@@ -1,211 +1,49 @@
-import os
+import re
 import time
 import json
-import shutil
-import tarfile
-import logging
+import os
+import psutil
+import threading
 import requests
-import arxiv
+from typing import List, Dict, Tuple, Optional
 from datetime import datetime
+from pathlib import Path
+from threading import Lock
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from bs4 import BeautifulSoup
 
-# Cấu hình logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# ==============================================================================
+# CONFIGURATION
+# ==============================================================================
+STUDENT_ID = "23456789"  # Thay MSSV của bạn
+INPUT_ARXIV_IDS = ["2310.12345"] 
+OUTPUT_DIR = Path(STUDENT_ID)
+S2_DELAY = 3.0  # Giây
 
-class ArxivScraper:
-    def __init__(self, student_id, target_ids):
-        self.student_id = student_id
-        self.target_ids = target_ids
-        # Tạo thư mục gốc theo MSSV
-        self.root_dir = str(student_id)
-        if not os.path.exists(self.root_dir):
-            os.makedirs(self.root_dir)
+ARXIV_EPRINT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+}
 
-    def _get_formatted_id(self, arxiv_id):
-        """Chuyển đổi ID dạng 2310.12345 thành 2310-12345 theo yêu cầu"""
-        return arxiv_id.replace('.', '-')
+SEMANTIC_SCHOLAR_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+}
 
-    def _clean_figures(self, directory):
-        """
-        Xóa các file hình ảnh để giảm dung lượng theo yêu cầu.
-        Giữ lại .tex, .bib, .bbl.
-        """
-        image_extensions = {'.png', '.jpg', '.jpeg', '.pdf', '.eps', '.tif', '.tiff', '.gif'}
-        for root, dirs, files in os.walk(directory):
-            for file in files:
-                ext = os.path.splitext(file)[1].lower()
-                # Lưu ý: file PDF gốc có thể nằm trong source, cần xóa nếu nó là hình ảnh
-                # Nhưng file .tex và .bib phải giữ lại
-                if ext in image_extensions:
-                    file_path = os.path.join(root, file)
-                    try:
-                        os.remove(file_path)
-                        logging.debug(f"Removed figure: {file_path}")
-                    except Exception as e:
-                        logging.warning(f"Could not remove {file_path}: {e}")
+# ==============================================================================
+# UTILS & LOGGING
+# ==============================================================================
+def log(msg: str):
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
 
-    def get_semantic_scholar_references(self, arxiv_id):
-        """
-        Lấy danh sách tham khảo từ Semantic Scholar API.
-        """
-        url = f"https://api.semanticscholar.org/graph/v1/paper/arXiv:{arxiv_id}"
-        params = {"fields": "references,references.externalIds,references.title,references.year,references.authors,references.publicationDate"}
-        
-        try:
-            # Rate limit handling
-            time.sleep(1.5) 
-            response = requests.get(url, params=params, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                refs = data.get('references', [])
-                
-                ref_dict = {}
-                for ref in refs:
-                    # Chỉ lấy các tham khảo có arXiv ID để làm key
-                    if ref.get('externalIds') and 'ArXiv' in ref['externalIds']:
-                        ref_arxiv_id = ref['externalIds']['ArXiv']
-                        formatted_ref_id = self._get_formatted_id(ref_arxiv_id)
-                        
-                        ref_dict[formatted_ref_id] = {
-                            "title": ref.get('title', ""),
-                            "authors": [a['name'] for a in ref.get('authors', [])],
-                            "submission_date": ref.get('publicationDate', ""), # ISO Format approximation
-                            "semantic_scholar_id": ref.get('paperId', "")
-                        }
-                return ref_dict
-            else:
-                logging.warning(f"Semantic Scholar API Error for {arxiv_id}: {response.status_code}")
-                return {}
-        except Exception as e:
-            logging.error(f"Error fetching references for {arxiv_id}: {e}")
-            return {}
+def arxiv_id_to_folder(id_str: str) -> str:
+    return id_str.replace('.', '-')
 
-    def download_source_version(self, arxiv_id, version, output_path):
-        """
-        Tải xuống source code (TeX) của một phiên bản cụ thể.
-        """
-        version_id = f"{arxiv_id}v{version}"
-        try:
-            # Sử dụng arxiv-downloader hoặc requests trực tiếp đến endpoint source
-            # URL format: https://arxiv.org/src/IDvVersion
-            url = f"https://arxiv.org/src/{version_id}"
-            response = requests.get(url, stream=True)
-            
-            if response.status_code == 200:
-                # Tạo thư mục cho version này: tex/YYMM-IDvX
-                os.makedirs(output_path, exist_ok=True)
-                
-                tar_path = os.path.join(output_path, f"{version_id}.tar.gz")
-                with open(tar_path, 'wb') as f:
-                    f.write(response.content)
-                
-                # Giải nén
-                if tarfile.is_tarfile(tar_path):
-                    try:
-                        with tarfile.open(tar_path, "r:gz") as tar:
-                            tar.extractall(path=output_path)
-                        os.remove(tar_path) # Xóa file tar sau khi giải nén
-                        return True
-                    except Exception as e:
-                        logging.warning(f"Error extracting {version_id}: {e}")
-                        # Có thể file tải về không phải tar (ví dụ PDF đơn lẻ), xử lý tùy ý
-                        return False
-                else:
-                    # Nếu không phải tar (ví dụ chỉ là file tex đơn hoặc PDF đổi đuôi)
-                    logging.warning(f"{version_id} is not a tar archive.")
-                    os.remove(tar_path)
-                    return False
-            else:
-                return False # Version likely doesn't exist
-        except Exception as e:
-            logging.error(f"Failed to download source for {version_id}: {e}")
-            return False
-
-    def process_paper(self, arxiv_id):
-        logging.info(f"Processing paper: {arxiv_id}")
-        formatted_id = self._get_formatted_id(arxiv_id)
-        
-        # Cấu trúc thư mục: StudentID/YYMM-ID
-        paper_dir = os.path.join(self.root_dir, formatted_id)
-        tex_dir = os.path.join(paper_dir, "tex")
-        
-        if os.path.exists(paper_dir):
-            shutil.rmtree(paper_dir)
-        os.makedirs(tex_dir)
-
-        # 1. Metadata Collection (Latest Version)
-        client = arxiv.Client()
-        search = arxiv.Search(id_list=[arxiv_id])
-        try:
-            paper = next(client.results(search))
-        except StopIteration:
-            logging.error(f"Paper {arxiv_id} not found on arXiv.")
-            return
-
-        # 2. Download ALL Versions
-        # arXiv không cung cấp API list version trực tiếp dễ dàng, 
-        # ta sẽ lặp từ v1 tăng dần cho đến khi không tải được nữa.
-        version = 1
-        revision_dates = []
-        
-        while True:
-            version_dir_name = f"{formatted_id}v{version}" #
-            version_path = os.path.join(tex_dir, version_dir_name)
-            
-            logging.info(f"Attempting to download version {version}...")
-            success = self.download_source_version(arxiv_id, version, version_path)
-            
-            if success:
-                # Clean figures
-                self._clean_figures(version_path)
-                
-                # Thu thập ngày revise (giả định ngày published của từng version)
-                # Để chính xác cần query từng version ID, ở đây ta lưu ngày chung
-                # Thực tế: metadata.json yêu cầu list revised dates.
-                version += 1
-            else:
-                # Nếu v1 thất bại, có thể paper mới quá hoặc lỗi mạng, nhưng thường là hết version
-                if version == 1:
-                    logging.warning(f"No source found for {arxiv_id} (might be PDF only).")
-                break
-
-        # 3. Create metadata.json
-        # Lưu ý: paper.updated là ngày version cuối.
-        metadata = {
-            "title": paper.title,
-            "authors": [author.name for author in paper.authors],
-            "submission_date": paper.published.isoformat(),
-            "revised_dates": [paper.updated.isoformat()], # API giới hạn, chỉ lấy được ngày update cuối
-            "venue": paper.journal_ref if paper.journal_ref else "arXiv"
-        }
-        
-        with open(os.path.join(paper_dir, "metadata.json"), "w", encoding='utf-8') as f:
-            json.dump(metadata, f, indent=4, ensure_ascii=False)
-
-        # 4. Create references.json via Semantic Scholar
-        refs_data = self.get_semantic_scholar_references(arxiv_id)
-        with open(os.path.join(paper_dir, "references.json"), "w", encoding='utf-8') as f:
-            json.dump(refs_data, f, indent=4, ensure_ascii=False)
-
-    def run(self):
-        for aid in self.target_ids:
-            self.process_paper(aid)
-        
-        # Zip folder
-        shutil.make_archive(self.student_id, 'zip', self.root_dir)
-        logging.info(f"Completed. Data zipped to {self.student_id}.zip")
-
-# --- CHẠY CHƯƠNG TRÌNH ---
-if __name__ == "__main__":
-    # Điền MSSV của bạn vào đây
-    STUDENT_ID = "23456789" 
-    
-    # Điền danh sách các arXiv ID được phân công vào đây
-    # Ví dụ: ['2310.12345', '2103.00001']
-    ASSIGNED_IDS = [
-        "2310.12345", 
-        "1706.03762"  # Ví dụ: Paper "Attention Is All You Need"
-    ]
-    
-    scraper = ArxivScraper(STUDENT_ID, ASSIGNED_IDS)
-    scraper.run()
+def get_total_size(path_root: Path) -> int:
+    total = 0
+    try:
+        if not path_root.exists(): return 0
+        for p in path_root.rglob('*'):
+            if p.is_file(): total += p.stat().st_size
+    except Exception: pass
+    return total
