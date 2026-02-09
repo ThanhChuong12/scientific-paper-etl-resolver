@@ -71,3 +71,60 @@ def enforce_rate_limit():
         if wait_time > 0:
             time.sleep(wait_time)
         last_request_time = time.time()
+
+# ==============================================================================
+# CORE LOGIC: VERSION DISCOVERY & METADATA
+# ==============================================================================
+def discover_versions_via_abs(arxiv_base_id: str, timeout: int = 20) -> List[str]:
+    url = f"https://arxiv.org/abs/{arxiv_base_id}"
+    try:
+        enforce_rate_limit()
+        r = session.get(url, headers=ARXIV_EPRINT_HEADERS, timeout=timeout)
+        if r.status_code != 200: return ["v1"]
+        
+        match = re.search(r"Submission history(.*?)</div>", r.text, re.S | re.I)
+        history_block = match.group(1) if match else r.text
+        versions = re.findall(r"\[v(\d+)\]", history_block)
+        
+        if not versions: return ["v1"]
+        return [f"v{v}" for v in sorted(map(int, versions))]
+    except Exception as e:
+        log(f"Error discovering versions: {e}. Defaulting to v1.")
+        return ["v1"]
+
+def get_metadata(arxiv_base_id: str):
+    url = f"https://arxiv.org/abs/{arxiv_base_id}"
+    try:
+        enforce_rate_limit()
+        r = session.get(url, headers=ARXIV_EPRINT_HEADERS, timeout=20)
+        if r.status_code != 200: return {"paper_title": "", "authors": [], "submission_date": "", "revised_dates": []}
+
+        soup = BeautifulSoup(r.text, 'html.parser')
+        
+        title_tag = soup.find('h1', class_='title')
+        title = title_tag.get_text(strip=True).replace('Title:', '').strip() if title_tag else ""
+        
+        authors_tag = soup.find('div', class_='authors')
+        authors = [a.text.strip() for a in authors_tag.find_all('a')] if authors_tag else []
+
+        revised_dates = []
+        hist_div = soup.find('div', class_='submission-history')
+        submission_block = hist_div.get_text("\n", strip=True) if hist_div else ""
+        
+        if submission_block:
+            pattern = re.compile(r'\[v(\d+)\]\s+([A-Za-z]{3},\s+\d{1,2}\s+[A-Za-z]{3}\s+\d{4})')
+            for vnum, date_str in pattern.findall(submission_block):
+                try:
+                    dt = datetime.strptime(date_str.strip(), "%a, %d %b %Y")
+                    revised_dates.append(dt.strftime("%Y-%m-%d"))
+                except: pass
+        
+        return {
+            "paper_title": title, "authors": authors,
+            "submission_date": revised_dates[0] if revised_dates else "",
+            "revised_dates": sorted(list(set(revised_dates))),
+            "publication_venue": soup.find('span', class_='primary-subject').get_text(strip=True) if soup.find('span', class_='primary-subject') else ""
+        }
+    except Exception as e:
+        log(f"Error parsing metadata: {e}")
+        return {}
