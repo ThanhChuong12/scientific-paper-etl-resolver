@@ -238,3 +238,93 @@ def copy_tex_and_bib_keep_structure(extracted_root: Path, target_version_dir: Pa
                 if dst.suffix == '.tex': tex_c += 1
                 else: bib_c += 1
     return tex_c, bib_c
+
+# ==============================================================================
+# MAIN EXECUTION
+# ==============================================================================
+def process_paper(arxiv_base_id: str):
+    start_time = time.time()
+    # Start RAM tracking
+    stop_mem, mem_stats = threading.Event(), {"max": 0, "avg": 0}
+    threading.Thread(target=track_memory_usage, args=(stop_mem, mem_stats)).start()
+
+    log(f"Processing {arxiv_base_id}")
+    folder_name = arxiv_id_to_folder(arxiv_base_id)
+    paper_dir = BASE_DIR / folder_name
+    paper_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Metadata & References
+    meta = get_metadata(arxiv_base_id)
+    versions = discover_versions_via_abs(arxiv_base_id)
+    venue, refs = get_semantic_data(arxiv_base_id)
+    if venue: meta['publication_venue'] = venue
+
+    # Prepare for download
+    total_tex, total_bib, size_before, size_after = 0, 0, 0, 0
+    got_tex = False
+    tex_root = paper_dir / "tex"
+    tex_root.mkdir(exist_ok=True)
+
+    for ver in versions:
+        arxiv_ver = f"{arxiv_base_id}{ver}"
+        tmp_dir = Path(tempfile.mkdtemp())
+        dl_path = tmp_dir / f"{arxiv_ver}.tar.gz"
+        
+        # Download -> Extract -> Clean -> Copy
+        if download_eprint(arxiv_ver, dl_path) or download_eprint(arxiv_base_id, dl_path):
+            ver_folder = tex_root / f"{format_yymm_id(arxiv_ver)}{ver}"
+            ver_folder.mkdir(exist_ok=True)
+            
+            extract_dir = tmp_dir / "extracted"
+            if extract_archive(dl_path, extract_dir):
+                size_before += get_total_size(extract_dir)
+                t, b = copy_tex_and_bib_keep_structure(extract_dir, ver_folder)
+                total_tex += t; total_bib += b
+                remove_figure_files(ver_folder)
+                size_after += get_total_size(ver_folder)
+                if t > 0: got_tex = True
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    # Save JSONs
+    json.dump(meta, open(paper_dir/"metadata.json", "w"), indent=4, default=str)
+    json.dump(refs, open(paper_dir/"references.json", "w"), indent=4, default=str)
+
+    # Stop tracking
+    stop_mem.set()
+    duration = time.time() - start_time
+    status = 'success' if got_tex else 'no_tex'
+
+    # CSV Report
+    with open(BASE_DIR / "performance.csv", "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            arxiv_base_id, datetime.fromtimestamp(start_time).isoformat(), round(duration, 3),
+            round(size_before/1048576, 3), round(size_after/1048576, 3),
+            round(mem_stats["max"], 3), status
+        ])
+
+    return {"arxiv_id": arxiv_base_id, "status": status, "tex_files": total_tex}
+
+def run_scraper():
+    BASE_DIR.mkdir(parents=True, exist_ok=True)
+    ids = [f"{START_MONTH}.{i:05d}" for i in range(START_ID, END_ID + 1)]
+    log(f"Starting crawl for {len(ids)} papers with {MAX_WORKERS} workers.")
+    
+    # Init CSV Header
+    csv_file = BASE_DIR / "performance.csv"
+    if not csv_file.exists():
+        with open(csv_file, "w", newline="", encoding="utf-8") as f:
+            csv.writer(f).writerow(["arxiv_id", "start_time", "duration_sec", "size_before_mb", "size_after_mb", "max_ram_mb", "status"])
+
+    # Multi-threading Execution
+    results = []
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as exc:
+        futures = {exc.submit(process_paper, pid): pid for pid in ids}
+        for fut in as_completed(futures):
+            try: results.append(fut.result())
+            except Exception as e: log(f"Error: {e}")
+
+    log("Scraping Completed.")
+
+if __name__ == "__main__":
+    run_scraper()
