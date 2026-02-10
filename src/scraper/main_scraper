@@ -152,3 +152,89 @@ def get_metadata(arxiv_base_id: str):
         log(f"Error parsing metadata: {e}")
         return {}
 
+# ==============================================================================
+# FILE DETECTORS
+# ==============================================================================
+def is_binary_file(content: bytes) -> bool:
+    if len(content) < 4: return False
+    # Check magic numbers for PDF, JPG, GZIP, ZIP
+    if any(content.startswith(sig) for sig in [b"\x25\x50\x44\x46", b"\xFF\xD8\xFF", b"\x1F\x8B\x08", b"\x50\x4B\x03\x04"]):
+        return True
+    # Heuristic: check ratio of printable characters
+    return (sum(1 for b in content if 32 <= b <= 126 or b in [9, 10, 13]) / len(content)) < 0.7
+
+def is_latex_file(file_path: Path) -> bool:
+    try:
+        if not file_path.exists() or file_path.stat().st_size == 0: return False
+        with open(file_path, 'rb') as f: start = f.read(4096)
+        if is_binary_file(start): return False
+        text = start.decode('utf-8', errors='ignore')
+        return "\\documentclass" in text or "\\begin{document}" in text or "\\section{" in text
+    except: return False
+
+
+# ==============================================================================
+# FILE PROCESSORS
+# ==============================================================================
+def extract_recursive(archive_path: Path, extract_dir: Path, depth: int = 0) -> bool:
+    if depth > 3: return False
+    try:
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        # Try TAR extraction
+        try:
+            with tarfile.open(archive_path, "r:*") as tar:
+                tar.extractall(path=extract_dir)
+            for item in extract_dir.iterdir():
+                if item.is_file() and item.suffix in [".tar", ".gz", ".tar.gz"]:
+                    nested_dir = extract_dir / f"nested_{depth}"
+                    if extract_recursive(item, nested_dir, depth + 1):
+                        for inner in nested_dir.iterdir():
+                            shutil.move(str(inner), str(extract_dir / f"{nested_dir.name}_{inner.name}"))
+                        shutil.rmtree(nested_dir)
+                    item.unlink(missing_ok=True)
+            return True
+        except: pass
+        
+        # Try GZIP extraction (single file)
+        try:
+            with gzip.open(archive_path, "rb") as f_in:
+                decompressed_data = f_in.read()
+            out_name = archive_path.stem if archive_path.suffix == ".gz" else archive_path.name
+            out_path = extract_dir / out_name
+            with open(out_path, "wb") as f_out: f_out.write(decompressed_data)
+            if out_path.suffix == ".tar":
+                extract_recursive(out_path, extract_dir, depth + 1)
+                out_path.unlink()
+            elif is_latex_file(out_path):
+                out_path.rename(out_path.with_suffix(".tex"))
+            return True
+        except: return False
+    except: return False
+
+def extract_archive(archive_path: Path, extract_dir: Path) -> bool:
+    if not archive_path.exists() or archive_path.stat().st_size == 0: return False
+    ok = extract_recursive(archive_path, extract_dir)
+    tex_files = list(extract_dir.rglob("*.tex"))
+    return ok and len(tex_files) > 0
+
+def remove_figure_files(path_root: Path) -> int:
+    removed = 0
+    for root, _, files in os.walk(path_root):
+        for fname in files:
+            if Path(fname).suffix.lower() in IMAGE_EXTS:
+                try: os.remove(Path(root)/fname); removed += 1
+                except: pass
+    return removed
+
+def copy_tex_and_bib_keep_structure(extracted_root: Path, target_version_dir: Path) -> Tuple[int, int]:
+    tex_c, bib_c = 0, 0
+    for root, _, files in os.walk(extracted_root):
+        for fname in files:
+            if Path(fname).suffix.lower() in ('.tex', '.bib'):
+                src = Path(root) / fname
+                dst = target_version_dir / src.relative_to(extracted_root)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
+                if dst.suffix == '.tex': tex_c += 1
+                else: bib_c += 1
+    return tex_c, bib_c
