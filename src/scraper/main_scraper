@@ -58,6 +58,19 @@ def get_total_size(path_root: Path) -> int:
     except Exception: pass
     return total
 
+def track_memory_usage(stop_event, mem_stats):
+    process = psutil.Process(os.getpid())
+    samples = []
+    while not stop_event.is_set():
+        try:
+            rss = process.memory_info().rss / (1024 * 1024)  # MB
+            samples.append(rss)
+        except: pass
+        time.sleep(0.1)
+    if samples:
+        mem_stats["max"] = max(samples)
+        mem_stats["avg"] = sum(samples) / len(samples)
+
 # ==============================================================================
 # HTTP CLIENT & RATE LIMITING
 # ==============================================================================
