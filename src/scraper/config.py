@@ -1,8 +1,12 @@
 from pathlib import Path
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 
+load_dotenv()
 # ---------------- CONFIG ----------------
-SEMANTIC_SCHOLAR_API_KEY = "YNsSffUP0ca1D7Rh0CBzS5XMot1LxNji24FP9dHi"
-STUDENT_ID = "23120195"
+SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+STUDENT_ID = os.getenv("STUDENT_ID", "23120195")
 
 BASE_DIR = Path(STUDENT_ID) # Base output path
 START_MONTH = "2412"        # Format YYMM
