@@ -19,6 +19,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from utils import log, arxiv_id_to_folder, format_yymm_id, get_total_size, track_memory_usage
+from http_client import session, enforce_rate_limit
 
 # ==============================================================================
 # CONFIGURATION
@@ -42,49 +43,8 @@ SEMANTIC_SCHOLAR_HEADERS = {
 IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.pdf', '.eps', '.tif', '.tiff', '.gif', '.bmp'}
 
 # ==============================================================================
-# HTTP CLIENT & RATE LIMITING
-# ==============================================================================
-last_request_time = 0
-request_lock = Lock()
-
-session = requests.Session()
-retry_strategy = Retry(
-    total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504],
-)
-adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=10, pool_maxsize=10)
-session.mount("http://", adapter)
-session.mount("https://", adapter)
-
-def enforce_rate_limit():
-    global last_request_time
-    with request_lock:
-        current_time = time.time()
-        elapsed = current_time - last_request_time
-        wait_time = S2_DELAY - elapsed
-        if wait_time > 0:
-            time.sleep(wait_time)
-        last_request_time = time.time()
-
-# ==============================================================================
 # CORE LOGIC: VERSION DISCOVERY & METADATA
 # ==============================================================================
-def discover_versions_via_abs(arxiv_base_id: str, timeout: int = 20) -> List[str]:
-    url = f"https://arxiv.org/abs/{arxiv_base_id}"
-    try:
-        enforce_rate_limit()
-        r = session.get(url, headers=ARXIV_EPRINT_HEADERS, timeout=timeout)
-        if r.status_code != 200: return ["v1"]
-        
-        match = re.search(r"Submission history(.*?)</div>", r.text, re.S | re.I)
-        history_block = match.group(1) if match else r.text
-        versions = re.findall(r"\[v(\d+)\]", history_block)
-        
-        if not versions: return ["v1"]
-        return [f"v{v}" for v in sorted(map(int, versions))]
-    except Exception as e:
-        log(f"Error discovering versions: {e}. Defaulting to v1.")
-        return ["v1"]
-
 def get_metadata(arxiv_base_id: str):
     url = f"https://arxiv.org/abs/{arxiv_base_id}"
     try:
