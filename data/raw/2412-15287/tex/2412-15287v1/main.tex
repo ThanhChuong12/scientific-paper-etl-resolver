@@ -1,0 +1,1102 @@
+\documentclass[11pt, letterpaper, logo, onecolumn, numbering]{googledeepmind}
+
+\usepackage{nameref}
+\input{math_commands.tex}
+\usepackage{hyperref}[citecolor=magenta]
+
+\setlength\parindent{0pt}
+
+\hypersetup{
+    colorlinks = true,
+    citecolor = {magenta},
+}
+
+\usepackage{Definitions}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{cleveref}
+\usepackage{delimset}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{wrapfig}
+\newcommand{\pibon}{\pi_{\text{bon}}}
+\usepackage{multirow}
+\usepackage{color, colortbl}
+
+
+\usepackage[authoryear, sort&compress, round]{natbib}
+\bibliographystyle{abbrvnat}
+
+\title{Inference-Aware Fine-Tuning for Best-of-N Sampling in Large Language Models}
+
+\correspondingauthor{yinlamchow@google.com}
+
+
+
+\renewcommand{\today}{2024-12-13}
+
+\author[1]{Yinlam Chow}
+\author[2]{Guy Tennenholtz}
+\author[1]{Izzeddin Gur}
+\author[1]{Vincent Zhuang}
+\author[1]{Bo Dai}
+\author[1]{Sridhar Thiagarajan}
+\author[2]{Craig Boutilier}
+\author[1]{Rishabh Agarwal}
+\author[1]{Aviral Kumar}
+\author[1]{Aleksandra Faust}
+
+\affil[1]{Google DeepMind}
+\affil[2]{Google Research}
+
+\begin{abstract}
+Recent studies have indicated that effectively utilizing inference-time compute is crucial for attaining better performance from large language models (LLMs). In this work, we propose a novel \emph{inference-aware fine-tuning} paradigm, in which the model is fine-tuned in a manner that directly optimizes the performance of the inference-time strategy. We study this paradigm using the simple yet effective Best-of-N (BoN) inference strategy, in which a verifier selects the best out of a set of LLM-generated responses. We devise the first imitation learning and reinforcement learning~(RL) methods for BoN-aware fine-tuning, overcoming the challenging, non-differentiable argmax operator within BoN. We empirically demonstrate that our BoN-aware models implicitly learn a meta-strategy that interleaves best responses with more diverse responses that might be better suited to a test-time input---a process reminiscent of the exploration-exploitation trade-off in RL. Our experiments demonstrate the effectiveness of BoN-aware fine-tuning in terms of improved performance and inference-time compute. In particular, we show that our methods improve the Bo32 performance of Gemma 2B on Hendrycks MATH from $26.8\%$ to $30.8\%$, and pass@$32$ from $60.0\%$ to $67.0\%$, as well as the pass@16 on HumanEval from $61.6\%$ to $67.1\%$.
+\end{abstract}
+
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newcommand{\greencheckmark}{\color[rgb]{0,.6,0}$\checkmark$}
+\newcommand{\redcross}{\color[rgb]{.6,0,0}$\times$}
+
+\begin{document}
+
+\maketitle
+
+
+
+
+\setlength{\abovedisplayskip}{1pt}
+\setlength{\abovedisplayshortskip}{1pt}
+\setlength{\belowdisplayskip}{1pt}
+\setlength{\belowdisplayshortskip}{1pt}
+\setlength{\jot}{1pt}
+
+\setlength{\floatsep}{1ex}
+\setlength{\textfloatsep}{1ex}
+
+
+
+\vspace{-0.1in}
+\section{Introduction}
+\vspace{-0.1in}
+
+An effective method for improving the performance of large language models (LLMs) is to leverage additional computation at inference-time: various works ~\citep{lightman2023lets, wu2024empirical,kumar2024training, hosseini2024v} have shown that by using search, re-ranking, multi-turn revision, and more generally, any approach that makes use of more tokens and inference-time compute, the performance of LLMs on various tasks can be significantly improved---so much that investing in improving inference-time computation might prove more beneficial than increasing model pre-training compute~\citep{snell2024scaling}. 
+
+Despite this promise, existing work largely considers using inference-time computation as an optional post-hoc design choice, after conventional pre-training and fine-tuning. However, decoupling training and inference-time computation is \emph{not} optimal; for example, if we knew that an LLM is allowed to make multiple attempts to solve a math problem, then it may be better to fine-tune it to explore diverse problem-solving strategies, rather than simply generating the candidates that represent the model's best attempt at solving the problem. Within the context of reasoning problems, these performance gains may be significant, as LLMs often fail due to their inability to draw complex inferences about the input and their internal knowledge \citep{chen2024more}. 
+
+We argue that the effectiveness of inference-time computation can be substantially increased by explicitly considering the inference procedure during training. We study this \emph{inference-aware fine-tuning} paradigm using the Best-of-N (BoN) inference strategy, where the LLM generates multiple candidate responses, and a verifier selects the best one according to some scoring function~\citep{cobbe2021gsm8k}. When this verifier is the ground-truth scoring function, BoN is equivalent to pass@N, a widely-used method for inference-time compute scaling \citep{brown2024largelanguagemonkeysscaling}. In contrast with traditional fine-tuning methods such as supervised fine-tuning (SFT) or reinforcement learning (RL), which are agnostic to the inference strategy used at test-time, our inference-aware (BoN-aware) methods directly optimize the performance of the BoN policy, and lead to significantly improved BoN performance at test time. 
+
+Our work makes several key contributions to the understanding and optimization of batch-of-neighbors (BoN) inference. 
+(1) We formally define the inference-aware and BoN-aware problem setting, recognizing the crucial role of the inference strategy during training. 
+(2) We establish a co-scaling behavior for BoN, quantifying the inherent trade-off between exploration and exploitation governed by the temperature ($T$) and the number of samples ($N$). This analysis directly informs the design and optimization of our BoN-aware algorithms. By understanding how these interactions influence performance, we can effectively tune these parameters to achieve an optimal balance between exploration and exploitation in both our supervised and reinforcement learning settings. (3) We develop a BoN-aware supervised fine-tuning algorithm that aligns the target distribution with the BoN policy distribution. (4) We extend our method to a general BoN-aware RL framework, enabling the policy to learn and solve downstream tasks under the BoN inference strategy.  To further enhance BoN-aware fine-tuning, we devise specialized algorithms inspired by methods optimizing pass@$N$ accuracy, which promote implicit exploration and connect with established self-supervised learning techniques, particularly in scenarios where the environment reward can be used for verification. (5) Empirically, our experiments demonstrate the effectiveness of BoN-aware fine-tuning in terms of improved performance and inference-time compute. In particular, we show that our methods improve the Bo32 performance of Gemma 2B on Hendrycks MATH from $26.8\%$ to $30.8\%$, and pass@$32$ from $60.0\%$ to $67.0\%$, as well as the pass@16 on HumanEval from $61.6\%$ to $67.1\%$.
+
+
+
+
+
+\section{Inference-Aware Fine-Tuning: A Case Study with Best-of-N}
+\label{sec:iaft_section}
+Standard fine-tuning methods typically train LLMs to produce the best response for a given prompt. %
+In LLM fine-tuning, a model (or \emph{policy}) is trained via \emph{supervised fine-tuning}~(SFT), by maximizing the likelihood w.r.t. ground-truth data. Formally, we search for a policy ${\pi: \gX \mapsto \Delta_{\gY}}$ that maximizes the likelihood $\expect*{x\sim P, y\sim \pi^*(y|x)}{\log \pi\rbr{y|x}}$, where here, $\gX$ and $\gY$ are the space of prompts and outputs of an LLM, $P$ is the prompt distribution, and $\pi^*$ is a distribution of expert responses. Alternatively, the policy can be fine-tuned via \emph{reinforcement learning}~(RL) ~\citep{schulman2017proximal}:
+$
+\label{eq:rl_loss}
+     \max_{\pi \in \Pi}
+    \expect*{x\sim P, y\sim \pi(x)}{R(x,y)},
+$
+to align the LLM's behaviors with the reward function $R(x, y)$. While popular, these methods have not taken the LLM's inference-time strategies into the account.
+
+
+\textbf{Inference-Aware Fine-Tuning.} To address the gap between how LLMs are trained and how they are used at inference time, we 
+develop inference-aware fine-tuning. During inference, the learned policy $\pi$ is often not directly used; rather some \emph{inference strategy} $I: \Pi \times \gX \mapsto \Delta_{\gY}$ is applied to it. For example, $I$ can be the BoN strategy, which samples multiple candidate responses, and selects the best using the score function of some verifier; or $I$ might be a search mechanism \citep{lightman2023lets} or self-correction~\citep{kumar2024training}. To account for this inference strategy $I$, we alter the objective SFT and RL objectives to be ``\emph{aware}" of the inference strategy:
+
+\vspace{-0.15in}
+\begin{align}
+    \label{eq:iaft-sft}
+    &\max_{\pi\in \Pi}\,\, \expect*{x\sim P, y\sim \pi^*(y|x)}{\log I(\pi, x)\rbr{y}}, \text{ and} \tag{Inference-Aware SFT}\\
+    \label{eq:iaft-rl}
+    &\max_{\pi \in \Pi}J(\pi) 
+    :=
+    \expect*{x\sim P, y \sim I(\pi, x)}{R(x,y)},
+    \tag{Inference-Aware RL}
+\end{align}
+\vspace{-0.15in}
+
+Indeed, \ref{eq:iaft-sft}  and \ref{eq:iaft-rl} are aware of the strategy $I$. In what follows, we focus on the case where the inference strategy is BoN (i.e., $I\equiv\text{BoN}$), in both the SFT and RL setups. As we will later see, this brings about new algorithms for training the policy.
+
+
+\paragraph{BoN-Aware Problem Formulation.} 
+We begin by defining the BoN strategy. This inference strategy samples $N$ resposnes from a model with some temperature $T$, and then selects the best one, based on some verifier score. Formally, the BoN inference policy can be written as:
+
+\vspace{-0.15in}
+\begin{align}
+    I(\pi,x)(y)
+    =
+    \pibon(y | x; \pi, r, N, T)
+    := 
+     \arg\max_{y' \in \brk[c]*{y_1, \hdots, y_N}} r(x,y'),  \; \mathrm{s.t.}\; y_i \overset{T}{\sim} \pi(\cdot | x), x \in \gX,\label{eq:bon}
+\end{align}
+\vspace{-0.15in}
+
+where $\overset{T}{\sim}$ is a sample with temperature $T$, and $r: \gX \times \gY \mapsto \sR$ is a verifier score\footnote{The verifier score $r$ and the true reward $R$ can be related, or even equal, yet we do not make that assumption here. Usually, $r$ is a model trained to predict $R$, and therefore serves as a proxy of the true reward.}. In what follows, when $r, N, T$ are clear from context, we 
+write $\pibon(y | x; \pi)$.
+We see that the above strategy defines a class of BoN policies that is different from the learned policy $\pi$, demonstrating the gap between training and inference. 
+We inject this class of BoN polices into the \ref{eq:iaft-sft} and \ref{eq:iaft-rl} frameworks to derive the instantiation of inference-aware fine-tuning. 
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+\vspace{-0.7cm}
+\includegraphics[width=1.0\linewidth]{images/T-N-opt.png}
+\caption{\centering The relationship between the optimal number of samples ($N^*$) and optimal temperature ($T^*$) in BoN. The size of each marker at a given ($T, N$) coordinate indicates the frequency of problems for which the ($T, N$) pair resulted in the best BoN performance. The plot reveals ``easier" problems have small $(T^*,N^*)$, while ``harder" problems require a larger $(T^*,N^*)$ for exploration.}
+\label{fig:co-scaling}
+\vspace{-0.7cm}
+\end{wrapfigure}
+Besides closing the gap between training and inference and mitigating potential discrepancies between the verifier score $r$ and true reward $R$, BoN policies provide further benefits. The BoN mechanism introduces \emph{implicit exploration} during training, bypassing the computational burden of explicit exploration~\citep{cen2024value}. 
+Selecting the best of $N$ samples allows the base policy to explore output variations, inducing a controlled exploration that can lead to more robust and generalizable policies, particularly in scaling behavior w.r.t.\ temperature $T$ and number of samples $N$.
+
+Optimizing the BoN policy class is notoriously difficult due to the non-differentiability of the $\argmax$ operator. Although several differentiable top-$k$ operators~\citep{cuturi2019differentiable,xie2020differentiable} might be exploited in $\pibon$, they induce 
+approximation error, and more importantly, increase the computational cost dramatically.
+In our work, we derive a variational formulation of the learning problem w.r.t.\ $\pibon$ without top-$k$ operators, allowing us to construct novel algorithms for inference-aware BoN, using both standard supervised imitation learning (\Cref{section: bon imitation}) and RL (\Cref{section: bon rl}).
+
+\textbf{Exploration-Exploitation with BoN Sampling.} 
+BoN sampling offers a natural mechanism for balancing exploration and exploitation in response generation. Adding BoN inference to the base model effectively explore the diverse possibilities within the model's output space while also exploiting its knowledge to generate high-quality candidates. This exploration-exploitation trade-off is crucial for solving various tasks and improving generalizability.
+To quantify such a trade-off, we empirically verify the implicit exploration and exploitation properties of BoN. We do this by revealing optimal co-scaling w.r.t.\ temperature~$T$ and number of samples~$N$. Specifically, for a fixed base policy $\pi$, at any prompt $x \in \gX$ there is an optimal temperature $T^*(x)$ and optimal number of samples $N^*(x)$ which maximize performance of BoN:
+\vspace{0.05in}
+\begin{equation*}
+    N^*(x; \pi),\! T^*(x; \pi) \!\in\! \arg\max_{N, T} \expect*{y \sim \pibon(y | x; \pi, r, N, T)}{R(x,y}.
+\end{equation*}
+\vspace{0.05in}
+To understand the connection between $N^*(x)$ and $T^*(x)$, we assess the performance of Gemma~2B~\citep{gemmateam2024gemma2improvingopen} on the MATH benchmark \citep{hendrycksmath2021}, when applying the BoN inference strategy. \Cref{fig:co-scaling} shows empirical frequencies of problems, when varying $T^*(x)$ and $N^*(x)$ (larger marker size signifies higher frequency). The figure depicts a tradeoff between $T$ and $N$, reminiscent of the exploration-expoitation trade-off. When $T^*(x)$ is small, any $N$ is optimal (and particularly also a small $N$). These ``easier'' problems do not require heavy exploration (small $T^*)$ and can therefore be more exploitative (small $N^*)$. On the other hand, as $T^*$ increases, the base policy $\pi$ becomes more stochastic, resulting in more diversity and exploration. These more ``difficult'' problems, require more exploration (larger $T^*$), hence less exploitation (larger $N^*$). Indeed, in such cases, the distribution of $N^*$ shifts to high values. Our results suggest a tradeoff between exploration and exploitation, and further motivates the BoN-aware setup, which can account for this tradeoff uniformly across all samples.
+
+\Cref{fig:co-scaling} also uncovers
+a cost-effective recipe 
+for adjusting $T$ and $N$ for optimal BoN performance: we can learn how to fine-tune the model for better inference by simply adjusting these accessible parameters.
+However, it is important to note that relying solely on model selection has limitations. While this approach offers a computationally inexpensive way to improve BoN's inference-time performance, it may not fully capture the nuances of the LLM's behavior. With sufficient computational resources, general BoN-aware fine-tuning can further unlock performance gains by directly training the LLM to optimize for the exploration-exploitation trade-off of the BoN inference process.
+
+
+
+
+
+
+
+
+
+
+
+\vspace{-0.1in}
+\section{Supervised BoN-Aware Fine-Tuning}
+\label{section: bon imitation}
+\vspace{-0.1in}
+
+We begin by developing the BoN-aware SFT framework. Under this setting we assume we do not have access to the true reward, and only wish to maximize the likelihood of a dataset of expert examples. Recall the definition of the BoN policy $\pibon$ in \Cref{eq:bon}. The \ref{eq:iaft-sft} version of BoN is:
+
+\vspace{-0.15in}
+\begin{align}
+\label{eq: bon_sft}
+\max_{\pi \in \Pi}\,\, \expect*{(x, y)\sim \Dcal}{\log \pibon(y | x; \pi)},
+\end{align}
+\vspace{-0.15in}
+
+
+
+
+
+
+
+A major difficulty in solving \Cref{eq: bon_sft} is the non-differentiability of the $\argmax$ operator in the BoN procedure. To address this, we can use the variational approximation of $\pibon$~(see Section \ref{sec:bon_var})
+
+\vspace{-0.15in}
+\begin{equation}
+\label{eq: variational form}
+    \pibon(y|x) \propto \brk[s]*{\pi (y|x) \cdot\exp\rbr{\lambda_N Q_{\pi}(x, y)}}, 
+\end{equation}
+\vspace{-0.15in}
+
+where $Q_{\pi}\rbr{x,y} = \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{r(x, y)\geq r(x, y')}}$ is the expected \emph{win-rate} over base policy $\pi$, characterizing the probability for which a response $y$ outperforms the responses generated by the base over the verifier score $r$. The constant $\lambda_N>0$ is a solution of a 1D-search problem \citep{gui2024bonbon} (see details in \Cref{appendix: variation approximation of bon}). It can be shown that $\lambda_N$ is monotonically increasing in $N$, and $\lambda_N \propto N$ approximately for large $N$. Plugging the variational form of \Cref{eq: variational form} into \Cref{eq: bon_sft} yields:
+
+\vspace{-0.15in}
+\begin{align}\label{eq:bonref_mle}
+    &\max_{\pi\in \Pi}\EE_{(x,y)\sim\Dcal}\sbr{\log \pibon(y|x)}:= \EE_{(x,y)\sim\Dcal}\sbr{\underbrace{\log \pi\rbr{y|x}}_{\text{Likelihood}} \!\ +\ \! \underbrace{\lambda_N\cdot Q_{\pi}\rbr{x,y} \!-\! \log Z_{\pi}(x)}_{\text{Inference-Awareness}}},\\
+    & \text{where} \quad Z_{\pi}(x) = \EE_{\pi(y|x)}\sbr{\exp\rbr{ \lambda_N \cdot Q_{\pi}\rbr{x,y}}} \text{is the partition function}.  \nonumber
+\end{align}
+\vspace{-0.15in}
+
+The above optimization problem reveals two term. While the first term tries to push the base policy $\pi$ into maximizing the likelihood of the data, the second term regularizes the policy to be more exploratory by increasing the data win rate over the policy. This in turn accounts for the sampling in BoN. For data efficiency when estimating the win rate $Q_{\pi}\rbr{x,y}$
+we leverage a common practice in modeling pairwise preferences \citep{rafailov2023direct} to approximate the win rate with its ``softened'' counterpart: $Q_{\pi}\rbr{x,y} \approx \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\sigma\rbr{r(x, y) - r(x, y')}}$, where $\sigma$ is the sigmoid function. 
+Next, we exploit properties of policy gradient \citep{sutton1999policy} and the gradient of energy-based policies \citep{rafailov2024direct} to derive  the gradient for \Cref{eq:bonref_mle} (see Appendix \ref{appendix:lem1} for proof):
+
+\begin{lemma}[\textbf{BoN-SFT}]
+\label{lem:sft_pg_bon}
+The gradient of \Cref{eq:bonref_mle} w.r.t. LLM parameters $\theta\in\Theta$ of $\pi$ is given by $\EE_{(x, y)\sim \Dcal}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}} - \EE_{x\sim \Dcal, y\sim \pibon\rbr{\cdot|x}}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}}$, where
+
+\vspace{-0.15in}
+\begin{equation}\label{eq:nabla_f}
+\nabla_{\theta} f\rbr{x, y;\theta} \!:=\! \nabla_{\theta} \log \pitheta\rbr{y|x} + \lambda_N\cdot\EE_{y'\sim \pitheta}\sbr{\nabla_{\theta}\log \pitheta\rbr{y'|x} \!\cdot\! \sigma \rbr{r(x, y)- r(x, y')}}.
+\end{equation}
+\vspace{-0.15in}
+
+\end{lemma}
+Our formulation circumvents the non-differentiability of the BoN distribution, allowing solution of BoN-SFT via standard gradient-ascent algorithms. 
+The individual terms of the gradient imply the following: \textbf{(1)} $\pi$ clones the expert behavior by maximizing its likelihood over $\mathcal D$; \textbf{(2)} it aligns with the verifier score ranking, which assigns a high win-rate to the expert over the base; \textbf{(3)} it avoids over-fitting by limiting its likelihood over the BoN sample; and \textbf{(4)} it maintains overall response quality by reducing the win rate between its best and average samples. 
+
+
+
+\section{BoN-Aware Fine-Tuning Using Reinforcement Learning}
+\label{section: bon rl}
+
+Training LLMs that are amenable to BoN sampling can be framed within the RL paradigm, which trains an agent (LLM) that optimizes its actions within an environment. In this context, the LLM generates N responses (candidates actions) for a given prompt (contexts). A separate macro agent (verifier) selects the candidate deemed most suitable according to a predefined criterion (e.g., probability of success). This action is then deployed to the environment, yielding a reward (e.g., task completion). The key challenge in training this agent lies in achieving two objectives simultaneously: (i) Enhancing agent's exploration capabilities to generate diverse candidates that cover the space of potential solutions and align with the verifier's preferences; (ii) Maximizing the environment reward of the final response. 
+Motivated by this observation, we utilize RL for BoN-aware fine-tuning, enabling the development of more robust and adaptable LLMs. A schematic of the BoN-Aware RL framework is shown in \Cref{fig:bon_schematic}.
+
+The BoN-Aware RL problem takes the following form:
+
+\vspace{-0.15in}
+\begin{align}\label{eq: bon optimality}
+    \max_{\pi \in \Pi} J(\pi) 
+    :=
+    \expect*{x\sim P, y\sim \pibon(\cdot|x; \pi, r, N, T)}{R(x,y)}.
+\end{align}
+\vspace{-0.15in}
+
+We train the BoN policy $\pibon$ (paramterized by $\pi$) to attain a high environment reward. Apart from enabling better exploration, using the environment reward $R(x,y)$ in BoN-RL allows the base policy to tolerate potential errors in the verifier $r(x,y)$. 
+We first develop a general algorithm for solving the BoN-aware RL problem. We then study an important subclass which assumes a binary reward, a common feature of many reasoning problems (e.g., math, code). 
+
+
+\begin{figure*}[t!]
+\centering
+\includegraphics[width=1.0\linewidth]{images/bon_schematic.pdf}
+\caption{\centering {BoN-Aware RL fine-tuning, where $N$ independent samples are first drawn from base $\pi$ and ranked by the verifier $r$. The BoN policy then optimizes the environment reward of the BoN samples (Lemma~\ref{lem: bon-rl})}.}
+\label{fig:bon_schematic}
+\end{figure*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+We begin with deriving a gradient estimator to the objective in \Cref{eq: bon optimality}. Exploiting the connection between the BoN policy and its energy-based policy counterpart in  \Cref{eq:pi_bon_soln}, and using  derivations analogous to those in Lemma~\ref{lem:sft_pg_bon}, we compute the gradient of $J(\theta)$, which leads to a REINFORCE-style algorithm~\citep{williams1992reinforce} (see Appendix \ref{appendix:lem2} for proof):
+ \begin{lemma}[\textbf{BoN-RL}]
+\label{lem: bon-rl}
+The gradient of \Cref{eq: bon optimality} w.r.t. LLM parameters $\theta\in\Theta$ of $\pi$ is given by 
+
+\vspace{-0.15in}
+\begin{equation}\label{eq:policy_grad_bon}
+\nabla_{\theta} J(\theta) = \EE_{x\sim\Dcal, y\sim \pibon(\cdot|x)}\sbr{\nabla_{\theta} \log\pi_{\theta}\rbr{x, y}\cdot \left(R(x,y) - b(x)\right)},
+\end{equation}
+\vspace{-0.15in}
+
+where $b(x) = \EE_{y\sim \pibon(\cdot|x)}[R(x,y)]$ is a baseline for variance reduction~\citep{schulman2015high}.
+\end{lemma}
+This formulation resembles the standard REINFORCE gradient with the main difference of drawing samples from the BoN policy (instead from the base policy $\pi$). This allows one to solve BoN-RL via actor-critic methods \citep{Sutton09b}. In practice, one can replace $b(x)$ with a learned value baseline $b_{\psi}(x)$ parameterized by $\psi$, for which $\psi$ is updated by gradient descent w.r.t.\ the critic value loss. 
+While BoN-RL inherits the benefits of verifier alignment from BoN-SFT, and can be viewed as a reward-weighted variant of the popular STaR method \citep{zelikman2022star}, generally it can be rather sample inefficient (especially when $N$ is large), as estimating both the value function $b(x)$ and the policy gradient in BoN-RL require samples from the BoN distribution.
+See \Cref{appendix: extensions} for a discussion on alleviation using BoN distillation \citep{sessa2024bond}.
+
+
+
+\paragraph{BoN-RL with Binary Reward and Verifier.}  While Lemma~\ref{lem: bon-rl} provides a general method for BoN-aware RL, the policy gradient estimator in~\Cref{eq:policy_grad_bon} is sample ineffiecient for a general rewards and verifiers. 
+However, many domains admit binary success/failure metrics (e.g., reasoning tasks, math, coding) which allow an efficient gradient estimator, obviating the need for value estimation.  
+Specifically, with a binary reward known to the verifier, i.e., ${R(x,y)=r(x,y)\in\{0,1\}}$, Theorem~1 of \citet{sessa2024bond} implies the following closed-form solution of the BoN policy $\pibon$:
+
+\vspace{-0.15in}
+\begin{equation}
+\label{eq:bon_binary}
+\pibon(y|x)  = \begin{cases} 
+\pi(y|x)  \cdot P_{\text{fail}}(x)^{N-1}  & \text{if } R(x,y) = 0\\
+\frac{\pi(y|x)}{1-P_{\text{fail}}(x)}  \cdot \left(1 - P_{\text{fail}}(x)^N\right) & \text{if } R(x,y) = 1\\ 
+\end{cases},\,\,
+\end{equation}
+\vspace{-0.15in}
+
+where $P_{\text{fail}}(x):=\EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{R(x, y')=0}}$ is the fraction of problems on which the base policy $\pi$ is incorrect. Under the binary assumption, $\pibon$ is a weighted distribution of the base policy $\pi$, whose importance sampling ratio depends on the its failure probability $P_{\text{fail}}(x)$. 
+Introducing this closed form of $\pibon$ to Lemma~\ref{lem: bon-rl}, we obtain the following policy gradient (see Appendix \ref{appendix:lem3} for proof):
+\begin{lemma}[\textbf{BoN-RLB}]
+\label{lem:eq:pg+bonrlb}
+Assume $R(x,y) \in\{0,1\}$. The gradient of \Cref{eq: bon optimality} w.r.t. LLM parameters $\theta\in\Theta$ of $\pi$ is given by 
+
+\vspace{-0.15in}
+\begin{equation}
+        \EE_{x\sim\Dcal}\bigg[\EE_{y\sim \pibon, R=1}\left[\nabla_{\theta} \log \pitheta(y|x)\right] \cdot g^+_N(P_\text{fail}(x)) -\EE_{y\sim \pibon, R=0}\left[\nabla_{\theta} \log \pitheta(y|x)\right]\cdot g^-(P_\text{fail}(x))\bigg],\nonumber
+\end{equation}
+\vspace{-0.15in}
+
+
+where the positive and negative sample-dependent weights are given by
+
+\vspace{-0.15in}
+\begin{equation}
+    g^+_N(p) = \frac{N \cdot p^{N-1}}{1 - p^N}, \quad g^-(p) = \frac{N\cdot p}{1 - p}.
+\end{equation}
+\vspace{-0.15in}
+
+
+
+\end{lemma}
+
+
+
+Lemma \ref{lem:eq:pg+bonrlb} not only reveals an efficient policy gradient estimator for binary reward, but more importantly demonstrates how BoN-RLB balances positive and negative examples in its gradient update. It proposes novel way to re-weigh BoN-RLB's training examples, which prioritizes harder examples (as $P_\text{fail}(x)\rightarrow 1$) by giving their positive samples exponentially more influence and aggressively redistributing log likelihood away from incorrect responses. 
+The significance of this asymmetric weighting scheme is that it infuses \emph{implicit exploration} capabilities to the base policy. As \citet{tajwar2024preference} observed, when the model reduces the likelihood of negative responses, it shifts that probability mass towards a mode of the learned policy – essentially reinforcing existing successful strategies (exploitation). However,  if these high-likelihood regions later produce errors, the resulting negative gradient redistributes this mass again, pushing the model to explore other potential solutions. This iterative process of concentrating probability mass and subsequent redistribution through negative gradients drives a form of exploration: as long as the model can produce correct solutions, it need not devote most of its sampling budget $N$ on that but can also explore more diverse solutions. 
+
+\paragraph{Positive-only Weighting.}
+Although we have illustrated the benefits of an asymmetric weighting scheme in BoN-RLB for exploration, training with both positive and negative examples may be infeasible (e.g., in a data-limited online RL system that only records positive examples). To tackle this, we apply a change of measure to Lemma \ref{lem:eq:pg+bonrlb} with the BoN distribution to derive a policy gradient that only involves positive examples (see Appendix \ref{appendix:coro1} for proof):
+\begin{corollary}[\textbf{BoN-RLB(P)}] 
+\label{corollary:rlbonb-plus}
+Assume $R(x,y) \in\{0,1\}$. The gradient of \Cref{eq: bon optimality} w.r.t. LLM parameters $\theta\in\Theta$ of $\pi$ is given by 
+$\EE_{x\sim\Dcal}[\EE_{y\sim \pibon, R=1}[\nabla_{\theta} \log \pitheta(y|x)] \cdot \overline g^+_N(P_\text{fail}(x))]$, 
+where $\overline{g}^+_N(p):=\frac{N\cdot p^{N - 1}\cdot\left(1-p\right)}{\left(1-p^{N}\right)}$.
+\end{corollary}
+Notice that the weighting $\overline{g}^+(p, N)$ is monotonically increasing in $p\in[0,1]$ and lies within $[0, 1]$ for any 
+$N$. Using this gradient update, BoN-RLB(P) resembles a weighted version of BoN-STaR (see Remark \ref{remark:bon_star} in the appendix), where it clones positive examples generated by the current BoN policy and up-weights the more difficult ones, where $P_\text{fail}(x)$ is close to $1$.
+
+\begin{table*}[t!]
+\centering
+\caption{\centering Summary of Our Best-of-N-Aware Fine-Tuning Methods}\label{table:bon_methods}
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\centering 
+\multirow{2}{*}{\textbf{Method}} & 
+\multirow{2}{*}{\parbox{1.5cm}{\centering \textbf{Offline \\ Data}}} & \multirow{2}{*}{\parbox{1.5cm}{\centering \textbf{Reward \\ (R)}}} & \multirow{2}{*}{\parbox{1.5cm}{\centering \textbf{Verifier \\ (R$\neq$r)}}} &\multirow{2}{*}{\parbox{1.5cm}{\centering \textbf{Binary \\ (R=r)}}} & 
+\multirow{2}{*}{\parbox{1.5cm}{\centering \textbf{Positive \\ Only}}} & 
+\multirow{2}{*}{\parbox{1.5cm}{\centering  \textbf{Closed \\ Form}}} \\ 
+& & & & & & \\ \hline
+\rowcolor[rgb]{.95,.95,.95}
+BoN-SFT & \greencheckmark & \redcross & \greencheckmark & \redcross & \greencheckmark & \redcross \\ \hline \rowcolor[rgb]{.95,.95,.95}
+BoN-RL-V & \redcross & \greencheckmark & \greencheckmark & \greencheckmark & \redcross & \redcross \\ \hline
+\rowcolor[rgb]{.97,.97,.97}
+BoN-RL-S & \redcross & \greencheckmark & \redcross & \greencheckmark & \redcross & \redcross \\  \hline
+\rowcolor[rgb]{.95,.95,.95}
+BoN-RLB & \redcross & \greencheckmark & \redcross & \greencheckmark & \redcross & \greencheckmark \\ \hline
+\rowcolor[rgb]{.97,.97,.97}
+BoN-RLB(P) & \redcross & \greencheckmark & \redcross & \greencheckmark & \greencheckmark & \greencheckmark \\ \hline
+\end{tabular}
+\vspace{0.5cm}
+\end{table*}
+
+
+Table \ref{table:bon_methods} summarizes different BoN-aware fine-tuning methods including: (1) {\textbf{BoN-SFT}} from Lemma \ref{lem:sft_pg_bon}, (2) BoN-RL from Lemma \ref{lem: bon-rl} with a verifier, {\textbf{BoN-RL-V}}, (3) BoN-RL with environment reward as verifier, {\textbf{BoN-RL-S}}, (4) \textbf{BoN-RLB} from Lemma \ref{lem:eq:pg+bonrlb}, and (5) {\textbf{BoN-RLB(P)}} from Corollary \ref{corollary:rlbonb-plus}. These methods are designed to leverage the BoN selection strategy during model fine-tuning, under different settings mentioned in Sections \ref{section: bon imitation} and \ref{section: bon rl}. BoN-SFT uses expert data but doesn't involve explicit reward learning. It relies on a verifier to select the best output and only trains with positive examples. BoN-RL-V and BoN-RL-S employ RL to optimize BoN performance, with the former using a verifier for response selection while the latter relying solely on a reward signal. 
+BoN-RLB and BoN-RLB(P) also utilize RL on the special case of binary reward feedback ($R=r\in\{0,1\}$). They both have closed-form solutions, which can lead to more efficient learning. BoN-RLB(P) only learns from positive examples, which might be beneficial for (e.g., safety-critical) situations where collecting negative data is difficult.
+
+
+
+
+
+
+
+
+
+
+
+\section{Experiments}\label{sec:experiment}
+\label{headings}
+
+In this section we address the following questions: (1) Can we quantify the co-scaling relationship between the BoN number of samples $N$ and temperature $T$, enabling joint optimization of these parameters? (2) Do inference-aware fine-tuning methods (SFT and RL) enhance the effectiveness of BoN sampling? (3) Do these improvements generalize across problem domains and BoN settings?
+
+\subsection{Co-scaling Analysis of Sample Size $N$ and Temperature $T$ in BoN}
+
+We study the co-scaling behaviors of BoN and pass@$N$
+performance over varying $N$ and $T$ by experimenting  pre-trained Gemma 2B and 9B models on the Hendrycks MATH benchmark~\citep{hendrycksmath2021}. Our experiments showed consistent co-scaling behaviors across different model sizes, therefore we summarize the results of 2B model below and include the 9B findings in \Cref{app:additional_scaling}.
+As illustrated in \Cref{fig:scaling} (\Cref{fig:scaling2},  \Cref{fig:bon_pass_at_k_combined_small_9b} in \Cref{app:additional_scaling}), pass@$N$ consistently increases with higher $N$, as commonly observed \citep{brown2024largelanguagemonkeysscaling}. Our analysis suggests that this relationship can be captured by a power-law function of the following form: $pass@N(T) \approx \exp(a(T)N^{b(T)})$,
+where the parameters $a(T)$ and $b(T)$ are temperature-dependent and derived by fitting the model to data at a specific temperature $T$. Further analysis of this scaling behavior (detailed in Appendix~\ref{app:additional_scaling}) indicates that there is a strong positive correlation between the optimal temperature and $N$, which aligns with the intuition that larger $N$ benefits from broader exploration (higher $T$), while smaller $N$ favors focused exploitation (constant $T$). This relationship is straightforward, as there are no verifier errors in the selection of best responses. 
+
+
+
+
+Our experiments demonstrate an intriguing relationship between BoN accuracy, $T$, and $N$. We find that lower temperatures generally yield better BoN accuracy. Furthermore, BoN accuracy generally decreases as $N$ increases, but degrades  more rapidly with higher temperatures.With larger $N$ and $T$, the increased randomness in the base policy inherently generates more ``bad'' samples (with poor accuracy). This phenomenon suggests that  the verifier is sensitive to noise and may mistakenly select random outputs generated at higher temperatures as the best responses due to misalignment with the true reward (Type II error). 
+Conversely, at very low temperatures, BoN accuracy improves with $N$, indicating the algorithm remains in an exploitation phase. Optimal performance is observed at moderate $N$ values, striking a balance between exploration and exploitation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\label{section: case study}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\linewidth]{images/bon_pass_at_k_combined_small.png}
+\label{fig:scaling_bon}
+
+\caption{\centering BoN and pass@$N$ performance of Gemma 2B policy and reward models w.r.t. varying $N$ and $T$.  pass@$N$ monotonically improves with $N$; BoN shows inflection points as $N$ increases. 
+Colored dashed lines denote predictions of scaling functions; black dashed lines in BoN plot denote the last inflection points.}
+\label{fig:scaling}
+\end{figure}
+
+
+
+
+
+
+
+
+\subsection{Inference-aware Fine-tuning with BoN Sampling}
+
+\paragraph{Experimental setup.}
+We study 2B and 9B Gemma 2 models \citep{gemmateam2024gemma2improvingopen} on canonical mathematical problem-solving and code generation benchmarks. For math, we train and evaluate on Hendrycks MATH benchmark~\citep{hendrycksmath2021}, and additionally evaluate on two held-out math benchmarks: Functional MATH \citep{srivastava2024functional} and MathOdyssey \citep{fang2024mathodyssey}. For coding, we train on MBPP \citep{austin2021program}, and evaluate on HumanEval \citep{chen2021evaluating}. More details of our experiments can be found in \Cref{appendix:bon_ft_details}. 
+
+
+Our main evaluation metrics are \textbf{BoN} and \textbf{pass@N} accuracies, i.e. the accuracies of the policies defined in \Cref{eq:bon} with a learned verifier and ground-truth reward respectively. For math, we consider both metrics, using a learned verifier for BoN, and for coding, we consider only pass@$N$ because test-case feedback is usually available.
+
+We benchmark our proposed methods BoN-SFT, BoN-RL-V, BoN-RL-S, BoN-RLB, and BoN-RLB(P) against several baselines: (1) STaR from Remark \ref{remark:bon_star}, which uses self-training over correctly generated responses; (2) RL \citep{lee2023rlaif} with verifier feedback (RL-V); (3) RL with environment feedback (RL-S); (4) standard SFT of the base policy (SFT, $N'=1$); and (5) BoN with the pre-trained model (Base model). We denote by ($N'$, $T'$) and ($N$, $T$) the number of samples and temperature used in training and evaluation, respectively. We use $T=T'=1.0$ unless specified otherwise. Similar to co-scaling, our experiments show similar trends with 2B and 9B models, therefore we summarize that of the 2B model below and defer the 9B results to \Cref{app:additional_exp}.
+
+
+
+
+
+
+
+
+
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{images/sft_sxs.pdf}
+    \caption{\centering BoN Accuracy and pass@$N$ accuracy for BoN-SFT with Gemma 2B models.}
+    \label{fig:sft}
+\end{figure}
+
+
+\textbf{BoN-aware supervised fine-tuning.} We first evaluate the BoN and pass@$N$ performance of offline SFT methods, including BoN-SFT with various $N'$, and base SFT ($N'=1$), with results shown in Figure~\ref{fig:sft}. We find that base SFT significantly degrades upon the base model, indicating that it causes overfitting or lack of generalization. BoN-SFT is able to improve the BoN accuracy significantly, especially with increasing $N'$. We find that BoN-SFT with $N'=32$ achieves the best performance for both BoN accuracy and pass@$N$, suggesting that it is able to produce both high-quality and exploratory responses. To improve substantively over the base model, we next turn to RL, which should be more effective by virtue of being on-policy.
+
+
+
+
+
+
+
+
+
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}{0.56\linewidth}
+      \includegraphics[width=\linewidth]{images/bon_only_n32_bon.pdf}
+      \caption{\centering Comparison of different methods.}
+      \label{sub:bo32}
+    \end{subfigure}~
+        \begin{subfigure}{0.44\linewidth}
+      \includegraphics[width=\linewidth]{images/bonrl_v_bon.pdf}
+      \caption{\centering {BoN-RL-V with various $N^\prime$ values.}}
+      \label{sub:bonrlv}
+    \end{subfigure}
+    \caption{\centering BoN accuracy on BoN-RL methods and comparisons with baselines, with Gemma 2B models on MATH.}
+    \label{fig:bon_n}
+\end{figure}
+
+
+
+\paragraph{BoN-RL-V improves BoN Accuracy.} 
+
+Our BoN RL algorithm, BoN-RL-V, with $N' = 32$, significantly outperforms several baselines (Figure~\ref{sub:bo32}). Specifically, it boosts the Bo-32 accuracy of our base model from $26.8\%$ to $30.8\%$.  As expected, the inference-unaware RL-V method performs poorly, likely due to common reward hacking issues \citep{jinnai2024regularized}. We also find that training with the same verifier used as test-time is critical - our other proposed inference-aware methods that use the environment reward instead of the verifier (BoN-RL-S and BoN-RLB) show improvement over the base model but are substantially worse than BoN-RL-V. 
+
+We plot the performance of BoN-RL-V with different training $N'$ in Figure~\ref{sub:bonrlv}, and observed the best performance when training with $32$ samples ($N' = 32$). Interestingly, although the gains are more pronounced at higher $N$ values, training with large $N'$ leads to consistent improvements across all $N = 1$ to $32$. This suggests that RL-BoN-V not only optimizes the specific BoN setting it was trained on, but also generalizes to other BoN configurations, including large improvements on direct $N=1$ accuracy (from $22\%$ to $26\%$). We hypothesize that the RL-BoN-V method significantly enhances BoN accuracy by effectively exploring a larger sample space during training. Training with a large $N'$ allows the base policy to explore a wider range of responses to generate higher-quality responses, similar to how effective exploration in RL leads to better performance and generalization across different scenarios.
+
+
+\begin{figure}[t]
+    \centering
+    \centering
+    \begin{subfigure}{0.44\linewidth}
+      \includegraphics[width=\linewidth]{images/pass_n_only_n32_pass_at_k.pdf}
+      \caption{\centering MATH.}
+      \label{sub:pass32}
+    \end{subfigure}~
+        \begin{subfigure}{0.44\linewidth}
+      \centering
+  \includegraphics[width=\linewidth]{images/humaneval_pk_2b.pdf}
+  \caption{\centering HumanEval.}
+  \label{sub:humaneval_pass_at_k}
+    \end{subfigure}
+    \caption{\centering pass@$N$ of BoN-RL methods with binary reward as verifier, with Gemma 2B models. }
+    \label{fig:pass_n}
+\end{figure}
+
+\textbf{BoN-RL-S, BoN-RLB, and BoN-RLB(P) improve pass@$N$.} We next analyze the pass@$N$ performance of various methods on math and coding benchmarks, aiming to understand how different training approaches impact the models' ability to generate diverse and correct solutions. As shown in Figure~\ref{fig:pass_n}, our inference-aware methods designed to explicitly optimize pass@$N$ during training (BoN-RL-S, BoN-RLB, or BoN-RLB(P)) can lead to better test-time pass@N across both domains, highlighting the importance of directly considering the desired evaluation metric during training. Notably, in the MATH domain (Figure~\ref{sub:pass32}), BoN-RL-S significantly improves the pass@$32$ of Gemma 2B from $60.0\%$ to $67.0\%$.  This suggests that by encouraging the model to explore a wider range of solution strategies during training, we can substantially enhance its ability to generate correct answers. Conversely, standard RL with $N'=1$ slightly degrades pass@$32$, indicating that over-optimizing for immediate performance can actually hinder the model's exploration capabilities and limit its overall problem-solving ability.  Interestingly, BoN-RL-V does not significantly improve pass@$N$, likely because its training objective focuses on robustness to a verifier, which may not perfectly align with generating diverse correct solutions.  Similar trends are observed on coding benchmarks (Figure~\ref{sub:humaneval_pass_at_k}), where pass@$N$-aware methods, particularly BoN-RLBP, significantly outperform the base model, increasing the pass@$16$ performance of Gemma 2B from $61.6\%$ to $67.1\%$.  Again, standard RL fine-tuning ($N'=1$) negatively impacts performance, reducing pass@$16$ to $59.8\%$, demonstrating the downsides of solely focusing on reward maximization during training
+
+
+\textbf{Generalization of BoN-RL to held-out benchmarks and other temperatures.} To further assess the generalization capabilities of our BoN aware fine-tuned models, we evaluate their performance on two challenging, held-out benchmarks: Functional MATH() \citep{srivastava2024functional} and MathOdyssey \citep{fang2024mathodyssey}. As shown in Figure~\ref{fig:pass_n_math_2b_held_out}, our fine-tuned models demonstrate clear improvements on both benchmarks.  Our BoN-aware policies also generalize well to different sampling settings. As shown in Figure \ref{fig:temp_generalization}, BoN-RL-V (trained with $T^\prime=1.0$) consistently outperform the base model across all evaluation temperatures ($T\in\{0.1, 1.0, 1.5\}$). Similarly, BoN-RL-S show superior performance for pass@$N$ at all temperatures, with increasing gains at higher temperatures. This highlights the benefits of broader exploration, even after BoN-aware training.  For BoN-accuracy, lower temperatures favored both models, but BoN-RL-V consistently excelled, particularly at lower temperatures, demonstrating its generalizability across different exploration-exploitation regimes.  Furthermore, BoN-RL-V show greater resilience to accuracy degradation at higher temperatures, suggesting an enhanced ability to adapt to verifier failure modes and mitigate Type-II errors.
+
+ 
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}{0.46\linewidth}
+      \includegraphics[width=\linewidth]{images/bonrls_pass_at_k_math_1745_2b.pdf}
+      \caption{\centering  Functional MATH().}
+      \label{sub:passn_functional_2b}
+    \end{subfigure}    ~
+        \begin{subfigure}{0.46\linewidth}
+      \includegraphics[width=\linewidth]{images/bonrls_pass_at_k_ody_2b.pdf}
+      \caption{\centering  MathOdyssey.}
+      \label{sub:passn_math_ody_2b}
+    \end{subfigure}    
+    \caption{\centering pass@$N$ of BoN-RL and baselines on held-out benchmarks with Gemma 2B models.}
+    \label{fig:pass_n_math_2b_held_out}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.4\linewidth}
+      \includegraphics[width=\linewidth]{images/bon_rl_v_temp.pdf}
+      \caption{\centering  BoN Accuracy}
+    \end{subfigure}
+   \quad\quad
+    \begin{subfigure}{0.4\linewidth}
+      \includegraphics[width=\linewidth]{images/bon_rl_s_temp.pdf}  
+      \caption{\centering  pass@$N$}
+    \end{subfigure}
+    \caption{\centering BoN and pass@$N$ over non-training temperatures. BoN-RL with verifier and exact reward (solid lines) are trained with fixed temperature 1.0. Dashed lines show the base model (Gemma 2B), and solid lines show the finetuned model.
+    }
+    \label{fig:temp_generalization}
+\end{figure}
+
+
+
+
+
+
+
+
+\section{Related Work}
+
+
+Large language models (LLMs) can leverage inference-time computation to improve the quality of their generated outputs~\citep{welleck2024decoding}, particularly on reasoning tasks.
+One common approach is to use chain-of-thought~\citep{wei2022chain}, where the model generates a step-by-step rationale before generating the final output. Another useful approach that can be combined with chain-of-thought is Best-of-N rejection sampling~\citep{charniak2005coarse, stiennon2020learning}, which is our focus in this work. In Best-of-N, we generate multiple candidate outputs from an LLM and select the best output. %
+BoN re-ranking can be done either using oracle information, such as checking final answers for solving math problems, which is also known as pass@$N$~\citep{chen2021evaluating}, or learned verifiers~\citep{cobbe2021gsm8k, lightman2023lets, hosseini2024v, zhang2024generative}. Recent work also empirically analyzes strategies that optimally trade off additional test-time compute for improved performance~\citep{wu2024empirical, snell2024scaling}. 
+
+
+Closely related to our approach is prior work that fine-tunes LLMs to improve their self-correction  capabilities~\citep{kumar2024training, snell2024scaling} or search capabilities on planning tasks~\citep{gandhi2024stream, lehnert2024beyond}, which allows for more efficient scaling with test-time compute. By contrast, our work focuses on inference-aware fine-tuning that directly optimizes for Best-of-N performance, instead of an intermediate capability that be used at test-time.
+
+
+
+
+
+
+
+To make an LLM amenable to test-time scaling, techniques like STaR \citep{zelikman2022star} or ReST$^{\text{EM}}$~\citep{singh2023beyond} have been employed to fine-tune the model using on-policy data. This process leverages BoN sampling to iteratively generate better responses, and fine-tunes on this curated data, for which the LLM learns to improve its proposal distribution, effectively increasing the likelihood of generating high-quality outputs during inference.
+
+Finally, our work is related to recent work on leveraging tree search to enhance decision-making in reinforcement learning \citep{dalal2021improve}.  A key challenge in both BoN sampling and tree search lies in mitigating the impact of imperfect value estimation. \citet{dalal2021improve} address this in tree search by penalizing actions leading to states with high $Q$-value error, effectively making inference more pessimistic for out-of-distribution samples. In contrast, in this work we tackle verifier error in BoN not by altering inference, but rather by incorporating it directly into training. Our BoN-aware methods learn to generate responses robust to these errors, aligning training with BoN inference. Furthermore, our BoN framework generalizes conceptually to tree search, with the verifier acting as an approximate $Q$-function, and training optimizing policy robustness to its errors.
+
+\section{Conclusion}
+\label{others}
+
+We introduced inference-aware fine-tuning, a novel paradigm that bridges the gap between training and inference for LLMs. Specifically for the Best-of-N inference strategy, we discovered a co-scaling law for BoN that guides the optimization of temperature and sample size, developed a gamut of fine-tuning algorithms that handle various imitation learning and reinforcement learning settings, training LLMs to generate diverse and high-quality outputs tailored for BoN inference, demonstrated the efficacy of these methods by significantly improving on BoN accuracy and pass@$N$ on the standard MATH reasoning benchmark over state-of-the-art baselines, highlighting the robustness and generalizability of our approaches across various BoN configurations. 
+
+Our work exemplified how BoN-aware fine-tuning  learns a meta-strategy, which interleaves best responses with more diverse responses that might be better suited for BoN sampling. These findings underscore the potential of inference-aware fine-tuning to unlock previously undiscovered capabilities in LLMs through aligning training methodologies with inference-time compute strategies. Future work includes extending this framework to incorporate more complex, inference algorithms (e.g., reasoning, critique-and-revise, MCTS), developing contextual BoN-aware algorithms that can generalize to various tasks, investigating the interplay between the co-scaling of temperature, sample size, and BoN-aware fine-tuning, and applying our algorithms to more larger-scale problems. 
+
+
+
+
+\bibliography{main}
+
+\newpage
+\appendix
+\section{Theoretical Derivations}
+
+\subsection{Variational Approximation of BoN}
+\label{appendix: variation approximation of bon}
+
+\label{sec:bon_var}
+
+We assume that the verifier score $r(x, y)$ is unique for all $x, y$, and the base model $\pi$ has a finite set of possible outcomes for each context \citep{beirami2024theoretical}.
+
+\begin{proposition}[Theorem 2 in~\citet{gui2024bonbon}]
+With negligible error, one may effectively approximate $\pibon$ as the solution to the following optimization problem:
+\begin{align}
+\label{eq:pi_bon_soln}
+    \pibon\rbr{y|x} \!\in\! \argmax_{\mu\rbr{\cdot|x}\in\Delta_{\mathcal Y}} \EE_{y\sim \mu}\sbr{Q_{\pi}\rbr{x,y}} \!-\! \frac{1}{\lambda_N} KL\rbr{\mu||\pi}(x),
+\end{align}
+where $Q_{\pi}\rbr{x,y} = \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{r(x, y)\geq r(x, y')}}$ is the expected \emph{win-rate} over $\pi$, and 
+\begin{equation}\label{eq:lambda_n}
+    \frac{({\lambda_N} - 1)\exp\rbr{{\lambda_N} + 1}}{\exp\rbr{{\lambda_N} - 1}} - \log\rbr{\frac{\exp{\lambda_N} -1}{\lambda_N}} = \log N-\frac{N-1}{N},
+\end{equation}
+through $\lambda_N$ scaling sub-linearly with BoN number of samples $N$.
+\end{proposition}
+
+We can show %
+the optimal solution to  \Cref{eq:pi_bon_soln} has a
+closed form $\pibon^* \propto \brk[s]*{\pi\cdot\exp\rbr{\lambda_N Q_{\pi}}}(y|x)$. This can also be revealed by viewing \Cref{eq:pi_bon_soln} as the variational form of Bayes' rule~\citep{williams1980bayesian, zellner1988optimal,zhu2014bayesian,dai2016provable}, whose optimal solution is the posterior. 
+This implies $\pibon$ can be represented by an exponential-twisting policy \citep{gerber1993option} over base policy $\pi$ with energy function $\lambda_N \cdot Q_{\pi}(y,x)$, partition function $Z_{\pi}(x) = \EE_{\pi(y|x)}\sbr{\exp\rbr{ \lambda_N \cdot Q_{\pi}\rbr{x,y}}}$, and an appropriate $\lambda_N$ from~\Cref{eq:lambda_n}. 
+
+
+In this section we will provide proofs for the technical results in this paper.
+\subsection{Proof of Lemma \ref{lem:sft_pg_bon}}\label{appendix:lem1}
+Therorem 2 of \cite{gui2024bonbon} shows that, with negligible error, one may effectively approximate $\pibon$ as the solution to the following optimization problem:
+\begin{align}
+    \pibon\rbr{y|x} \!\in\! \argmax_{\mu\rbr{\cdot|x}\in\Delta_{\mathcal Y}} \EE_{y\sim \mu}\sbr{Q_{\pi}\rbr{x,y}} \!-\! \frac{1}{\lambda_N} KL\rbr{\mu||\pi}(x),
+\end{align}
+where $Q_{\pi}\rbr{x,y} = \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{r(x, y)\geq r(x, y')}}$ is the expected \emph{win-rate} over $\pi$, and this yields the variational form ${\pibon \propto \brk[s]*{\pi\cdot\exp\rbr{\lambda_N Q_{\pi}}}(y|x)}$. 
+Plugging the variational form of $\pibon$ into (\ref{eq: bon_sft}) yields the learning problem for $\pi$:
+\begin{align}
+    &\max_{\pi\in \Pi}\EE_{(x,y)\sim\Dcal}\sbr{\log \pibon(y|x)}:= \EE_{(x,y)\sim\Dcal}\sbr{\underbrace{\log \pi\rbr{y|x}}_{\text{Likelihood}} \!+\! \underbrace{\lambda_N\cdot Q_{\pi}\rbr{x,y} \!-\! \log Z_{\pi}(x)}_{\text{Inference-Awareness}}},
+\end{align}
+
+Taking gradient of this objective function over $\theta\in\Theta$ implies
+\[
+\begin{split}
+&\nabla_\theta \EE_{(x,y)\sim\Dcal}\sbr{\log \pitheta\rbr{y|x} \!+\! \lambda_N\cdot Q_{\pitheta}\rbr{x,y} \!-\! \log Z_{\pitheta}(x)}\\
+=&\EE_{(x,y)\sim\Dcal}\sbr{\nabla_\theta \log \pitheta\rbr{y|x}} \!+\!  \lambda_N\cdot\nabla_\theta\EE_{(x,y)\sim\Dcal}\sbr{ Q_{\pitheta}\rbr{x,y}} \!-\! \nabla_\theta\EE_{x\sim\Dcal}\sbr{\log Z_{\pitheta}(x)}\\
+=&\EE_{(x,y)\sim\Dcal}\sbr{\nabla_\theta \log \pitheta\rbr{y|x}} \!+\!  \lambda_N\cdot \EE_{(x,y)\sim\Dcal}\sbr{\EE_{y'\sim \pitheta}\sbr{\nabla_\theta\log\pitheta(y'|x)\cdot\sigma\rbr{r(x, y) - r(x, y')}}}\\
+&\!-\! \EE_{x\sim\Dcal}\sbr{\nabla_\theta\log \EE_{\pitheta(y|x)}\sbr{\exp\rbr{ \lambda_N \cdot Q_{\pitheta}\rbr{x,y}}}}\\
+=&\EE_{(x,y)\sim\Dcal}\sbr{\nabla_\theta \log \pitheta\rbr{y|x}} \!+\!  \lambda_N\cdot \EE_{(x,y)\sim\Dcal}\sbr{\EE_{y'\sim \pitheta}\sbr{\nabla_\theta\log\pitheta(y'|x)\cdot\sigma\rbr{r(x, y) - r(x, y')}}}\\
+&\!-\! \EE_{x\sim\Dcal}\sbr{\frac{\EE_{\pitheta(y|x)}\sbr{\nabla_\theta\log\pitheta(y|x)\cdot\exp\rbr{ \lambda_N \cdot Q_{\pitheta}\rbr{x,y}}}+\EE_{\pitheta(y|x)}\sbr{\nabla_\theta\exp\rbr{ \lambda_N \cdot Q_{\pitheta}\rbr{x,y}}}}{ \EE_{\pitheta(y|x)}\sbr{\exp\rbr{ \lambda_N \cdot Q_{\pitheta}\rbr{x,y}}}}}.
+\end{split}
+\]
+This further implies that
+\[
+\begin{split}
+&\nabla_\theta \, \EE_{(x,y)\sim\Dcal}\sbr{\log \pitheta\rbr{y|x} \!+\! \lambda_N\cdot Q_{\pitheta}\rbr{x,y} \!-\! \log Z_{\pitheta}(x)}\\
+=& \EE_{(x,y)\sim\Dcal}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}} - \EE_{x\sim\Dcal}\sbr{\EE_{\pitheta(y|x)}\sbr{\frac{\exp\rbr{ \lambda_N \cdot Q_{\pitheta}\rbr{x,y}}}{\EE_{\pitheta(y|x)}\sbr{\exp\rbr{ \lambda_N \cdot Q_{\pitheta}\rbr{x,y}}}}\cdot {\nabla_{\theta} f\rbr{x, y;\theta}}}},
+\end{split}
+\]
+through collecting terms from the above expression and recalling the definition of $\nabla_{\theta} f\rbr{x, y;\theta}$ as
+\[
+\nabla_{\theta} f\rbr{x, y;\theta} \!:=\! \nabla_{\theta} \log \pitheta\rbr{y|x} + \lambda_N\cdot\EE_{y'\sim \pitheta}\sbr{\nabla_{\theta}\log \pitheta\rbr{y'|x} \!\cdot\! \sigma \rbr{r(x, y)- r(x, y')}}.
+\]
+This further implies that 
+\[
+\begin{split}
+&\nabla_\theta \, \EE_{(x,y)\sim\Dcal}\sbr{\log \pitheta\rbr{y|x} \!+\! \lambda_N\cdot Q_{\pitheta}\rbr{x,y} \!-\! \log Z_{\pitheta}(x)}\\
+=&\EE_{(x,y)\sim\Dcal}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}}-\EE_{x\sim \Dcal, y\sim \pibon}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}},
+\end{split}
+\]
+completing the proof of this lemma.
+
+\subsection{Proof of Lemma \ref{lem: bon-rl}}\label{appendix:lem2}
+Recall the RL objective function
+\begin{align}
+    \max_{\pi \in \Pi} J(\pi) 
+    :=
+    \expect*{x\sim P, y\sim \pibon(\cdot|x; \pi, r, N, T)}{R(x,y)}.
+\end{align}
+Applying the REINFORCE trick \citep{Sutton09a} to this problem over the BoN policy class and using the analgous argument from the proof of Lemma \ref{lem:sft_pg_bon}, we have the following expression for the policy gradient:
+\[
+\begin{split}
+&\EE_{y\sim \pibon(\cdot|x), x\sim \Dcal}\sbr{\nabla_{\theta} \log \pibon(y|x) \cdot R(x,y)}\\
+=&\EE_{x\sim\Dcal, y\sim\pibon(\cdot|x)}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}\cdot R(x,y)}-\EE_{x\sim \Dcal, y\sim \pibon}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}}\cdot \EE_{y\sim \pibon(\cdot|x), x\sim \Dcal}\sbr{ R(x,y)}\\
+=& \EE_{x\sim\Dcal, y\sim \pibon(\cdot|x)}\sbr{\nabla_{\theta} f_{\theta}\rbr{x, y}\cdot \left(R(x,y) - b(x)\right)}\\
+=& \EE_{x\sim\Dcal, y\sim \pibon(\cdot|x)}\sbr{\nabla_{\theta} \log\pi_{\theta}\rbr{y|x}\cdot \left(R(x,y) - b(x)\right)},
+\end{split}
+\]
+the last equality is due to the fact that $y\sim\pibon$ will always has a win-rate of $1$, i.e., $Q_{\pitheta}(x,y) = 1$ almost surely, for $y\sim\pibon(\cdot|x)$. This completes the proof of this lemma.
+
+
+\subsection{Proof of Lemma \ref{lem:eq:pg+bonrlb}}\label{appendix:lem3}
+Using the log-likelihood trick, and plugging in the BoN distribution from \Cref{eq:bon_binary}, the gradient of \Cref{eq: bon optimality} can be computed as
+    \begin{align}
+    &\EE_{y\sim \pibon(\cdot|x), x\sim \Dcal}\sbr{\nabla_\theta \log \pibon(y|x) \cdot R(x,y)}= \EE_{y\sim \pibon(\cdot|x), R(x,y)=1, x\sim \Dcal}\sbr{\nabla_\theta \log \pibon(y|x)}\nonumber\\
+   =& \EE_{x\sim \Dcal}\bigg[\EE_{y\sim \pibon(\cdot|x), R(x,y)=1, }\big[\nabla_\theta \log \pi_\theta(y|x)\big] + (1 - \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{R(x, y')=0}}^N)\nabla_\theta\log \frac{1 - \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{R(x, y')=0}}^N}{1-\EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{R(x, y')=0}}} \bigg] \nonumber \\
+   =& \EE_{x\sim \Dcal}\bigg[\EE_{y\sim \pibon(\cdot|x), R(x,y)=1}\big[\nabla_\theta \log \pi_\theta(y|x)\big] - \frac{1 - \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{R(x, y')=0}}^N}{1- \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{R(x, y')=0}}}\EE_{y'\sim \pi}\left[\nabla_\theta \log \pi_\theta(y'|x)\cdot\one_{R(x, y')=1}\right] \nonumber\\
+   &\quad + \EE_{y'\sim \pi}\sbr{\nabla_\theta \log \pi_\theta(y'|x)\cdot\one_{R(x, y')=1}}\cdot N\cdot \EE_{y'\sim \pi\rbr{\cdot|x}}\sbr{\one_{R(x, y')=0}}^{N-1}\bigg]\nonumber\\
+   =&\EE_{x\sim\Dcal}\bigg[\EE_{y\sim \pibon(\cdot|x), R(x,y)=1}\left[\nabla_\theta \log \pi_\theta(y|x)\right] \cdot \frac{NI_{\text{ref}}(x)^{N-1}(1 - I_{\text{ref}}(x) )}{1-I_{\text{ref}}(x)^N}\bigg].\nonumber\\
+   =&\EE_{x\sim\Dcal}\bigg[\EE_{y\sim \pibon(\cdot|x), R(x,y)=1}\left[\nabla_\theta \log \pi_\theta(y|x)\right] \cdot \frac{N\cdot I_{\text{ref}}(x)^{N - 1}}{1-I_{\text{ref}}(x)^{N}}\nonumber\\
+        &\qquad\qquad -\EE_{y\sim \pibon(\cdot|x), R(x,y)=0}\left[\nabla_\theta \log \pi_\theta(y|x)\right]\cdot\frac{N\cdot I_{\text{ref}}(x)}{1-I_{\text{ref}}(x)}\bigg]\nonumber
+    \end{align}
+
+\subsection{Proof of Corollary \ref{corollary:rlbonb-plus}}\label{appendix:coro1}
+Using the log-likelihood trick, and plugging in the BoN distribution from \Cref{eq:bon_binary}, the gradient of problem \Cref{eq: bon optimality} can be computed as
+    \begin{equation}
+    \begin{split}
+    &\EE_{x\sim\Dcal}\bigg[\EE_{y\sim \pibon(\cdot|x), R(x,y)=1}\left[\nabla_\theta \log \pi_\theta(y|x)\right] \cdot \frac{N\cdot I_{\text{ref}}(x)^{N - 1}}{1-I_{\text{ref}}(x)^{N}} -\EE_{y\sim \pibon(\cdot|x), R(x,y)=0}\left[\nabla_\theta \log \pi_\theta(y|x)\right]\cdot\frac{N\cdot I_{\text{ref}}(x)}{1-I_{\text{ref}}(x)}\bigg]\\
+    =&\EE_{x\sim\Dcal}\bigg[\EE_{y\sim \pibon(\cdot|x), R(x,y)=1}\left[\nabla_\theta \log \pi_\theta(y|x)\right] \cdot \frac{NI_{\text{ref}}(x)^{N-1}(1 - I_{\text{ref}}(x) )}{1-I_{\text{ref}}(x)^N}\bigg].
+\end{split}
+    \end{equation}
+
+\newpage
+\section{Pseudo-code and Implementation Details}
+
+Pseudo-code for all our SFT and RL methods is presented in \Cref{alg: bon-sft,alg: bon-rlbp,alg: bon-rlb,alg: bon-rl}. Our implementation follows the standard use of an anchor policy, updated using exponential moving average. The policy is trained via BoN-aware losses, with additional KL divergence loss to the anchor policy. \Cref{tab:hparams} shows the hyper-parameters used for all of our experiments.
+
+We use linear annealing for the KL-coefficient. For all our RL experiments, we use a value baselines to reduce variance of our reward estimates. We normalize our advantage estimates w.r.t. the batch. For BoN-RLB the value network estimates $P_{\text{fail}}(x)$. We add additional clipping of the coefficients $g_N^+, g_N^-$ by clipping the value estimates for $P_{\text{fail}}$.
+
+
+\begin{table}[h]
+\caption{\centering Hyperparameters used in experiments.}
+\centering
+\label{tab:hparams}
+\begin{tabular}{ll}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value}   \\ \midrule
+Optimizer               & AdamW             \\
+Learning rate policy    & 3e-6             \\
+Policy warmup steps     & 100             \\
+Learning rate value     & 1e-5             \\
+Anchor EMA              & 0.01             \\
+Training steps          & 2500             \\
+Batch size              & 32              \\
+Sampling temperature    & 1.0              \\
+KL coefficient anneal steps            & 2500              \\
+KL coefficient anneal range            & $1.0\to0.075$              \\
+KL coefficient anneal delay            & 10              \\
+Clipping values for $P_{\text{fail}}$     & $\brk[c]*{0.01, 0.99} $             \\
+\bottomrule             
+\end{tabular}
+\end{table}
+
+
+\begin{algorithm}[t!]
+\begin{algorithmic}[1]
+    \State \textbf{Input:} Verifier score $r$, environment reward $R$, expert dataset $\mathcal{D}$
+    \For{$t = 1, 2, \hdots$}
+        \State Sample a batch of prompts and solutions $\{x_i,y_i\}_{i=1}^{B}$ from the expert data $\mathcal{D}$.
+        \For{$i = 1, \hdots, B$}
+            \State Sample $N$ responses $\brk[c]*{y_{i,j}}_{j=1}^{N}$ from $\pitheta(\cdot|x_i)$.
+            \State Select the BoN response $y_i^* = \argmax_{j} r(x_i, y_{i,j})$.
+            \State Compute the gradient $\nabla_{\theta} f_{\theta}(x_i, y_i)$ using \Cref{eq:nabla_f}.
+        \EndFor
+        \State Update $\theta$ by following the gradient in \Cref{lem:sft_pg_bon} at learning rate $\alpha > 0$, i.e.,
+        \[
+        \theta\leftarrow \theta + \alpha \left(\frac{1}{N}\sum_{i=1}^N\sbr{\nabla_{\theta} f\rbr{x_i, y_i;\theta}} - \sbr{\nabla_{\theta} f\rbr{x_i, y_i^*;\theta}}\right)
+        \]
+    \EndFor
+\end{algorithmic}
+    \caption{\centering BoN-SFT}
+\label{alg: bon-sft}
+\end{algorithm}
+
+\begin{algorithm}[t!]
+\begin{algorithmic}[1]
+    \State \textbf{Input:} Environment reward $R$, dataset $\mathcal{D}$
+    \For{$t = 1, 2, \hdots$}
+        \State Sample a batch of prompts $\{x_i\}_{i=1}^{B}$ from $\mathcal{D}$.
+        \For{$i = 1, \hdots, B$}
+            \State Sample $N$ responses $\brk[c]*{y_{i,j}}_{j=1}^{N}$ from $\pitheta(\cdot|x_i)$.
+            \State Sample rewards for all candidate responses $\{R(x_i, y_i)\}_{i=1}^N$ from environment.
+            \State Select the BoN response $y_i^* = \argmax_{j} R(x_i, y_{i,j})$.
+            
+            \State Empirically estimate the base failure probability for each $x_i$, $i\in\{1,\ldots,B\}$,
+            \[
+            \widehat{P}_{\text{fail}}(x_i):=\frac{1}{N}\sum_{j=1}^N\one_{R(x_i, y_{i,j})=0}.
+            \]
+        \EndFor
+        \State Update $\theta$ by following the gradient in Corollary \ref{corollary:rlbonb-plus} at learning rate $\alpha > 0$, i.e.,
+         \[
+        \theta\leftarrow \theta + \alpha \left(\frac{1}{B}\sum_{i=1}^B \nabla_{\theta} \log \pitheta(y_i^{*,+}|x_i) \cdot \overline{g}^+(P_\text{fail}(x_i), N)
+\right)
+        \]
+        where $y_i^{*,+}$ represents the BoN sample that achieves a reward of $1$.
+    \EndFor
+\end{algorithmic}
+    \caption{\centering BoN-RLB(P)}
+\label{alg: bon-rlbp}
+\end{algorithm}
+
+\begin{algorithm}[t!]
+\begin{algorithmic}[1]
+    \State \textbf{Input:} Environment reward $R$, dataset $\mathcal{D}$
+    \For{$t = 1, 2, \hdots$}
+        \State Sample a batch of prompts $\{x_i\}_{i=1}^{B}$ from $\mathcal{D}$.
+        \For{$i = 1, \hdots, B$}
+            \State Sample $N$ responses $\brk[c]*{y_{i,j}}_{j=1}^{N}$ from $\pitheta(\cdot|x_i)$.
+            \State Sample rewards for all candidate responses $\{R(x_i, y_i)\}_{i=1}^N$ from environment.
+            \State Select the BoN response $y_i^* = \argmax_{j} R(x_i, y_{i,j})$.
+            
+            \State Empirically estimate the base failure probability for each $x_i$, $i\in\{1,\ldots,B\}$,
+            \[
+            \widehat{P}_{\text{fail}}(x_i):=\frac{1}{N}\sum_{j=1}^N\one_{R(x_i, y_{i,j})=0}.
+            \]
+        \EndFor
+        \State Update $\theta$ by following the gradient in Lemma \ref{lem:eq:pg+bonrlb} at learning rate $\alpha > 0$, i.e.,
+         \[
+        \theta\leftarrow \theta + \alpha \left(\frac{1}{B}\sum_{i=1}^B \nabla_{\theta} \log \pitheta(y_i^{*,+}|x_i) \cdot g^+(P_\text{fail}(x_i), N) -\nabla_{\theta} \log \pitheta(y^{*,-}|x_i)\cdot g^-(P_\text{fail}(x_i))
+\right)
+        \]
+        where $y_i^{*,+}$, $y_i^{*,-}$ represent the BoN samples that achieve rewards of $1$ and $0$ respectively.
+    \EndFor
+\end{algorithmic}
+    \caption{\centering BoN-RLB}
+\label{alg: bon-rlb}
+\end{algorithm}
+
+\begin{algorithm}[t!]
+\begin{algorithmic}[1]
+    \State \textbf{Input:} Verifier score $r$, environment reward $R$, dataset $\mathcal{D}$
+    \For{$t = 1, 2, \hdots$}
+        \State Sample a batch of prompts $\{x_i\}_{i=1}^{B}$ from $\mathcal{D}$.
+        \For{$i = 1, \hdots, B$}
+            \State Sample $N$ responses $\brk[c]*{y_{i,j}}_{j=1}^{N}$ from $\pitheta(\cdot|x_i)$.
+            \State Select the BoN response $y_i^* = \argmax_{j} r(x_i, y_{i,j})$. 
+            \State (If environment reward $R$ is available to the BoN algorithm, we replace verifier $r$ with that.)
+            \State Sample the reward $R(x_i, y_i^*)$ from environment.
+            \State Compute the gradient $\nabla_{\theta} f_{\theta}(x_i, y_i)$ using \Cref{eq:nabla_f}.
+        \EndFor
+        \State Update $\theta$ by following the gradient in Lemma \ref{lem: bon-rl} at learning rate $\alpha > 0$, i.e.,
+         \[
+        \theta\leftarrow \theta + \alpha \left(\frac{1}{B}\sum_{i=1}^B\nabla_{\theta} f_{\theta}\rbr{x_i, y_i^*}\cdot \left(R(x_i,y_i^*) - b(x_i)\right)\right)
+        \]
+        where $b_{\psi}(x_i), i = 1, \hdots, B$ is  a learned baseline value function of $\pibon$, i.e., 
+        \[
+        \psi^*\in\argmin_\psi \frac{1}{B}\sum_{i=1}^B[R(x_i,y_i^*) - b_\psi(x_i)]^2
+        \]
+        \State Update value estimate $\psi$ using the current environment reward target and BoN policy trajectories.
+    \EndFor
+\end{algorithmic}
+    \caption{\centering BoN-RL}
+\label{alg: bon-rl}
+\end{algorithm}
+
+\subsection{Analysis of Bon-RLB Weights}
+
+The shifting balance between $g^+_N(p)$ and $g^-(p)$ with varying $p$ directly reflects the exploration-exploitation trade-off. As $p$ approaches 1, signifying very difficult problems, both $g^+_N(p)$ and $g^-(p)$ increase, but $g^+_N(p)$ rises more dramatically, especially for larger values of $N$. This sharp increase in $g^+_N(p)$ highlights the algorithm's increasing emphasis on learning from the few correct responses that are available in challenging scenarios. The effect is amplified by larger sample sizes: the more attempts are made, the more valuable the scarce successes become. The $\overline{g}^+_N(p)$ weight, used when only positive feedback is available, exhibits a similar upward trend with $p$ but with a less pronounced increase.  This more moderate behavior can be attributed to the subtraction term in its formula, which tempers the influence of the positive samples and promotes a more balanced learning approach.
+
+Finally, the potentially very large values of $g^+_N(p)$ for hard problems and larger $N$ introduce challenges for estimation.  These high weights amplify the impact of individual positive samples, making the training more vulnerable to noise and potentially hindering convergence to a stable optimal policy.  This underscores the need for techniques like gradient clipping or regularization to mitigate the destabilizing effects of high weight values and ensure robust learning, or alternatively, using $\overline{g}^+_N(p)$ with Corollary~\ref{corollary:rlbonb-plus} to ensure boundness of the gradient weights.
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\section{Algorithmic Extensions}
+\label{appendix: extensions}
+
+\subsection{Entropy-regularized RL}
+We would like to study an entropy-regularized RL problem for the $\pibon$ policy. Recall that generally in entropy-regularized RL, we solve
+\begin{equation}\label{eq:rl}
+     \max_{\pi(\cdot|x)\in\Delta}\,\, \EE_{x\sim \Dcal}\big[\EE_{y\sim \pi(\cdot|x)}\sbr{R(x,y)}-\beta\cdot KL(\pi||\pi_\beta)(x)\big],
+\end{equation}
+where $R(x,y)$ is the environment reward (that is not necessarily identical to the verifier score model), $\pi_\beta$ is a baseline policy, and $\beta>0$ is the weight for the KL regularization term. Using the consistency condition of KL-regularized MDP, solving for the optimal policy of this problem is equivalent to finding a solution pair of $V$ and $\pi\in\Delta$ of the following equation:
+\begin{equation}
+    V(x) = R(x,y) + \beta\log\pi_\beta(y|x) - \beta\log\pi(y|x),\,\,\forall x\in\Dcal,\,\,\forall y
+\end{equation}
+Now, we further parameterize the policy variable $\pi$ with the BoN policy $\pibon$, then with the sufficiency part of the consistency condition one can show that $\pibon$ is an optimal RL policy of \Cref{eq:rl} if there exists a pair of $V$ and $\pi$ that satisfies the following equation
+\begin{equation}\label{eq:bon_consistency}
+    V(x) = R(x,y) + \beta\log\pi_\beta(y|x) - \beta\left(\log \pi(y|x)+\lambda_N \cdot Q_{\pi}\rbr{y, x}-\log{Z_{\pi}(x)}\right),\,\,\forall x\in\Dcal,\,\,\forall y
+\end{equation}
+
+There are two ways to approximately find the solution in \Cref{eq:bon_consistency}. The first way is to reformulate the above equation with a condition that equates the values between any pairwise states and outputs $(x,y,y')$:
+\begin{equation}\label{eq:bon_consistency_2}
+    R(x,y') + \beta\log\frac{\pi_\beta(y'|x)}{\pi(y'|x)} +\beta\lambda_N \cdot Q_{\pi}\rbr{y', x} = R(x,y) + \beta\log\frac{\pi_\beta(y|x)}{\pi(y|x)}+\beta\lambda_N \cdot Q_{\pi}\rbr{y, x},\,\,\forall x\in\Dcal,\,\,\forall y, y'.
+\end{equation}
+ Suppose one have access to pairwise labels in the data-set, then this formulation eliminates any terms that are independent to $y$ and circumvents the need of solving for the value function $V$. One may approximately solve \Cref{eq:bon_consistency_2} by minimizing the following $\ell_2$ loss:
+\[
+\begin{split}
+\min_{\pi\in\Delta} &\EE_{(x,y,y')\in\Dcal}\sbr{(g(x,y;\pi)-(g(x,y';\pi))^2},\\
+& g(x,y;\pi):= R(x,y) + \beta\log\frac{\pi_\beta(y|x)}{\pi(y|x)} +\beta\lambda_N \cdot Q_{\pi}\rbr{y, x}.
+\end{split}
+\]
+This formulation is similar to that in IPO \citep{azar2024general}. However, unlike IPO, where the term $g(x,y;\pi)$ is linear in the logits of $\pi$ and therefore one can show that its $\ell_2$ minimization problem has a unique solution, in this case $g(x,y;\pi)$ also depends on $Q_{\pi}$, which is a function of $\pi$ (and thus a nonlinear function of its logits), preventing us from drawing similar conclusions that the $\ell_2$ minimization problem has a unique solution. Therefore, even if one can exactly solve this $\ell_2$ minimization problem (and make the loss zero), there is no guarantee that the solution  policy $\pi^*$ corresponds to the base policy of an optimal $\pibon$ policy to the KL-regularized RL problem.
+
+For the second approach, consider the following linear programming reformulation of \Cref{eq:bon_consistency}: 
+\begin{equation}
+    \begin{split}
+        &\min_{V,\pi\in\Delta} \EE_{x\in\Dcal}[V(x)]\\
+        \text{s.t. }& V(x) \geq  R(x,y) + \beta\log\pi_\beta(y|x) - \beta\left(\log \pi(y|x)+\lambda_N \cdot Q_{\pi}\rbr{y, x}-\log{Z_{\pi}(x)}\right),\,\,\forall x\in\Dcal,\,\,\forall y
+    \end{split}
+\end{equation}
+Since the inequality constraint is a convex function in $\pi$ and an affine function in $V$, by strong duality it has the following equivalent Lagrangian-dual formulation:
+\begin{equation}
+\begin{split}
+    &\max_{\kappa(\cdot,\cdot)\geq 0}\min_{V,\pi\in\Delta} \EE_{(x,y)\in\Dcal}\left[V(x)+\kappa(x,y)\cdot\left( R(x,y) + \beta\frac{\pi_\beta(y|x)}{\pi(y|x)} - \beta\left(\lambda_N \cdot Q_{\pi}\rbr{y, x}-\log{Z_{\pi}(x)}-V(x)\right)\right)\right]\\
+    =&\max_{\kappa(\cdot,\cdot)\geq 0}\min_{V} \EE_{\Dcal}\big[(1-\kappa(x,y))\cdot V(x)+\kappa(x,y)\cdot ( R(x,y) + \beta\cdot\pi_\beta(y|x))\big]-\max_{\pi\in\Delta}\EE_{\Dcal}\left[\kappa(x,y)\cdot\log\pibon(y|x;\pi)\right]
+    \end{split}
+\end{equation}
+This formulation can be viewed as an  weighted-SFT approach that iteratively updates (i) the base policy $\pi$ that maximizes the likelihood of $\pibon$ over data $\Dcal$, weighted with importance weights $\kappa(x,y)$, and (ii) the importance weight function $\kappa$ itself. Here, the value function $V(x)$ is simply an auxiliary variable. 
+
+\subsection{Improved Efficiency with BoN Distillation}
+While Lemma~\ref{lem:sft_pg_bon} provides a recipe for training a base policy to adapt to the BoN inference strategy, a key challenge lies in the  computational cost and data inefficiency associated with BoN sampling, especially when $N$ is large. Particularly, each gradient update requires generating $N$ samples from the current base policy, which can be prohibitively expensive. Furthermore, using these samples solely for a single gradient update may deem wasteful. 
+
+To alleviate this issue, leveraging the recent advances in BoN Distillation (BoND) \citep{sessa2024bond}, an RLHF algorithm that distills BoN behaviors into a standard LLM, we approximate the BoN distribution of the current $\pi$. 
+This results in an iterative, two-step procedure. First, we estimate a BoND policy $\pi_{\text{BoND}}$ (parameterized by weights $\phi$) of $\pi$ by solving the distribution-matching problem: $\min_{\phi} \mathbb E_{x\sim\mathcal D}[\text{KL}(\pi_{\phi}||\pibon)(x)]$, where the backward-KL metric induces quantile-based advantage and mode-seeking behaviors to $\pi_{\text{BoND}}$. Utilizing the variational form $\pibon(y|x)\propto \pi\cdot\exp\rbr{\lambda_N Q_{\pi}}(y|x)$, this problem can be further reformulated as
+\begin{equation}
+\label{eq:bon2}
+\pi_{\text{BoND}}(y|x)\in\arg\max_{\phi}\,\, \mathbb E_{x\sim\mathcal D}[ \mathbb E_{y\sim \pi_{\phi}(\cdot|x)}[Q_{\pi}(y,x)]-\frac{1}{\lambda_N}\text{KL}(\pi_{\phi}||\pi)(x) ].
+\end{equation}
+Second, equipped with the BoND policy, we change the gradient of Lemma~\ref{lem:sft_pg_bon} with the approximate gradient $\EE_{(x, y)\sim \Dcal}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}} - \EE_{x\sim \Dcal, y\sim \pi_{\text{BoND}}\rbr{\cdot|x}}\sbr{\nabla_{\theta} f\rbr{x, y;\theta}}$. In general, this approach is also well-connected with Contrastive Divergence \citep{carreira2005contrastive} in energy-based learning, which promotes the idea of approximately sample from the current target distribution ($\pibon$ in our case). It shows that the learning algorithm can still converge to an optimum w.r.t. the original objective function as long as the gradient estimated by the approximate samples still points at an ascending direction.
+
+
+\subsection{Connection to STaR}
+\label{remark:bon_star}
+Consider the popular STaR method \citep{zelikman2022star} applied for training $\pibon$, which updates $\theta$ by following the reward-weighted gradient:
+\begin{align}
+\qquad &\EE_{x\sim\Dcal, y\sim\pibon(\cdot|x)}\left[\nabla_{\theta} \log \pitheta(y|x) \cdot R(x,y) \right]. \label{eq:grad_star_b}
+\end{align}
+
+Notice that the policy gradient of BoN-RL is a sum of two terms: $\nabla_\theta J(\theta)=g_1(\theta) + g_2(\theta)$, where $g_1(\theta)=\EE_{x\sim\Dcal, y\sim\pibon(\cdot|x)}\left[\nabla_{\theta} \log \pitheta(y|x) \cdot R(x,y) \right]$ is equivalent to that of BoN-STaR, updating $\pi$ via weighted supervised fine-tuning over the responses and the rewards obtained by the current BoN policy, and $g_2(\theta)= \EE_{x\sim\Dcal, y\sim\pibon(\cdot|x)}\left[\nabla_{\theta} (\lambda_N Q_{\pi} - \text{log$\EE_{\pi}$exp}(\lambda_N Q_{\pi}))(x,y) \cdot R(x,y) \right] $ accounts for the gradient effect of the importance sampling term $(\exp\lambda_N Q_{\pi}/Z_{\pi})(x,y)$ between $\pi$ and $\pibon$, emphasizing on how much it can improve the reward. The additional $g_2(\theta)$ component makes BoN-RL amenable to the distributional shifts introduced by the BoN procedure, enabling the base policy to be adept at utilizing the BoN exploration mechanism to optimize the reward.
+
+\section{Experimental Details}
+\subsection{Additional Scaling Results with Gemma 9B verifier and policy models}
+\label{app:additional_scaling}
+\begin{figure}
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{images/pass_at_k_exponent.png}
+  \caption{\centering  pass@$N$}
+  \label{fig:scaling_passatk_exp}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{images/N_star_vs_T.png}
+  \caption{\centering  BoN}
+  \label{fig:scaling_bon_coeff}
+\end{subfigure}
+
+\caption{\centering Scaling of exponent w.r.t temperature in pass@$N$ and optimal $N$ w.r.t. temperature in BoN. Dashed curves denote in-training predictions, stars denote extrapolation  values for the corresponding temperatures. 
+}
+\label{fig:scaling2}
+\end{figure}
+
+Similar to Gemma2B co-scaling experiments, for Gemma 9B co-scaling, we present additional results in Figure \ref{fig:scaling2}. We analyze the optimal exponent $b^*(T)$ w.r.t different temperatures (see co-scaling in \Cref{sec:experiment}) and find that a power law functional form can explain the relationship very accurately, achieving very low extrapolation error for pass@$N$ and BoN, i.e., $2.75e-05$ and $2.87$, respectively.
+Results for pass@$N$ suggest that exponent can be accurately predicted from just temperature.
+  We also inspect how optimal $N^*$ scales with $T$ in BoN. We fit a power law function plus a linear term which accurately predicts optimal $N$ for unseen temperatures. Predictions of the fitted model can be used to achieve close to optimal performance, achieving less than $0.001$ point drop in BoN performance. This suggests that our predictive model makes accurate predictions that keeps the optimal performance.
+
+ \paragraph{Generalization of scaling predictions.}In Table \ref{tab:rsquared}, we compare various inference algorithms and LLMs of different sizes.
+For MajorityVoting algorithm, we use MC estimation to simulate different sample sizes.
+We use the same functional form used for co-scaling experiments in \Cref{sec:experiment} for MajorityVoting.
+Our results remark the strong generalization performance of our predictive models across different LLMs (both policy and reward models) and inference algorithms.
+The same power-law function with a linear trend term applies well to both BoN and MajorityVoting.
+While we use unbiased estimates for pass@$N$ and BoN, we use MC estimation for MajorityVoting which leads to less smooth curves and slightly lower prediction performance.
+
+\begin{table}
+\begin{center}
+
+\begin{tabular}{ c|c|c|c| } 
+& pass@$N$ & BoN & MajorityVoting \\
+\hline
+ Gemma-9B & 0.986 & 0.989 & 0.89 \\ 
+ \hline
+ Gemma-2B & 0.998 & 0.998 & 0.784 \\
+ \hline
+
+\end{tabular}
+
+\caption{\centering  R-squared values for different language models and inference algorithms.}
+\label{tab:rsquared}
+\end{center}
+\end{table}
+
+\paragraph{Gemma 9B Results.} In Figure \ref{fig:bon_pass_at_k_combined_small_9b}, we present results for Gemma-9B policy and reward models.
+Using Gemma-9B improves both pass@$N$ and BoN significantly compared to Gemma-2B.
+We observe that the gap between using large temperatures (0.7 or 1.0) and very small temperatures (0.1) also increased.
+While Gemma-2B showed very strong reward model overoptimization for larger $N$ and temperatures, we see a lesser overoptimization for Gemma-9B models.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{images/bon_pass_at_k_combined_small_9b.png}
+  \caption{\centering  pass@$N$ (left) and BoN (right) performance for Gemma-9B. While curves show similar shape as Gemma-2B models, overall performance is globally improved and overoptimization is reduced.}
+  \label{fig:bon_pass_at_k_combined_small_9b}
+\end{figure}
+
+
+\subsection{Details of BoN-aware Fine-tuning Experiments}\label{appendix:bon_ft_details}
+For the MATH benchmark, we trained the Gemma 2B and 9B models with the Hendrycks MATH dataset. Following \citet{lightman2023lets}, we augment the original $7500$ MATH training problems with $4500$ problems from the test set, evaluating performance on the remaining $500$ problems. In the supervised setting, we leverage a larger Gemini~1.5 Flash model~\citep{geminiteam2024gemini} to generate MATH solutions with answers and steps ($32$ candidates for each of the MATH problems), sub-sampling only the correct responses and distilling knowledge into the Gemma 2B model. In the RL setting, we use a binary environment reward denoting whether the model's answer matches the ground truth answer. The verifier used in all BoN experiments is a separate pre-trained Gemma 2B model that predicts the probability of a correct response given the prompt. 
+The verifier is trained with the data collected from the Gemini 1.5 Flash model. 
+
+Alternatively, to benchmark our models on code generation, we train on MBPP \citep{austin2021program} and evaluate on the HumanEval benchmark \citep{chen2021evaluating}, following the standard procedures delineated in \citet{kumar2024training}.
+
+\subsection{Additional BoN-aware Fine-tuning Results}
+We now present additional results on BoN-aware fine-tuning (both SFT and RL).\label{app:additional_exp}
+
+\subsubsection{Hendrycks MATH with Gemma 9B}
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}{0.42\linewidth}
+      \includegraphics[width=\linewidth]{images/bonrlv_bon_math9b.pdf}
+      \caption{\centering  BoN}
+      \label{sub:bon_math_9b}
+    \end{subfigure}
+    ~
+    \begin{subfigure}{0.42\linewidth}
+      \includegraphics[width=\linewidth]{images/bonrls_pass_at_k_math_9b.pdf}
+      \caption{\centering pass@$N$}
+      \label{sub:passn_math_9b}
+    \end{subfigure}    
+    \caption{\centering BoN and pass@$N$ Accuracy Results on Hendrycks MATH with Gemma 9B.}
+    \label{fig:math_9b}
+\end{figure}
+
+We additionally benchmark a larger model, Gemma 2 9B, on Hendrycks MATH, with results shown in Figure~\ref{fig:math_9b}. We observe that, similar to the trends of the experiments run with the Gemma 2B counterpart, BoN-RL-V achieves the best BoN performance, while BoN-RL-S achieves the best pass@$N$ performance, with both substantially improving over the base model.
+
+\subsubsection{Held-out math benchmarks with Gemma 9B}
+
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}{0.42\linewidth}
+      \includegraphics[width=\linewidth]{images/bonrls_pass_at_k_math1745_9b.pdf}
+      \caption{\centering Functional MATH().}
+      \label{sub:passn_functional_9b}
+    \end{subfigure}    ~
+        \begin{subfigure}{0.42\linewidth}
+      \includegraphics[width=\linewidth]{images/bonrls_pass_at_k_ody_9b.pdf}
+      \caption{\centering MathOdyssey.}
+      \label{sub:passn_math_ody_9b}
+    \end{subfigure}    
+    \caption{\centering pass@$N$ of BoN-RL and baselines on held-out benchmarks with Gemma 9B models.}
+    \label{fig:pass_n_math_9b_held_out}
+\end{figure}
+
+
+
+To evaluate the generalization capabilities of our BoN-aware finetuned models, we additionally evaluate on two completely held-out and challenging benchmarks, Functional MATH() \citep{srivastava2024functional} and MathOdyssey \citep{fang2024mathodyssey}. We present the results of these held-out benchmarks with 9B models in Figure \ref{fig:pass_n_math_9b_held_out}, and observe that our fine-tuned models improve on both BoN and pass@$N$ for these held-out benchmarks similarly as in the case of Gemma 2B.
+
+
+\subsubsection{pass@N Accuracy with Different Training Samples, with Gemma 2B}
+
+\begin{figure}[t]
+    \centering
+\includegraphics[width=0.42\linewidth]{images/pass_n_only_n16_pass_at_k.pdf}
+    \caption{\centering pass@$N$ of various methods with $N'=16$}
+    \label{sub:pass16}
+\end{figure}
+
+
+
+Similar to the experiments in Figure \ref{sub:pass32}, our BoN-RL-S, BoN-RLB, and BoN-RLB(P) models also demonstrate superior performance over the baseline methods in pass@$N$ evaluations with $N'=16$ (Figure \ref{sub:pass16}). In this case, STaR performs the worst ($55\%$ in pass@$32$) as it fails to (i) utilize negative samples in training for implicit exploration (unlike BoN-RLB, $60\%$ pass@$32$), (ii) re-weight samples based on difficulty, prioritizing learning from challenging problems and avoiding overfitting to simpler ones (unlike BoN-RLB(P), $60\%$ pass@$32$), and (iii) account for the importance sampling factor between the base policy and the BoN policy (unlike BoN-RL-S, $58\%$ pass@$32$).
+BoN-RLB and BoN-RLB(P) are superior to BoN-RL-S on $N'=16$ (Figure~\ref{sub:pass16}), but worse on $N'=32$ (Figure~\ref{sub:pass32}), suggesting that they suffer from instability with increasing $N'$. This is potentially due to the following observations: (i) The asymmetry between the positive ($g^+$) and negative ($g^-$) weights in BoN-RLB increases with $N'$, destabilizing its learning at larger $N'$ values; (ii) RL-BoN-S utilizes the variational approximation of $\pibon$ in its gradient update, introducing approximation errors that may cause its sub-optimal performance (relative to a stable instance of BoN-RLB trained at $N'=16$); BoN-RLB(P) only uses positive samples, which inherits the shortcomings of STaR (lack of implicit exploration), yet it re-balances the examples with the difficulty of the problems. Overall, it leads to consistent yet mild performance degradation over BoN-RLB. 
+
+
+\subsubsection{Comparing BoN-RL with Base-BoN Distillation Baselines, with Gemma 2B}
+
+We consider various alternative methods to improve Gemma 2B BoN accuracy through various data generation methods. We distill the Gemma 2B model using these datasets and compare to the base Gemma 2B model and our BoN-RL-V method. We consider the following four distillation benchmarks (all run over Hendrycks MATH):
+\begin{enumerate}
+    \item Base-BoN-SFT: In this method we generate a dataset of the best of $N=16$ samples for each example in the dataset. We use the best sample as target to distill Gemma~2B.
+    \item Base-All-SFT: We use the full range of $N=16$ samples as targets. This dataset is used to distill Gemma~2B to the average effective sample of the base model.
+    \item Base-Weighted-SFT: Similar to Base-All-SFT, we sample $N=16$ samples for each example. We then re-sample $N=16$ examples (from these samples, with repetition), weighted according to verifier scores. This dataset is used to distill Gemma~2B to the average effective sample, weighted by verifier scores.
+    \item Base-Maj-SFT: We use majority voting over $N=16$ samples to select a target. We distill Gemma~2B to predict the majority voted target.
+\end{enumerate}
+
+We show the BoN accuracy results of these methods in Figure 10. While the aforementioned baselines do improve BoN performance over the Base Gemma 2B model, they are still out-performed by our BoN-RL-V method, indicating the value of utilizing the inference BoN strategy explicitly during training. 
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.5\linewidth]{images/bonrlv_vs_baselines_bon_math_2b.pdf}
+  \caption{\centering BoN Accuracy on MATH comparing Base Gemma 2B and BoN RL-V with other fine-tuning techniques: (1) BoN-SFT: Distillation of BoN sample for N=16; (2) All-SFT: Distillation of all N=16 samples (i.e., average sample); (3) Weighted-SFT: Distillation of all N=16 samples by average re-sampling w.r.t. verifier scores; and (4) Maj-SFT: Distillation of majority voting strategy.} \label{fig:distilled inference benchmarks}
+\end{figure}
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.5\linewidth]{images/bonrls_BoN_bon_mathb_2b.pdf}
+  \caption{\centering Plots show BoN accuracy under verifier-reward mismatch using Gemma 2B on MATH. During training verifier was used for BoN. On test, environment reward was used as verifier of the BoN strategy, inducing a mismatch in verifiers.}
+  \label{fig: verifier mismatch}
+\end{figure}
+
+
+\end{document}

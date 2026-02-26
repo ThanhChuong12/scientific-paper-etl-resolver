@@ -1,0 +1,165 @@
+ % !TEX root = ../main.tex
+ 
+
+ 
+\section{Proposed Approach}
+\label{sec:method}
+
+This section first presents our class-specific scaling technique, which captures the trade-off landscape and identifies the optimal performance points for desired objectives along the trade-off curve.
+We also propose an instance-wise class-specific scaling approach to overcome the trade-off and further improve the performance.
+Based on the proposed scaling strategy, we introduce a novel and intuitive measure for evaluating the group robustness of an algorithm with consideration of the trade-off.
+ 
+
+\subsection{Problem Setup}
+\label{sec:setup}
+Consider a triplet $(x, y, a)$ with an input feature $x \in \mathcal{X}$, a target label $y \in \mathcal{Y}$, and an attribute $a \in \mathcal{A}$. 
+We define groups based on the pair of a target label and an attribute, such that $g := (y, a) \in \mathcal{Y} \times \mathcal{A} =: \mathcal{G}$.
+Suppose that the training set consists of $n$ examples without attribute annotations, \eg, $\{(x_1, y_1), ..., (x_n, y_n)\}$, while the validation set includes {$m$ examples with group annotations, \eg, $\{(x_1, y_1, a_1), ..., (x_m, y_m, a_m)\}$, for selecting scaling parameters.
+ % \eg, $\{(x_1, g_1), ..., (x_m, g_m)\}$ = $\{(x_1, y_1, a_1), ..., (x_m, y_m, a_m)\}$.
+This assumption is known to be essential for model selection or hyperparameter tuning~\cite{GroupDRO, JTT, LfF, idrissi2022simple} although not desirable for the practicality of algorithms. 
+However, we will show that our algorithm works well with only a few examples with attribute annotations in the validation set; considering such marginal labeling cost, our approach is a meaningful step to deal with notorious bias problems in datasets and models.
+ 
+% \begin{align}
+%     \text{UA} := \frac{1}{N}\sum_{i=1}^N \mathbf{1}(f_\theta(\mathbf{x}_i) = y_i )
+% \end{align}
+Our goal is to learn a model $f_\theta(\cdot): \mathcal{X} \rightarrow \mathcal{Y}$ that is robust to group distribution shifts.
+%  To evaluate the group robustness, let first define the group-wise accuracy (GA).
+To measure the group robustness, we typically refer to the robust accuracy such as unbiased accuracy (UA) and worst-group accuracy (WA).
+The definitions of UA and WA require the group-wise accuracy (GA), which is formally given by
+%
+\begin{align}
+    \text{GA}_{(r)} := \frac{\sum_{i} \mathds{1}(f_\theta(\mathbf{x}_i) = y_i, g_i=r)}{\sum_{i} \mathds{1}(g_i=r)},
+\end{align}
+%
+where $\mathds{1}(\cdot)$ denotes an indicator function and $\text{GA}_{(r)}$ is the accuracy of the $r^\text{th}$ group samples.
+Then, the robust accuracies are defined by
+%
+\begin{align}
+    \text{UA} := \frac{1}{|\mathcal{G}|}\sum_{r\in\mathcal{G}}{\text{GA}_{(r)}}~~~\text{and}~~~ \text{WA} := \min_{r\in\mathcal{G}} \text{GA}_{(r)}.
+\end{align}
+%
+The goal of the group robust optimization is to ensure robust performance in terms of UA or WA regardless of the group membership of a sample.
+
+
+\begin{figure}[t]
+\centering
+    \begin{subfigure}[m]{0.85\linewidth}
+    	\includegraphics[width=\linewidth]{figures/worst_curve.png}\vspace{-1mm}
+%    	\includegraphics[width=\linewidth]{figures/worst_curve_green.png}
+	\subcaption{Worst-group accuracy}
+	\label{fig:tsne_noise}
+	    \vspace{2mm}
+    \end{subfigure}
+%    	\hspace{0.5cm}
+        \begin{subfigure}[m]{0.85\linewidth}
+    	\includegraphics[width=\linewidth]{figures/unbias_curve.png}\vspace{-1mm}
+%    	\includegraphics[width=\linewidth]{figures/unbias_curve_green.png}
+	\subcaption{Unbiased accuracy}
+	\label{fig:tsne_erm}
+	\end{subfigure} 
+%    \vspace{-2mm}
+    \caption{The relation between the robust and average accuracies obtained by varying the class-specific scaling factor $\mathbf{s}$ with ERM on CelebA.
+    The black marker denotes the original point, where the uniform scaling is applied. 
+%    \bhr{The points, located within the green area, on the trade-off curve represent the Pareto optima.}
+%    \vspace{-0.1cm}
+    }
+    \label{fig:observation_curve}
+\end{figure}
+%\vspace{0.5cm}
+
+ \subsection{Class-Specific Robust Scaling}
+ \label{sec:robust_scaling}
+ 
+As illustrated in Figure~\ref{fig:observation_tradeoff}, all algorithms exhibit a clear trade-off between robust accuracy and average accuracy. 
+To analyze this behavior more closely, we propose a simple non-uniform scaling method for adjusting the scores associated with individual classes. 
+This approach can influence the final decision of the classifier: by upweighting the prediction scores for minority classes, a sample may be classified into a minority class even if its initial score is low. 
+Consequently, this adjustment can enhance the worst-group accuracy at the cost of a slight reduction in average accuracy, yielding a favorable trade-off for achieving group robustness.
+Formally, the prediction with the class-specific scaling is given by
+%
+  \begin{align}
+     \argmax_c~(\mathbf{s}\odot \hat{\mathbf{y}})_c,
+     \label{eq:rs}
+ \end{align}
+%
+where $\mathbf{\hat{y}} \in \mathbb{R}^C$ is a prediction score vector over $C$ classes, $\mathbf{s} \in \mathbb{R}^C$ is a $C$-dimensional scaling coefficient vector, and $\odot$ denotes the element-wise product operator.
+
+Based on the ERM model, we obtain a set of the average and robust accuracy pairs using a wide range of the class-specific scaling factors and illustrate their relations in Figure~\ref{fig:observation_curve}.
+The black markers indicate the point with a uniform scaling, \ie, $\mathbf{s} = (1, \dots, 1) \in \mathbb{R}^C$.
+The graphs show that a simple class-specific scaling effectively represents the landscape of the trade-off between the two accuracies.
+This validates the ability to identify the desired Pareto optimal points between the robust and average accuracies in the test set by following two simple steps: 1) finding the optimal class-specific scaling factors that maximize the target objective (UA, WA, or AA) in the validation set, and 2) apply the scaling factors to the test set\footnote{Refer to our supplementary document for the coherency of robust scaling in the validation and test sets.}.
+We refer to this scaling strategy for robust prediction as \textit{robust scaling}.
+ 
+To identify the optimal scaling factor $\mathbf{s}$, we perform a greedy search, where we first identify the best scaling factor for a class and then determine the optimal factors of the remaining ones sequentially conditioned on the previously estimated scaling factors.
+The greedy search is sufficient for finding good scaling factors partly because there are many different near-optimal solutions.
+Thanks to the simplicity of the process, the entire procedure takes negligible time even in large-scale datasets with multiple classes.
+%
+It is worth noting that, as a post-processing method, robust scaling can be seamlessly applied to existing robust optimization techniques without requiring additional training. 
+Our approach enables the identification of any desired performance point on the trade-off envelope using a pretrained model.
+For example, even when dealing with multiple tasks, our robust scaling approach is flexible enough to handle the situation; we only need to apply a scaling factor optimized for each target objective, leaving the trained model unchanged.
+Meanwhile, existing robust optimization methods have limited flexibility and require to training separate models for each target objective.
+
+
+
+%%%%%%%%% CELEBA TABLE  %%%%%%%%%
+\input{sections/celeba_table}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \subsection{Group Robust Methods with Adaptive Robust Scaling}
+% \subsection{Instance-wise Robust Scaling for Improving Group Robustness}
+ \subsection{Instance-wise Robust Scaling}
+ \label{sec:method}
+%If we partition the dataset based on feature semantics and reserve different scaling factors for each partition, then it can give more flexible trade-offs. 
+%If we can apply instance-wise scaling factor to each test example adaptively, then it will have the potential to improve the trade-off furthermore.  
+The optimal scaling factor can be adaptively applied to each test example, enabling instance-specific scaling to potentially overcome the trade-off and further improve accuracy. 
+Previous approaches~\cite{seo2021unsupervised, sohoni2020no} have demonstrated the ability to identify hidden spurious attributes by clustering in the feature space for debiased representation learning. 
+Similarly, we take advantage of feature clustering for adaptive robust scaling; we obtain the optimal class-specific scaling factors based on the cluster membership of each sample.
+The overall algorithm of our instance-wise robust scaling (IRS) is outlined as follows.
+%
+%\vspace{2mm}
+\begin{enumerate}
+  \item Perform clustering with the validation dataset on the feature space and store the cluster centroids. \vspace{-1mm}
+   \item Find the optimal scaling factor for each cluster. \vspace{-1mm}
+%  \item Assign each test example to the nearest cluster using the stored cluster centroids in step 1.
+%  \textbf{4)} Apply the optimal scaling factors obtained in 2) to the samples of each cluster in the test split.
+  \item Apply the estimated scaling factor to each test example based on its cluster membership.
+\end{enumerate}
+\vspace{2mm}
+%
+In step 1, we use a simple \textit{K}-means clustering algorithm.
+Empirically, when $K$ is sufficiently large, \ie, $K > 10$, IRS achieves stable and superior results, compared to the original class-specific scaling.
+
+
+
+
+
+
+
+% \subsection{Robust Coverage for Comprehensive Performance Evaluation}
+ \subsection{Robust Coverage}
+ \label{sec:robust_coverage}
+Although robust scaling identifies a desired performance point on the trade-off curve, it captures only a single point, overlooking the other Pareto-optimal solutions. 
+To enable a more comprehensive evaluation of an algorithm, we propose a convenient scalar measure that summarizes the robust-average accuracy trade-off.
+Formally, we define the \textit{robust coverage} as
+%
+\begin{align}
+     \text{(Robust coverage)} &:=  \int_{c=0}^1\max_\mathbf{s}\big\{\text{RA}^\mathbf{s}|\text{AA}^\mathbf{s}\geq c\big\}dc 
+      \nonumber \\
+     & \hspace{-5mm}\approx \sum_{d=0}^{D-1}\frac{1}{D}\max_\mathbf{s}\big\{\text{RA}^\mathbf{s}|\text{AA}^\mathbf{s}\geq \frac{d}{D}\big\},
+     \label{eq:coverage}
+\end{align}
+%
+where $\text{RA}^\mathbf{s}$ and $\text{AA}^\mathbf{s}$ denote the robust and average accuracies, respectively, and $D = 10^3$ is the number of slices used for discretization.
+The robust coverage measures the area under the Pareto frontier of the robust-average accuracy trade-off curve, where the maximum operation in~(\ref{eq:coverage}) identifies the Pareto optimum for each threshold.
+Depending on the target objective of robust coverage in~(\ref{eq:rs}), we use either WA or UA as the measure of RA.
+%Please refer to Appendix~\ref{sec:coverage_clarification} for more discussions.
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 

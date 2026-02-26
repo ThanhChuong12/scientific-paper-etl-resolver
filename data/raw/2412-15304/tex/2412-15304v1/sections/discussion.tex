@@ -1,0 +1,45 @@
+\section{Limitations and Discussion}
+
+\fakepar{Model Architectures} Currently, the framework supports only pre-training of GPT-2 based architectures, although fine-tuning supports many other models.
+
+\fakepar{Context Window length} The input prompt size is currently limited to 1024, which might limit the applicability of some usecases consisting of longer prompts
+
+% \fakepar{}
+Here, the smaller models (below 120M) are scaled down from the 124M parameter model by reducing the number of transformer blocks but maintaining the relation $C = 64l$ as shown in Table~\ref{tab:gpt2_parameters}. However, it might be interesting to explore the training of smaller models created by varying $C$ and $l$ without constraining.
+
+% \fakepar{ML vs LLM}
+% \begin{itemize}
+%     \item  LLMs require less data preprocessing and handle unstructured data types (text, numerical, etc.) more smoothly than traditional ML models which have rigid data input types. This makes it easy to train/ fine-tune LLMs.
+%     \item  LLMs use a single transformer-based architecture that can be fine-tuned across a wide range of tasks (text, time-series, anomaly detection, etc.). In contrast, ML models often require distinct architectures (e.g., CNNs for images, RNNs for sequences, decision trees for tabular data) tailored to each specific problem type. This makes it difficult to adapt its usage for different usecases.
+%     \item  Small LLMs can be fine-tuned with minimal data points (need to prove this)
+%     \item LLMs provide context-rich outputs that can facilitate human decision-making (Human-In-The-Loop) and interactive diagnostics.
+%     \item LLMs are suited for transfer learning and few-shot learning, where models can be used for different usecases without retraining from scratch.
+% \end{itemize}
+
+% \fakepar{Cross-accuracies}
+
+% \begin{table}[ht]
+% \centering
+% \begin{tabular}{cccc}
+% \toprule
+% \textbf{Model} & \textbf{Fine-tune Data} & \textbf{Test Data} & \textbf{Accuracy} \\
+% \midrule
+% \multirow{4}{*}{Phi - 3} & - & Gesture & 0 \\
+%                          & Gesture & Local & 34.3 \\
+%                          & - & Local & 6.7  \\
+%                          & Local & Gesture & 33.3 \\
+% \midrule
+% \multirow{4}{*}{Llama - 3} & - & Gesture & 0 \\
+%                          & Gesture & Local & 34.3 \\
+%                          & - & Local & 0  \\
+%                          & Local & Gesture & 33.3 \\
+
+% \bottomrule
+% \end{tabular}
+% \caption{Performance of local LLMs with various     quantization types benchmarked on a Latte Panda.  }
+% \label{tab:cross_performance}
+% \end{table}
+
+
+% Table \ref{tab:cross_performance} shows the accuracy of selected LLMs tested on different sensor datasets apart from their fine-tuned sensor data. Without any fine-tunings, the models report close to zero accuracy in most cases. However, after fine-tuning with a sensor dataset, the models are just printing a single choice (say out of 3 choices) taking the accuracy to 33.3\%. This is not an optimal scenario, but surely the model has become better than before in terms of comprehending the sensor datasets.
+

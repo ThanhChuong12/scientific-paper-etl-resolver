@@ -1,0 +1,120 @@
+\begin{table}
+    \small
+    \centering
+    \begin{tabularx}{\textwidth}{llX}
+        \toprule
+        constraint & keyword args & description \\ \midrule
+        \texttt{alliteration} & \texttt{num\_alliteration\_words} & the response should contain an alliteration, i.e. a sequence of X words starting with the same letter, where X $=$ \texttt{num\_alliteration\_words}.\\
+        \texttt{ascending\_num\_words} & \texttt{n/a} & the response should contain sentences such that the number of words in each sentence is in ascending order.\\
+        \texttt{max\_word\_length} & \texttt{max\_word\_length} & the maximum length of all words in the response should be at most X characters, where X $=$ \texttt{max\_word\_length}.\\
+        \texttt{num\_words\_per\_sentence} & \texttt{relation}, \texttt{num\_words} & each sentence in the response should contain R $\in \{\text{at least, at most}\}$ X words, where R $=$ \texttt{relation} and X $=$ \texttt{num\_words}.\\
+        \texttt{required\_sentence} & \texttt{sentence} & the response should contain a sentence S, where S $=$ \texttt{sentence}. \\
+        \texttt{tldr\_summary} & \texttt{n/a} & the response should end with a “TL;DR” on a new line summarizing the response.\\
+        \bottomrule
+    \end{tabularx}
+    \caption{
+    Examples of verifiable constraints used for our synthetic prompts.
+    Some constraints require one or more keyword arguments that materialize the constraint for its associated prompt, while others do not require any argument.
+    }
+    \label{tab:constraint_examples}
+\end{table}
+
+We perform all our experiments with a new set of synthetic prompts that incorporate mixtures of verifiable constraints.
+These prompts allow us to evaluate the qualities of the generated responses in both a consistent and fine-grained manner, providing a suitable environment for us to control the attributes of the preference dataset and investigate their impact on downstream performance.
+
+\subsection{Instruction-Following with Verifiable Constraints}
+\label{subsection:constraint-ontology}
+Our verifiable constraints resemble but are distinct from the set of constraints provided in \texttt{IFEval}~\citep{DBLP:journals/corr/abs-2311-07911}.
+We define 23 constraints which can be deterministically verified using code, spanning ones that check for adherence to specific structural, stylistic, or formatting requirements.
+The complete ontology of our constraints is provided in Table~\ref{tab:constraint_all} in the appendix.
+
+We design our verifiable constraints such that they follow the formatting of the verifiable constraints provided in \texttt{IFEval} for unified evaluation -- each constraint is accompanied by a set of keyword arguments that are needed to actualize the constraint for the given prompt.
+Refer to Table~\ref{tab:constraint_examples} for examples of such constraints and their associated keyword arguments.
+For example, the \texttt{alliteration} constraint is paired with a keyword argument \texttt{num\_alliteration\_words}, which indicates the number of words that must display the alliteration.
+Some constraints such as \texttt{tl;dr\_summary} do not contain any keyword arguments as they are self-explanatory and do not need any further specifications.
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.67, clip, trim=0.8cm 0.6cm 1.2cm 3.0cm]{img/prompt_synthesis.pdf}
+    \caption{
+    Overview of our pipeline for generating synthetic prompts with verifiable constraints.
+    We first take a set of seed prompts from an existing dataset where the prompts contain constraints, and remove all constraints with an LLM (\texttt{llama-3.1-70b-instruct}) to obtain base prompts corresponding to the original dataset.
+    Next, we randomly sample a small subset of the base prompts and use them as few-shot examples to generate new prompts \textit{without any constraints}.
+    We remove duplicates among the newly-generated prompts and the existing base prompts using a sentence transformer.
+    Then, we randomly sample a combination of $k \in \{4,5,6\}$ of our verifiable constraints that are non-conflicting and use an LLM to generate the input parameters required for the set of selected constraints.
+    Finally, we use the resulting input kwargs and the new base prompts to generate the final prompts that integrate the constraints in natural language.
+    }
+    \label{fig:prompt-synthesis}
+\end{figure}
+
+\subsection{Prompt Generation}
+\label{subsection:prompt-generation}
+We build a pipeline that generates synthetic prompts for instruction-following, incorporating combinations of different verifiable constraints to create a set of challenging prompts that stress-test models' capabilities of following complex instructions.
+Our pipeline is similar to \texttt{Instruct-SkillMix}~\citep{DBLP:journals/corr/abs-2408-14774} in terms of mixing skills, except that we have a preexisting set of verifiable constraints functioning as the ``skills'' and incorporate additional layers for generating the keyword arguments before generating the final instructions.
+In terms of scalability, our pipeline does not require human supervision and generates synthetic prompts only using \texttt{llama-3.1-70b-instruct}~\citep{DBLP:journals/corr/abs-2407-21783}.
+
+Figure~\ref{fig:prompt-synthesis} provides a visual summary of our synthetic prompt generation pipeline.
+Our data generation pipeline can be decomposed into five main processes.
+First, we take a set of seed instruction-following prompts (e.g., from \texttt{IFEval}) and remove the additional constraints originally associated with the dataset.
+We few-shot prompt \texttt{llama-3.1-70b-instruct} with examples of additional constraints being removed and obtain a set of prompts from the seed dataset without constraints.
+Second, we take the base prompts and use \texttt{llama-3.1-70b-instruct} to generate new prompts in their base forms, taking an approach similar to \texttt{Self-Instruct}~\citep{DBLP:conf/acl/WangKMLSKH23} by using the existing base prompts as few-shot examples and prompting the model to generate 20 new prompts at a time.
+Third, we remove the newly generated prompts that are semantically duplicates either with any of the seed set of base prompts or any of the other new prompts.
+We use \texttt{all-mpnet-base-v2}~\citep{DBLP:conf/nips/Song0QLL20}, a lightweight sentence transformer, to compute semantic embeddings and use the dot product to compute similarity scores.
+Fourth, we randomly sample a combination of $k$ constraints which do not contradict each other, and for each constraint in this mixture, we randomly sample or generate the associated keyword arguments.
+We perform random sampling for keyword arguments that can be randomly chosen without considering the prompt such as the \texttt{relation} argument in the \texttt{num\_words\_per\_sentence} constraint or the \texttt{num\_alliteration\_words} argument in the \texttt{alliteration} constraint.
+Meanwhile, we use \texttt{llama-3.1-70b-instruct} to generate the keyword arguments that require more contextual understanding of the prompt, such as the \texttt{sentence} argument for the \texttt{required\_sentence} constraint.
+Fifth, we take the set of constraints along with the keyword arguments chosen for each prompt and use \texttt{llama-3.1-70b-instruct} to rewrite the base prompts into their final forms which integrate the constraints and their keyword arguments in natural language.
+
+We use our data generation pipeline to generate synthetic prompts with mixtures of verifiable constraints such that we can score the quality of any arbitrary response to the given prompt by using the constraints and their keyword arguments along with a deterministic evaluation code.
+In contrast to \texttt{IFEval} which integrates at most $k=3$ constraints into the instruction, our pipeline allows us to integrate any number of constraints to create synthetic prompts, resulting in more challenging prompts and leaving room for a more diverse array of quality of responses in our preference datasets.
+We use $k \in \{4,5,6\}$ in our experiments.
+Our choice of using relatively higher values of $k$ is to make our synthetic training prompts maximally distinct from \texttt{IFEval}~\citep{DBLP:journals/corr/abs-2311-07911} for more reliable evaluation, and to perform evaluations on challenging, out-of-distribution test prompts with equally high values of $k$.
+Refer to Table~\ref{tab:prompt_examples} in the appendix for examples of our synthetic prompts.
+
+\subsection{Prompt Information}
+\label{subsection:prompt-info}
+We generate instruction-following prompts for combinations of $k\in\{4, 5, 6\}$ constraints.
+Table~\ref{tab:prompt_statistics} shows the statistics that describe the prompts that we generate.
+For each value of $k$, we generate about 16K synthetic prompts, resulting in a total of about 48K prompts being used in our experiments.
+The average length of the prompts increases as the number of constraints increases, as the complexity of the prompts increases with larger numbers of constraints.
+
+Table~\ref{tab:prompt_examples} displays examples of synthetic prompts generated using our pipeline for a given combination of verifiable constraints.
+Each prompt contains a general-purpose base instruction such as writing a short story or a speech, and is accompanied by a combination of verifiable constraints defined in our ontology with keyword arguments that satisfy the context of the instruction -- for example, the first example uses the word "shouting" for the \texttt{nth\_sent\_first\_word} constraint, which is appropriate for the context of the base instruction involving a boy lost in a shopping mall.
+For any arbitrary response to a given prompt, we can use the associated constraints and keyword arguments to automatically assign a score indicating whether the response follows each constraint and aggregate the scores to assign an overall correctness score to the response.
+
+\begin{table}
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{ccc|ccc|ccc}
+    \toprule
+        \multicolumn{3}{c}{$k=4$} & \multicolumn{3}{c}{$k=5$} & \multicolumn{3}{c}{$k=6$} \\\midrule
+        {\scriptsize \texttt{num\_prompts}} & {\scriptsize \texttt{mean\_words}} & {\scriptsize \texttt{std\_words}} & {\scriptsize \texttt{num\_prompts}} & {\scriptsize \texttt{mean\_words}} & {\scriptsize \texttt{std\_words}} & {\scriptsize \texttt{num\_prompts}} & {\scriptsize \texttt{mean\_words}} & {\scriptsize \texttt{std\_words}} \\\midrule
+        \small 15,900 & \small 70.62 & \small 14.37 & \small 15,739 & \small 84.17 & \small 15.61 & \small 15,559 & \small 97.95 & \small 16.91 \\
+    \bottomrule
+    \end{tabular}
+    }
+    \caption{
+    Statistics of synthetic prompts generated by our pipeline.
+    We generate about 16K prompts for each value of $k$, resulting in 48K prompts total across all our experiments.
+    Note that \texttt{num\_prompts} refers to the number of prompts, \texttt{mean\_words} refers to the average number of words in each prompt, and \texttt{std\_words} refers to the standard deviation of the number of words in each prompt.
+    The number of words in each prompt increases with the number of constraints.
+    }
+    \label{tab:prompt_statistics}
+\end{table}
+
+\begin{table}
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{p{5.1cm}X}
+        \toprule
+        constraints & prompt \\\midrule
+        \texttt{ascending\_num\_words}, \texttt{freq\_long\_words}, \texttt{max\_word\_length}, \texttt{nth\_sent\_first\_word}, \texttt{start\_checker} & Write a short story about a boy who gets lost in a shopping mall. Include at least 7 words that are at least 12 characters long, and ensure that the sentences have an increasing number of words, i.e. each sentence should contain more words than its previous one. Also, only include words that are at most 12 characters long. Make sure that the fifth sentence starts with the word "shouting", and begin your response with the sentence "As the sounds of loud chatter and clinking of dishes filled the food court, little Tommy suddenly discovered that his parents were nowhere to be seen.". \\
+        \\
+        \texttt{nth\_sent\_first\_word}, \texttt{num\_bold\_words}, \texttt{num\_exclamations}, \texttt{tldr\_summary}, \ \texttt{vowel\_capitalization} & Write a motivational speech for a high school graduation ceremony. Capitalize the vowels in your response, and include seven words that are bolded in HTML format (e.g., <b>word</b>). Also, ensure that the sixth sentence starts with the word "today". Make sure that the response contains exactly three exclamation marks, and finish the response with the final line including "TL;DR" followed by a one-sentence summary of your response. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{
+    Examples of synthetic prompts generated for $k=5$, which contains a combination of five verifiable constraints.
+    }
+    \label{tab:prompt_examples}
+\end{table}

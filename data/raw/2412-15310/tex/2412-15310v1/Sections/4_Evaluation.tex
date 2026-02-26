@@ -1,0 +1,190 @@
+\begin{table*}[ht]
+\centering
+\footnotesize
+\caption{Overall correlation with human scores for web UI similarity metrics. CC: Correlation coefficient (absolute value); OR: Outlier ratio; MAE: Mean absolute error; RMS: Root mean square error; SROCC: Spearman's rank-order correlation coefficient (absolute value). We mark the \textbf{best results} with bold font and the \underline{second best} with underline. Metrics are sorted by their SROCC.}
+\label{tab:IQA}
+\vspace{-5pt}
+\begin{tabular}{@{}lcccccccccc@{}}
+\toprule
+ & \multicolumn{4}{c}{Variance-Weighted Regression} & \multicolumn{4}{c}{Non-Linear Regression} & \multicolumn{1}{c}{Direct} \\ 
+\cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(lr){10-10}
+ & CC $\uparrow$ & MAE $\downarrow$ & RMS $\downarrow$ & OR $\downarrow$ & CC $\uparrow$ & MAE $\downarrow$ & RMS $\downarrow$ & OR $\downarrow$ & SROCC $\uparrow$ \\ 
+\midrule
+MAE   & \textbf{0.547} & \underline{4.10} & \textbf{1.95} & 0.049 & \underline{0.515} & \underline{0.646} & \underline{0.765} & 0.013 & \textbf{0.542} \\
+NEMD  & \underline{0.469} & \textbf{3.98} & \textbf{1.95} & 0.052 & \textbf{0.532} & \textbf{0.628} & \textbf{0.752} & 0.023 & \underline{0.508} \\
+PSNR  & 0.323 & 5.69 & 2.46 & \textbf{0.000} & 0.434 & 0.679 & 0.800 & 0.016 & 0.451 \\
+
+CLIP  & 0.314 & 5.37 & \underline{2.41} & 0.013 & 0.426 & 0.681 & 0.800 & \underline{0.010} & 0.340 \\
+
+SSIM  & 0.305 & 5.47 & 2.42 & \underline{0.010} & 0.381 & 0.699 & 0.817 & \textbf{0.000} & 0.218 \\
+
+LPIPS & 0.221 & 5.70 & 2.49 & \underline{0.010} & 0.290 & 0.726 & 0.847 & 0.013 & 0.168 \\
+
+\midrule
+Human  &       &      &      &       &       &       &       &       & 0.640 \\
+\bottomrule
+\end{tabular}
+\vspace{-5pt}
+\end{table*}
+
+
+\begin{table*}[h!]
+    \centering
+    \footnotesize
+    \caption{Visual metrics of models across methods. SC: Self-contained; ZS: Zero-shot; CoT: Chain-of-thought; SR: Self-refine. The best result per model is highlighted in bold.}
+    \label{tab:visual-metrics}
+    \vspace{-5pt}
+    \begin{tabular}{@{}lcccccccccccc@{}}
+        \toprule
+        Model & \multicolumn{4}{c}{Gemini-Pro} & \multicolumn{4}{c}{GPT-4o} & \multicolumn{4}{c}{Claude-3.5} \\
+        \cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(lr){10-13}
+        Method & SC  & ZS  & CoT & SR & SC  & ZS  & CoT & SR & SC  & ZS  & CoT & SR \\
+        \midrule
+        MAE\textsubscript{\(\downarrow\)} & 68.3 & 66.7 & 66.5 & \textbf{63.1} & 69.3 & 67.7 & 67.9 & \textbf{65.1} & 71.6 & 69.1 & 69.3 & \textbf{69.4} \\
+        NEMD\textsubscript{\(\uparrow\)} & 0.732 & 0.744 & 0.743 & \textbf{0.757} & 0.730 & 0.734 & 0.735 & \textbf{0.750} & 0.717 & \textbf{0.732} & 0.729 & 0.725 \\
+        CLIP\textsubscript{\(\uparrow\)} & 0.771 & 0.785 & 0.789 & \textbf{0.797} & 0.753 & 0.766 & 0.766 & \textbf{0.774} & 0.767 & 0.788 & 0.784 & \textbf{0.792} \\
+        \bottomrule
+    \end{tabular}%
+\vspace{-10pt}
+\end{table*}
+
+\begin{table}[h!]
+    \centering
+    \footnotesize
+    \caption{RER of models across methods. SC: Self-contained; ZS: Zero-shot; CoT: Chain-of-thought; SR: Self-refine. The best result per model is highlighted in bold.}
+    \label{tab:function-metrics}
+    \vspace{-5pt}
+    \begin{tabular}{@{}lcccc@{}}
+        \toprule
+         Act. Exist. Ratio$_\uparrow$ & SC    & ZS     & CoT    & SR \\
+        \midrule
+        Gemini-Pro   & 0.008 & 0.822 & 0.819 & \textbf{0.832} \\
+        GPT-4o       & 0.006 & 0.779 & 0.774 & \textbf{0.803} \\
+        Claude-3.5   & 0.007 & 0.640 & 0.615 & \textbf{0.668} \\
+        \bottomrule
+    \end{tabular}%
+    \vspace{-10pt}
+\end{table}
+
+\begin{table*}[ht]
+    \centering
+    \footnotesize
+    \caption{Comparison of metrics across different models and prompting strategies. ZS: Zero-shot; CoT: Chain-of-thought; SR: Self-refine. The best result per dimension is highlighted in bold.}
+    \vspace{-5pt}
+    \label{tab:finegrain}
+    \begin{tabular}{@{}lccccccccc|c@{}}
+        \toprule
+        & \multicolumn{3}{c}{Gemini-Pro} & \multicolumn{3}{c}{GPT-4o} & \multicolumn{3}{c}{Claude-3.5} & \multirow{2}{*}{\textbf{Avg.}} \\
+        \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+        \textbf{Difference}$_\downarrow$ & \textbf{ZS} & \textbf{CoT} & \textbf{SR} & \textbf{ZS} & \textbf{CoT} & \textbf{SR} & \textbf{ZS} & \textbf{CoT} & \textbf{SR} & \\
+        \midrule
+        \textbf{Pos. Shift}   & 0.239 & 0.260 & 0.236 & 0.217 & 0.267 & 0.209 & \textbf{0.155} & 0.161 & 0.193 & 0.215 \\
+        \textbf{Area Diff}    & 0.376 & 0.389 & 0.403 & 0.360 & 0.375 & 0.360 & \textbf{0.279} & 0.326 & 0.334 & 0.356 \\
+        \textbf{Color Diff}   & 0.128 & 0.144 & 0.110 & 0.043 & 0.066 & 0.055 & 0.057 & \textbf{0.024} & 0.038 & 0.074 \\
+        \textbf{Text Diff}    & 0.014 & 0.011 & 0.009 & 0.013 & \textbf{0.004} & 0.005 & 0.020 & 0.011 & 0.005 & 0.010 \\
+        \bottomrule
+    \end{tabular}%
+    \vspace{-10pt}
+\end{table*}
+
+
+\section{Experiment Results}
+\subsection{The Best Web UI Similarity Metric}
+\label{sec:rq1}
+A critical challenge in the \taskname task is accurately evaluating web UI similarity. To verify the effectiveness of the evaluation metrics and determine the most suitable one, we initiated a human evaluation in the web UI domain, where we compared various image similarity methods (Section \ref{sec:metrics}) and discussed their alignment with human preferences. We sample 600 pairs of original and generated screenshots and recruit 14 college students with varying levels of familiarity with web applications to rate their perceived similarity on a Likert scale~\cite{joshi2015likert} within five categories: ``Highly Dissimilar'', ``Dissimilar'', ``Moderately Similar'', ``Similar'', and ``Highly Similar''. This setup follows standard image quality assessment (IQA) procedure~\cite{Wang2004ImageQA, VQEG2000}.
+
+We analyzed the alignment between human judgments and objective similarity scores following established evaluation protocols~\cite{VQEG2000, Wang2004ImageQA}:
+
+\begin{itemize}[leftmargin=*]
+    \item Spearman Rank-Order Correlation Coefficient (SROCC): Measure the rank correlation between human and objective scores by capturing the consistency of the rankings.
+    \item Variance-weighted Regression Analysis: Evaluate how well objective metrics predict human subjective scores using four key metrics: \textit{absolute correlation coefficient (CC)}, \textit{outlier ratio (OR)}, \textit{weighted mean absolute error (MAE)}, and \textit{weighted root mean square error (RMSE)}. This analysis identifies how well objective scores align with human judgments.
+    \item Nonlinear Regression Analysis: Use logistic functions to model the relationship between objective and subjective scores when the relationship is monotonic but nonlinear. We compute \textit{CC}, \textit{OR}, \textit{MAE}, and \textit{RMSE} to measure the strength and quality of the alignment.
+    \item Human Evaluators' Consistency: we calculated the SROCC for each pair of evaluators and averaged the results. This inter-rater reliability serves as a benchmark to evaluate the performance of objective metrics relative to human consensus.
+\end{itemize}
+
+Please refer to Appendix~\ref{appendix:IQA} for a detailed illustration of the metrics and evaluation practices.
+
+\textbf{Pixel-based methods generally perform better. MAE and NEMD perform the best across all approaches} (Table~\ref{tab:IQA}). The result is initially counter-intuitive as most previous works adopt semantic-level and structure-level metrics such as CLIP and SSIM~\cite{Si2024Design2CodeHF, xiao2024interaction2code, zhou2024bridging}. However, this result aligns with the practice in frontend development, where developers use various tools~\cite{pixelparallel, perfectpixel} to overlay the design image and the result web page to compare their pixel-level differences to refine their UI code~\cite{pixelperfectmedium, pixelperfectsteps}. Variance-weighted regression results showed that MAE and NEMD achieved the highest correlation coefficients (CC: 0.547, 0.469) and lowest RMS (1.95), demonstrating strong predictive accuracy. In non-linear regression, NEMD excelled with the highest CC (0.532) and lowest MAE (0.628) and RMS (0.752), effectively capturing non-linear relationships. 
+
+\textbf{Inter-rater reliability (SROCC) among human evaluators is 0.640, indicating a relatively high agreement and consistency in subjective assessments}. Among the metrics, MAE (0.542) and NEMD (0.508) demonstrated the best consistency with human rankings. 
+
+\textbf{Despite their lower overall alignment scores, SSIM, CLIP, and LPIPS excelled in minimizing outliers (low OR)}, demonstrating their ability to reduce significant mismatches.
+
+To further understand the characteristics of these metrics, we divide the image pairs into three equal-sized groups according to their human ratings (i.e., low, medium, high) and analyze their correspondence with human scores (details in Appendix~\ref{appendix:sim-analysis}). Analysis reveals pixel-based metrics, particularly MAE and NEMD, excel in low and medium-similarity cases. MAE is the most robust metric, maintaining strong performance across all similarity levels. While semantic and structural metrics, such as SSIM and LPIPS, perform better in high-similarity cases, they have near-zero performance in low and medium-similarity groups. This indicates that \textbf{pixel-level features are more effective at distinguishing dissimilar images, whereas semantic and structural information better captures fine-grained similarities.}
+
+
+
+
+
+\subsection{Effectiveness of the Resource List}
+\label{sec:rq2}
+Central to our framework is a novel data structure, the resource list. To assess its impact, we employ MLLMs to generate web page code under various prompting strategies (Section~\ref{subsubsec:prompt}), using the two best-performing metrics (MAE and NEMD) and the best-performing high-level metrics (CLIP) for visual similarity and RER to measure the function similarity. We use the result of the self-contained (SC) prompt as a baseline. 
+
+\textbf{Adding resource lists can improve the visual similarity of a generated webpage across different MLLMs and metrics}. Table~\ref{tab:visual-metrics} shows the comparison of visual metrics. We observe that SC consistently results in the lowest visual scores. This is because resource lists enable MLLMs to include the exact images displayed on the webpage, thus enhancing the overall similarity. Without resource lists, MLLMs can only use placeholder images in the generated web code. Some examples of such cases are in Appendix~\ref{appendix:visual-compare}, Fig.~\ref{fig:data-compare}. This highlights the practical value of resource lists in real-world web development compared to self-contained methods.
+
+\textbf{Resource lists enable MLLMs to generate webpages with valid resources, significantly boosting RER from 0\% to 66\%-80\%}. Table~\ref{tab:function-metrics} shows that under SC prompting, MLLMs exhibit near-zero functional similarity due to the lack of guidance for generating valid links. However, some links are inferred through common sense (e.g., ``facebook.com'' for Facebook). Among prompting strategies, self-refine (SR) consistently achieves the highest scores across models, making it the most effective for both visual and functional metrics. Genimi-Pro emerges as the top-performing MLLM in reproducing functionality.
+
+An interesting observation is that CoT prompting slightly decreases performance despite its reasoning capability. We discuss this phenomenon in Appendix~\ref{appendix:CoT}.
+
+
+
+\subsection{Limitations of MLLMs in MRWeb}
+\label{sec:rq3}
+For all matched actionable element pairs, we calculate their fine-grained metrics to have a deeper understanding of MLLMs' strengths and weaknesses.
+
+
+\textbf{The main challenge in \taskname generation is the visual grounding problem, where MLLMs struggle to replicate the position and size of elements} (Table~\ref{tab:finegrain}). This is reflected by the Positional Shift and Area Difference metrics. MLLMs generate elements with an average 21.5\% positional shift relative to the entire webpage and an average 35.6\% size difference compared to the original elements.
+
+
+
+\textbf{Despite these issues, MLLMs perform well in recognizing color and text}, with Color Difference and Text Similarity metrics showing much smaller errors. Among the models, Claude-3.5 demonstrates the best positional accuracy and size recognition, with the lowest Positional Shift (15.5\%) and Area Difference (27.9\%) in the Zero-shot strategy. GPT-4o excels in Text Similarity (0.004), showing strong semantic accuracy. 
+
+\begin{figure}[ht]
+    \centering
+        % \hspace{5px}
+        \begin{subfigure}[b]{0.49\linewidth}
+            \includegraphics[width=\linewidth]{Sections/figs/gpt4o_MAE.pdf}
+            \vspace{-20pt}
+            \caption{GPT-4o MAE$_\downarrow$}
+            \label{fig:gpt4o-mae}
+        \end{subfigure}
+         \begin{subfigure}[b]{0.49\linewidth}
+            \includegraphics[width=\linewidth]{Sections/figs/gpt4o_match_ratio.pdf}
+            \vspace{-20pt}
+            \caption{GPT-4o RER$_\uparrow$}
+            \label{fig:gpt4o-aer}
+        \end{subfigure}
+        \vspace{-20pt}
+        \caption{GPT-4o performance decreases with input image size (million pixels) and resource list length.}
+        \vspace{-10pt}
+\end{figure}
+
+
+\textbf{The performance of MLLMs degrades with increasing input complexity, suggesting further optimization in handling large-scale and complex inputs.} To evaluate the robustness of MLLMs in the \taskname task, we analyzed their visual (MAE) and functional (RER) performances across varying image sizes and resource list lengths. As shown in Fig. \ref{fig:gpt4o-mae} and \ref{fig:gpt4o-aer}, GPT-4o's performance lowers with increasing input complexity. While it performs well on simpler websites with smaller image sizes and shorter resource lists, its accuracy declines significantly for intricate websites. Similar patterns are observed in other MLLMs, as detailed in Appendix~\ref{appendix:complexity}.
+
+
+
+
+\subsection{\taskname’s Practical Capabilities.}
+\label{sec:rq4}
+We developed a user-friendly tool within the \taskname framework to convert visual designs into multi-page, realistic web UI code. The tool's interface is shown in Appendix~\ref{appendix:demo}. We conducted a case study using AI-generated design images\footnote{\url{https://openai.com/index/dall-e-3/}} to build a personal website with three pages: home, project, and contact (Appendix~\ref{appendix:demo}). We introduced various resources to each page to test the tool’s capabilities. These resources include internal links, external links, images, and backend routing (Table~\ref{tab:practical}). The tool successfully addressed all the challenges, achieving a 100\% success rate. The demonstration video of the entire development procedure is available online\footnote{\url{https://github.com/WebPAI/MRWeb}}. Specifically, the generated home page and project page included internal and external links and embedded images with pixel-perfect alignment. The contact page demonstrated the tool’s ability to integrate backend routing seamlessly, implying its full-stack capabilities. 
+
+\begin{table}[ht]
+    \centering
+    \footnotesize
+    \caption{Total number of challenges in the home, project, and contact page versus tool success rate.}
+    \vspace{-5pt}
+    \label{tab:practical}
+    \begin{tabular}{lcc}
+        \toprule
+        Resource & Count & Success \\
+        \midrule
+        Internal links &  7 & 100\% \\
+        External links &  9 & 100\% \\
+        Images         &  13 & 100\% \\
+        Backend routing & 1 & 100\% \\
+        \bottomrule
+    \end{tabular}
+    \vspace{-5pt}
+\end{table}
+

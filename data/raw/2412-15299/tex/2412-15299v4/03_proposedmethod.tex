@@ -1,0 +1,57 @@
+\section{Proposed Method}
+The overall structure of the proposed multilingual ASR pipeline,~\shortname, comprises a universal transcription generation phase and a language-specific transliteration phase, as shown in Fig~\ref{fig:pipeline}. 
+We produce universal transcriptions by finetuning an audio encoder with an additional classification layer.
+Consequently, we manually select a prompt type from a predefined dictionary and combine it with language information to generate the input prompt for the universal converter.
+Finally, by feeding this input prompt into the universal converter, we translate the universal transcription into language-specific ones.
+
+\subsection{Universal Transcription Generation}
+Previous studies in linguistics~\cite{ladefoged1996sounds, clark2007introduction} have shown that the phonological characteristics of human speech are constrained by a limited range of sounds due to the anatomical structure of the vocal tract. 
+Similarly, in the ASR domain, prior research~\cite{taguchi-chiang-2024-language} has empirically demonstrated that the primary obstacle in multilingual ASR is the orthographic complexity across languages.
+Through the integration of these two insights, we aim to unify orthographic systems across diverse languages by standardization of notations into a Latin character system.
+This approach establishes alignment between phonetic and orthographic features through a unified transcription system.
+As a result, we develop a universal transcription generator capable of producing consistent transcriptions across multilingual speech corpora, including unseen languages. 
+
+\subsubsection{International Phonetic Alphabet.} 
+The first method for orthography unification is to use the international phonetic alphabet (IPA).
+IPA is a phonetic notation system that includes four elements: consonants, vowels, diacritics, and suprasegmentals. 
+IPA can precisely transcribe pronunciations in a consistent format with a combination of the four elements.
+There are challenges with the IPA, especially in vocabulary mapping, and one possible solution is to treat the combination of elements as a single token (e.g., ts, dz, etc.).
+However, due to the vast diversity of possible combinations makes this approach difficult to implement.
+Conversely, treating each IPA character as a distinct token introduces another issue: characters without phonetic value must be mapped to specific frames as shown in Fig~\ref{fig:problems}.
+Since diacritics and suprasegmentals provide detailed information about pronunciation (e.g., length, tone, and stress) but do not carry specific phonetic values, mapping them to distinct frames can introduce confusion during the training process. 
+
+\input{tables/prompt_examples}
+\subsubsection{Romanization.} Romanization is an alternative method for orthography unification which involves converting text from various writing systems into Latin script.
+While Romanization does not preserve phonetic features as precisely as the IPA, it generally retains phonetic information.
+Additionally, Romanization offers several advantages over the IPA.
+Romanization standardizes diverse writing systems using the Latin alphabet, which is already employed by the majority of languages.
+In contrast, IPA requires a specific set of rules for converting the orthography of each language into its IPA representation.
+Thus, Romanization is more efficient as it only requires conversion for languages that do not use the Latin alphabet.
+Furthermore, Romanization is advantageous for LLMs, as a large portion of their training data consists of Latin characters.
+Given these benefits, we adopt Romanization as a method for orthography unification. 
+
+\input{figures/problems}
+\subsubsection{Universal Transcription Generator.} 
+Since our goal is to generate a universal transcription with unified orthography, our first approach was leveraging a wav2vec2.0-phoneme~\cite{xu2021simpleeffectivezeroshotcrosslingual}.
+However, we found that directly passing phoneme tokens to the universal converter is suboptimal for transliteration, as it generates phoneme-level tokens without accounting for spacing. 
+To address this, we shifted our focus to developing a universal transcription generator that produces character-level tokens while incorporating spacing information.
+In this context, Romanization provides a universal character-level orthographic representation, effectively reducing the vocabulary size to around 30 tokens compared to IPA.
+Since Romanization aligns with the common phonetic features preserved across languages, we are also confident in the proposed method's strong generalization ability for languages not explicitly included in the training data.
+We selected wav2vec2.0-XLS-R~\cite{babu2021xlsrselfsupervisedcrosslingualspeech} with 1 billion parameters, an SSL model pre-trained on 128 languages, as the audio encoder to leverage the advantages of pre-training on a diverse set of languages.
+We then attach a classification layer on top and fine-tune both the audio encoder and the classification layer with speech and Romanized transcription pairs to generate universal transcriptions.
+
+\subsection{Language-Specific Transliteration}
+The next step is to revert the universal transcription, which retains phonetic features, back to its original language-specific form. 
+Since this process involves a text-to-text transformation, we approach it as a transliteration task.
+Consequently, we focused on the versatility of LLMs which excel in multilingual and multitask benchmarks due to extensive training on diverse text data.
+Therefore, we aim to utilize LLMs as universal converters to transform Romanized transcriptions into language-specific ones.
+
+\subsubsection{Prompt Generation.}
+While LLMs have brought a tectonic shift to the NLP domain, additional techniques are still needed to fully harness their emergent abilities.
+In this context, prompt engineering has emerged as a field focused on crafting and refining prompts to effectively utilize LLMs across diverse applications and research areas.
+To maximize the performance of the inversion process, in the ablation study, we empirically investigated various prompt types: zero-shot, few-shot, zero-shot chain-of-thought (CoT), and prompt chaining, to determine which is the most appropriate for this task. 
+
+\subsubsection{Universal Converter.}
+We transliterate the unified Romanized transcription by leveraging LLM's multilingual and multitask language understanding ability without finetuning.
+Since our approach does not require any special fine-tuning, the universal converter can be replaced with any superior LLMs, potentially improving the performance of our proposed pipeline in line with the rapidly advancing capabilities of LLMs.
+For this paper implementation, we utilize LLaMA3-8B, 4-bit quantized LLaMA3-70B~\cite{touvron2023llamaopenefficientfoundation}, and GPT-4o-mini~\cite{openai2024gpt4technicalreport} as the universal converter.

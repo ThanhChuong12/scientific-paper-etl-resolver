@@ -1,0 +1,269 @@
+\section{Evaluation}
+We evaluate the custom foundational models trained using \system across resource-constrained edge platforms. Specifically, we utilize single-board computers with diverse computational capabilities, as illustrated in Figure~\ref{fig:single-board-computers}. In these experiments, we focus on the impact of the pre-training data on the model's accuracy for embedded sensing applications. We compare the performance of our custom model against state-of-the-art language models, focusing on metrics such as token generation rate, task completion time, and accuracy.  The key highlights of some of the results are as follows. 
+
+\begin{itemize}
+\item Custom models exhibit improved performance after careful fine-tuning and incorporating domain-specific information into the pre-training dataset.
+\item Custom models achieve better token generation rates and task completion times than commodity models
+\item Smaller models can be deployed on resource-constrained edge platforms,  addressing memory limitations that hinder the deployment of commodity models.
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{ccccc}
+\hline
+\begin{tabular}[c]{@{}c@{}}Dataset\\ Name\end{tabular} & Source & \# Readings & \# Datastreams & \begin{tabular}[c]{@{}c@{}}\# Output\\ Labels\end{tabular} \\ \hline
+\vspace{5pt}
+\begin{tabular}[c]{@{}c@{}}Gesture\\ Detection\\  \end{tabular} & In-house & 630 & 4 & 3 \\
+\vspace{5pt}
+\begin{tabular}[c]{@{}c@{}}Localisation\\ \end{tabular} & In-house & 350 & 8 & 3 \\
+\vspace{5pt}
+\begin{tabular}[c]{@{}c@{}}Swimming Style\\ Detection  \end{tabular} & Brunner et al.~\cite{swimming_dataset} & 3,730 & 3 & 5 \\  \hline
+\end{tabular}
+}
+%\vspace{-4mm}
+\caption{Datasets used for evaluation. The datasets are split into 70\% for training, 10\% for validation, and 20\% for testing.}
+\label{tab:datasets}
+\vspace{-4mm}
+\end{table}
+
+
+\begin{figure}[htb]
+\centering
+\begin{subfigure}{1\columnwidth}
+    \centering
+    \includegraphics[width=0.7\columnwidth]{figures/use_case_gesture.pdf}
+    \caption{}
+\end{subfigure}%
+\vfill
+\begin{subfigure}{1\columnwidth}
+    \centering
+    \includegraphics[width=0.85\columnwidth]{figures/Hand_gestures_v1.pdf}
+    \caption{}
+\end{subfigure}
+\vspace{-4mm}
+\caption{\emph{ (a) A user performing a hand gesture, and (b) observed light intensity values for different hand gestures.}}
+\label{fig:gesture_dataset}
+\end{figure}
+
+
+\begin{figure}[htb]
+\centering
+  \includegraphics[width=\columnwidth]{figures/single-board-computers.pdf}
+  \vspace{-4mm}
+  \caption{\emph{Embedded platforms for running \system\space-trained models vary in processing and memory capabilities, ranging from a few hundred megabytes to several gigabytes of RAM.}}
+    \vspace{-4mm}
+  \label{fig:single-board-computers}
+\end{figure}
+
+\begin{figure*}[tb]
+\centering
+\begin{subfigure}{1\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth]{figures/use_case_localisation.pdf}
+    \caption{}
+\end{subfigure}
+\hfill
+\begin{subfigure}{1\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth, height=4cm]{figures/localisation_dataset.pdf}
+  \caption{}
+\end{subfigure}%
+\vspace{-4mm}
+\caption{\emph{The localisation dataset was created based on data collected from sensors deployed on a moving robot in an indoor workspace. (a) shows sensors deployed on an indoor robot for sensor-based location detection, and (b)The physical location and sensor data collected.}}
+\label{fig:localisation_dataset}
+\end{figure*}
+
+\fakepar{Dataset} Since we target embedded sensing applications as a case study in this work, we collect relevant datasets to support such applications. Specifically, we utilize three datasets, summarized in Table~\ref{tab:datasets}. Two datasets—gesture detection and localization—were collected specifically for this work, while the swimming style detection dataset was sourced from~\cite{swimming_dataset} and is publicly available. It is worth noting that our framework can easily incorporate any additional datasets.
+
+The custom dataset collected for this work includes 630 instances of hand gesture data captured using the APDS9960 light sensor at a sampling rate of 12.6 Hz, with each gesture instance lasting 4 seconds. This data was recorded from seven participants performing gestures under three distinct light levels: low (100–200 lux), medium (600–750 lux), and high (1500–1600 lux), as well as across two distance ranges: close (2–4 cm) and far (8–10 cm). The gestures included \textit{“Single Tap”}, \textit{“Double Tap”}, and \textit{“Hold”} (as illustrated in Figure~\ref{fig:gesture_dataset}), with an equal number of samples for each gesture class.
+
+The second dataset captures environmental parameters characterizing various locations within a workspace (illustrated in Figure~\ref{fig:localisation_dataset}). The recorded parameters include temperature (°C), humidity (\%), air pressure (hPa), light intensity (RGB channels), and sound intensity. These measurements were taken at three distinct indoor locations: the entrance, the charging station, and the server rack. The dataset contains 350 instances collected using sensors mounted on a moving robot, with readings taken hourly between 11:00 AM and 5:00 PM over two consecutive days at the respective locations. The dataset comprises 120 instances each for the \textit{“Charging Station”} and \textit{“Entrance”} locations, and 110 instances for the \textit{“Server Rack”}.
+
+Finally, the externally sourced dataset, the Swimming Style Detection Dataset~\cite{swimming_dataset}, consists of 17 hours of sensor data collected from 40 swimmers of varying skill levels. The data, obtained using the Nixon The Mission\footnote{\url{https://www.nixon.com/ch/en/smart}} smartwatch, includes measurements from an accelerometer, gyroscope, magnetometer, barometer, and ambient light sensor, sampled at a frequency of 30 Hz. We utilized only the accelerometer data for evaluations, comprising three streams representing movement along the $X$, $Y$, and $Z$ axes. These streams were segmented into chunks containing 100 readings per stream (approximately 3 seconds) to create input samples. Each chunk was annotated with one of five action labels, resulting in the following class distribution: \textit{“Freestyle”} (1,504 samples), \textit{“Breaststroke”} (285 samples), \textit{“Backstroke”} (475 samples), \textit{“Butterfly”} (222 samples), and \textit{“Transition”} (1,244 samples).
+
+
+
+\fakepar{Pre-training and Fine-tuning Using Custom Models}
+We provide a brief overview of the specific steps undertaken with these datasets for pre-training and fine-tuning model development within the \system framework. For pre-training, we first created a sensor dataset by processing data from the Extrasensory~\cite{extra_sensory} and SHL~\cite{shl} datasets, as illustrated in Figure~\ref{fig:dataset-prep}. This sensor dataset was combined with the Fineweb dataset, using a 40:60 split (unless explicitly stated otherwise) to pre-train the custom models for evaluation.
+
+For fine-tuning, we followed the steps outlined in Figure~\ref{fig:fine-tuning}. Due to space constraints, we will only detail this process for the gesture dataset. The gesture dataset consists of four time-series data streams: proximity and light intensity (red, blue, and green channels). For each sample, sensor readings were concatenated into a text string formatted as follows:
+\textit{Proximity: [...] \textbackslash n Red: [...] \textbackslash n Blue: [...] \textbackslash n Green: [...]}''.   The corresponding output labels included one of three gestures: \textit{Tap}’’, \textit{Double Tap}'', and \textit{Hold}’’. The instruction provided was:
+``\textit{Sensor data values are provided in the following order: proximity, red, green, and blue light intensity values. Using these sensor values, determine the hand gesture performed. Give your answer only as Tap, Double Tap, or Hold.}’’
+
+
+
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{0.42\textwidth}
+        \centering
+  \includegraphics[width=\textwidth]{figures/results/accuracies_gesture.pdf}
+      \vspace{-6mm}
+        \caption{Gesture dataset}
+     \vspace{-2mm}
+        \label{fig:gesture_acc}
+    \end{subfigure}
+        \hfill
+    \begin{subfigure}[b]{0.42\textwidth}
+        \centering
+  \includegraphics[width=\textwidth]{figures/results/accuracies_local.pdf}
+      \vspace{-6mm}
+        \caption{Localisation dataset}
+     \vspace{-2mm}
+        \label{fig:local_acc}
+    \end{subfigure}
+            \hfill
+    \begin{subfigure}[b]{0.15\textwidth}
+        \centering
+  \includegraphics[width=\textwidth]{figures/results/accuracies_legend.pdf}
+      \vspace{+2mm}
+     %    \caption{}
+     % \vspace{-2mm}
+        \label{fig:legend}
+    \end{subfigure}
+
+    \caption{\emph{Compares the accuracy of fine-tuned off-the-shelf models (Phi and Llama) and custom models across (a) gesture and (b) localisation datasets, as a function of model size. The plots show that larger models do not always achieve high accuracy. In several cases, a smaller custom model achieves comparable or better performance than the larger model}}%, illustrating the efficiency of custom pre-training for specific tasks. (Phi 3 q2\_k and custom models below 82M parameters are excluded due to their very low accuracies)}}
+    \vspace{-2mm}
+    \label{fig:accuracy}
+    \end{figure*}
+
+
+\fakepar{Experiment setup} We use multiple single-board computers for deploying custom and off-the-shelf models. This includes Latte Panda Sigma~\cite{lattepanda} (Intel Core i5-1340P, 32 GB RAM, Ubuntu 20.04.4 LTS), Orange Pi 5 \cite{orangepi5} (16GB RAM, Orange Pi OS), and Orange Pi Zero 2 W \cite{orangepi502w} (2GB RAM, Orange Pi OS). We use the llama.cpp~\cite{llama.cpp} library and its metrics (token generation rate and run time) for the execution and evaluation of the selected models. 
+
+We have set the LLM's parameters for generating the responses: temperature (T = 0.7), repeat penalty = 1.1, and threads (t = 2) to maintain consistency across models and experiments. In addition to the custom models, we employ off-the-shelf LLMs and their quantized versions \cite{quantization} to enable comparison. In the quantized versions, model weights are stored at lower precisions, which reduces the memory requirements but can also impact the quality of the model’s responses. Several quantization schemes exist, among which we used q2\_k and q4\_k for some of the evaluations. In all experiments, we conduct ten trials for each configuration and plot the average value and the standard deviation unless specified otherwise. We also evaluate model performance using accuracy, which is the percentage of correctly generated outputs. Since our prompts follow a specific template, the correct label is expected within the first few tokens. We check for the expected word within the first 3–4 tokens (ignoring line breaks). If it is missing, or if gibberish or incorrect classes are predicted, the output is classified as incorrect. Accuracy is calculated as the ratio of correct predictions to the total number of test cases, then multiplied by 100 for a percentage score.
+
+
+  
+
+
+
+\subsection{Accuracy of Fine-tuned Custom Models}
+
+
+
+The custom models, Llama and Phi, are fine-tuned on three different datasets, and their accuracy is evaluated based on test data. The quantized versions of the fine-tuned Phi and Llama models are also evaluated for accuracy. However, the same analysis could not be performed on the swimming dataset, as the fine-tuning process for Llama 3 and Phi 3 exceeded 72 hours (3 days) due to the dataset's higher count of samples compared to the collected datasets. It can be noted that Phi 3\_q2 is not plotted as it achieved zero accuracy, as it repeatedly generated irrelevant outputs (mostly repeating the prompt). 
+
+\fakepar{Insights} As shown in Figure \ref{fig:accuracy} the accuracy of the custom models, Llama, and Phi models fine-tuned with the collected datasets. Notably, the smaller custom models perform on par with or better than the larger models. Among the datasets, higher accuracy is observed for the localization dataset, suggesting that the gesture dataset poses more challenges. For the gesture dataset, Llama 2 outperforms Llama 3, while Phi 3 consistently performs well across both datasets, with Phi 2 following closely. Phi models performed better than Llama models, which can be attributed to their pre-training data being more focused on computer programming (coding) datasets, enhancing their ability to handle sensor data as well. 
+
+\subsection{Different Pre-training Datasets}
+
+
+\begin{figure}[htb]
+    \centering
+            \begin{subfigure}[b]{0.49\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/results/split_gesture.pdf}
+        \vspace{-6mm}
+        \caption{Gesture}
+      \vspace{-3mm}
+        \label{fig:split_gesture}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/results/split_local.pdf}
+      \vspace{-6mm}
+        \caption{Localisation}
+     \vspace{-3mm}
+        \label{fig:split_local}
+    \end{subfigure}
+
+    \caption{\emph{Compares the accuracy of fine-tuned custom models (124M) on the (a) gesture and (b) localization datasets. The models are pre-trained on varying splits of sensor data and general web data, with a split of 0 indicating training solely on web data and a split of 1 indicating training exclusively on the sensor dataset. The shaded region highlights the preferred data split.}}
+
+    \vspace{-2mm}
+    \label{fig:splits}
+    \end{figure}
+
+ With the sensor dataset created earlier, we merged the Fineweb dataset to generate a series of mixed datasets in varying proportions, ranging from 0 (only Fineweb dataset) to 1 (only sensor dataset) in increments of 0.1. Then, a custom 124M model is pre-trained on these datasets separately and subsequently fine-tuned separately on gesture and localization datasets.Figure~\ref{fig:split_gesture} and \ref{fig:split_local} show the accuracy of the fine-tuned 124M parameter model, pre-trained on varying splits of sensor and web data. It can be observed that an almost equal mix of web and sensor data yields the highest accuracy (marked in blue). For both tasks, performance declines significantly as the data split shifts towards either extreme (i.e., pure web or pure sensor data).
+ 
+ \fakepar{Insights} This suggests that a balanced dataset improves model performance for sensor data-specific applications like gesture recognition and localization. A notable spike in accuracy is observed with the localization dataset when the split is 0.9, which occurred because the model consistently returned the same output label for all input prompts, artificially inflating the accuracy to 33\%.
+
+
+\subsection{Varied Custom Model Parameter}
+
+\begin{figure}[h]
+\centering
+  \includegraphics[width=0.8\columnwidth]{figures/results/accuracy_gpt2.pdf}
+  \vspace{-4mm}
+  \caption{\emph{The accuracy of sensor data analysis increases with the model’s parameter size. Notably, even smaller models with fewer than 100 million parameters achieve high accuracy.}}
+  \vspace{-4mm}
+  \label{fig:gpt_acc}
+\end{figure}
+
+\begin{figure}[htb]
+\centering
+  \includegraphics[width=0.9\columnwidth]{figures/eval/small_models_combined.pdf}
+  \vspace{-4mm}
+  \caption{\emph{Shows the variation of evaluation tokens per second when prompted with a gesture recognition prompt.  The lowest token generation rate is comparable to the average human typing speed, demonstrating that custom models achieve reasonable performance, even on resource-constrained platforms.}}
+    \vspace{-4mm}
+  \label{fig:small_models}
+\end{figure}
+
+In evaluating the performance of custom models on resource-constrained platforms, we employ models with varying parameters (30M to 124M), fine-tuned on the datasets discussed above. We evaluate performance based on accuracy, inference time, and tokens per second. Figure~\ref{fig:gpt_acc} shows the accuracy of smaller models across the three datasets considered. We observe that accuracy generally improves as the number of model parameters increases, although some minor exceptions exist. Notably, the 30M and 50M models perform poorly on the gesture dataset, with the custom 30M model achieving zero accuracy. Figure~\ref{fig:small_models} shows the variation of token generation rate with the number of parameters of gesture fine-tuned custom models. We observe that models with fewer parameters achieve higher tokens per second rates compared to larger models or those with higher parameter counts. Additionally, the token generation rate decreases as the computational power of the device decreases. Figure~\ref{fig:inference_timings} shows the inference time with varied model parameter sizes across custom and off-the-shelf models.
+
+\begin{figure}[htb]
+\centering
+  \includegraphics[width=0.9\columnwidth]{figures/results/inference_time.pdf}
+  \vspace{-4mm}
+  \caption{\emph{Smaller models enable rapid inference. \system\space-trained models significantly improve inference time while maintaining high accuracy for the sensor data analysis.}}
+  \vspace{-4mm}
+  \label{fig:inference_timings}
+  \Description{}
+  % Larger models, such as Llama-2 and Llama-3, exhibit significantly higher inference times compared to smaller custom models. The inset zooms in on smaller models (ranging from 30M to 124M parameters), highlighting their much lower inference times, which make them more suitable for deployment in resource-constrained environments.
+\end{figure}
+
+\fakepar{Insights} Smaller models achieve higher token generation rates and reduced inference times, presenting a trade-off with accuracy.
+
+As shown in Figure~\ref{fig:gpt_acc} for the swimming dataset, while the maximum accuracy achieved was 93.1\%, the highest F1-score recorded was 0.78, which is lower than the 0.97 F1-score reported in \cite{swimming_dataset}. It is important to note that we only used 3 datastreams (accelerometer readings along X, Y, and Z) out of the 11 provided in the dataset, due to the limited window context of the smaller models used in this study.
+
+% We use a gesture data-based prompt and set the number of new tokens to generate to $n = 9$.
+
+
+
+\subsection{Multiple Active Instances}
+
+\begin{figure}[htb]
+\centering
+  \includegraphics[width=0.9\columnwidth]{figures/eval/lattepanda_general_prompt_eval.pdf}
+  \vspace{-4mm}
+  \caption{\emph{Shows the variation of evaluation tokens per second when multiple instances of the same LLM are running simultaneously on LattePanda Sigma.}}
+    \vspace{-4mm}
+  \label{fig:multiple_active_instances}
+\end{figure}
+
+We evaluate the impact of running multiple concurrent instances of the same model on the token generation rate. We use the sample prompt: \textit{"How to interface a sensor to a micro-controller? Explain in great detail."} and set the number of new tokens to generate to $n = 300$, deploying the models on LattePanda Sigma.As shown in Figure \ref{fig:multiple_active_instances}, we observed that across all models, the overall token generation rate decreases as the number of active instances increases. This rate reduction is more pronounced in larger models compared to smaller ones. 
+
+\fakepar{Insights} Notably, the custom model exhibits a significantly higher token generation rate due to its smaller size, which may allow multiple custom models specialized for different sensor data-related tasks to operate concurrently on resource-constrained devices without significantly compromising performance.
+
+
+\subsection{Varied Background Load}
+
+\begin{figure}[htb]
+\centering
+  \includegraphics[width=0.9\columnwidth]{figures/eval/background_load.pdf}
+  \vspace{-4mm}
+  \caption{\emph{Displays the total time taken by different models for inferring location under various background load conditions on the LattePanda Sigma. Custom models significantly outperform the other models by completing the inference task within a second.}}
+    \vspace{-4mm}
+  \label{fig:background_load}
+\end{figure}
+
+We evaluate the impact of background load on task completion time. To do this, we actively prompt a single model while multiple models are loaded into the memory of the LattePanda Sigma. We employ custom and off-the-shelf models fine-tuned on the localisation dataset, using a localisation-based prompt, and set the number of new tokens to generate to $n = 9$. We consider three different background loads based on the inactive models: High (three instances of Llama-3), Low (three instances of Phi-3), and None (no inactive LLMs loaded).As shown in Figure~\ref{fig:background_load}, we observe that the background load from inactive LLM instances has little to no impact on the time taken to achieve a task-inferring location. 
+\fakepar{Insights} The time taken by the custom model to perform the task is significantly less (over 70 times) than the time taken by other models for the same task across all background load conditions considered. This complements the results of the previous experiment, which showed that the custom model had a significantly higher token generation rate.
+
+
+\subsection{Multiple Edge platforms}
+
+\begin{figure}[htb]
+\centering
+  \includegraphics[width=0.9\columnwidth]{figures/eval/sbc_localisation_eval_tps.pdf}
+  \vspace{-4mm}
+  \caption{\emph{The smaller size of these models enables concurrent loading of multiple specialized models. Their token generation rates show they maintain efficient inference speeds even when running multiple instances simultaneously.}}
+    \vspace{-4mm}
+  \label{fig:tokens_load}
+\end{figure}
+
+We evaluated the performance of the custom model on different single-board computers and assessed it based on average tokens per second and the impact of running multiple concurrent instances of the same model. We used a custom model fine-tuned on the localisation dataset, with a localisation based prompt and a new tokens generated parameter set to $n = 4$. As shown in Figure~\ref{fig:tokens_load}, we observe that while the token generation rate decreases with an increasing number of concurrent instances on the SBC, it maintains a reasonable rate. Although the custom model can be deployed on all the SBCs considered, we observe a steep drop in the token generation rate when moving to more resource-constrained devices. This drop is due to the decreasing computing power of the processors in the SBCs.
+
+\fakepar{Insights} Even in highly constrained devices such as the Orange Pi Zero 2W, on which the considered off-the-shelf models cannot be deployed, the custom model achieves a token rate of approximately 6 tokens per second, comparable to the average typing speed of humans.
+

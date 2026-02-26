@@ -1,0 +1,29 @@
+ % !TEX root = ../main.tex
+ 
+
+ 
+ 
+ 
+% \subsection{Group Robust Methods with Adaptive Robust Scaling}
+% \subsection{Instance-wise Robust Scaling for Improving Group Robustness}
+ \subsection{Instance-wise Robust Scaling}
+ \label{sec:method}
+The optimal scaling factor can be applied adaptively to each test example and the instance-specific scaling has the potential to overcome the trade-off and improve accuracy even further.  
+Previous approaches~\cite{seo2021unsupervised, sohoni2020no} have shown the capability to identify hidden spurious attributes via clustering on the feature space for debiased representation learning.
+Likewise, we take advantage of feature clustering for adaptive robust scaling; we obtain the optimal class-specific scaling factors based on the cluster membership for each sample.
+The overall algorithm of instance-wise robust scaling (IRS) is described as follows.
+
+\begin{enumerate}
+  \item Perform clustering with validation data on the feature space and store the cluster centroids.   \item Find the optimal scaling factor for each cluster.
+%  \item Assign each test example to the nearest cluster using the stored cluster centroids in step 1.\vspace{-0.05cm}
+%  \textbf{4)} Apply the optimal scaling factors obtained in 2) to the samples of each cluster in the test split.
+  \item Apply the estimated scaling factor to the test example based on its cluster membership.
+\end{enumerate}
+
+In step 1, we use a simple \textit{k}-means clustering algorithm, where the number of clusters $K$ is set to the value that gives the highest robust coverage in the validation set. 
+Empirically, numbers larger than 10, \ie, $K > 10$, yield stable and superior results, compared to the original class-specific scaling.
+
+
+
+
+

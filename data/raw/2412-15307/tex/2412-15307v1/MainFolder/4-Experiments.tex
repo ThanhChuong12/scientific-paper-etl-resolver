@@ -1,0 +1,943 @@
+\section{Experiments}\label{sec:experiments}
+\subsection{Implementation Parameter and Environment}
+This study employs a deep learning model implemented using Python 3.9.2 and the open-source machine learning framework PyTorch v1.8.0. Computational processes are accelerated with an Nvidia GeForce RTX 2070 Super graphics card featuring an 8 GB frame buffer. The model training utilizes a hybrid loss function that combines Cinary Cross-Entropy Loss (BCELoss) and Dice Similarity Coefficient Loss (DSCLoss). The DSC value measures the similarity between two images. To calculate the values between the DSC, use Equation \ref{eqn_DiceScore}, where the annotated and output segmentation masks are denoted by \textit{A} and \textit{B}. This formula represents twice the intersection of the Region of Interest (ROI) compared to the sum of the ROIs in the two masks. The coefficient is 1 when the segmentation mask perfectly matches the ground truth mask; however, it becomes 0 if it does not match any pixels. According to the above definition, the Dice similarity coefficient is precisely the harmonic mean of precision and recall, which can also be expressed as Equation \ref{eqn_DiceScoreHarmonic}. The segmentation model is trained using a combined loss function. This loss function combines the BCELoss and DSCLoss see Equation \ref{eqn: Hybrid loss function}. A segmented image can be regarded as a classification of each pixel. The parameters $\omega$ and $1 - \omega$ are weights of the above two terms in our loss function, and both are set to 0.5.
+
+\begin{equation}
+\label{eqn_DiceScore}
+ \text{DSC}=\frac{2\times |A\cap B|}{|A|+|B|}
+\end{equation}
+
+\begin{equation}
+\label{eqn_DiceScoreHarmonic}
+ \text{DSC} = 2 \times \frac{\text{Recall} \times \text{Precision}}{\text{Recall} + \text{Precision}}
+\end{equation}
+
+\begin{equation}
+\label{eqn: Hybrid loss function}
+ \text{Loss value}= \omega \times \text{BCELoss} + (1 - \omega) \times \text{DSCLoss}
+\end{equation}
+
+Model updates are performed using the Adaptive Moment Estimation (Adam) optimizer with a learning rate of 1.00e-5, and L2 regularization is applied to prevent overfitting by incorporating a regularization term. Due to computational constraints, all experiments are conducted with a batch size of 4. To evaluate model performance, five-fold cross-validation is employed, partitioning the dataset into five independent folds at the patient level, ensuring a balanced distribution of patients. For the federated learning setup, the dataset is divided into three folds, each assigned to a local client (Fig. \ref{fig: Methods FL Procedure.}). Model training is conducted for 10 communication rounds, with each local client performing 1 epoch of training per round. This setup enables collaborative construction of a global model across distributed datasets.
+
+\subsection{Dataset Description}
+The IVUS dataset (IRB: 2021-05-002B) was collected from three independent hospitals, Taipei Veterans General Hospital (TVGH), Taichung Veterans General Hospital (VGHTC), and Kaohsiung Veterans General Hospital (VGHKS), Taiwan. A total of 151 individuals that undergo PCI and IVUS were included in the study. An IVUS mechanical system (OptiCross HD, 60 MHz Coronary Imaging Catheters, Boston Scientific Corporation) equipped with a 60 MHz wideband transducer collects raw data in DICOM format. Two physicians blinded to the participant information annotated approximately 87,505 frames of 2-dimensional images from 151 individuals. A cardiovascular is annotated within the target length indicated by the white line in the longitudinal view, which is the narrowing range of the lumen area owing to plaque growth as shown in Figure \ref{fig: cardiovascular in the longitudinal view.}. Each adjacent frame is approximately 3 mm apart. There are a certain number of frames depending on the length of the cardiovascular system. There are two classes in total, and each frame is annotated at the pixel level; class "0" for the non-region-of-interest area and class "1" for the region-of-interest area, which include the EEM, lumen, or plaque burden areas.
+
+To assess the inter-observer variability for the EEM, lumen, and plaque burden area, two independent domain experts (doctors or cardiologists), evaluated 3,000 randomly selected images. In Table \ref{tab: Inter-observer agreement}, the DSC is calculated for the inter-observer image analysis. The consensus between the two analysts determines the final annotations, and a senior expert resolves conflicts. Despite the conflicting opinions, there was an excellent inter-observer agreement between the two cardiologists for the EEM area annotations (DSC $0.753$), lumen area annotations (DSC $0.793$), and plaque burden index annotations (DSC $0.778$).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.25]{figures/IVUS_in_longitudinal_view.pdf}
+\caption{Cardiovascular appearance in the longitudinal view.}
+\label{fig: cardiovascular in the longitudinal view.}
+\end{figure} 
+
+\begin{table}[ht]
+ \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ \caption{Comparison of Segmentation Results for EEM, Lumen, and Plaque Burden Between the Proposed Model and Expert Annotations (DSC).}
+ \label{tab: Inter-observer agreement}
+ %\smallskip
+ \centering
+ \renewcommand{\arraystretch}{1.3}
+ \begin{tabular}{p{6em}p{3.5em}p{3.5em}p{6em}}
+  \hline\noalign{\smallskip}
+  \bfseries \tabincell{l}{} &
+  \bfseries \tabincell{c} EEM &
+  \bfseries \tabincell{c} Lumen &
+  \bfseries \tabincell{c} Plaque Burden Index\\
+  \hline\noalign{\smallskip}
+  Expert Annotations & {0.753} & {0.793} & {0.778}\\
+  Proposed Approach & {0.890} & {0.877} & {0.706}\\
+  \hline
+ \end{tabular}
+\end{table}
+
+\subsection{Experimental Results and Analyses}
+% \subsubsection{Quantitative Analysis}\label{subsection: Quantitative Analysis}
+Plaque in the cardiovascular system can obstruct ultrasound reflections, causing blood vessels to appear unclear on IVUS images. This results in manually annotating IVUS images becoming a time-consuming and labor-intensive process. Analysts must often rely on their expertise and experience to infer boundaries that are unclear or disconnected. Even among highly trained professionals, interpretations of the same image may vary, leading to non-identical annotations. According to Table \ref{tab: Inter-observer agreement}, two independent domain experts evaluated the same dataset, achieving Dice similarity coefficients of approximately 0.778 for the plaque burden index and 0.753 to 0.793 for the EEM and lumen. These results demonstrate excellent inter-observer agreement, highlighting the consistency of expert evaluations despite the inherent challenges.
+
+Quantitative indices demonstrate Dice similarity coefficients for segmenting the EEM, lumen, and plaque burden. The proposed parallel deep learning models were evaluated using five-fold cross-validation to segment these structures across different image coordinates. Key performance metrics, including Dice similarity coefficient, recall, and precision, were assessed. For EEM and lumen segmentation with coordinate conversion processing, the model achieved metrics exceeding 0.877, indicating high accuracy. Conversely, plaque segmentation resulted in metrics around 0.706, closely matching the results of domain experts and highlighting the increased complexity involved in accurately identifying plaque boundaries.
+
+Model inference time was also considered, emphasizing the need for real-time IVUS image segmentation during surgical procedures. An efficient model not only supports real-time operations but also enhances the framework's overall efficiency for deep learning tasks and federated learning applications, demonstrating its versatility and practical utility.
+
+\subsubsection{Plaque Segmentation Results:} Based on the quantitative analysis presented earlier, image segmentation in polar coordinates with post-processing improves the EEM segmentation results, particularly enhancing plaque burden segmentation. Detecting EEM areas is often challenging due to plaque burden artifacts that result in disconnected borders. A comparison of the plaque burden segmentation outcomes between the two methods is illustrated in Figure \ref{fig: SegmentationResults_Comparison}.
+
+The first and second columns display five consecutive frames along with their corresponding annotation masks. The third and last columns show the segmentation results obtained using Cartesian and polar coordinate methods, respectively. Both methods demonstrate comparable performance for these frames, achieving DSC scores of approximately 0.89. However, the Cartesian coordinate method exhibits notable signal loss on the right and left sides of the IVUS image, particularly in the fourth quadrant. This results in indentations on the left and right sides of the predicted segmentation outcomes. Artifacts result in boundaries that appear concave inward. While the polar coordinate method may produce jagged edges, the contours remain sharp and well-defined, minimizing the impact of such artifacts. Consequently, segmentation using polar coordinates delivers superior and more accurate results compared to other methods.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.20]{figures/SegmentationResults.pdf}
+\caption{Segmentation results of Cartesian system and polar coordinate conversion with post-processing.}
+\label{fig: SegmentationResults_Comparison}
+\end{figure} 
+
+\subsubsection{Consistency Evaluation Between Manual and Automatic Measurements:} The analyzed indicators include the EEM area, lumen area, plaque burden area, plaque burden index, EEM volume, lumen volume, and plaque burden volume. The plaque burden index, as defined by Equation \ref{eqn: Plaque Burden Index}, represents the proportion of the plaque burden relative to the EEM area. To evaluate the agreement between manual measurements and automatic estimations by the global model, a Bland-Altman plot, also known as a Tukey mean difference plot, is utilized.
+
+\begin{equation}
+\label{eqn: Plaque Burden Index}
+ \begin{aligned}
+ \text{Plaque Burden Index} &= \frac{\text{EEM Area} - \text{Lumen Area}}{\text{EEM Area}}\\\\
+ &= \frac{\text{Plaque Area}}{\text{EEM Area}}\\
+ \end{aligned}
+\end{equation}\\
+
+This study utilized 87,505 IVUS frames from 151 patients collected across three hospitals (TVGH, VGHTC, and VGHKS). The dataset was divided into 135 cases (78,749 frames) for training and 16 cases (8,756 frames) for global verification. A single patient could contribute multiple frames, resulting in a non-independent dataset.
+The plaque burden index, defined by the EEM, lumen, and plaque areas as shown in Equation \ref{eqn: Plaque Burden Index}, quantifies vascular blockage. Lower index values complicate plaque identification and influence training due to data distribution variations. Risk thresholds of 50\% and 70\% classify cardiovascular disease risk, with indices below 50\% indicating low risk and above 70\% signifying high risk \cite{10.1001/jamacardio.2023.2731}. Table \ref{table: description N=3 IID} summarizes dataset characteristics for federated learning with balanced and similar distributions.
+
+Figures \ref{figpolarBAPlot} and \ref{fig_cart BA-Plot} present the Bland-Altman analysis comparing quantitative indicators estimated by the global model, utilizing Cartesian and polar coordinate conversions, with evaluations from domain experts, including doctors and radiologists. Each data point represents a patient case, with the horizontal axis showing the average of two measurements and the vertical axis depicting their difference. A blue line represents the mean difference, while red lines indicate the 1.96 standard deviations from the mean, forming the 95\% confidence interval. Figure \ref{fig_cart BA-Plot} shows the comparison between the Cartesian segmentation method and expert annotations, whereas Figure \ref{figpolarBAPlot} illustrates the results for the polar segmentation method. 
+
+All indicators demonstrate mean differences close to zero, suggesting minimal bias. Most data points lie within the confidence intervals and show no discernible patterns, indicating strong agreement between the methods. However, in several subplots, data points below the blue line represent negative differences, while those above indicate positive differences caused by discrepancies between predictions and expert measurements. A few data points fall outside the confidence intervals, potentially due to imbalanced data collection. The dataset contains relatively few extreme cases with high or low indicator values, causing the deep learning models to predict values closer to the dataset's mean. To overcome cross-hospital data sharing challenges, a federated learning algorithm was introduced, enabling collaborative model development while maintaining data privacy. This framework delivers mutual benefits to participating institutions and enhances feasibility. The proposed model is an effective and indispensable segmentation tool, essential for surgical procedures.
+
+
+\begin{table}[ht]
+\centering
+\caption{Descriptions of local datasets (balanced datasets with similar data distributions).}
+\label{table: description N=3 IID}
+\renewcommand{\arraystretch}{1.3}
+ \begin{tabular}{
+>{\centering\arraybackslash}p{2.8cm}%m{0.05\textwidth}
+>{\centering\arraybackslash}p{1.2cm}%m{0.3\textwidth}
+>{\centering\arraybackslash}p{1.2cm}%m{0.1\textwidth}
+>{\centering\arraybackslash}p{1.2cm}}
+% >{\centering\arraybackslash}m{0.5\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}}
+ \multicolumn{4}{r}{(\# of Frames / \# of Cases)}\\
+\hline
+ \textbf{Plaque Burden Index Distribution} & \textbf{Dataset 1}& \textbf{Dataset 2} & \textbf{Dataset 3}\\
+\hline
+ Low ($<$ 50) & \phantom{0}6,039 / 10 & \phantom{0}7,907 / 15 & \phantom{0}7,864 / 14\\
+ Moderate (50 $\sim$ 70) & 16,592 / 31 & 15,737 / 27 & 15,851 / 26\\
+ High ($>$ 70) & \phantom{0}3,411 / \phantom{0}4 & \phantom{0}2,714 / \phantom{0}3 & \phantom{0}2,634 / \phantom{0}5\\
+ (Total) & 26,042 / 45 & 26,358 / 45 & 26,349 / 45\\
+\hline
+ \\\\
+\end{tabular}
+\end{table}
+
+
+
+\begin{figure*}[ht]
+\centering
+\begin{multicols}{3}
+ \begin{subfigure}{0.32\textwidth}
+ \centering
+ \includegraphics[width=1\linewidth]{figures/polar_Plaque_area_BAPlot.pdf}
+ \caption{Plaque Area}
+ \label{subfig: polar Plaque area BA}
+ \end{subfigure}
+ \begin{subfigure}{0.32\textwidth}
+ \centering
+ \includegraphics[width=1\linewidth]{figures/polar_Plaque_volume_BAPlot.pdf}
+ \caption{Plaque Volume}
+ \label{subfig: polar Plaque volume BA}
+ \end{subfigure}
+ \begin{subfigure}{0.32\textwidth}
+ \centering
+ \includegraphics[width=1\linewidth]{figures/polar_Burden_Index_BAPlot.pdf}
+ \caption{Plaque Burden Index}
+ \label{subfig: polar Plaque Burden Index BA}
+ \end{subfigure}
+\end{multicols}
+%\begin{multicols}{3}
+\caption{Bland-Altman plot of quantitative indicators for plaque estimation comparing the global model with the polar coordinate conversion to domain experts' measurements.}
+\label{figpolarBAPlot}
+%\end{multicols}
+\end{figure*}
+
+\begin{figure*}[ht]
+\centering
+\begin{multicols}{3}
+ \begin{subfigure}{0.33\textwidth}
+ \centering
+ \includegraphics[width=1\linewidth]{figures/cart_Plaque_area_BAPlot.pdf}
+ \caption{Plaque Area}
+ \label{subfig: cart Plaque area BA}
+ \end{subfigure}
+ \begin{subfigure}{0.33\textwidth}
+ \centering
+ \includegraphics[width=1\linewidth]{figures/cart_Plaque_volume_BAPlot.pdf}
+ \caption{Plaque Volume}
+ \label{subfig: cart Plaque volume BA}
+ \end{subfigure}
+ \begin{subfigure}{0.33\textwidth}
+ \centering
+ \includegraphics[width=1\linewidth]{figures/cart_Burden_Index_BAPlot.pdf}
+ \caption{Plaque Burden Index}
+ \label{subfig: cart Plaque Burden Index BA}
+ \end{subfigure}
+\end{multicols}
+%\begin{multicols}{3}
+%\centering
+\caption{Bland-Altman plot of quantitative indicators for plaque estimation comparing the global model with Cartesian coordinate conversion to domain experts' measurements.}
+\label{fig_cart BA-Plot}
+%\end{multicols}
+\end{figure*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Table \ref{table: FL N=3 IID} presents the results of local model training, testing, federated learning, and global verification on these three balanced local datasets for EEM segmentation. The first three rows show the performance of the three individual clients based on the local dataset and evaluated on another two different datasets in clients. For example, DSC 0.9546 is determined by client 1; it emulates an individual hospital with a local model and training. Taking model 1, DSC 0.8537 is determined by testing on dataset 2. Similarly, the procedure is tested on dataset 3. Finally, DSC 0.8948 results from the average number of model 1 training on dataset 1 and testing on datasets 2 and 3, respectively. It is a baseline to compare with the federated learning algorithm (\textit{FedAvg}). The last row shows the global model iteratively updated by the FedAvg testing on datasets 1, 2, and 3, respectively. DSC 0.9182 is the mean performance. As the results indicate, each client performed well on their local dataset, with a Dice similarity coefficient above 0.90; however, they performed poorly on other local datasets. All clients experienced improved performance after joining federated learning, DSC 0.9182, compared with the baseline. FedAvg has the highest DSC of 0.8741 for global verification testing based on 16 cases from the original 151 datasets that are not joined in each client. The federated learning framework enables cross-hospital institutions to achieve win-win situations by increasing the data volume without exchanging data and improving the plaque segmentation feasibility. 
+
+
+
+% \begin{table*}[ht]
+% \centering
+% \caption{Results of federated learning on balanced datasets with similar data distributions.}
+% \label{table: FL N=3 IID}
+% \renewcommand{\arraystretch}{1.3}
+% \begin{tabular}{
+% % >{\centering\arraybackslash}p{1.5cm}%m{0.05\textwidth}
+% % >{\centering\arraybackslash}p{2.5cm}%m{0.3\textwidth}
+% % >{\centering\arraybackslash}p{2.5cm}%m{0.1\textwidth}
+% % >{\centering\arraybackslash}p{2.5cm}%m{0.1\textwidth}
+% % >{\centering\arraybackslash}p{2.5cm}%m{0.1\textwidth}
+% % >{\centering\arraybackslash}p{2.5cm}}
+% >{\centering\arraybackslash}m{0.12\textwidth}
+% >{\centering\arraybackslash}m{0.12\textwidth}
+% >{\centering\arraybackslash}m{0.12\textwidth}
+% >{\centering\arraybackslash}m{0.12\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}}
+%  \multicolumn{5}{r}{(Dice similarity coefficient / Loss value for EEM)}\\
+% \hline
+%  & \textbf{Dataset 1}& \textbf{Dataset 2} & \textbf{Dataset 3} & \textbf{Performance} & \textbf{Global Verification}\\
+% \hline
+%  Client 1 & \textbf{0.9546}/0.0480 & 0.8537/0.2041 & 0.8762/0.1523 & 0.8948/0.1348 & 0.8683/0.1811\\
+%  Client 2 & 0.8188/0.2084 & \textbf{0.9067}/0.0952 & 0.8374/0.1789 & 0.8543/0.1608 & 0.8489/0.1712\\
+%  Client 3 & 0.8554/0.2029 & 0.8477/0.2323 & \textbf{0.9479}/0.0525 & 0.8837/0.1626 & 0.8633/0.1903\\
+%  \hline
+%  FedAvg & 0.9214/0.0829 & \textbf{0.9094}/0.0990 & 0.9237/0.0772 & \textbf{0.9182}/0.0864 & \textbf{0.8741}/0.1518\\
+% \hline
+%  \\
+% \end{tabular}
+% \end{table*}
+
+% In the same way as other deep learning paradigms, the performance of federated learning depends on the amount and distribution of data. Lack of data is one of the main reasons that clients want to participate in federated learning. However, each client may have varying amounts of local data, resulting in different performances on the local training front. Furthermore, since data collection is affected by various factors, each local dataset may have a different distribution. There is no guarantee that each local dataset represents the global dataset, so training a global model will be difficult. In this paper, three hospitals (TVGH, VGHTC, and VGHKS) collected 87,505 IVUS frames from 151 patients. At the patient level, the dataset is split into training and global verification sets, with 135 cases (78,749 frames) for training and 16 cases (8,756 frames) for global verification. A patient may provide more than one frame. As a result, the frames in the dataset are not necessarily independent.
+
+% However, a plaque burden index describes data distribution composed of three areas: EEM, lumen, and plaque burden area (Equation \ref{eqn: Plaque Burden Index}). The plaque burden index indicates the degree of vascular blockage; the lower the index, the more difficult it is to identify plaques. As a result, model training may be affected by plaque burden index distribution. Based on the dataset, 50\% and 70\% are typically used as cut-off values for determining the severity of injuries \cite{Kolossváry2017PlaqueIndex, Bittner2018High-Risk_Plaque, 10.1001/jamacardio.2023.2731, Stone2011PlaqueIndex}. In general, plaque burden indexes less than 50\% indicate low cardiovascular disease risk, while plaque burden indexes greater than 70\% indicate high cardiovascular disease risk. In the case of federated learning performed on distributed datasets with balanced amounts and similar data distributions, the datasets are described in Table \ref{table: description N=3 IID}. In this study, we have 151 cases of IVUS images, and 16 cases are reserved for global verification. This means those 16 cases are not included in each local dataset for training. The goal is to eliminate any differences among hospitals. The remaining 135 cases are randomly divided into three local datasets. Each hospital has 45 cases and the plaque burden index data are distributed similarly with an almost equal number of IVUS frames in each local dataset. 
+
+% Table \ref{table: FL N=3 IID} presents the results of local model training, testing, federated learning, and global verification on these three balanced local datasets for EEM segmentation. The first three rows show the performance of the three individual clients based on the local dataset and evaluated on another two different datasets in clients. For example, DSC 0.9546 is determined by client 1, it emulates an individual hospital with a local model and training. Then, taking model 1, DSC 0.8537 is determined by testing on dataset 2. Similarly, the procedure is also tested on dataset 3. Finally, DSC 0.8948 results from the average number of model 1 training on dataset 1 and testing on datasets 2 and 3, respectively. It is a baseline to compare with the federated learning algorithm (\textit{FedAvg}). The last row shows the global model iteratively updated by FedAvg testing on datasets 1, 2, and 3, respectively. DSC 0.9182 is the mean performance. As the results indicate, each client performed well on their local dataset, with a Dice similarity coefficient above 0.90; however, they performed poorly on other local datasets. All clients experienced improved performance after joining federated learning, DSC 0.9182, compared with the baseline. FedAvg has the highest DSC of 0.8741 for global verification testing based on 16 cases from the original 151 datasets that are not joined in each client. The federated learning framework enables cross-hospital institutions to achieve win-win situations by increasing data volume without exchanging data and improving plaque segmentation feasibility. 
+
+% \begin{table*}[t]
+% \centering
+% \caption{Local datasets description (balanced datasets with similar data distributions).}
+% \label{table: description N=3 IID}
+% \begin{tabular}{
+% >{\centering\arraybackslash}p{7.5cm}%m{0.05\textwidth}
+% >{\centering\arraybackslash}p{2cm}%m{0.3\textwidth}
+% >{\centering\arraybackslash}p{2cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{2cm}}
+% >{\centering\arraybackslash}m{0.5\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}}
+ % \multicolumn{4}{r}{(\# of Frames / \# of Cases)}\\
+ %\hline
+ % \textbf{Plaque Burden Index Distribution} & \textbf{Dataset 1}& \textbf{Dataset 2} & \textbf{Dataset 3}\\
+ %\hline
+ % Low (< 50) & \phantom{0}6,039 / 10 & \phantom{0}7,907 / 15 & \phantom{0}7,864 / 14\\
+ % Moderate (50 $\sim$ 70) & 16,592 / 31 & 15,737 / 27 & 15,851 / 26\\
+ % High (> 70) & \phantom{0}3,411 / \phantom{0}4 & \phantom{0}2,714 / \phantom{0}3 & \phantom{0}2,634 / \phantom{0}5\\
+ % (Total) & 26,042 / 45 & 26,358 / 45 & 26,349 / 45\\
+ %\hline
+ % \\\\
+% \end{tabular}
+% \end{table*}
+
+
+
+% \begin{table*}[h]
+% \centering
+% \caption{Results of federated learning on balanced datasets with similar data distributions.}
+% \label{table: FL N=3 IID}
+% \begin{tabular}{
+% >{\centering\arraybackslash}p{1.5cm}%m{0.05\textwidth}
+% >{\centering\arraybackslash}p{2.5cm}%m{0.3\textwidth}
+% >{\centering\arraybackslash}p{2.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{2.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{2.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{2.5cm}}
+% >{\centering\arraybackslash}m{0.12\textwidth}
+% >{\centering\arraybackslash}m{0.12\textwidth}
+% >{\centering\arraybackslash}m{0.12\textwidth}
+% >{\centering\arraybackslash}m{0.12\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}
+% >{\centering\arraybackslash}m{0.15\textwidth}}
+ % \multicolumn{5}{r}{(Dice similarity coefficient / Loss value for EEM)}\\
+ %\hline
+ % & \textbf{Dataset 1}& \textbf{Dataset 2} & \textbf{Dataset 3} & \textbf{Performance} & \textbf{Global Verification}\\
+ %\hline
+ % Client 1 & \textbf{0.9546}/0.0480 & 0.8537/0.2041 & 0.8762/0.1523 & 0.8948/0.1348 & 0.8683/0.1811\\
+ % Client 2 & 0.8188/0.2084 & \textbf{0.9067}/0.0952 & 0.8374/0.1789 & 0.8543/0.1608 & 0.8489/0.1712\\
+ % Client 3 & 0.8554/0.2029 & 0.8477/0.2323 & \textbf{0.9479}/0.0525 & 0.8837/0.1626 & 0.8633/0.1903\\
+ % \hline
+ % FedAvg & 0.9214/0.0829 & \textbf{0.9094}/0.0990 & 0.9237/0.0772 & \textbf{0.9182}/0.0864 & \textbf{0.8741}/0.1518\\
+ %\hline
+ % \\
+% \end{tabular}
+% \end{table*}
+% This study implements the deep learning model using the Python 3.9.2 programming language with an open-source machine learning framework, PyTorch v1.8.0. A \textit{Nvidia GeForce RTX 2070 Super} graphics card with an 8 GB frame buffer is used to accelerate the computational process. A hybrid loss function that combines the binary cross entropy loss (BCELoss) and the Dice similarity coefficient loss (DSCLoss) is calculated to train the proposed deep learning model. The model is updated using an Adaptive Moment Estimation (Adam) optimizer with a learning rate of 1.00e-5. Additionally, L2 regularization prevents the model from overfitting by adding a regularization term. Due to computational limitations, all experiments are conducted with a batch size of four.
+
+% Five-fold cross-validation is used in this study to evaluate the model performance. The dataset was randomly partitioned into five independent folds at the patient level, each with a similar number of patients. Additionally, the dataset is also divided into \textit{N} folds for a federated learning environment, with each client having a local dataset to build a global model collaboratively.
+
+% \subsection{Evaluation Metrics}
+% This study considers the DSC, recall, precision, loss value, and inference time as the evaluation metrics. 
+
+% This study considers the model inference time. When implementing the IVUS image segmentation, it is imperative to segment IVUS images in real-time during surgical operations. An efficient model can enhance the framework's efficiency for general deep-learning tasks and federated learning.
+
+
+% This study considers the DSC, recall, precision, loss value, and inference time as evaluation metrics. The DSC value measures the similarity between two images. For calculating the values between DSC, use Equation \ref{eqn_DiceScore}, where the annotated mask and output segmentation mask are denoted by \textit{A} and \textit{B}. This formula represents twice the intersection of the region of interest (ROI) compared to the sum of the ROIs in the two masks. The coefficient goes to 1 when the segmentation mask perfectly matches the ground truth mask; however, it becomes 0 if it does not match any pixels. According to the above definition, the Dice similarity coefficient is precisely the harmonic mean of precision and recall, which can also be expressed as Equation \ref{eqn_DiceScoreHarmonic}.
+
+% \begin{equation}
+% \label{eqn_DiceScore}
+ % \text{DSC}=\frac{2\times |A\cap B|}{|A|+|B|}
+% \end{equation}
+
+% \begin{equation}
+% \label{eqn_DiceScoreHarmonic}
+ % \text{DSC} = 2 \times \frac{\text{Recall} \times \text{Precision}}{\text{Recall} + \text{Precision}}
+% \end{equation}
+
+% The segmentation model is also trained using a combined loss function. This loss function combines binary cross entropy loss (BCELoss) and Dice similarity coefficient loss (DSCLoss); see Equation \ref{eqn: Hybrid loss function}. A segmented image can be thought of as a classification of each pixel. As this study focuses primarily on binary classification, we use the binary cross entropy loss. As a second term in the loss function, the Dice similarity coefficient loss is included to maximize the Dice similarity coefficient, which is the inverse value of the Dice similarity coefficient. The parameters $\omega$ and $1 - \omega$ are weights of the above two terms in our loss function, and both are set to 0.5.
+
+% \begin{equation}
+% \label{eqn: Hybrid loss function}
+ % \text{Loss value}= \omega \times \text{BCELoss} + (1 - \omega) \times \text{DSCLoss}
+% \end{equation}
+
+% 
+
+% In IVUS images, noise can cause artifacts that make boundaries appear invisible or disconnected. Therefore, annotating images requires time, and observers may differ. 
+% The IVUS dataset was collected from three independent hospitals, Taipei Veterans General Hospital (TVGH), Taichung Veterans General Hospital (VGHTC), and Kaohsiung Veterans General Hospital (VGHKS), Taiwan. A total of 151 individuals who undergo PCI and IVUS are included in the study. An IVUS mechanical system (OptiCross HD, 60 MHz Coronary Imaging Catheters, Boston Scientific Corporation) equipped with a 60 MHz wideband transducer collects raw data in Digital Imaging and Communications in Medicine (DICOM) format. Two physicians blinded to participant information annotated approximately 87,505 frames of 2-dimensional images from 151 individuals. A cardiovascular is annotated within the target length indicated by the white line in the longitudinal view, which is the range of narrowing of the lumen area due to plaque growth as shown in Figure \ref{fig: cardiovascular in the longitudinal view.}. Each adjacent frame is about 3 millimeters apart. Depending on the length of the cardiovascular system, there will be a certain number of frames. There are two classes in total, and each frame is annotated at the pixel level, class "0" for the non-region-of-interest area and class "1" for the region-of-interest area, which is the EEM, lumen, or plaque burden areas.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.28]{figures/IVUS in longitudinal view.pdf}
+% \caption{The cardiovascular appearance in the longitudinal view.}
+% \label{fig: cardiovascular in the longitudinal view.}
+% \end{figure} 
+
+% In IVUS images, noise can cause artifacts that make boundaries appear invisible or disconnected. Therefore, annotating images requires time, and observers may differ. In order to assess inter-observer variability for EEM, lumen, and plaque burden area, two independent domain experts (doctors or cardiologists), evaluated 3,000 randomly selected images. In Table \ref{tab: Inter-observer agreement}, the Dice similarity coefficient (DSC) is calculated for inter-observer image analysis. The consensus between the two analysts determines final annotations, and a senior expert resolves conflicts. Despite conflicting opinions, there was an excellent inter-observer agreement between the two cardiologists for EEM area annotations (DSC $0.753 \pm 0.241$), lumen area annotations (DSC $0.793 \pm 0.211$), and plaque burden area annotations (DSC $0.778 \pm 0.201$).
+
+% \begin{comment}
+% \begin{table}[t]
+ % \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ % \caption{ Inter-observer agreement for image annotation (DSC)}
+ % \label{tab: Inter-observer agreement}
+ % \centering
+ % \begin{tabularx}{8cm}{lccc} % p{2cm}p{5cm}p{5cm}
+ % \hline\noalign{\smallskip}
+ % \hline
+ % \bfseries \tabincell{l}{} & 
+ % \bfseries \tabincell{c}{EEM} &
+ % \bfseries \tabincell{c}{Lumen} &
+ % \bfseries \tabincell{c}{Plaque Burden}\\
+ % \hline\noalign{\smallskip}
+ % \hline
+ % Inter-observer variability & $0.753 \pm 0.241$ & $0.793 \pm 0.211$ & $0.778 \pm 0.201$\\
+ % \hline
+ % \hline
+ % \end{tabularx}
+% \end{table}
+% \end{comment}
+
+% \begin{table}[t]
+ % \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ % \caption{Inter-observer agreement for image annotation (DSC)}
+ % \label{tab: Inter-observer agreement}
+ % \smallskip
+ % \centering
+ % \begin{tabular}{p{5.01 em}p{5.1 em}p{5.1 em}p{5.3em}}
+  % \hline\noalign{\smallskip}
+  % \bfseries \tabincell{l}{} &
+  % \bfseries \tabincell{c} EEM &
+  % \bfseries \tabincell{c} Lumen &
+  % \bfseries \tabincell{c} Plaque Burden\\
+  % \hline\noalign{\smallskip}
+  % Inter-observer variability & $0.753 \pm 0.241$ & $0.793 \pm 0.211$ & $0.778 \pm 0.201$\\
+  % \hline
+ % \end{tabular}
+% \end{table}
+
+%\subsection{FL}
+%1.全集中式結果
+%2.小中大agent各自training 的結果
+%3.FL avg 的結果
+%4.FL weighted avg(based on agent 資料集大小)
+% Five-fold cross-validation is conducted to evaluate the model's performance. The dataset is randomly divided into five folds at the patient level, with nearly identical numbers of patients in each fold. This section uses Bland-Altman plots to measure the level of agreement and correlation between segmentation results and ground truth annotations.
+
+
+\begin{comment}
+\begin{table*}[ht]
+\centering
+\caption{Five-fold cross-validation of image segmentation in Cartesian coordinates.}
+\label{table: Cart-method 5-fold}
+\begin{tabular}{
+>{\centering\arraybackslash}m{0.1\textwidth}
+>{\centering\arraybackslash}m{0.1\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}}
+ \hline
+ & & \textbf{DSC} & \textbf{Recall} & \textbf{Precision}\\
+ \hline
+ \multirow{3}{*}{Fold 1} & EEM & 0.8901 & 0.8945 & 0.9045\\
+ & Lumen & 0.8761 & 0.8823 & 0.8866\\
+ & Plaque & 0.7023 & 0.7272 & 0.7211\\
+ \hline
+ \multirow{3}{*}{Fold 2} & EEM & 0.8940 & 0.8881 & 0.9125\\
+ & Lumen & 0.8881 & 0.8960 & 0.8922\\
+ & Plaque & 0.7178 & 0.7186 & 0.7510\\
+ \hline
+ \multirow{3}{*}{Fold 3} & EEM & 0.8872 & 0.9026 & 0.8875\\
+ & Lumen & 0.8745 & 0.8771 & 0.8906\\
+ & Plaque & 0.6630 & 0.7107 & 0.6651\\
+ \hline
+ \multirow{3}{*}{Fold 4} & EEM & 0.8748 & 0.8785 & 0.8904\\
+ & Lumen & 0.8582 & 0.8747 & 0.8636\\
+ & Plaque & 0.6727 & 0.6928 & 0.6976\\
+ \hline
+ \multirow{3}{*}{Fold 5} & EEM & 0.8851 & 0.9028 & 0.8862\\
+ & Lumen & 0.8810 & 0.8893 & 0.8885\\
+ & Plaque & 0.7142 & 0.7552 & 0.7177\\
+ \hline
+ \\
+\end{tabular}
+\end{table*}
+\end{comment}
+
+\begin{comment}
+\begin{table*}[ht]
+\centering
+\caption{Five-fold cross-validation of image segmentation in polar coordinates without post-processing.}
+\label{table: polar-method without post-processing 5-fold}
+\begin{tabular}{
+>{\centering\arraybackslash}m{0.1\textwidth}
+>{\centering\arraybackslash}m{0.1\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}}
+ \hline
+ & & \textbf{DSC} & \textbf{Recall} & \textbf{Precision}\\
+ \hline
+ \multirow{3}{*}{Fold 1} & EEM & 0.8713 & 0.8502 & 0.9121\\
+ & Lumen & 0.8700 & 0.8641 & 0.8913\\
+ & Plaque & 0.6790 & 0.6749 & 0.7222\\
+ \hline
+ \multirow{3}{*}{Fold 2} & EEM & 0.8729 & 0.8440 & 0.9184\\
+ & Lumen & 0.8842 & 0.8748 & 0.9050\\
+ & Plaque & 0.6940 & 0.6775 & 0.7498\\
+ \hline
+ \multirow{3}{*}{Fold 3} & EEM & 0.8685 & 0.8500 & 0.9059\\
+ & Lumen & 0.8709 & 0.8586 & 0.9004\\
+ & Plaque & 0.6431 & 0.6558 & 0.6824\\
+ \hline
+ \multirow{3}{*}{Fold 4} & EEM & 0.8479 & 0.8027 & 0.9203\\
+ & Lumen & 0.8473 & 0.8536 & 0.8652\\
+ & Plaque & 0.6282 & 0.5908 & 0.7223\\
+ \hline
+ \multirow{3}{*}{Fold 5} & EEM & 0.8644 & 0.8440 & 0.9059\\
+ & Lumen & 0.8718 & 0.8601 & 0.9002\\
+ & Plaque & 0.6838 & 0.6844 & 0.7272\\
+ \hline
+ \\
+\end{tabular}
+\end{table*}
+\end{comment}
+
+\begin{comment}
+\begin{table*}[ht]
+\centering
+\caption{Five-fold cross-validation of image segmentation in polar coordinates with post-processing.}
+\label{table: Polar-method with post-processing five-fold}
+\begin{tabular}{
+>{\centering\arraybackslash}m{0.1\textwidth}
+>{\centering\arraybackslash}m{0.1\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}
+>{\centering\arraybackslash}m{0.2\textwidth}}
+ \hline
+ & & \textbf{DSC} & \textbf{Recall} & \textbf{Precision}\\
+ \hline
+ \multirow{3}{*}{Fold 1} & EEM & 0.8908 & 0.9192 & 0.8812\\
+ & Lumen & 0.8766 & 0.8869 & 0.8810\\
+ & Plaque & 0.7166 & 0.7702 & 0.7048\\
+ \hline
+ \multirow{3}{*}{Fold 2} & EEM & 0.9001 & 0.8982 & 0.9132\\
+ & Lumen & 0.8888 & 0.9027 & 0.8863\\
+ & Plaque & 0.7301 & 0.7309 & 0.7596\\
+ \hline
+ \multirow{3}{*}{Fold 3} & EEM & 0.8940 & 0.9136 & 0.8889\\
+ & Lumen & 0.8814 & 0.8851 & 0.8931\\
+ & Plaque & 0.6820 & 0.7323 & 0.6785\\
+ \hline
+ \multirow{3}{*}{Fold 4} & EEM & 0.8782 & 0.8976 & 0.8774\\
+ & Lumen & 0.8593 & 0.8754 & 0.8655\\
+ & Plaque & 0.6789 & 0.6972 & 0.7044\\
+ \hline
+ \multirow{3}{*}{Fold 5} & EEM & 0.8856 & 0.9170 & 0.8737\\
+ & Lumen & 0.8783 & 0.8981 & 0.8740\\
+ & Plaque & 0.7197 & 0.7682 & 0.7155\\
+ \hline
+ \\
+\end{tabular}
+\end{table*}
+\end{comment}
+
+
+% Five-fold cross-validation is conducted to evaluate the model's performance. The dataset is randomly divided into five folds at the patient level, with nearly identical numbers of patients in each fold. 
+
+
+%In Table \ref{table: Cart-method 5-fold}, the segmentation results are presented in Cartesian coordinates. For the EEM and lumen segmentation, most metrics achieve above 0.87, whereas for the plaque segmentation, most achieve approximately 0.70. 
+
+%Table \ref{table: polar-method without post-processing 5-fold} and Table \ref{table: Polar-method with post-processing five-fold} present the segmentation results in the polar coordinates with and without post-processing. We calculate the performance metrics after converting the segmentation masks to Cartesian coordinates. The post-processing increases the Dice similarity coefficient and recalls for all three target segmentation results. In the closing operation, some defects are repaired, and the polar images can be filled in with missing pixels. By predicting more positive pixels, the Dice coefficient score increases because the recall increases more than the precision decreases.
+
+
+% \begin{table*}[ht]
+% \centering
+% \caption{Mean performance of five-fold cross-validation.}
+% \label{table: Mean performance of five-fold}
+% \renewcommand{\arraystretch}{1.3}
+%  \begin{tabular}{
+% >{\centering\arraybackslash}p{1cm}%m{0.05\textwidth}
+% >{\centering\arraybackslash}p{4cm}%m{0.3\textwidth}
+% >{\centering\arraybackslash}p{1.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{1.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{1.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{1.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{3.5cm}}%m{0.1\textwidth}}
+%  \hline
+%  & \textbf{Method}& \textbf{Parameters} & \textbf{DSC} & \textbf{Recall} & \textbf{Precision} & \textbf{Inference Time (per frame)}\\
+%  \hline
+%  \multirow{3}{*}{EEM} & Cartesian & 933k & 0.8862 & 0.8933 & 0.8962 & \textbf{0.0030} s\\
+%  & polar & 721k & 0.8650 & 0.8382 & \textbf{0.9125} & 0.1620 s\\
+%  & polar + Post-processing & 721k & \textbf{0.8897} & \textbf{0.9091} & 0.8869 & 0.1640 s\\
+%  \hline
+%  \multirow{3}{*}{Lumen} & Cartesian & 933k & 0.8756 & 0.8839 & 0.8843 & \textbf{0.0030} s\\
+%  & polar & 721k & 0.8688 & 0.8622 & \textbf{0.8924} & 0.1670 s\\
+%  & polar + Post-processing & 721k & \textbf{0.8769} & \textbf{0.8896} & 0.8800 & 0.1690 s\\
+%  \hline
+%  \multirow{3}{*}{Plaque} & Cartesian & 933k & 0.6942 & 0.7209 & 0.7105 & \textbf{0.0060} s\\
+%  & polar & 721k & 0.6656 & 0.6567 & \textbf{0.7208} & 0.2180 s\\
+%  & polar + Post-processing & 721k & \textbf{0.7055} & \textbf{0.7398} & 0.7126 & 0.2200 s\\
+%  \hline
+%  \\
+% \end{tabular}
+% \end{table*}
+
+
+% In Table \ref{table: Mean performance of five-fold}, the results of the five-fold cross-validation are summarized. Because of the smaller polar converted images, the number of neurons decreased to approximately 721k from 933k in the original model. In comparison to segmentation in the Cartesian images, post-processing polar images can exhibit a higher Dice similarity coefficient and recall score in the EEM, lumen, and plaque burden segmentation. The EEM and lumen segmentation results can be improved using post-processing, further improving the plaque burden segmentation. In this study, the EEM and lumen regions were first segmented, and the plaque burden areas were extracted. Based on our computational environment, training an epoch takes 36 min for the polar coordinate method and 48 min for the Cartesian method. The two training methods differ regarding the number of model parameters and the input image size. While a lighter model for the polar coordinate method can infer slightly faster, however, the time for coordinate conversion and post-processing should also be considered. Compared to post-processing, coordinate conversion takes significantly longer. Therefore, polar coordinates require more time, resulting in a trade-off between prediction performance and computation time.
+
+% \begin{table*}[ht]
+% \centering
+% \caption{Five-fold cross-validation of image segmentation in Cartesian coordinate.}
+% \label{table: Cart-method 5-fold}
+% \begin{tabular}{
+% >{\centering\arraybackslash}m{0.1\textwidth}
+% >{\centering\arraybackslash}m{0.1\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}}
+ % \hline
+ % & & \textbf{DSC} & \textbf{Recall} & \textbf{Precision}\\
+ % \hline
+ % \multirow{3}{*}{Fold 1} & EEM & 0.8901 & 0.8945 & 0.9045\\
+ % & Lumen & 0.8761 & 0.8823 & 0.8866\\
+ % & Plaque & 0.7023 & 0.7272 & 0.7211\\
+ % \hline
+ % \multirow{3}{*}{Fold 2} & EEM & 0.8940 & 0.8881 & 0.9125\\
+ % & Lumen & 0.8881 & 0.8960 & 0.8922\\
+ % & Plaque & 0.7178 & 0.7186 & 0.7510\\
+ % \hline
+ % \multirow{3}{*}{Fold 3} & EEM & 0.8872 & 0.9026 & 0.8875\\
+ % & Lumen & 0.8745 & 0.8771 & 0.8906\\
+ % & Plaque & 0.6630 & 0.7107 & 0.6651\\
+ % \hline
+ % \multirow{3}{*}{Fold 4} & EEM & 0.8748 & 0.8785 & 0.8904\\
+ % & Lumen & 0.8582 & 0.8747 & 0.8636\\
+ % & Plaque & 0.6727 & 0.6928 & 0.6976\\
+ % \hline
+ % \multirow{3}{*}{Fold 5} & EEM & 0.8851 & 0.9028 & 0.8862\\
+ % & Lumen & 0.8810 & 0.8893 & 0.8885\\
+ % & Plaque & 0.7142 & 0.7552 & 0.7177\\
+ % \hline
+ % \\
+% \end{tabular}
+% \end{table*}
+
+
+
+% \begin{table*}[ht]
+% \centering
+% \caption{Five-fold cross-validation of image segmentation in polar coordinate without post-processing.}
+% \label{table: polar-method without post-processing 5-fold}
+% \begin{tabular}{
+% >{\centering\arraybackslash}m{0.1\textwidth}
+% >{\centering\arraybackslash}m{0.1\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}}
+ % \hline
+ % & & \textbf{DSC} & \textbf{Recall} & \textbf{Precision}\\
+ % \hline
+ % \multirow{3}{*}{Fold 1} & EEM & 0.8713 & 0.8502 & 0.9121\\
+ % & Lumen & 0.8700 & 0.8641 & 0.8913\\
+ % & Plaque & 0.6790 & 0.6749 & 0.7222\\
+ % \hline
+ % \multirow{3}{*}{Fold 2} & EEM & 0.8729 & 0.8440 & 0.9184\\
+ % & Lumen & 0.8842 & 0.8748 & 0.9050\\
+ % & Plaque & 0.6940 & 0.6775 & 0.7498\\
+ % \hline
+ % \multirow{3}{*}{Fold 3} & EEM & 0.8685 & 0.8500 & 0.9059\\
+ % & Lumen & 0.8709 & 0.8586 & 0.9004\\
+ % & Plaque & 0.6431 & 0.6558 & 0.6824\\
+ % \hline
+ % \multirow{3}{*}{Fold 4} & EEM & 0.8479 & 0.8027 & 0.9203\\
+ % & Lumen & 0.8473 & 0.8536 & 0.8652\\
+ % & Plaque & 0.6282 & 0.5908 & 0.7223\\
+ % \hline
+ % \multirow{3}{*}{Fold 5} & EEM & 0.8644 & 0.8440 & 0.9059\\
+ % & Lumen & 0.8718 & 0.8601 & 0.9002\\
+ % & Plaque & 0.6838 & 0.6844 & 0.7272\\
+ % \hline
+ % \\
+% \end{tabular}
+% \end{table*}
+
+
+
+% \begin{table*}[ht]
+% \centering
+% \caption{Five-fold cross-validation of image segmentation in polar coordinate with post-processing.}
+% \label{table: polar-method with post-processing 5-fold}
+% \begin{tabular}{
+% >{\centering\arraybackslash}m{0.1\textwidth}
+% >{\centering\arraybackslash}m{0.1\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}
+% >{\centering\arraybackslash}m{0.2\textwidth}}
+ % \hline
+ % & & \textbf{DSC} & \textbf{Recall} & \textbf{Precision}\\
+ % \hline
+ % \multirow{3}{*}{Fold 1} & EEM & 0.8908 & 0.9192 & 0.8812\\
+ % & Lumen & 0.8766 & 0.8869 & 0.8810\\
+ % & Plaque & 0.7166 & 0.7702 & 0.7048\\
+ % \hline
+ % \multirow{3}{*}{Fold 2} & EEM & 0.9001 & 0.8982 & 0.9132\\
+ % & Lumen & 0.8888 & 0.9027 & 0.8863\\
+ % & Plaque & 0.7301 & 0.7309 & 0.7596\\
+ % \hline
+ % \multirow{3}{*}{Fold 3} & EEM & 0.8940 & 0.9136 & 0.8889\\
+ % & Lumen & 0.8814 & 0.8851 & 0.8931\\
+ % & Plaque & 0.6820 & 0.7323 & 0.6785\\
+ % \hline
+ % \multirow{3}{*}{Fold 4} & EEM & 0.8782 & 0.8976 & 0.8774\\
+ % & Lumen & 0.8593 & 0.8754 & 0.8655\\
+ % & Plaque & 0.6789 & 0.6972 & 0.7044\\
+ % \hline
+ % \multirow{3}{*}{Fold 5} & EEM & 0.8856 & 0.9170 & 0.8737\\
+ % & Lumen & 0.8783 & 0.8981 & 0.8740\\
+ % & Plaque & 0.7197 & 0.7682 & 0.7155\\
+ % \hline
+ % \\
+% \end{tabular}
+% \end{table*}
+
+% We examine the five-fold cross-validation of the proposed deep learning model in different image coordinates for segmenting EEM, lumens, and plaque burdens. The Dice similarity coefficient, recall, and precision are the performance metrics. In Table \ref{table: Cart-method 5-fold}, the segmentation results are presented in Cartesian coordinates. For EEM and lumen segmentation, most metrics achieve above 0.87, while for plaque segmentation, most achieve around 0.70. Table \ref{table: polar-method without post-processing 5-fold} and Table \ref{table: polar-method with post-processing 5-fold} present the segmentation results in polar coordinates with and without post-processing. We calculate performance metrics after converting the segmentation masks to Cartesian coordinates. Post-processing increases the Dice similarity coefficient and recalls for all three target segmentation results. In the closing operation, some defects are repaired, and polar images can be filled in with missing pixels. By predicting more positive pixels, the Dice coefficient score rises since the recall has increased more than the precision has decreased.
+
+
+% \begin{table*}[ht]
+% \centering
+% \caption{The mean performance of five-fold cross-validation.}
+% \label{table: Mean performance of 5-fold}
+% \begin{tabular}{
+% >{\centering\arraybackslash}p{1cm}%m{0.05\textwidth}
+% >{\centering\arraybackslash}p{4cm}%m{0.3\textwidth}
+% >{\centering\arraybackslash}p{1.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{1.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{1.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{1.5cm}%m{0.1\textwidth}
+% >{\centering\arraybackslash}p{3cm}}%m{0.1\textwidth}}
+ % \hline
+ % & \textbf{Method}& \textbf{Parameters} & \textbf{DSC} & \textbf{Recall} & \textbf{Precision} & \textbf{Inference Time \ (per frame)}\\
+ % \hline
+ % \multirow{3}{*}{EEM} & Cartesian & 933k & 0.8862 & 0.8933 & 0.8962 & \textbf{0.0030} s\\
+ % & polar & 721k & 0.8650 & 0.8382 & \textbf{0.9125} & 0.1620 s\\
+ % & polar + Post-processing & 721k & \textbf{0.8897} & \textbf{0.9091} & 0.8869 & 0.1640 s\\
+ % \hline
+ % \multirow{3}{*}{Lumen} & Cartesian & 933k & 0.8756 & 0.8839 & 0.8843 & \textbf{0.0030} s\\
+ % & polar & 721k & 0.8688 & 0.8622 & \textbf{0.8924} & 0.1670 s\\
+ % & polar + Post-processing & 721k & \textbf{0.8769} & \textbf{0.8896} & 0.8800 & 0.1690 s\\
+ % \hline
+ % \multirow{3}{*}{Plaque} & Cartesian & 933k & 0.6942 & 0.7209 & 0.7105 & \textbf{0.0060} s\\
+ % & polar & 721k & 0.6656 & 0.6567 & \textbf{0.7208} & 0.2180 s\\
+ % & polar + Post-processing & 721k & \textbf{0.7055} & \textbf{0.7398} & 0.7126 & 0.2200 s\\
+ % \hline
+ % \\
+% \end{tabular}
+% \end{table*}
+
+
+% In Table \ref{table: Mean performance of 5-fold}, the results of five-fold cross-validation are summarized. Because of the smaller polar converted images, the number of neurons has decreased to around 721k from 933k in the original model. In comparison to segmentation in Cartesian images, post-processing polar images can show a higher Dice similarity coefficient and recall score in EEM, lumen, and plaque burden segmentation. EEM and lumen segmentation results can be improved with post-processing, further improving plaque burden segmentation. In this study, EEM and lumen regions were first segmented, and plaque burden areas were extracted. Based on our computational environment, training an epoch takes 36 minutes for the polar coordinate method and 48 minutes for the Cartesian method. The two methods differ in terms of the number of model parameters and the input image size. While a lighter model for the polar coordinate method can infer slightly faster, the time for coordinate conversion and post-processing should also be considered. Compared to post-processing, coordinate conversion takes significantly longer. Therefore, the polar coordinate method takes longer, causing a trade-off between prediction performance and time.
+% This section uses Bland-Altman plots to measure the level of agreement and correlation between the segmentation results and ground truth annotations \cite{KARUN2021100831}.
+
+% We also calculate the performance metrics after converting the segmentation masks to Cartesian coordinates. The post-processing increases the Dice similarity coefficient and recalls for all three target segmentation results. In the closing operation, some defects are repaired, and the polar images can be filled in with missing pixels. By predicting more positive pixels, the Dice coefficient score increases because the recall increases more than the precision decreases.
+
+% This study evaluates the segmentation of images using different coordinate systems. Because the U-Net model has a symmetric architecture, the output image is identical to the input image. The input and output images have the exact shape of 512 $\times$ 512. Using this method, one can easily read and understand the relative positions of objects on a plane, which is intuitive. 
+% According to the polar coordinate method, the visualization results are shown in Figure \ref{fig: SegmentationResults_polar}. 
+
+% The image is a 256 $\times$ 720 rectangle, the segmentation results can be observed as a white band, and the target boundary appears as irregular lines. It is helpful to assess the size of the cardiovascular radius and the thickness of the plaque burden from different angles because the image's width indicates the distance from the cardiovascular center.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.24]{figures/SegmentationResults_Cartesian.pdf}
+% \caption{Segmentation results of the Cartesian coordinate system.}
+% \label{fig: SegmentationResults_Cartesian}
+% \end{figure} 
+
+
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.31]{figures/SegmentationResults_polar.pdf}
+% \caption{Segmentation results of the polar coordinate conversion.}
+% \label{fig: SegmentationResults_polar}
+% \end{figure} 
+
+
+
+% In Table \ref{table: Mean performance of five-fold}, the proposed deep learning methods achieved a human-level inter-observer agreement based on the quantitative analysis and were in high agreement with human-made annotation masks.
+
+% An essential objective of this study is to develop an automated biomarker tool that can assist physicians in diagnosing diseases accurately and promptly. Based on the segmentation results, this tool can also perform quantitative measurements. Thus, essential pathological information for IVUS analysis can be determined simultaneously. The area of the region of interest can be calculated after the two-dimensional mask is extracted. The volume can also be computed by summing the frame area within the estimated range. A few of the most critical quantitative indicators measured in this study indicate the severity of the disease. 
+
+% Similar to other deep learning paradigms, the performance of federated learning depends on the amount and distribution of data. Lack of data is one of the main reasons that clients want to participate in federated learning. However, practically, each client may have varying amounts of local data, resulting in different performances on the local training front. Furthermore, because data collection is affected by various factors, each local dataset may have a different distribution in clinical environments. There is no guarantee that each local dataset represents the global dataset, thus, training a global model will be difficult.
+
+% In this study, we have 151 cases of IVUS images, and 16 cases are reserved for global verification. The 16 cases are not included in each local dataset for training. The goal is to eliminate any differences among the hospitals. The remaining 135 cases are randomly divided into three local datasets. Each hospital has 45 cases and the plaque burden index data are distributed similarly with an almost equal number of IVUS frames in each local dataset. 
+
+
+% This study examines the segmentation of images using different coordinate systems. Because the U-Net model has a symmetric architecture, the output image is identical to the input image. Figure \ref{fig: SegmentationResults_Cartesian} shows the visualization results of the Cartesian coordinate method. The input and output images have the exact shape of 512 $\times$ 512. Using this method, one can easily read and understand the relative positions of objects on the plane, which is intuitive. According to the polar coordinate method, the visualization results are shown in Figure \ref{fig: SegmentationResults_polar}. The image is a 256 $\times$ 720 rectangle, the segmentation results can be seen as a white band, and the target boundary appears as irregular lines. It is helpful to assess the size of the cardiovascular radius and the thickness of the plaque burden from different angles since the image's width indicates the distance from the cardiovascular center.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.28]{figures/SegmentationResults_Cartesian.pdf}
+% \caption{Segmentation results of the Cartesian coordinate system.}
+% \label{fig: SegmentationResults_Cartesian}
+% \end{figure} 
+
+
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.35]{figures/SegmentationResults_polar.pdf}
+% \caption{Segmentation results of the polar coordinate conversion.}
+% \label{fig: SegmentationResults_polar}
+% \end{figure} 
+
+% The quantitative analysis in the previous section showed no significant differences between the two proposed segmentation methods. However, image segmentation in polar coordinates with post-processing can enhance EEM segmentation results by improving plaque burden segmentation. In most cases, it is challenging to detect EEM areas due to plaque burden artifacts that cause disconnected borders. A comparison of plaque burden segmentation results of the two methods can be seen in Figure \ref{fig: SegmentationResults_Comparison}. The first and second columns present five consecutive frames and their corresponding masks of annotations. The third and last columns present segmentation results based on Cartesian and polar coordinates, respectively. Both methods perform similarly well for these few frames, with DSC scores of about 0.88. There is significant signal loss on the right and left sides of the IVUS image, particularly around the fourth quadrant. The left and right sides of the predicted results showed indentations based on the Cartesian coordinate method. Artifacts cause the boundary to be concave inward. Although the polar coordinate method produces jagged boundaries, the contours are still sharp and clear. Thus, artifacts of this magnitude have a limited effect on them. Polar coordinate segmentation yields better results and is more accurate.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.24]{figures/SegmentationResults.pdf}
+% \caption{The segmentation results of Cartesian system or polar coordinate conversion with post-processing.}
+% \label{fig: SegmentationResults_Comparison}
+% \end{figure} 
+
+% Plaque in the cardiovascular system can block the reflection of the ultrasound, making blood vessels appear unclear on IVUS images. Therefore, manually annotating IVUS images is a time-consuming and laborious process. Analysts must sometimes make judgments based on expertise and experience when boundaries are unclear and disconnected. Analysts may have different opinions about the same image and annotate masks in a non-identical way, even if they are both well-trained and professional. According to Table \ref{tab: Inter-observer agreement}, two independent domain experts interpreted and evaluated the same dataset using Dice similarity coefficients of approximately 0.75, considered excellent inter-observer agreement. Additionally, the quantitative indexes indicated that the Dice similarity coefficients for EEM segmentation, lumen segmentation, and plaque burden segmentation were 0.8897, 0.8769, and 0.7055 shown in Table \ref{table: Mean performance of 5-fold}. The proposed deep learning methods achieved human-level inter-observer agreement based on quantitative analysis and were in high agreement with human-made annotation masks.
+
+% An essential objective of this study is to develop an automated biomarker tool that can assist physicians in diagnosing diseases with accuracy and rapidity. Based on the segmentation results, this tool can also perform quantitative measurements. Thus, some essential pathological information for IVUS analysis can be determined simultaneously. After the 2-dimensional mask is extracted, the area of the region of interest can be calculated. The volume can also be computed by summing the frame area within the estimated range. A few of the most critical quantitative indicators measured in this study indicate the severity of the disease. Among these indicators are the EEM area, the lumen area, the plaque burden area, the plaque burden index, the EEM volume, the lumen volume, and the plaque burden volume. In this regard, the plaque burden index represents the proportion of plaque burden to the EEM area, defined by Equation \ref{eqn: Plaque Burden Index}. A Bland-Altman plot, also known as a Tukey mean difference plot, is used to analyze the agreement between manual and automatic measurements.
+
+
+% \begin{equation}
+% \label{eqn: Plaque Burden Index}
+ % \begin{aligned}
+ % \text{Plaque Burden Index} &= \frac{\text{EEM Area} - \text{Lumen Area}}{\text{EEM Area}}\\\\
+ % &= \frac{\text{Plaque Area}}{\text{EEM Area}}\\
+ % \end{aligned}
+% \end{equation}\\
+%https://tex.stackexchange.com/questions/401201/difference-between-align-and-alignedt
+
+
+% Bland-Altman analysis of quantitative indicators estimated by automatic methods (Cartesian and polar methods) and domain experts (doctors and radiologists) is shown in Figure \ref{fig_cart BA-Plot} and 13, respectively. The mean indicator value of each patient is estimated separately. A data point represents a patient case, and the horizontal axis represents the average of two measurements. As a comparison, the vertical axis represents the difference between the two measurements. A blue line on the plot represents the mean difference, while a red line indicates the 1.96 standard deviations from the mean difference. This is also the confidence interval for 95 percent. Figure \ref{fig_cart BA-Plot} illustrates the Bland-Altman analysis results of the estimation between the Cartesian coordinate segmentation method and domain experts. The Bland-Altman analysis of the estimation between the polar coordinate segmentation method and domain experts is shown in Figure 13. In these plots, all indicators have a mean difference close to zero, indicating a slight bias. The fact that most data points fall between the two red lines and show no pattern indicates that the two measurements agree. 
+
+% \ref{figpolarBAPlot}
+% In most subplots, however, measurements with low means have positive differences, while measurements with high means have negative differences. Compared to measurements made by domain experts, the proposed methods are likely to overestimate low-value data and underestimate high-value data. An imbalance in data collection may be responsible for this problem. Unlike many datasets, our dataset has relatively few extreme cases with high or low indicator values; therefore, deep learning models tend to predict values close to the whole dataset's mean value. 
+
+% \begin{figure*}[ht]
+% \centering
+% \begin{multicols}{4}
+% \begin{subfigure}[h]{0.27\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_EEM_area_BAPlot.pdf}
+ % \caption{EEM Area}
+ % \label{subfig: cart EEM area BA}
+% \end{subfigure}
+% \begin{subfigure}[h]{0.27\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_EEM volume_BAPlot.pdf}
+ % \caption{EEM Volume}
+ % \label{subfig: cart EEM volume BA}
+% \end{subfigure}
+% \begin{subfigure}[h]{0.27\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_Lumen area_BAPlot.pdf}
+ % \caption{Lumen Area}
+ % \label{subfig: cart Lumen area BA}
+% \end{subfigure}
+% \begin{subfigure}{0.27\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_Lumen volume_BAPlot.pdf}
+ % \caption{Lumen Volume}
+ % \label{subfig: cart Lumen volume BA}
+% \end{subfigure}
+% \end{multicols}
+% \begin{multicols}{4}
+% \centering
+% \caption{Bland-Altman Plot of quantitative indicators for EEM and lumen area estimated by the %Cartesian coordinate segmentation method and human expert.}
+% \label{fig_cart BA-Plot1}
+% \end{multicols}
+% \end{figure*}
+
+% \twocolumn
+
+
+% \begin{figure*}[ht]
+% \begin{multicols}{2}
+% \begin{subfigure}[h]{0.25\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_Lumen area_BAPlot.pdf}
+ % \caption{Lumen Area}
+ % \label{subfig: cart Lumen area BA}
+% \end{subfigure}
+% \begin{subfigure}{0.25\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_Lumen volume_BAPlot.pdf}
+ % \caption{Lumen Volume}
+ % \label{subfig: cart Lumen volume BA}
+% \end{subfigure}
+% \end{multicols}
+% \begin{multicols}{2}
+% \centering
+% \caption{XXXX}
+% \label{fig:}
+% \end{multicols}
+% \end{figure*}
+
+% \begin{figure*}[ht]
+% \centering
+% \begin{multicols}{3}
+ % \begin{subfigure}{0.35\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_Plaque area_BAPlot.pdf}
+ % \caption{Plaque Area}
+ % \label{subfig: cart Plaque area BA}
+ % \end{subfigure}
+ % \begin{subfigure}{0.35\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_Plaque volume_BAPlot.pdf}
+ % \caption{Plaque Volume}
+ % \label{subfig: cart Plaque volume BA}
+ % \end{subfigure}
+ % \begin{subfigure}{0.35\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/cart_Burden_Index_BAPlot.pdf}
+ % \caption{Plaque Burden Index}
+ % \label{subfig: cart Plaque Burden Index BA}
+ % \end{subfigure}
+% \end{multicols}
+% \begin{multicols}{3}
+% \centering
+% \caption{Bland-Altman Plot of quantitative indicators for plaque estimated by the Cartesian coordinate segmentation method and domain experts.}
+% \label{fig_cart BA-Plot}
+% \end{multicols}
+% \end{figure*}
+
+
+
+% \begin{figure*}[ht]
+% \centering
+% \begin{multicols}{4}
+% \begin{subfigure}{0.27\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_EEM area_BAPlot.pdf}
+ % \caption{EEM Area}
+ % \label{subfig: polar EEM area BA}
+% \end{subfigure}
+% \begin{subfigure}{0.27\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_EEM volume_BAPlot.pdf}
+ % \caption{EEM Volume}
+ % \label{subfig: polar EEM volume BA}
+% \end{subfigure}
+% \begin{subfigure}{0.27\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_Lumen area_BAPlot.pdf}
+ % \caption{Lumen Area}
+ % \label{subfig: polar Lumen area BA}
+% \end{subfigure}
+% \begin{subfigure}{0.27\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_Lumen volume_BAPlot.pdf}
+ % \caption{Lumen Volume}
+ % \label{subfig: polar Lumen volume BA}
+% \end{subfigure}
+% \end{multicols}
+% \begin{multicols}{4}
+% \centering
+% \caption{Bland-Altman Plot of quantitative indicators for EEM and lumen area estimated by the polar coordinate segmentation method and human expert.}
+% \label{figpolarBAPlot1}
+% \end{multicols}
+% \end{figure*}
+
+
+% \begin{figure*}[ht]
+% \centering
+% \begin{multicols}{2}
+% \begin{subfigure}{0.25\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_Lumen area_BAPlot.pdf}
+ % \caption{Lumen Area}
+ % \label{subfig: polar Lumen area BA}
+% \end{subfigure}
+% \begin{subfigure}{0.25\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_Lumen volume_BAPlot.pdf}
+ % \caption{Lumen Volume}
+ % \label{subfig: polar Lumen volume BA}
+% \end{subfigure}
+% \end{multicols}
+% \begin{multicols}{2}
+% \centering
+% \caption{XXXX}
+% \label{fig:}
+% \end{multicols}
+% \end{figure*}
+
+% \begin{figure*}[ht]
+% \label{figpolarBAPlot}
+% \begin{multicols}{3}
+ % \begin{subfigure}{0.33\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_Plaque area_BAPlot.pdf}
+ % \caption{Plaque Area}
+ % \label{subfig: polar Plaque area BA}
+ % \end{subfigure}
+ % \begin{subfigure}{0.33\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_Plaque volume_BAPlot.pdf}
+ % \caption{Plaque Volume}
+ % \label{subfig: polar Plaque volume BA}
+ % \end{subfigure}
+ % \begin{subfigure}{0.33\textwidth}
+ % \centering
+ % \includegraphics[width=1\linewidth]{figures/polar_Burden Index_BAPlot.pdf}
+ % \caption{Plaque Burden Index}
+ % \label{subfig: polar Plaque Burden Index BA}
+ % \end{subfigure}
+% \end{multicols}
+% \begin{multicols}{3}
+% \centering
+% \caption{Bland-Altman Plot of quantitative indicators for plaque estimated by the polar coordinate segmentation method and domain experts.}
+% \end{multicols}
+% \end{figure*}
+
+% \subsubsection{Local Training vs. Federated Learning Performance}
+

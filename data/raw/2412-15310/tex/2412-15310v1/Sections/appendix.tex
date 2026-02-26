@@ -1,0 +1,315 @@
+\section{Motivating study}
+\label{sec:motivating-study}
+
+\begin{figure*}[t]
+    \begin{minipage}{0.3\textwidth}
+        \footnotesize
+        \centering
+        \begin{tabular}{lccc}
+        \toprule
+        \textbf{Stat} & \textbf{Ext./Back.} & \textbf{Int.} & \textbf{Img} \\
+        \midrule
+        \textbf{Median}   & 26  & 22   & 14 \\
+        \textbf{Mean}  & 51  & 45  & 25 \\
+        \textbf{Max}   & 361 & 763 & 537 \\
+        \bottomrule
+        \end{tabular}
+        \caption{Summary statistics for external/backend links, internal links, and images count.}
+        \label{fig:motivating-table}
+    \end{minipage}
+    \begin{minipage}{0.7\textwidth}
+        \centering
+        \begin{subfigure}[b]{0.4\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{Sections/figs/is_multipage_pie_chart.pdf}
+            \caption{Proportion of multi-page vs single-page websites.}
+            \label{fig:multipage-pie}
+        \end{subfigure}
+        % \hspace{5px}
+        \begin{subfigure}[b]{0.4\textwidth}
+            \includegraphics[width=\linewidth]{Sections/figs/internal_page_pie_chart.pdf}
+            \caption{Number of internal pages in multi-page websites.}
+            \label{fig:internal-page-pie}
+        \end{subfigure}
+
+        \caption{Detailed analysis.}
+        \label{fig:RQ1-detail}
+    \end{minipage}
+\end{figure*}
+
+
+In this study, we show that the three common assumptions made by previous design-to-code works (i.e., UIs are self-contained and do not have external links, UIs consist of a single or a limited number of pages, and UIs use placeholder images) are highly over-simplified in web UI scenarios. We sample the top 300 most visited websites ranked by the Tranco~\footnote{https://tranco-list.eu} list and study their characteristics. 
+
+Specifically, we first count the number of external links, internal links, and images on each web page. The statistics in Figure \ref{fig:motivating-table} highlight the over-simplified assumptions about web UIs: The number of pages involved is typically large, with a mean of 51 external links, 45 internal links, and 25 images. The maximum number of external links reaches 361, internal links 763, and images 537, indicating that websites generally contain numerous elements that are not accounted for in simplified models. 
+
+Then, we calculate the proportion of multi-page websites among the samples. Figure \ref{fig:multipage-pie} illustrates the result, which shows that 90.3\% of the websites are multi-page, while only 9.7\% are single-page websites. This suggests that most modern websites are not self-contained but involve a complex structure with multiple pages. 
+
+Finally, we calculate the number of distinct internal pages each multi-page website contains. Internal pages are web pages within the same domain as the website; for instance, "apple.com/iphone" and "apple.com/ipad" would both be internal to the website "apple.com," while "facebook.com" is external to the website. To count the number of internal pages for each website, we recursively visit all the internal pages a website links to until no new internal web pages can be found. The result is shown in Figure \ref{fig:internal-page-pie}. Less than 50\% of the multi-page websites have fewer than 10 internal pages, while 18.9\% of the websites have between 10 and 99 internal pages, demonstrating a moderate complexity. Notably, 36\% of the websites feature more than 100 internal pages, showcasing the highly complex nature of a significant portion of modern websites. This variability in the number of internal pages challenges the assumption that web UIs consist of a single or a limited number of pages. 
+
+
+\begin{tcolorbox}[colback=gray!20, colframe=gray!20, width=\columnwidth]
+\textbf{Conclusion:} The three common assumptions made by previous design-to-code works are over-simplified, and manually locating and editing the omitted content in generated code requires high proficiency in coding and remarkable effort.
+\end{tcolorbox}
+
+\section{Related Works}
+\label{appendix:related-work}
+Current approaches of design-to-code span deep learning (DL), computer vision (CV), and multimodal large language models (MLLMs). DL-based methods use CNNs for GUI prototyping \cite{acsirouglu2019automatic, Cizotto2023WebPF, Moran2018MachineLP, Xu2021Image2e, Chen2018FromUI}, with Pix2code \cite{beltramelli2018pix2code} combining CNNs and LSTMs for DSL generation, and \cite{Chen2022CodeGF} enhancing quality via attention-based encoder-decoder frameworks. In CV, Sketch2Code \cite{jain2019sketch2code} processes hand-drawn sketches using object detection, while REMAUI \cite{nguyen2015reverse} employs OCR to extract UI elements and build hierarchies. MLLM-based methods offer more advanced multi-modal generation. Design2Code \cite{Si2024Design2CodeHF} uses text-augmented prompts, DCGen \cite{wan2024automatically} employs a divide-and-conquer layout approach, DeclarUI \cite{zhou2024bridging} builds page transition graphs for multi-screen apps, and Interaction2Code \cite{xiao2024interaction2code} generates interactive UIs from web interaction graphs. Despite these advances, most methods still rely on the three over-simplified assumptions, leaving the challenge of multi-page website generation underexplored. 
+
+
+
+
+
+\section{Prompts}
+\label{appendix:prompts}
+In this section, we list the exact prompts used in the experiments.
+
+\paragraph{Self-contained prompt.}\texttt{Here is a screenshot of a web page. Please write an HTML and Tailwind CSS to make it look exactly like the original web page. Pay attention to things like size, text, position, and color of all the elements, as well as the overall layout. Respond with the content of the HTML+tail-wind CSS code.}
+
+\paragraph{Zero-shot prompt.} \texttt{Here is a screenshot of a web page and its ``action list'' which specifies the links and images in the webpage. Please write an HTML and Tailwind CSS to make it look exactly like the original web page. Pay attention to things like size, text, position, and color of all the elements, as well as the overall layout. The format of the action list is as follows:
+    \{
+    ``position'': bounding box of format [[x1, y1], [x2, y2]], specifying the top left corner and the bottom right corner of the element;
+    ``type'': element type;
+    ``url'': url of the element;
+    \}
+The action list is as follows: 
+[ACTION LIST]}
+
+\paragraph{CoT prompt.} \texttt{Here is a screenshot of a web page and its ``action list'' which specifies the links and images in the webpage. Please write a HTML and Tailwind CSS to make it look exactly like the original web page. Please think step by step, and pay attention to things like size, text, position, and color of all the elements, as well as the overall layout.  The format of the action list is as follows:
+    \{
+    ``position'': bounding box of format [[x1, y1], [x2, y2]], specifying the top left corner and the bottom right corner of the element;
+    ``type'': element type;
+    ``url'': url of the element;
+    \}
+The action list is as follows:
+[ACTION LIST]}
+
+\paragraph{Self-refine prompt.} \texttt{Here is a screenshot of a web page and its ``action list'' which specifies the links and images in the webpage. I have an HTML file for implementing a webpage but it has some missing or wrong elements that are different from the original webpage. Please compare the two webpages and revise the original HTML implementation. Return a single piece of HTML and tail-wind CSS code to reproduce exactly the website. Pay attention to things like size, text, position, and color of all the elements, as well as the overall layout. Respond with the content of the HTML+tail-wind CSS code.  The format of the action list is as follows:
+    \{
+    ``position'': bounding box of format [[x1, y1], [x2, y2]], specifying the top left corner and the bottom right corner of the element;
+    ``type'': element type;
+    ``url'': url of the element;
+    \}
+The current implementation I have is: [CODE] The action list is as follows: [ACTION LIST]}
+
+\section{Visual Similarity Metrics}
+\label{appendix:similarity}
+This section provides all the details of the visual similarity metrics tested in this work.
+
+At the pixel level, we employ metrics that directly compare pixel values to quantify low-level differences: 
+\begin{itemize}[leftmargin=*] 
+\item \textbf{Mean Absolute Error (MAE)}~\cite{Nguyen2015ReverseEM, Moran2018MachineLP}: Computes the average absolute difference in pixel intensities, providing a straightforward measure of overall similarity that treats all errors equally without amplifying larger differences.
+
+\item \textbf{Peak Signal-to-Noise Ratio (PSNR)}~\cite{Lim2017EnhancedDR, Wang2019EDVRVR}:  Measures the ratio between the maximum possible power of a signal (image) and the power of corrupting noise. PSNR is based on the Mean Squared Error (MSE), with higher values indicating closer similarity between two images. It is widely used to evaluate image quality, especially in compression and restoration tasks. 
+
+\item \textbf{Wasserstein Distance (Earth Mover's Distance - EMD)}~\cite{Arjovsky2017WassersteinG, Rubner2000TheEM}: Measures the minimum transport cost required to transform one image onto the other, capturing spatial differences in pixel values and reflects structural rearrangements needed to align images. The EMD depends on the image size, with larger image pairs producing higher EMD values due to more pixels. To eliminate this dependency and make the metric size-independent, we define a normalized version $\text{\textbf{NEMD}} = 1 - \frac{\text{EMD}}{\text{EMD}_{\text{max}}}$ where $\text{EMD}_{\text{max}}$ is the maximum possible EMD between a reference image and any other arbitrary image. It represents the worst-case scenario of pixel differences (i.e., the distance from the reference image to a "completely" different image). It is achieved by assuming each pixel in the reference image is moved to its farthest possible value (0 or 255), thus providing an upper bound for the EMD. The NEMD ranges from 0 to 1, where higher values indicate greater similarity. This metric is not symmetric, as the $\text{EMD}_{\text{max}}$ is computed relative to the reference image. The original web page screenshot serves as the reference image in our experiments.
+
+\end{itemize}
+
+At the structural level, we use metrics that capture spatial and perceptual coherence: 
+\begin{itemize}[leftmargin=*] 
+
+\item \textbf{Structural Similarity Index Measure (SSIM)}~\cite{Zhou2024BridgingDA, Wang2004ImageQA}: Assesses structural coherence by evaluating changes in luminance, contrast, and structural information across images. SSIM models perceived image quality by accounting for local patterns and how structural details align, closely mirroring human visual perception. 
+
+\end{itemize}
+
+At the semantic level, we leverage: \begin{itemize}[leftmargin=*] 
+
+\item \textbf{CLIP score}~\cite{Radford2021LearningTV, Si2024Design2CodeHF}: Derived from the CLIP model, it captures high-level semantic similarities by aligning image embeddings with corresponding language representations. This approach allows us to gauge similarity based on shared meanings and conceptual elements rather than visual appearance alone. It is particularly suited for comparing images representing similar objects or scenes in different styles or contexts. 
+
+\item \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}~\cite{Zhang2018TheUE}: Evaluates perceptual similarity by computing the distance between deep feature representations of two images. LPIPS offers a robust method for assessing how similar two images are regarding human perception. We use VGG~\cite{Simonyan2014VeryDC} as the backbone model for LPIPS calculation.
+
+\end{itemize}
+
+Except for the CLIP score, which accepts images of varying sizes as input, we pad each image pair with random noise to ensure the two images in the pair are the same size.
+
+
+\section{Image Quality Analysis Details}
+\label{appendix:IQA}
+We analyzed the alignment between human judgments and objective similarity scores following established evaluation protocols~\cite{VQEG2000, Wang2004ImageQA}. This section provides a detailed illustration of the metrics and evaluation practices.
+
+\paragraph{Processing Human Scores} 
+After collecting human-perceived similarity scores, the scores of each annotator across all image pairs were normalized using z-scores (mean-centered and scaled by standard deviation) to ensure comparability. We computed the Mean Opinion Scores (MOS) for each image pair by first removing outliers and then averaging all human scores of the image pair. This process yields a robust, representative set of subjective human scores. The image database and subjective scores will be publicly available for further study.
+
+\begin{table*}[]
+\centering
+\small
+\caption{Correlation of similarity scores with human scores across different score levels (Low, Medium, High). CC-V: Correlation coefficient under variance-weighted regression; CC-N: Correlation coefficient under non-linear regression; SROCC: Spearman's rank-order correlation coefficient. All correlations are absolute values. We mark the \textbf{best results} with bold font and the \underline{second best} with underline. \textbf{SROCC is a more direct measurement} of correlations between similarity scores and human scores.}
+\label{tab:level-IQA}
+\begin{tabular}{@{}lccc|ccc|ccc@{}}
+\toprule
+ & \multicolumn{3}{c|}{Low} & \multicolumn{3}{c|}{Medium} & \multicolumn{3}{c}{High} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+ & CC-V & CC-N & SROCC & CC-V & CC-N & SROCC & CC-V & CC-N & SROCC \\
+\midrule
+MAE & \underline{0.413} & \underline{0.429} & \underline{0.401} & \textbf{0.211} & \underline{0.222} & \textbf{0.212} & 0.406 & 0.420 & 0.330 \\
+NEMD & \textbf{0.422} & \textbf{0.430} & \textbf{0.408} & 0.075 & 0.108 & \underline{0.209} & 0.286 & 0.301 & 0.328 \\
+PSNR & 0.264 & 0.313 & 0.351 & \underline{0.193} & 0.192 & 0.191 & \textbf{0.582} & \textbf{0.583} & 0.264 \\
+CLIP & 0.065 & 0.194 & 0.058 & 0.143 & \textbf{0.262} & 0.145 & 0.357 & 0.376 & 0.361 \\
+SSIM & 0.033 & 0.033 & 0.012 & 0.066 & 0.069 & 0.058 & \underline{0.494} & \underline{0.508} & \textbf{0.379} \\
+LPIPS & 0.041 & 0.044 & 0.084 & 0.046 & 0.049 & 0.010 & 0.491 & 0.502 & \underline{0.367} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\paragraph{Alignment Analysis of Objective and Subjective Scores} To compare the correlation between automatic objective scores and human subjective scores, we use three approaches:
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{Spearman rank-order correlation coefficient (SROCC):} A direct measure of the strength and direction of the association between the ranked objective and subjective scores. In our experiment, we consider the absolute value of SROCC, which is a metric between 0 and 1, where a indicates perfect positive or negative correlation, and 0 indicates no correlation. SROCC is particularly useful for evaluating the consistency of scores produced by objective metrics with those of human subjective assessment scores, regardless of the absolute values of the scores.
+
+\item \textbf{Variance-weighted regression analysis:} This analysis evaluates how well the objective metrics can predict human subjective scores. By weighting data points based on their variance before conducting a linear regression, we minimize the influence of noisy or uncertain scores, which leads to more robust and reliable predictions. After regression, we calculate several quantities to measure the magnitude of prediction errors and how closely the objective metric matches human assessments. The metrics are 1) the \textit{absolute correlation coefficient (CC)}: after taking the absolute value, this becomes a score between [0, 1] that measures the linear alignment between predictions and human perceptions, with higher absolute values indicating stronger alignment; 2) the \textit{outlier ratio (OR)}, i.e., the percentage of predictions outside twice the standard deviation, which identifies the ratio of cases where the model significantly deviates from human perception; 3) weighted \textit{mean absolute error (MAE)}, which measures the average magnitude of prediction errors without considering their direction, providing a straightforward indication of overall prediction accuracy; and 4) weighted \textit{root mean square error (RMSE)}, which gives a higher penalty to larger errors and emphasizes the magnitude of extreme deviations. These metrics collectively provide a comprehensive evaluation of the model’s ability to predict subjective human scores accurately and robustly.
+
+
+\item \textbf{Nonlinear regression analysis:} In this analysis, logistic functions are used to fit a nonlinear mapping between objective and subjective scores. This approach is particularly useful when the relationship between objective metrics and human perception is monotonic but not strictly linear. We also calculate \textit{CC}, \textit{OR}, \textit{MAE}, and \textit{RMSE} to understand the strength of the nonlinear relationship and discrepancies between the metrics and human evaluations.
+
+\end{itemize}
+
+\paragraph{Assessing inter-rater reliability of human scores.} For each pair of human subjects, we calculate their \textbf{SROCC} to evaluate the consistency of their subjective assessments. We then average the SROCC values across all pairs to obtain an overall measure of inter-rater reliability. This indicates how consistently human subjects rank the similarity between objective and subjective scores, serving as a benchmark for evaluating the performance of objective metrics.
+
+
+\section{Analysis of Similarity Metrics Across Different Similarity Levels}
+\label{appendix:sim-analysis}
+
+\paragraph{Why do learning- and structure-based metrics fail?} We divide the image pairs into three equal-sized groups according to their human ratings (i.e., low, medium, high) and analyze their correspondence with human scores. The result is in Table~\ref{tab:level-IQA}. 
+
+For the low-similarity image group, NEMD consistently achieves the best results (CC-V: 0.422, CC-N: 0.430, SROCC: 0.408), followed by MAE. Notably, SSIM, CLIP, and LPIPS show near-zero correlation with human perception in this range.
+
+In the medium-similarity image group, the performance of all metrics generally declines, indicating increased difficulty in predicting similarity when human perception becomes less polarized. NEMD and MAE remain competitive, and CLIP performs best under a nonlinear mapping with a CC-N  of 0.262.
+
+For the high-similarity image group, PSNR achieves the highest correlation under variance-weighted mapping and non-linear mapping  (CC-V: 0.582, CC-N: 0.583). Metrics such as SSIM and LPIPS show significant improvement. SSIM achieves the highest direct correlation (SROCC: 0.379), while LPIPS also demonstrates notable performance in SROCC (0.367). 
+
+In conclusion, \textbf{learning- and structure-based metrics fall short due to near-zero performance in low-similarity groups and poor performance in medium-similarity groups, failing to capture the similarity of intrinsically dissimilar image pairs.} In contrast, pixel-based metrics effectively distinguish dissimilar pairs while maintaining reasonable performance for high-similarity pairs, with MAE and NEMD emerging as standout methods.
+
+
+\section{Why CoT Decrease Performance}
+\label{appendix:CoT}
+Manual investigation reveals that MLLMs tend to omit content at the end of their generated code, often ending with placeholder comments like ``additional content goes here.'' The decrease in CoT performance arises because when being explicitly prompted with ``please think step by step,'' it generates HTML code part by part, omitting content at the end of every part, thereby compounding the omissions compared to direct prompts. This leads to lower action existence rates and reduced overall performance.
+
+
+
+
+
+
+\section{MLLMs' Performance and Input Complexity}
+\label{appendix:complexity}
+\begin{figure*}[ht]
+    \centering
+        \begin{subfigure}[b]{0.32\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{Sections/figs/gemini_MAE.pdf}
+            \caption{Gemini-Pro-1.5.}
+        \end{subfigure}
+        % \hspace{5px}
+        \begin{subfigure}[b]{0.32\textwidth}
+            \includegraphics[width=\linewidth]{Sections/figs/gpt4o_MAE.pdf}
+            \caption{GPT-4o.}
+        \end{subfigure}
+         \begin{subfigure}[b]{0.32\textwidth}
+            \includegraphics[width=\linewidth]{Sections/figs/claude_MAE.pdf}
+            \caption{Claude-3.5.}
+        \end{subfigure}
+        \caption{MAE$_\downarrow$ vs. input image size (million pixels).}
+        \label{fig:mae}
+\end{figure*}
+
+
+\begin{figure*}[ht]
+    \centering
+        \begin{subfigure}[b]{0.32\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{Sections/figs/gemini_match_ratio.pdf}
+            \caption{Gemini-Pro-1.5.}
+        \end{subfigure}
+        % \hspace{5px}
+        \begin{subfigure}[b]{0.32\textwidth}
+            \includegraphics[width=\linewidth]{Sections/figs/gpt4o_match_ratio.pdf}
+            \caption{GPT-4o.}
+        \end{subfigure}
+         \begin{subfigure}[b]{0.32\textwidth}
+            \includegraphics[width=\linewidth]{Sections/figs/claude_match_ratio.pdf}
+            \caption{Claude-3.5.}
+        \end{subfigure}
+        \caption{Action existence ratio$_\uparrow$ vs. action list length.}
+        \label{fig:aer}
+\end{figure*}
+
+
+
+According to Fig.~\ref{fig:mae}, as input image size increases, the MAE ($\downarrow$) grows for all models. GPT-4o and Claude-3.5 demonstrate more stable performance compared to Gemini-Pro, which is sensitive to size, particularly under the self-refine strategy. Among the prompting strategies, self-refine consistently performs best for Gemini-Pro and GPT-4o. For Claude-3.5, self-refine shows minimal improvement and occasionally underperforms compared to zero-shot and CoT).
+
+For action list length (Fig.~\ref{fig:aer}), the action existence ratio ($\uparrow$) decreases as the list grows longer, highlighting the challenge of maintaining accuracy with increased complexity. GPT-4o and Claude-3.5 perform comparably, with CoT and self-refine providing slight advantages. However, for Claude-3.5, SR again offers a limited improvement to other methods. 
+
+
+
+
+\section{Developing Website with the MRWeb Tool}
+\label{appendix:demo}
+In RQ4, we conduct a case study using the MRWeb tool, whose user interface is shown in Figure~\ref{fig:tool}. The tool enables users to define design assets, including webpage layouts, external resources (like images and links), and actions such as backend routing. These assets are organized using the action list structure—a dictionary-like format that systematically maps resources to visual elements. Leveraging the \taskname framework, the tool processes action lists and screenshots as inputs to MLLMs, facilitating the generation of functional, multi-page web UI code with visual consistency.
+
+The case study focuses on building a personal website with three internal pages: a home page, a project page, and a contact page, using AI-generated design images (Fig~\ref{fig:demo}). Table~\ref{tab:challenge} summarizes the key challenges introduced for each page.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{Sections/figs/tool.pdf}
+    \caption{User interface of the MRWeb tool.}
+    \label{fig:tool}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \caption{Challenges and performance of the case study.}
+    \label{tab:challenge}
+    \begin{tabular}{llcc}
+        \toprule
+        & Challenge      & Count & Success \\
+        \midrule
+        Home page & Internal links & 3 & 100\% \\
+                           & Images                 & 4 & 100\% \\
+        Project page & Internal links       & 2 & 100\% \\
+                           & External links & 6 & 100\% \\
+                           & Images         & 6 & 100\% \\
+        Contact page & Internal links       & 2 & 100\% \\
+                           & External links         & 3 & 100\% \\
+                           & Images                & 3 & 100\% \\
+                           & Backend routing & 1 & 100\% \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.28\columnwidth}
+            \centering
+            \includegraphics[width=\linewidth]{Sections/figs/home.png}
+            \caption{Home page design.}
+        \end{subfigure}
+        % \hspace{5px}
+        \begin{subfigure}[b]{0.294\columnwidth}
+            \includegraphics[width=\linewidth]{Sections/figs/project.png}
+            \caption{Project page design.}
+        \end{subfigure}
+         \begin{subfigure}[b]{0.312\columnwidth}
+            \includegraphics[width=\linewidth]{Sections/figs/contact.png}
+            \caption{Contact page design.}
+        \end{subfigure}
+        \caption{Design images of the personal website in RQ4.}
+        \label{fig:demo}
+\end{figure}
+
+
+\section{Visual Comparison of Self-Contained Web and MRWeb}
+\label{appendix:visual-compare}
+Figure~\ref{fig:data-compare} shows a comparison between self-contained webpages and our multipages resource-aware webpages (MRWebs). Self-contained webpages contain placeholder images and empty links, whereas MRWebs contain real images and links.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{Sections/figs/comparison.pdf}
+    \vspace{-5pt}
+    \caption{Comparison between self-contained webpages and our multipages resource-aware webpages (MRWebs). Design-to-code webpages contain placeholder images and empty links, whereas MRWebs contain real images and links.}
+    \label{fig:data-compare}
+    \vspace{-10pt}
+\end{figure*}
+
+
+
+

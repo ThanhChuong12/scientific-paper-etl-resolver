@@ -1,0 +1,72 @@
+As the excitation gap above the target state scales as $\propto 1/L$ with system size  \cite{Tu_et_al, Halperin_Sarma, Fidkowski_et_al, Zoller_model}, it resembles a critical state. Hence, we find it useful to look to the theory of theory of critical ground state preparation for guidance, where experimental control over a ``mass'' term that gaps out the critical target system is a crucial ingredient \cite{crit_state_prep_1, crit_state_prep_2, crit_state_prep_3, Review_QPT_Dziarmaga, crit_state_prep_4}. For the present model, this role is assumed by the flux-hopping with amplitude $r$. In Sec.~(\ref{Sec:introduction_protocols}), we introduce a protocol that exploits this term to optimize \gls{gs} preparation time by considering the total Hamiltonian $H_0(\tau) + H_W(\tau) + H_\phi(\tau) + H_\mu(\tau)$ as per Eqs.~(\ref{Eqn:Zoller_model}-\ref{Eqn:H_mu}) with parameters varying as a function of the dimensionless parameter $\tau$, and a second, simpler protocol that never breaks the symmetry and requires a ramp along a critical region in parameter space. To demonstrate the expected advantage of the symmetry-breaking protocol over the symmetry-respecting protocol, we conduct \gls{mpste} simulations in Sec.~\ref{Sec:crit_state_prep}.
+
+\begin{figure}[htp!]	 
+    {
+        \vbox to 0pt {
+                \raggedright
+                \textcolor{white}{
+                    \subfloatlabel[1][Fig:protocol_data_a]
+                    \subfloatlabel[2][Fig:protocol_data_b]
+                    \subfloatlabel[3][Fig:protocol_data_c]
+                    \subfloatlabel[4][Fig:protocol_data_d]
+                }
+            }
+    }
+    \includegraphics{plots/gap_system_size_pyplot/gaps_protocol.pdf}
+    \caption{(a) The upper panel shows the gaps $\Delta_\mathrm{M} = E_1 - E_0$ and $\Delta_\mathrm{B} = E_2 - E_0$ as a function of $\tau$. We present data for system size $L = 24$ and $L =48$ at filling $\nu = 1/3$, corresponding to $N_\mathrm{tot} = 16$ and $N_\mathrm{tot} = 32$ particles, both with \gls{obc}. The interchain hopping phase is set to $\phi = 1/3$ while the other parameters follow the function \eq{Eqn:time_dependence_p1}, which is illustrated in the lower panel. (b) Similar to (a), but with the parameters determined by \eq{Eqn:time_dependence_p2} as illustrated in the lower panel.}
+\end{figure}
+
+\subsection{Symmetry breaking versus symmetric protocol}\label{Sec:introduction_protocols}
+Using the indicator function $\mathbbm{1}_I(\tau)$ for the interval $I$ and the auxiliary functions $f(\tau) = 3\tau^2 - 2 \tau^3$, $g(\tau) = 11\tau^2 -7 \tau^3$, and $h(\tau) = 2\tau^2 - \tau^3$, the parameter functions for the symmetry-breaking protocol can be written as
+
+\begin{align}
+t_1(\tau) &= t \left [ f(\tau) \mathbbm{1}_{(0,1]}(\tau)+ \mathbbm{1}_{(1,3]}(\tau) \right ], \nonumber \\
+W_1(\tau) &= W \left[f(\tau - 1) \mathbbm{1}_{(1,2]}(\tau) + \mathbbm{1}_{(2,3]}(\tau) \right], \nonumber \\
+r_1(\tau) &= r \left[ 5 f(\tau) \mathbbm{1}_{(0,1]}(\tau) + [1 - g(\tau - 1)] \mathbbm{1}_{(1,2]}(\tau) \right . \nonumber \\ 
+&\quad + \left. (3 - \tau) \mathbbm{1}_{(2,3]}(\tau)\right], \nonumber \\
+\mu_1(\tau) &= \mu\left[\mathbbm{1}_{[0,1]}(\tau) + [1 - f(\tau-1)] \mathbbm{1}_{(1, 2]}(\tau) \right], \label{Eqn:time_dependence_p1}
+\end{align}
+where $t = 1$, $W = -1.8$, $r = 0.1$ and $\mu = 1$. The protocol is divided into three stages corresponding to $\tau \in [0,1]$, $\tau \in (1,2]$, and $\tau \in (2,3]$; an illustration of the parameter evolution can be found in Fig.~\ref{Fig:protocol_data_c}. At $\tau = 0$, only a staggered chemical potential is present, which stabilizes a Mott state at filling $\nu = 1/3$ (cf. Fig.~\ref{Fig:illustration_a}). During the first stage, the Mott state is deformed adiabatically into a non-interacting double-leg flux ladder state, with the staggered chemical potential $\mu$ always sustaining a large gap. Stage two exchanges the chemical potential with the pair-hopping $W$ and ramps down the flux-hopping amplitude to $r = 0.1$, ending in the target Hamiltonian plus the residual flux hopping (cf. Fig.~\ref{Fig:illustration_b}). The final step consists of turning the flux hopping off entirely, thereby arriving at the target Hamiltonian hosting the Majorana phase (cf. Fig.~\ref{Fig:illustration_c}).
+
+Fig.~\ref{Fig:protocol_data_a} shows the evolution of the gaps $\Delta_\mathrm{M} = E_1 - E_0$ and $\Delta_\mathrm{B} = E_2 - E_0$ to the first and second excited state as a function of $\tau$ for two system sizes $L = 24$ and $L=48$ in an open geometry. The data is obtained from \gls{dmrg} simulations \cite{Itensor_basic, Itensor_codebase_release}. Here, $\Delta_\mathrm{M}$ and $\Delta_\mathrm{B}$ can be interpreted as the gap to the Majorana mode and the excited bulk states, respectively. In agreement with the theoretical expectation, the Majorana gap $\Delta_\mathrm{M}$ of the target Hamiltonian decays exponentially with system size, while the bulk gap $\Delta_\mathrm{B}$ closes $\propto 1/L$ \cite{Tu_et_al, Halperin_Sarma, Fidkowski_et_al, Zoller_model}. This poses a challenge for the third stage: while stage one and two can be completed in a finite time regardless of system size due to the finite gap, the criticality of the target state requires a specialized strategy to optimize preparation time, which will be subject of the following section.
+
+We contrast the protocol in \eq{Eqn:time_dependence_p1} with a symmetry-respecting path in parameter space designated by the parameter functions
+\begin{align}
+t_2(\tau) &= t_1(\tau), \nonumber \\
+W_2(\tau) &= 0.5 W \left[h(\tau - 1) \mathbbm{1}_{(1,2]}(\tau) + (-1 + \tau) \mathbbm{1}_{(1,2]}(\tau)  \right ], \nonumber \\
+r_2(\tau) &= 0, \nonumber \\
+\mu_2(\tau) &= 0.5 \mu \left[ 2 \mathbbm{1}_{[0,1]}(\tau) + [2 - h(\tau - 1)] \mathbbm{1}_{(1, 2]}(\tau) \right . \nonumber \\ 
+ &\quad+ \left. (3 - \tau) \mathbbm{1}_{(2, 3]}(\tau) \right].  \label{Eqn:time_dependence_p2}
+\end{align}
+Again, we illustrate the parameter evolution in Fig.~\ref{Fig:protocol_data_d} and provide \gls{dmrg} data on the evolution of the energy gaps in Fig.~\ref{Fig:protocol_data_b}. Similar to the first protocol \eq{Eqn:time_dependence_p1}, stages one and two are gapped and thus completable in finite time. The third stage not only ends in a critical state, but requires ramping along a critical line in parameter space, which is a generic problem of any parameter path that respects the protecting $\mathbb{Z}_2$ symmetry. As we demonstrate in the following section, this will severely increase the necessary preparation time.
+
+We stress that due to the $\mathbb Z_2$ symmetry breaking, the protocol \eq{Eqn:time_dependence_p1} will prepare a superposition of the two degenerate $P_\mathrm{a}$ eigenstates for \gls{obc}, while the symmetry-respecting protocol \eq{Eqn:time_dependence_p2} prepares the state that corresponds to the parity of the initial Mott state. To prepare a definite-parity eigenstate with the first protocol, one can proceed with \gls{pbc} first and then adiabatically cut the chain in one place \cite{Cutting_Majorana_Chain}.
+
+\subsection{Critical state preparation}\label{Sec:crit_state_prep}
+The time $t_\mathrm{tot}$ to adiabatically prepare a critical state is generally bounded from below by the inverse excitation gap $\Delta_\mathrm{c}^{-1}$ above the target state \cite{crit_state_prep_1, crit_state_prep_2}, which implies a minimal asymptotic scaling with system size  of $t_\mathrm{tot} \propto 1/L$ for the model at hand. To achieve an optimal fidelity for a given preparation time, we approach the critical point by ramping down the flux hopping as 
+\begin{align}
+r_p(t) = r_{0} |1 -  t / t_\mathrm{tot}|^p. \label{Eqn:power_law_ramp}
+\end{align}
+At $r_{0} = 0.1$, this completes stage three of the protocol Fig.~\ref{Fig:protocol_data_a}, with the power $p$ controlling the transition rate close to the critical point. Based on estimates deriving from the Kibble-Zurek mechanism \cite{crit_state_prep_3, Review_QPT_Dziarmaga}, this ramp can be expected to be adiabatic if $t_\mathrm{tot} \gg L^{z_\mathrm{c} + \frac{1}{p \nu_\mathrm{c}}}$, where $L$ is the system size and $z_\mathrm{c}, \nu_\mathrm{c}$ are the dynamical and correlation length exponents characterizing the critical point. The critical behavior of \eq{Eqn:H_0_bosonized} stems from the symmetric sector, which is simply a free Luttinger liquid exhibiting a linear dispersion and thus $z_\mathrm{c} = 1$ and $\nu_\mathrm{c} = 1$, suggesting a quadratic scaling of preparation time for $p = 1$ and a linear scaling in the limit $p \to \infty$. However, this limit is not directly viable while keeping the initial value $r_{0}$ fixed, since the rate $|\dot{r}_p(t = 0)| = r_{0} p / t_\mathrm{tot}$ is not bounded. Nevertheless, virtually linear scaling may still be achieved if we consider increasing the power $p(L)$ as a function of system size together with a linear scaling of the total ramp time $t_\mathrm{tot}(L) \propto L$ such that $p(L) / t_\mathrm{tot}(L) < \mathrm{const}$ is bounded by a constant while $\lim_{L \to \infty}p(L) = \infty$. Then, the bound $t_\mathrm{tot}(L) \gg L^{z_\mathrm{c} + \frac{1}{p(L) \nu_\mathrm{c}}} \approx L$ can be satisfied while keeping the rate of change bounded.
+
+To validate this hypothesis, we consider the Hamiltonian $H_1(t)$ at fixed parameters $t = 1$, $W = -1.8$, $\mu = 0$, $\phi = 1/3$, and the only time-dependence $r(t) = r_p(t)$ given by \eq{Eqn:power_law_ramp} with $r_{0} = 0.1$, such that $H_1(0)$ is precisely the Hamiltonian at the beginning of stage three and $H_1(t_\mathrm{tot})$ is the target Hamiltonian. We time-evolve the initial ground state $\ket{\psi_\mathrm{prep}(t = 0)}$  of $H_1(t = 0)$ under $H_1(t)$ using  \gls{mpste} and measure the overlap of the prepared state with the two degenerate \gls{gs} $\ket{\mathrm{GS}_{1,2}}$ of $H_1(t_\mathrm{tot})$ as $F = |\braket{\mathrm{GS}_{1}|\psi_\mathrm{prep}(t_\mathrm{tot})}|^2 + |\braket{\mathrm{GS}_{2}|\psi_\mathrm{prep}(t_\mathrm{tot})}|^2$. The \gls{mpste} results for four system sizes ranging from $L = 24$ to $L = 96$ are depicted in Fig.~\ref{Fig:fidelity_data_a} over a time axis linearly rescaled with system size for power $p = 1$, corresponding to a linear ramp, and a higher power $p(L)$ that we optimized to find the best possible fidelity. While the fidelity lines for the optimized power law do not collapse exactly at large $t_\mathrm{tot}$, the general result is compatible with our hypothesis: increasing the power $p$ sublinearly with system size allows us to prepare a ground state with high fidelity in a time that roughly scales linearly with system size. 
+
+We perform similar simulations for the third stage of \eq{Eqn:time_dependence_p2} by considering the Hamiltonian $H_2(t)$ with fixed parameters $t = 1$, $r = 0$, and the time-dependence $W(t) = W_2(2 + t/t_\mathrm{tot})$, $\mu(t) = \mu_2(2 + t/t_\mathrm{tot})$  (cf. \eq{Eqn:time_dependence_p2}). This is simply a linear ramp towards the critical target state, similar to \eq{Eqn:power_law_ramp} with $p = 1$. Contrary to the symmetry-breaking protocol, this approach follows  a critical line in parameter space, hence there is nothing to gain by a larger power as the finite-size gap persists along a finite interval in time. The adiabatic theorem implies a scaling of preparation time as $t_\mathrm{tot}\propto \Delta_\mathrm{c}^{-2} \propto L^2$ \cite{Adiabatic_theorem_Born_Fock, Adiabatic_theorem_Kato}, suggesting that this approach severely underperforms the symmetry-breaking protocol. These expectations are confirmed by the \gls{mpste} results we present in Fig.~\ref{Fig:fidelity_data_b} for system sizes $L = 24$, $L = 48$, and $L = 72$. For $L = 24$, the time to reach $99.9\%$ fidelity is roughly twice as much as for the symmetry-breaking protocol, but for larger system sizes this worsens rapidly. We also note that while the $p = 1$ case presented in Fig.~\ref{Fig:fidelity_data_a} still greatly outperforms the protocol in Fig.~\ref{Fig:fidelity_data_b} on a quantitative level, the shape of the curves is very similar in consistency with the expected quadratic scaling of preparation time in both cases. 
+
+
+
+\begin{figure}[htp!]	 
+{
+        \vbox to 0pt {
+                \raggedright
+                \textcolor{white}{
+                    \subfloatlabel[1][Fig:fidelity_data_a]
+                    \subfloatlabel[2][Fig:fidelity_data_b]
+                }
+            }
+    }
+    \includegraphics{plots/Compare_fidelity_pyplot/compare_fidelity.pdf}
+\caption{Ground state fidelity $F$ after completing stage three of the protocol for different system sizes at filling $\nu = 1/3$. The horizontal axis indicates the total preparation time $t_\mathrm{tot}$ and is rescaled proportional to system size by a factor of $12 / (5 L)$. (a) Result for stage three of the symmetry-breaking protocol \eq{Eqn:time_dependence_p1} with $r(t)$ following \eq{Eqn:power_law_ramp} for different powers $p$. System sizes are $L = 24, 48,72,96$. (b) Result for stage three of the symmetry-preserving protocol \eq{Eqn:time_dependence_p2}, here with the parameters simply following a linear ramp over a time $t_\mathrm{tot}$. System sizes are $L = 24, 48,72$.}\label{Fig:fidelity_data}
+\end{figure}
+
+For completeness, we note that there exist proposals to achieve a linear scaling of critical state preparation time by a spatially inhomogeneous ramp of the ``mass'' term, where the critical region spreads through the system as a front that propagates at a well-chosen speed \cite{crit_state_prep_3, crit_state_prep_4}. We implement such a protocol numerically and provide \gls{mpste} data in Appendix \ref{App:Sec:IH_ramp}, demonstrating that this approach is clearly outperformed by the power law optimization strategy we presented above. Furthermore, for an experimental implementation the precise manipulation of the transverse hopping amplitude in space would rise as another significant challenge.

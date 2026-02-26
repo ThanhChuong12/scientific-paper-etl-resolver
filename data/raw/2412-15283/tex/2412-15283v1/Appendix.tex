@@ -1,0 +1,163 @@
+% \documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+% \usepackage[submission]{aaai25}  % DO NOT CHANGE THIS
+% \usepackage{times}  % DO NOT CHANGE THIS
+% \usepackage{helvet}  % DO NOT CHANGE THIS
+% \usepackage{courier}  % DO NOT CHANGE THIS
+% \usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+% \usepackage{graphicx} % DO NOT CHANGE THIS
+% \urlstyle{rm} % DO NOT CHANGE THIS
+% \def\UrlFont{\rm}  % DO NOT CHANGE THIS
+% \usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+% \usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+% \frenchspacing  % DO NOT CHANGE THIS
+% \setlength{\pdfpagewidth}{8.5in} % DO NOT CHANGE THIS
+% \setlength{\pdfpageheight}{11in} % DO NOT CHANGE THIS
+% %
+% % These are recommended to typeset algorithms but not required. See the subsubsection on algorithms. Remove them if you don't have algorithms in your paper.
+% \usepackage{algorithm}
+% \usepackage{algorithmic}
+% \usepackage{booktabs}
+% \usepackage{times}
+% \usepackage{amsmath}
+% \usepackage{inconsolata}
+% \usepackage{amssymb}
+% \usepackage{graphicx}
+% \usepackage{array}   
+% \usepackage{multirow}
+% \usepackage{makecell}
+% \usepackage{rotating}
+% \usepackage{caption}
+% \usepackage{subcaption}
+% \usepackage{enumitem}
+% \usepackage{bm}
+% \begin{document}
+
+\begin{center}
+	{
+		\Large{\textbf{Appendix}}
+	}
+\end{center}
+\begin{table*}[!htbp]
+\renewcommand{\arraystretch}{1.3}
+\caption{\label{table:merging_groups}Experimental results on different merging groups.}
+\centering
+\scalebox{0.65}
+{
+\begin{tabular}{c|c|ccc|ccc|ccc|cccc}
+\toprule
+\toprule
+\multirow{2}{*}{Groups} & \multirow{2}{*}{Param. (B)} &\multicolumn{3}{c}{Instruction Expert (\%) $\uparrow$} & \multicolumn{3}{c}{Math Expert (\%) $\uparrow$} & \multicolumn{3}{c}{Code Expert (\%) $\uparrow$} & \multicolumn{3}{c}{Chinese Expert (\%) $\uparrow$} \\
+\cmidrule(l){3-5} \cmidrule(l){6-7} \cmidrule(l){9-11} \cmidrule(l){12-14}
+% \cmidrule{l}{2-12}
+& &CommonSenseQA & TriviaQA & Avg. & GSM8K & Math & Avg. & HumanEval & MBPP & Avg.& CMMLU & CEVAL & Avg. \\
+\midrule
+1&6.7&73.85&51.93&62.89&63.02&10.38&36.70&31.58&36.26&33.92&44.32&45.96&45.14\\
+2&14.3&75.27&\textbf{64.49}&\textbf{69.88}&70.05&19.89&44.95&45.13&43.00&44.01&\textbf{48.41}&\textbf{47.69}&\textbf{48.05} \\
+3&21.9&75.36& 60.21 & 67.79&71.83&20.43&46.13&45.10&43.46&44.28&47.52&47.36&47.44 \\
+4&26.8& \textbf{75.86}& 58.39 & 67.12&\textbf{73.92}&\textbf{20.62}&\textbf{47.27}&\textbf{45.36}&\textbf{43.20}&\textbf{44.28}&47.52&47.50&47.51 \\
+
+\bottomrule
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+\begin{table*}
+\centering
+\caption{\label{table:llm_detail}Versions and correspondences with pre-trained backbones of fine-tuned LLMs.}
+\scalebox{0.85}
+{
+\begin{tabular}{@{}lll@{}}
+\toprule
+Tasks & Fine-tuned LLMs & Pre-Trained backbones \\ \midrule
+English Reasoning &  Dolphin-2.2.1-Mistral-7B \cite{dolphin-2.2.1-mistral-7b} & Mistral-7B-v0.1 \cite{jiang2023mistral} \\
+                       &  Hercules-2.5-Mistral-7B \cite{Hercules-2.5-Mistral-7B} & Mistral-7B-v0.1 \cite{jiang2023mistral} \\
+                       &  CollectiveCognition-v1.1-Mistral-7B \cite{CollectiveCognition-v1.1-Mistral-7B} & Mistral-7B-v0.1 \cite{jiang2023mistral} \\
+                       &CodeLlama-7b-Instruct \cite{roziere2023code}& CodeLlama-7b \cite{roziere2023code} \\ \midrule
+Mathematical Reasoning &  MetaMath-Mistral-7B \cite{MetaMath-Mistral-7B} & Mistral-7B-v0.1 \cite{jiang2023mistral} \\
+                       & 
+OpenMath-CodeLlama-7b-Python \cite{toshniwal2024openmath} & CodeLlama-7b \cite{roziere2023code}\\ \midrule
+Code Generation        & Speechless-Code-Mistral-7B \cite{speechless-code-mistral-7b-v1.0}  & Mistral-7B-v0.1 \cite{jiang2023mistral} \\
+                       & WizardCoder-Python-7B \cite{luo2023wizardcoder}& CodeLlama-7b \cite{roziere2023code}\\ \midrule
+Chinese Reasoning      &  Chinese-Mistral-7B-Instruct-v0.1 \cite{Chinese-Mistral-7B-Instruct-v0.1}& Mistral-7B-v0.1 \cite{jiang2023mistral} \\
+        
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+\section{Detailed Experimental Setting}
+\subsection{Candidate LLMs}
+\label{sec:candidate_llm}
+To analyze the similarity relationship between different experts, we conduct experiments under Mistral-7B-v0.1 model family and CodeLLaMA model family. In Mistral-7B-v0.1 model family experiments, we use Dolphin-2.2.1-Mistral-7B as the instruction expert, MetaMath-Mistral-7B as the math expert and Speechless-Code-Mistral-7B as the code expert. In CodeLLaMA model family experiments, we use CodeLlama-7b-Instruct as the instruction expert, OpenMath-CodeLlama-7b-Python as the math expert and WizardCoder-Python-7B as the code expert.
+
+\noindent In our main experiments, we apply our method to the Mistral-7B-v0.1 model family, including several specialized LLMs: Dolphin-2.2.1-Mistral-7B as the instruction expert, Speechless-Code-Mistral-7B as the code expert, MetaMath-Mistral-7B as the math expert, and Chinese-Mistral-7B-Instruct-v0.1 as the Chinese expert. These models are all fine-tuned derivatives of the foundational pretrained model Mistral-7B-v0.1. The details of each expert can be found in Table \ref{table:llm_detail}.
+
+\subsection{Training detail of task-specific router} 
+\label{sec:training_detail}
+To efficiently assign queries to the optimal expert, We utilize the bert-base-multilingual-cased \cite{bert-base-multilingual-cased} which is a tiny model with only 110M parameters as the task-specific router. To train the task-specific router, we collect 50k instruction samples from various open-source datasets and randomly select 50k samples to train the router, including Dolphin \cite{Dolphin} for the instruction domain, MetaMathQA \cite{MetaMath-Mistral-7B} for the mathematics domain, WizardLM-evol-instruct-V2-196k \cite{WizardLM-evol-instruct-V2-196k} for the code domain, and Wizard-LM-Chinese-instruct-evol \cite{Wizard-LM-Chinese-instruct-evol} for the Chinese domain. We use the AdamW optimizer with $\beta_1 = 0.9$ and $\beta_2=0.95$ to train 1 epoch on a single A100GPU, setting the learning rate to $1\times10^{-4}$, the batchsize to 128, and applying a linear learning rate warmup. 
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.5]{imgs/experts_similarity.pdf}
+    \caption{\label{fig:experts_similarity} Heatmap of channel similarities between different expert models. }
+\end{figure}
+
+\section{More Ablation Studies}
+\noindent\textbf{The similarity between merged experts.} We assess the channel similarities between different experts after merging. The similarity between experts is calculated by counting the number of channels where $S^{t_n}$ values matched between two experts and then normalizing this count by the total number of channels. The results, depicted in Figure \ref{fig:experts_similarity}, show relatively low similarity scores across different experts. For instance, the Instruction and Math experts, despite having the highest similarity score in the matrix, still exhibit a moderate similarity of 0.77, suggesting that while there are shared characteristics, distinct features prevail. On the other end, the Code and Chinese experts have the lowest similarity of 0.41, indicating significant differences in their channel characteristics. These findings validate Channel Merging's ability to preserve expert uniqueness, effectively minimizing parameter conflicts and enhancing performance by ensuring each expert's specialized knowledge remains intact within the merged framework.
+
+\noindent\textbf{Merging under different groups.} In Channel Merging, we can categorize expert parameters into varying numbers of groups. We conduct experiments to explore the impact of the number of groups on the merged model's parameter count and performance. The results, as shown in Table \ref{table:merging_groups}, indicate that when the number of groups is set to one, Channel Merging functions similarly to DARE \cite{jiang2023llm}. Although this setting minimizes the number of parameters required, it also yields the poorest performance. Conversely, when the number of groups is set to four, Channel Merging resembles a model ensemble, requiring the maximum number of parameters. Notably, setting the number of groups to two not only surpasses or closely matches the performance of having four groups across various downstream tasks but also significantly reduces the number of parameters needed.
+
+\noindent\textbf{Latency analysis for Instant Lookup.} To comprehensively analyze the cost associated with the lookup and concatenation processes during inference, we randomly selected 50 data points from the MMLU validation dataset to evaluate the time costs associated with the lookup and inference processes. The final reported times for lookup and inference are the average values derived from these 50 data points. The results given in Table \ref{tab:inference_time} clearly show that the lookup and concatenation process accounts for a minimal portion of the total inference time.
+
+\begin{table}[]
+    \centering
+    \begin{tabular}{c|c}
+    \toprule
+         Lookup and concatenation&Total inference  \\
+    \hline
+         0.06s& 0.831s\\
+    \bottomrule
+    \end{tabular}
+    \caption{The inference time of the lookup and concatenation process.}
+    \label{tab:inference_time}
+\end{table}
+
+
+\noindent\textbf{The effectiveness of the similarity metric.} In response to inquiries about our choice of cosine similarity as the metric for assessing parameter similarities, we conducted comprehensive experiments comparing various similarity metrics, including cosine similarity, Euclidean distance, and Manhattan distance. The experimental results given in Table \ref{tab:metric_eval} reveal that cosine similarity and Euclidean distance consistently outperformed Manhattan distance. 
+\begin{table}[htbp]
+    \centering
+    \scalebox{0.8}{
+    \begin{tabular}{c|c|c|c|c}
+    \toprule
+         Similarity metric & MBPP   & CommonSenseQA  & GSM8K  & CMMLU  \\
+    \hline
+    Consine similarity  & 43.00 & 75.27    & 70.05 & 48.41\\
+    Euclidean Distance  & 43.00 & 75.01   & 70.09 & 48.30 \\
+    Manhattan Distance  & 42.85 & 74.86   & 69.12 & 48.40 \\
+    \bottomrule
+    \end{tabular}}
+    \caption{The comparison results between different similarity metrics.}
+    \label{tab:metric_eval}
+\end{table}
+
+\noindent\textbf{Pruning under different pruning ratios.} As mentioned in \textbf{Implementation}, our approach enhances the existing channel merging methods. Previous implementations of channel merging, such as TIES and DARE, necessitate pruning the delta parameters before merging to reduce parameter conflicts. Accordingly, we adopt the same strategy of pruning delta parameters prior to merging. We conducted experiments with various pruning ratios to determine their impact on the final results. Our findings indicate that a 30\% pruning ratio yields the most effective outcome. The specific experimental results demonstrating this are presented in Table \ref{tab:ratio_eval}.
+\begin{table}[htbp]
+    \centering
+    \scalebox{0.83}{
+    \begin{tabular}{c|c|c|c|c|c}
+    \toprule
+         Ratio & MBPP   & HumanEval & MMLU   & GSM8K  & CMMLU  \\
+    \hline
+    0\%   & 42.06 & 43.98 & 61.70 & 68.36 & 47.38\\
+    30\%   & 43.00 & 45.13 & 63.01 & 70.05 & 48.41 \\
+    50\%   & 43.00 & 45.01 & 62.80 & 70.09 & 48.40 \\
+    70\%   & 42.80 & 44.69 & 62.53 & 69.15 & 48.27 \\
+    \bottomrule
+    \end{tabular}}
+    \caption{The comparison results between different pruning ratios.}
+    \label{tab:ratio_eval}
+\end{table}
+
+
+
+% \bibliography{aaai25}
+% \end{document}

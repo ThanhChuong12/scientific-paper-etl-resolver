@@ -1,0 +1,146 @@
+%\documentclass[sigconf,review,anonymous]{acmart}
+\documentclass[11pt]{article}
+
+% Remove the "review" option to generate the final version.
+% \usepackage[review]{ACL2023}
+\usepackage[]{ACL2023}
+\usepackage{times}
+\usepackage{latexsym}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out.
+% However, it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+\usepackage{pdflscape}
+\usepackage{rotating}
+\usepackage{amssymb}
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+
+% Added
+\usepackage{amsmath,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{lipsum}
+\usepackage{makecell}
+% \usepackage{subfigure}
+\usepackage{xspace}
+\usepackage{float}
+\usepackage{tipa}
+
+\usepackage{arydshln}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{tcolorbox}
+\usepackage{colortbl}
+\usepackage{adjustbox} % for \sbox
+\usepackage[T1]{fontenc}
+
+\usepackage{threeparttable}
+% \usepackage{easyReview}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\let\comment\undefined
+\usepackage{changes}
+\usepackage{tabularx}
+\usepackage{amssymb} % For \checkmarkuse
+\usepackage{bbding}
+\usepackage{enumitem}
+% Define \xmark if not already defined
+\newcommand{\etal}{{\em et al.}\xspace}
+\newcommand{\ie}{{\em i.e.},\xspace}
+\newcommand{\eg}{{\em e.g.},\xspace}
+\newcommand{\taskname}{MRWeb\xspace}
+% \newcommand{\webname}{MRWeb\xspace}
+\definecolor{lightblue}{rgb}{0.2, 0.2, 0.8}
+\definecolor{lightgreen}{rgb}{0.2, 0.8, 0.2}
+
+\newcommand{\wcz}[1]{\textcolor{green}{{#1}}}
+
+\newsavebox{\arrangebox}
+\newlength{\arrangeht}
+
+\lstset{
+    backgroundcolor=\color{gray!10},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+}
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title{MRWeb: An Exploration of Generating Multi-Page Resource-Aware Web Code from UI Designs}
+
+
+
+\author{
+    {\bf Yuxuan Wan}$^{1}$,
+    {\bf Yi Dong}$^{1}$,
+    {\bf Jingyu Xiao}$^{1}$, 
+    {\bf Yintong Huo}$^{1}$, \\
+    {\bf Wenxuan Wang}$^{1}$\thanks{\ \ Wenxuan Wang is the corresponding author.},
+    {\bf Michael R. Lyu}$^{1}$ \\
+    $^1$The Chinese University of Hong Kong, Hong Kong, China \\
+    \texttt{\{yxwan9, ythuo, wxwang, lyu\}@cse.cuhk.edu.hk},\\ \texttt{dy13367795706@gmail.com, whalexiao99@gmail.com}
+}
+
+
+
+\maketitle
+
+\begin{abstract}
+Multi-page websites dominate modern web development. However, existing design-to-code methods rely on simplified assumptions, limiting to single-page, self-contained webpages without external resource connection. To address this gap, we introduce the Multi-Page Resource-Aware Webpage (MRWeb) generation task, which transforms UI designs into multi-page, functional web UIs with internal/external navigation, image loading, and backend routing. We propose a novel resource list data structure to track resources, links, and design components. Our study applies existing methods to the MRWeb problem using a newly curated dataset of 500 websites (300 synthetic, 200 real-world).
+Specifically, we identify the best metric to evaluate the similarity of the web UI, assess the impact of the resource list on MRWeb generation, analyze MLLM limitations, and evaluate the effectiveness of the MRWeb tool in real-world workflows. The results show that resource lists boost navigation functionality from 0\% to 66\%-80\% while facilitating visual similarity. Our proposed metrics and evaluation framework provide new insights into MLLM performance on MRWeb tasks. We release the MRWeb tool, dataset, and evaluation framework to promote further research\footnote{\url{https://github.com/WebPAI/MRWeb}}.
+
+\end{abstract}
+
+
+\input{Sections/1_Introduction}
+\input{Sections/2_Background}
+\input{Sections/3_Methodology}
+\input{Sections/4_Evaluation}
+\input{Sections/5_Discussion}
+
+%%
+%% The next two lines define the bibliography style to be used, and
+%% the bibliography file.
+\bibliographystyle{acl_natbib}
+\bibliography{reference}
+
+\appendix
+
+\input{Sections/appendix}
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-authordraft.tex'.

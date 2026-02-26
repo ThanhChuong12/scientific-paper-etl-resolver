@@ -1,0 +1,74 @@
+
+% \section{Results}
+
+% We compare the trained and fine-tuned smaller language model with off-the-shelf counterparts that often have a few billion parameters. We perform comparisons and present the results:
+
+
+
+
+
+
+\FloatBarrier   
+
+
+
+
+% \begin{figure}[htb]
+% \centering
+%   \includegraphics[width=0.9\columnwidth]{figures/results/accuracy-comp-gesture.pdf}
+%   \vspace{-2mm}
+%   \caption{Best accuracies of LLMs on gesture sensor datasets. * denotes fine-tuned variants}
+%   \label{fig:acc-comp-gesture}
+  
+% \end{figure}
+
+% \begin{figure}[htb]
+% \centering
+%   \includegraphics[width=0.9\columnwidth]{figures/results/accuracy-comp-local.pdf}
+%   \vspace{-2mm}
+%   \caption{Best accuracies of LLMs on localisation sensor datasets. * denotes fine-tuned variants}
+%   \label{fig:acc-comp-local}
+  
+% \end{figure}
+
+
+% \begin{table}[htb]
+% \centering
+% \caption{F1 Scores for different Models on swimming dataset}
+% \label{tab:f1_scores_only_tabular}
+% \begin{tabular}{|p{4cm}|p{3cm}|}
+% \hline
+% \textbf{Model} & \textbf{F1-Score (\%)} \\ \hline
+% 30M           & 67.74\%                \\ \hline
+% 50M           & 62.87\%                \\ \hline
+% 82M           & 73.27\%                \\ \hline
+% 101M          & 78.01\%                \\ \hline
+% 124M          & 71.97\%                \\ \hline
+% Original      & 97.4\%                  \\ \hline
+% \end{tabular}
+% \end{table}
+
+
+% \fakepar{3. Time for training and fine-tuning smaller models}
+
+% Table~\ref{tab:training_timings} shows the training and fine-tuning timings for different models. Training was conducted for 16,800 steps with a mix of Fineweb and IoT sensor datasets, while fine-tuning was performed on the gesture sensing dataset with 10\% of the total parameters set as trainable. All experiments were run on H100 NVL GPUs. Although models were trained across different clusters of the same type, resulting in slight timing variations, the trend shows that smaller custom models require significantly less time. This efficiency makes them more suitable for diverse use cases compared to larger off-the-shelf models, which, for example, took over 3 days to train on datasets like swimming style detection, whereas smaller models completed training within 20-24 hours.
+
+% \begin{table*}[]
+% \caption{Training and fine-tuning times for models with varying parameter sizes using the framework.}
+% \label{tab:training_timings}
+% \begin{tabular}{cccccccc}
+% \hline
+% \begin{tabular}[c]{@{}c@{}}Time\\ (min)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Custom\\ 30M\end{tabular} & \begin{tabular}[c]{@{}c@{}}Custom\\ 51M\end{tabular} & \begin{tabular}[c]{@{}c@{}}Custom\\ 82M\end{tabular} & \begin{tabular}[c]{@{}c@{}}Custom\\ 101M\end{tabular} & \begin{tabular}[c]{@{}c@{}}Custom\\ 124M\end{tabular} & \begin{tabular}[c]{@{}c@{}}Phi 3\\ 3.8B\end{tabular} & \begin{tabular}[c]{@{}c@{}}Llama 3\\ 8B\end{tabular} \\ \hline
+% Training & 188 & 300 & 400 & 481 & 700 & NA & NA \\
+% \begin{tabular}[c]{@{}c@{}}Fine-tuning\\ (Gesture)\end{tabular} & 230 & 379 & 534 & 458 & \textless{}\textgreater{} & 531 & 901
+% \end{tabular}
+% \end{table*}
+
+%----------------------------------- old
+% We prototype a sensing application for evaluating our system. We selected a complex application involving a novel sensor for tracking breathing~\cite{rfid2024}. We build on TunnelSense, which exploits the high sensitivity of a tunnel diode oscillator to changes in its electromagnetic environment due to nearby motions, causing drifts in resonant frequency for tracking a person's breathing. When a tunnel diode-based sensor is kept close to a subject at a high level, the person's breathing causes movement of the chest and other body parts. This leads to changes in the oscillator's frequency, which is then captured by a software-defined radio. The captured radio signals can then be analyzed to track breathing rates. Using our proposed framework, we train a small LLM on the breathing dataset to track a person's breathing.
+
+% We pre-train the model on a fine web dataset for this application. However, we observed that the model gave inaccurate responses with a high hallucination rate and produced gibberish output. Hence, we fine-tune the model with the breathing dataset. We provide the prompt to the model similar to that shown in Figure~\ref{breathe_prompt}. We present the results in Figure~\ref{fig:Plots} and observe that the model achieves an absolute error of 11.29\%. This is a significant improvement, given that this custom model has only 124M parameters and weighs just 250 MB. Additionally, this model generates a token in just 8ms, compared to 154ms and 302ms for the state-of-the-art Phi 3 (3.8B parameters) and Llama 3 (8B parameters) models, as observed on the Latte Panda. The inference time shows a linear increase with the model's parameter count.
+
+% Furthermore, the custom and much smaller model performs favorably compared to larger foundational models that can run on embedded devices, like  Phi 3  and Llama 3. This represents approximately a 28x improvement in size and parameter count compared to Phi 3 and a 60x compared to Llama 3.
+
+

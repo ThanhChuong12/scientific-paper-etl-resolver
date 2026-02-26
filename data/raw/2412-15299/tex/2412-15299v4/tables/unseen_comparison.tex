@@ -1,0 +1,19 @@
+\begin{table}[]
+\centering
+\small
+\begin{tabular}{l|cccc}
+\toprule
+Model       &      \begin{tabular}[c]{@{}c@{}}Data (h)\end{tabular} & \begin{tabular}[c]{@{}c@{}}\# Lang.\end{tabular} & \begin{tabular}[c]{@{}c@{}}Universal\end{tabular} & CER $\downarrow$  \\ \midrule
+ASR-2K & 2k & 8 & O                                             & 65.5 \\
+% \textbf{\shortname} (IPA)         & \textbf{0.6k} & \textbf{102} & \textbf{O}                                                           & \textbf{40.4} \\
+\textbf{\shortname} (Roman)        & \textbf{0.6k} & \textbf{102} & \textbf{O}                                                           & \textbf{34.7} \\
+\midrule
+MMS-ZS & 40k & 1078 & X                                              & 29.2 \\
++ n-gram LM & 40k & 1078 & X                                           & 25.2 \\
+ \bottomrule
+\end{tabular}%
+\caption{
+Comparison with previous zero-shot approaches. 
+We evaluated transcription quality on 25 unseen languages from the CommonVoice 17.0 dataset. \textit{\# Lang.} denotes the number of languages leveraged in training.}
+\label{unseen_comp_tab}
+\end{table}

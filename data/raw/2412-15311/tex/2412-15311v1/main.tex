@@ -1,0 +1,122 @@
+% WACV 2025 Paper Template
+% based on the WACV 2024 template, which is
+% based on the CVPR 2023 template (https://media.icml.cc/Conferences/CVPR2023/cvpr2023-author_kit-v1_1-1.zip) with 2-track changes from the WACV 2023 template (https://github.com/wacv-pcs/WACV-2023-Author-Kit)
+% based on the CVPR template provided by Ming-Ming Cheng (https://github.com/MCG-NKU/CVPR_Template)
+% modified and extended by Stefan Roth (stefan.roth@NOSPAMtu-darmstadt.de)
+
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+%%%%%%%%% PAPER TYPE  - PLEASE UPDATE FOR FINAL VERSION
+% \usepackage[review,algorithms]{wacv}      % To produce the REVIEW version for the algorithms track
+%\usepackage[review,applications]{wacv}      % To produce the REVIEW version for the applications track
+\usepackage{wacv}              % To produce the CAMERA-READY version
+%\usepackage[pagenumbers]{wacv} % To force page numbers, e.g. for an arXiv version
+
+% Include other packages here, before hyperref.
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+
+
+% It is strongly recommended to use hyperref, especially for the review version.
+% hyperref with option pagebackref eases the reviewers' job.
+% Please disable hyperref *only* if you encounter grave issues, e.g. with the
+% file validation for the camera-ready version.
+%
+% If you comment hyperref and then uncomment it, you should delete
+% ReviewTempalte.aux before re-running LaTeX.
+% (Or just hit 'q' on the first LaTeX run, let it finish, and you
+%  should be clear).
+\usepackage[pagebackref,breaklinks,colorlinks]{hyperref}
+
+
+\usepackage{booktabs} 
+\usepackage{subcaption}
+\usepackage{bbm}
+\usepackage{arydshln}
+%\usepackage{wasysym}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage[algo2e,ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{amsfonts}
+\usepackage{tikz}
+\usepackage{comment}
+\usepackage{dsfont}
+\usepackage{color, colortbl}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\input{math_commands.tex}
+%%%%%%%%% past file
+\definecolor{Gray}{gray}{0.9}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{tabularx,  makecell, caption}
+\usepackage{diagbox}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+
+
+% Support for easy cross-referencing
+\usepackage[capitalize]{cleveref}
+\crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Tab.}{Tabs.}
+
+
+%%%%%%%%% PAPER ID  - PLEASE UPDATE
+\def\wacvPaperID{2124} % *** Enter the WACV Paper ID here
+\def\confName{WACV}
+\def\confYear{2025}
+
+\newcommand{\bhr}[1]{\textcolor{red}{#1}}
+\newcommand{\bhb}[1]{\textcolor{blue}{#1}}
+
+
+\begin{document}
+
+%%%%%%%%% TITLE - PLEASE UPDATE
+\title{Re-evaluating Group Robustness via Adaptive Class-Specific Scaling}
+
+\author{
+Seonguk Seo$^1$ \qquad Bohyung Han$^{1,2}$ \\
+$^1$ECE \& $^{2}$IPAI, Seoul National University\\
+ {\tt\small \{seonguk, bhhan\}@snu.ac.kr}
+}
+\maketitle
+
+\begin{abstract}
+Group distributionally robust optimization, which aims to improve robust accuracies---worst-group and unbiased accuracies---is a prominent algorithm used to mitigate spurious correlations and address dataset bias. 
+Although existing approaches have reported improvements in robust accuracies, these gains often come at the cost of average accuracy due to inherent trade-offs. 
+To control this trade-off flexibly and efficiently, we propose a simple class-specific scaling strategy, directly applicable to existing debiasing algorithms with no additional training.
+We further develop an instance-wise adaptive scaling technique to alleviate this trade-off, even leading to improvements in both robust and average accuracies. 
+Our approach reveals that a na\"ive ERM baseline matches or even outperforms the recent debiasing methods by simply adopting the class-specific scaling technique.
+Additionally, we introduce a novel unified metric that quantifies the trade-off between the two accuracies as a scalar value, allowing for a comprehensive evaluation of existing algorithms. 
+By tackling the inherent trade-off and offering a performance landscape, our approach provides valuable insights into robust techniques beyond just robust accuracy. 
+We validate the effectiveness of our framework through experiments across datasets in computer vision and natural language processing domains.
+\end{abstract}
+
+
+\input{sections/intro.tex}
+\input{sections/related.tex}
+\input{sections/prelim.tex}
+\input{sections/scaling.tex}
+
+%\input{sections/method.tex} 
+\input{sections/exp.tex}
+\input{sections/conclusion.tex}
+
+
+%%%%%%%%% REFERENCES
+\bibliographystyle{ieee_fullname}
+\bibliography{neurips_2023}
+
+
+\input{sections/supple.tex}
+
+
+\end{document}

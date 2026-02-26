@@ -1,0 +1,25 @@
+\begin{table*}[]
+\centering
+\small
+\begin{tabular}{c|c||rrr|rrr|rrr}
+\toprule
+\multirow{2}{*}{Resource} & \multirow{2}{*}{Lang.} & \multicolumn{3}{c|}{Whisper-large-v3}            & \multicolumn{3}{c|}{MMS-1162}                    & \multicolumn{3}{c}{\shortname}   \\ 
+                          &                           &Data (h) &CER $\downarrow$  &WER $\downarrow$  &Data (h) &CER $\downarrow$ &WER $\downarrow$ &Data (h) &CER $\downarrow$  &WER $\downarrow$ \\ \midrule\midrule
+\multirow{3}{*}{High}     & es                   & 11000            & 1.2  & 3.1  &        2969          &  1.6   &  5.8   & \textbf{6.1}              & 2.8  & 7.3  \\
+                          & it                   & 2585             & 0.5  & 1.6  &     1566             &  1.2   &  5.2   & \textbf{6.8}              & 2.0  & 5.2  \\
+                          & id                & 1014             & 1.4  & 5.7  &      71            &  2.9   &  14.2   & \textbf{6.8}              & 4.2  & 11.5 \\ \midrule
+\multirow{3}{*}{Middle}   & ta                     & 136              & 18.3 & 26.7 &         265         &  11.0   &  41.5   & \textbf{6.3}              & 19.5 & 31.9 \\
+                          & ur                      & 104              & 30.9 & 65.0 &      57            &  9.0   &  29.0   & \textbf{4.9}              & 14.9 & 31.9 \\
+                          & sk                    & 90               & 2.9  & 8.7  &      301            &  2.2   &  8.8   & \textbf{4.5}              & 3.8  & 10.2 \\ \midrule
+\multirow{3}{*}{Low}      & mk                & 16               & 10.3 & 26.3 &       45           &   1.5  &  8.1   & \textbf{5.1}              & 5.5  & 17.2 \\
+                          & hi                     & 12               & 35.9 & 43.3 &      57            &  5.8  &   19.6  & \textbf{5.0}              & 8.2  & 15.0 \\ 
+                          & kk                   & 12               & 8.5  & 35.1 &         46         &  2.8   &  15.2   & \textbf{8.1}              & 6.7  & 22.9 \\\midrule\midrule
+\multicolumn{2}{c||}{Average}                   & -                & 23.9 & 42.9 &         -         &  \textbf{7.8}   &  \textbf{28.8}   & -                & \textbf{14.8} & \textbf{33.2} \\ \bottomrule
+\end{tabular}%
+\caption{
+Comparison results with the baseline models.
+Average CER and WER have reported over 82 languages from FLEURS that are covered by Whisper, MMS, and our method. 
+The classification of the amount of resources is based on the volume of training data used by Whisper. 
+We utilized MMS which encompasses 1162 languages, trained on a combined dataset from MMS-lab, FLEURS, CommonVoice, Voxpopuli~\cite{wang-etal-2021-voxpopuli}, and MLS~\cite{Pratap_2020}.} 
+\label{baseline_comparison_tab}
+\end{table*}

@@ -1,0 +1,29 @@
+\section{Discussions}
+
+This section highlights key implications of our work for future research.
+
+\paragraph{Visual metrics for UI quality (RQ1)} While prior studies emphasize structural and semantic metrics, our findings show that pixel-based metrics better align with human judgment, especially in low-to-medium similarity cases. This suggests hybrid approaches that combine these metrics could provide more robust evaluations. The limited performance of learning-based methods in these cases indicates a need for targeted fine-tuning.
+
+\paragraph{Enhancing website generation with resource lists (RQ2)} Incorporating resource lists significantly boosts both visual and functional metrics, underscoring their potential for advancing automated full-stack development.
+
+\paragraph{Improving MLLM visual grounding (RQ3)} Metrics on positional shift and area difference highlight MLLMs’ limitations in precise positioning and sizing. Addressing this may involve improving visual grounding or developing layout-aware prompts for better layout reproduction.
+
+\paragraph{Advancing MRWeb generation (RQ4)} MRWeb generation connects design and functionality, supporting links, images, and routing. However, non-link-based functionalities remain underexplored, presenting opportunities for more comprehensive full-stack development.
+
+
+
+
+\section{Conclusion}
+In this paper, we introduce the MRWeb generation task, addressing the limitations of single-page design-to-code methods. Our contributions include defining the MRWeb problem, creating a benchmark dataset, conducting a comprehensive IQA for web UIs, analyzing MLLM performance, and developing a dedicated MRWeb generation tool. We release the tool, dataset, and evaluation framework to facilitate future research.
+\newpage
+
+\section*{Limitations}
+
+\textit{Limited Support for Non-Link Functionalities.}
+While MRWeb effectively handles links, images, and routing, it does not currently support non-link-based functionalities, as these require distinct formulations and evaluation metrics. Addressing this limitation is a key focus for future work, with the goal of enabling full-stack development capabilities.
+
+\noindent\textit{Context Length Constraints.}
+MLLMs have limited context windows (e.g., 128K tokens for GPT-4o), which can be a challenge for websites with extensive token requirements. However, our experiments show that all prompts remain within these limits, highlighting the approach's feasibility for most practical scenarios.
+
+\noindent\textit{Backbone Model Selection.}
+We validate \taskname using three popular multimodal LLMs, but smaller models struggle with complex prompts. To improve adaptability and generalization, future work will explore the potential of emerging models and investigate strategies to handle more complex input scenarios.

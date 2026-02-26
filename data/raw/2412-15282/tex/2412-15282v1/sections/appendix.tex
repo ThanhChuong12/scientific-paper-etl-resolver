@@ -1,0 +1,458 @@
+\section{Complete Ontology of Verifiable Constraints and Training Examples}
+We present our 23 verifiable constraints in Table~\ref{tab:constraint_all}, and examples of our synthetic prompts in Table~\ref{tab:prompt_examples}.
+\begin{table}[!h]
+    \small
+    \centering
+    \begin{tabularx}{\textwidth}{lp{3.6cm}X}
+        \toprule
+        constraint & keyword args & description \\ \midrule
+        \texttt{alliteration} & \texttt{num\_alliteration\_words} & the response should contain an alliteration, i.e. a sequence of X words starting with the same letter, where X $=$ \texttt{num\_alliteration\_words}.\\
+        \texttt{ascending\_num\_words} & \texttt{n/a} & the response should contain sentences such that the number of words in each sentence is in ascending order.\\
+        \texttt{edit\_response} & \texttt{n/a} & the response should be separated by dashes ‘------’ separating two responses with the second response improving upon the first response.\\
+        \texttt{end\_quotation} & \texttt{n/a} & the last sentence should be wrapped in quotation marks.\\
+        \texttt{first\_letter\_capital} & \texttt{n/a} & the first letter of each word should be capitalized.\\
+        \texttt{frequency\_long\_words} & \texttt{relation}, \texttt{num\_words}, \texttt{word\_length} & the response should contain R $\in \{\text{at least, at most}\}$ X words that are at least Y characters long each, where R $=$ \texttt{relation}, X $=$ \texttt{num\_words} and Y $=$ \texttt{word\_length}.\\
+        \texttt{keywords\_ordered} & \texttt{keywords} & the response should contain a set of keywords in the given order and not in any other order.\\
+        \texttt{max\_word\_length} & \texttt{max\_word\_length} & the maximum length of all words in the response should be at most X characters, where X $=$ \texttt{max\_word\_length}.\\
+        \texttt{no\_period} & \texttt{n/a} & the response should contain no periods.\\
+        \texttt{nth\_sentence\_capital} & \texttt{nth\_sentence} & the \texttt{nth\_sentence} in the response should be all capitalized (and only the nth sentence).\\
+        \texttt{nth\_sentence\_first\_word} & \texttt{first\_word}, \texttt{num\_sentences}, \texttt{nth\_sentence} & the first word of the \texttt{nth\_sentence} should be the given word W in the instruction, where W $=$ \texttt{first\_word}.\\
+        \texttt{num\_words\_per\_sentence} & \texttt{relation}, \texttt{num\_words} & each sentence in the response should contain R $\in \{\text{at least, at most}\}$ X words, where R $=$ \texttt{relation} and X $=$ \texttt{num\_words}.\\
+        \texttt{number\_bold\_words} & \texttt{num\_words} & the response should bold exactly X words in HTML format <b>word</b>, where X $=$ \texttt{num\_words}.\\
+        \texttt{number\_exclamations} & \texttt{relation}, \texttt{num\_exclamations} & the response should contain R $\in \{\text{at least, at most}\}$ X exclamation marks, where R $=$ \texttt{relation} and X $=$ \texttt{num\_exclamations}.\\
+        \texttt{number\_italic\_words} & \texttt{num\_words} & the response should italicize exactly X words in textile format ‘\_word\_’, where X $=$ \texttt{num\_words}.\\
+        \texttt{number\_parentheses} & \texttt{num\_parentheses} & the response should contain exactly X parentheses (), where X $=$ \texttt{num\_parentheses}.\\
+        \texttt{number\_parts} & \texttt{part\_splitter}, \texttt{num\_parts} & the response should contain X parts such as “Part 1”, “PART 1”, “Part 2”, “PART 2”, ... where \texttt{part\_splitter} $\in \{\text{Part, PART}\}$ and X $=$ \texttt{num\_parts}.\\
+        \texttt{numbered\_headers} & \texttt{num\_headers} & the response should contain X enumerated headings starting with 1. , 2. , 3. , ... , where X $=$ \texttt{num\_headers}..\\
+        \texttt{required\_sentence} & \texttt{sentence} & the response should contain a sentence S, where S $=$ \texttt{sentence}.\\
+        \texttt{start\_checker} & \texttt{first\_sentence} & the response should begin with \texttt{first\_sentence}.\\
+        \texttt{tldr\_summary} & \texttt{n/a} & the response should end with a “TL;DR” on a new line summarizing the response.\\
+        \texttt{variable\_placeholder\_format} & \texttt{relation}, \texttt{num\_placeholders} & the response should contain R $\in \{\text{at least, at most}\}$ X variable placeholders in curly brackets, where R $=$ \texttt{relation} and X $=$ \texttt{num\_placeholders}.\\
+        \texttt{vowel\_capitalization} & \texttt{n/a} & the response should capitalize all vowels in the response.\\
+        \bottomrule
+    \end{tabularx}
+    \caption{
+    Complete list of verifiable constraints used for our synthetic prompts.
+    % Some constraints require one or more keyword arguments that materialize the constraint for its associated prompt, while others do not require any argument.
+    }
+    \label{tab:constraint_all}
+\end{table}
+
+\clearpage
+\begin{table*}[!h]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{p{3.5cm}X}
+        \toprule
+        constraints & prompt \\\midrule
+        \texttt{ascending\_num\_words}, \texttt{freq\_long\_words}, \texttt{max\_word\_length}, \texttt{nth\_sent\_first\_word}, \texttt{start\_checker} & Write a short story about a boy who gets lost in a shopping mall. Include at least 7 words that are at least 12 characters long, and ensure that the sentences have an increasing number of words, i.e. each sentence should contain more words than its previous one. Also, only include words that are at most 12 characters long. Make sure that the fifth sentence starts with the word "shouting", and begin your response with the sentence "As the sounds of loud chatter and clinking of dishes filled the food court, little Tommy suddenly discovered that his parents were nowhere to be seen.". \\
+        \\
+        \texttt{nth\_sent\_first\_word}, \texttt{num\_bold\_words}, \texttt{num\_exclamations}, \texttt{tldr\_summary}, \ \texttt{vowel\_capitalization} & Write a motivational speech for a high school graduation ceremony. Capitalize the vowels in your response, and include seven words that are bolded in HTML format (e.g., <b>word</b>). Also, ensure that the sixth sentence starts with the word "today". Make sure that the response contains exactly three exclamation marks, and finish the response with the final line including "TL;DR" followed by a one-sentence summary of your response. \\
+        \\
+        \texttt{alliteration}, \texttt{keywords\_ordered}, \texttt{nth\_sent\_first\_word}, \texttt{number\_bold\_words}, \texttt{vowel\_capitalization} & Write a scene where a character walks into a room and is surprised by what they see. Capitalize the vowels in your response and include exactly six words that are bolded in HTML format (e.g., <b>word</b>). Include an alliteration of five consecutive words beginning with the same letter of the alphabet, and include the words 'door', 'space', 'chaos' in your response in the exact order provided. Moreover, make sure that the fourth sentence starts with the word "suddenly".\\
+        \\
+        \texttt{alliteration}, \texttt{number\_italic\_words}, \texttt{number\_parts}, \texttt{required\_sentence}, \texttt{start\_checker} & Write a short essay on the importance of vitamin D in human health. Start your response with the sentence "Vitamin D is an essential nutrient that has been gaining increasing attention in recent years, primarily due to its significant role in preventing various health issues, ranging from bone diseases to certain cancers." Include the sentence "Research has shown that vitamin D deficiency is associated with an increased risk of cardiovascular disease, diabetes, and osteoporosis." in your response, and include one word that is italicized in textile format, wrapped between underscore characters (e.g., \_word\_). Divide your essay into one part marked with 'Part 1', and include an alliteration of five consecutive words beginning with the same letter of the alphabet.\\
+        \\
+        \texttt{edit\_response}, \texttt{num\_exclamations}, \texttt{start\_checker}, \texttt{tldr\_summary}, \texttt{vowel\_capitalization} & Write a short script of a news anchor introducing a breaking news story. Capitalize the vowels in your response, provide two responses separated by six plus signs ++++++, and include at least nine exclamation marks. Also, include a "TL;DR" summarizing the breaking news story at the end of your response. Begin the response with the sentence "We interrupt your regular programming to bring you this breaking news story coming in from the White House.".\\
+        \\
+        \texttt{alliteration}, \texttt{ascending\_num\_words}, \texttt{nth\_sentence\_capital}, \texttt{number\_italic\_words}, \texttt{number\_parentheses} & Create a data model for a medical records database, including at least one relationship and one constraint. Write the first sentence of the response in all capital letters, include eight words that are italicized in textile format, and include an alliteration of five consecutive words beginning with the same letter of the alphabet. Ensure that the sentences in the response have an increasing number of words, i.e. each sentence should contain more words than its previous one. Include exactly six parentheses in the response.\\
+        \\
+        \texttt{max\_word\_length}, \texttt{number\_parentheses}, \texttt{number\_parts}, \texttt{tldr\_summary}, \texttt{vowel\_capitalization} & Write a list of 10 ways to improve your public speaking skills. Capitalize the vowels in the response. Have one part marked with PART 1. Finish your response with the final line including "TL;DR" followed by a one-sentence summary of your response. Only include words that are at most 14 characters long, and include exactly eight parentheses in the response.\\
+        \\
+        \texttt{alliteration}, \texttt{nth\_sentence\_first\_word}, \texttt{num\_words\_per\_sentence}, \texttt{number\_bold\_words}, \texttt{vowel\_capitalization} & Write a letter to a historical figure, asking for their advice on a modern issue. Ensure that the vowels in the response are capitalized and there are eight words that are bolded in HTML format (e.g., <b>word</b>). Include an alliteration of three consecutive words beginning with the same letter of the alphabet. Make sure that the sixth sentence starts with the word "nonetheless", and that each sentence in the response is less than 15 words long.\\
+        \bottomrule
+    \end{tabularx}
+    \caption{
+    Examples of synthetic prompts generated for $k=5$, which combines five verifiable constraints.
+    }
+    \label{tab:prompt_examples}
+\end{table*}
+
+\clearpage
+\section{MCTS Details}
+\label{sec:mcts_details}
+\textbf{Computing the policy score.}
+We compute the policy score $\Pi(a_i|s_t)$ by computing the average of the log probabilities of tokens generated for action $a_i$ from state $s_t$, with the denominator moderated by a hyperparameter $\gamma$, which we set to 1.0 for our experiments.
+Refer to the formula below for the exact definition:
+$$\Pi(a_i|s_t) = \text{exp}\left[\frac{1}{\|a_i\|^{\gamma}}\sum_{j=1}^{\|a_i\|}\Pi(t_j|s_t, t_{1...j-1})\right]$$
+Note that $t_j$ denotes the $j$th token in action $a_i$.
+
+\textbf{Computing the self-evaluation score.}
+We compute the self-evaluation score $\Pi_{\text{self-eval}}$ by prompting the policy with a self-evaluation prompt $P_{\text{self-eval}}$, coupled with the response generated by the model so far, and obtaining the log probabilities of the final token of the response, denoted as $t_{\text{final}} \in \{\text{yes}, \text{no}\}$.
+We use self-consistency~\citep{Wang2022SelfConsistencyIC} to obtain multiple self-evaluations of the policy of its own output over $L$ generations and average the scores in order to improve the reliability of our self-evaluation scores via increased compute.
+$$\Pi_{\text{self-eval}} = \frac{1}{L}\sum_{i=1}^{L}\frac{1 + \text{exp}(\Pi(t_{\text{final}}=\text{yes}|P_{\text{self-eval}}, s_t)) - \text{exp}(\Pi(t_{\text{final}}=\text{no}|P_{\text{self-eval}}, s_t))}{2}$$
+Our formula allows us to normalize the score between 0 to 1, with 0.5 indicating a neutral state where the confidence scores for $\Pi(t_{\text{final}}=\text{yes}|P_{\text{self-eval}}, s_t) = \Pi(t_{\text{final}}=\text{no}|P_{\text{self-eval}}, s_t)$.
+We provide the self-evaluation prompt $P_{\text{self-eval}}$ in Figure~\ref{fig:self-evaluation-prompt}.
+
+\section{Full Experiment Results}
+\subsection{Common Prefix Results}
+We provide the full results of our experiments investigating the effects of common prefixes in preference pairs in Tables~\ref{tab:common_prefix_full_results_k4},~\ref{tab:common_prefix_full_results_k5} and~\ref{tab:common_prefix_full_results_k6}.
+
+\setlength{\tabcolsep}{8pt}
+\begin{table}[!h]
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{training k=4}} \\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$ \\\midrule
+        RS, (c=4, r=1) & 79.24 / 85.78 & 37.49 / 77.50 & 20.54 / 72.06 & 13.78 / 70.23 \\
+        MCTS, (c=4, r=1) & 79.48 / 85.92 & 39.16 / 78.11 & 20.39 / 72.04 & 14.11 / 70.10 \\\midrule
+        RS, (c=4, r=2) & 78.86 / 85.74 & 38.56 / 78.02 & 21.66 / 72.34 & 14.71 / 70.00 \\
+        MCTS, (c=4, r=2) & 79.68 / 86.36 & 39.22 / 78.20 & 22.43 / 72.64 & 15.75 / 70.61 \\\midrule
+        RS, (c=4, r=3) & 76.74 / 83.92 & 35.02 / 76.25 & 19.40 / 71.00 & 12.85 / 68.63 \\
+        MCTS, (c=4, r=3) & 79.59 / 86.30 & 39.05 / 77.86 & 21.61 / 72.28 & 14.96 / 70.22 \\\midrule
+        RS, (c=3, r=0) & 80.06 / 86.69 & 39.25 / 78.55 & 21.54 / 72.44 & 14.37 / 70.32 \\
+        MCTS, (c=3, r=0) & 79.39 / 85.86 & 39.15 / 78.02 & 21.56 / 72.26 & 13.61 / 69.42 \\\midrule
+        RS, (c=3, r=1) & 80.06 / 86.42 & 39.15 / 78.35 & 21.90 / 72.01 & 15.20 / 70.09 \\
+        MCTS, (c=3, r=1) & 79.94 / 86.37 & 39.23 / 78.37 & 22.15 / 72.34 & 14.93 / 70.00 \\\midrule
+        RS, (c=3, r=2) & 77.52 / 84.27 & 36.20 / 76.86 & 19.52 / 70.96 & 12.48 / 68.68 \\
+        MCTS, (c=3, r=2) & 77.89 / 84.85 & 38.89 / 78.02 & 21.51 / 71.93 & 13.97 / 69.58 \\\midrule
+        RS, (c=4, r=1/2/3) & 78.70 / 85.48 & 36.68 / 76.78 & 20.20 / 70.71 & 13.57 / 68.45 \\
+        MCTS, (c=4, r=1/2/3) & 79.97 / 86.51 & 39.31 / 78.22 & 22.19 / 72.14 & 15.89 / 70.36 \\\midrule
+        RS, (c=3/4, r=0/1/2/3) & 79.10 / 85.72 & 37.62 / 77.59 & 20.98 / 71.28 & 13.99 / 68.65 \\
+        MCTS, (c=3/4, r=0/1/2/3) & 79.42 / 85.84 & 39.37 / 78.38 & 22.24 / 72.48 & 15.20 / 70.26 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results comparing preference data without common prefixes (RS) and with common prefixes (MCTS).
+    We show results for different training data configurations for $k=4$.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:common_prefix_full_results_k4}
+\end{table}
+
+\newpage
+\begin{figure}[!h]
+
+\centering
+\tcbset{colback=verylightgray, colframe=verylightgray, boxrule=0.5pt, arc=4pt}
+\begin{tcolorbox}
+\lstset{
+    basicstyle=\ttfamily\color{black}\scriptsize,
+    keywordstyle=\color{black},
+    identifierstyle=\color{black},
+    commentstyle=\color{black},
+    stringstyle=\color{black},
+    breaklines=true,
+    backgroundcolor=\color{verylightgray},
+    frame=none,
+    numbers=none
+}
+\begin{lstlisting}
+<|start_header_id|>user<|end_header_id|>
+
+Evaluate whether the assistant's (partial) response to the given instruction follows the conditions specified in the instruction so far and does not violate any of the conditions. Complete the evaluation by using the words "yes" or "no", followed by an explanation for why the assistant's response follows or does not follow the given instruction so far.
+
+Do NOT evaluate the conditions that can be checked automatically with Python code, including the ones listed below.
+- DON'T EVALUATE: number of paragraphs/sentences/words/sections
+- DON'T EVALUATE: existence of certain phrases/words/characters
+- DON'T EVALUATE: capital or lowercase
+Make sure to only evaluate the conditions that can be checked so far. For example, you cannot check if the response contains at least 20 sentences- this is because the given response is a partial, incomplete response and the full response later may possibly contain at least 20 sentences. Also, this can be checked automatically, so it corresponds to the first "DO NOT" condition listed above.
+
+Instead, focus on the conditions that cannot be checked automatically and is more related to the content itself, as listed below.
+- DO EVALUATE: whether the response follows the topic so far
+- DO EVALUATE: whether the response matches the description of the characters/location/theme/etc laid out in the instruction so far
+- DO EVALUATE: whether the response follows the tone requested in the instruction (e.g., persuasive, solemn, lively, etc.)
+For example, if the response asks to write a conversation between a software engineer and a research scientist, make sure that there are two characters who are each software engineer and research scientist, respectively.
+
+Instruction: %s
+Response so far: %s
+
+Begin your response by listing such content-based conditions and analyzing whether each condition has been satisfied on separate lines.
+Be generous in terms of the evaluation criteria - only say "no" when you are sure that the partial response does not adhere to the content-based conditions. Otherwise, answer "yes" to each condition.
+Most importantly, make sure to finish your evaluation with the phrase "Based on these evaluations, my overall evaluation is: ", followed by either "yes" or "no".
+
+<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+\end{lstlisting}
+\end{tcolorbox}
+\caption{Our self-evaluation prompt $P_{\text{self-eval}}$.
+We allow the policy to focus on the soft content of the response rather than the hard constraints that are verifiable by code.}
+\label{fig:self-evaluation-prompt}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{training k=5}} \\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$ \\\midrule
+        RS, (c=5, r=2) & 76.32 / 83.55 & 35.70 / 76.64 & 19.46 / 71.51 & 12.61 / 69.39 \\
+        MCTS, (c=5, r=2) & 76.59 / 83.81 & 37.81 / 77.58 & 20.06 / 72.01 & 12.93 / 69.85 \\\midrule
+        RS, (c=5, r=3) & 76.25 / 83.63 & 35.28 / 76.23 & 18.91 / 70.03 & 12.24 / 68.75 \\
+        MCTS, (c=5, r=3) & 76.47 / 83.84 & 36.73 / 77.10 & 19.94 / 71.82 & 13.62 / 69.52 \\\midrule
+        RS, (c=5, r=4) & 74.18 / 81.79 & 33.38 / 75.10 & 17.35 / 70.05 & 10.38 / 67.54 \\
+        MCTS, (c=5, r=4) & 75.15 / 82.73 & 34.88 / 76.06 & 18.75 / 71.06 & 11.74 / 69.03 \\\midrule
+        RS, (c=4, r=1) & 78.95 / 85.57 & 39.40 / 78.60 & 21.74 / 72.48 & 14.58 / 70.02 \\
+        MCTS, (c=4, r=1) & 78.63 / 85.49 & 39.21 / 78.33 & 21.19 / 72.24 & 14.63 / 70.07 \\\midrule
+        RS, (c=4, r=2) & 78.07 / 84.87 & 37.02 / 77.35 & 20.17 / 71.02 & 13.05 / 68.48 \\
+        MCTS, (c=4, r=2) & 78.48 / 85.24 & 38.53 / 77.91 & 22.12 / 72.16 & 15.22 / 69.69 \\\midrule
+        RS, (c=4, r=3) & 75.64 / 82.97 & 32.98 / 75.32 & 17.83 / 69.95 & 11.19 / 67.40 \\
+        MCTS, (c=4, r=3) & 77.40 / 84.28 & 37.63 / 77.41 & 20.84 / 71.72 & 14.06 / 69.42 \\\midrule
+        RS, (c=4, r=1/2/3) & 79.08 / 85.56 & 37.98 / 77.83 & 20.50 / 71.48 & 13.42 / 68.86 \\
+        MCTS, (c=4, r=1/2/3) & 78.47 / 85.25 & 39.03 / 78.06 & 22.63 / 72.49 & 15.25 / 70.05 \\\midrule
+        RS, (c=4/5, r=0/1/2/3) & 78.18 / 85.05 & 36.81 / 77.06 & 19.72 / 71.13 & 13.29 / 68.67 \\
+        MCTS, (c=4/5, r=0/1/2/3) & 77.89 / 84.82 & 38.17 / 77.81 & 22.00 / 72.19 & 14.38 / 69.63 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results comparing preference data without common prefixes (RS) and with common prefixes (MCTS).
+    We show results for different training data configurations for $k=5$.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:common_prefix_full_results_k5}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{training k=5}} \\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$ \\\midrule
+        RS, (c=6, r=2) & 75.17 / 82.74 & 33.45 / 75.19 & 17.00 / 69.84 & 10.19 / 67.39 \\
+        MCTS, (c=6, r=2) & 75.70 / 83.11 & 34.06 / 75.71 & 17.07 / 70.27 & 10.46 / 67.64 \\\midrule
+        RS, (c=6, r=3) & 77.47 / 84.44 & 36.99 / 77.22 & 20.05 / 71.16 & 13.27 / 68.39 \\
+        MCTS, (c=6, r=3) & 78.06 / 85.04 & 38.68 / 77.96 & 21.63 / 72.21 & 14.94 / 70.02 \\\midrule
+        RS, (c=6, r=4) & 76.09 / 83.51 & 35.68 / 75.63 & 19.07 / 71.01 & 11.99 / 68.47 \\
+        MCTS, (c=6, r=4) & 76.26 / 83.58 & 35.81 / 75.63 & 18.41 / 71.05 & 11.56 / 68.64 \\\midrule
+        RS, (c=5, r=1) & 75.13 / 82.77 & 34.17 / 75.56 & 18.48 / 70.93 & 11.93 / 68.49 \\
+        MCTS, (c=5, r=1) & 76.09 / 83.47 & 36.34 / 76.52 & 19.04 / 71.33 & 12.70 / 68.62 \\\midrule
+        RS, (c=5, r=2) & 75.01 / 82.68 & 34.48 / 75.88 & 18.10 / 70.64 & 11.21 / 68.60 \\
+        MCTS, (c=5, r=2) & 76.57 / 83.83 & 36.03 / 76.72 & 18.75 / 70.93 & 11.62 / 68.68 \\\midrule
+        RS, (c=5, r=3) & 76.73 / 83.89 & 36.16 / 76.62 & 19.96 / 70.97 & 12.87 / 68.15 \\
+        MCTS, (c=5, r=3) & 77.18 / 84.53 & 37.06 / 77.10 & 20.16 / 71.25 & 12.84 / 68.57 \\\midrule
+        RS, (c=5, r=1/2/3) & 78.10 / 84.97 & 37.66 / 77.61 & 21.45 / 71.49 & 13.69 / 68.84 \\
+        MCTS, (c=5, r=1/2/3) & 78.33 / 85.17 & 40.12 / 78.34 & 23.12 / 72.32 & 15.28 / 69.73 \\\midrule
+        RS, (c=5/6, r=1/2/3/4) & 78.48 / 85.28 & 37.82 / 77.86 & 22.73 / 72.02 & 14.39 / 69.48 \\
+        MCTS, (c=5/6, r=1/2/3/4) & 79.01 / 85.72 & 40.58 / 78.93 & 23.04 / 73.18 & 16.00 / 70.57 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results comparing preference data without common prefixes (RS) and with common prefixes (MCTS).
+    We show results for different training data configurations for $k=6$.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:common_prefix_full_results_k6}
+\end{table}
+
+\subsection{Response Quality Results}
+\textbf{(chosen, rejected) response quality (unmixed).} We provide the full results of our experiments investigating the effects of the response correctness (or quality) in preference pairs in Tables~\ref{tab:response_quality_results_k4} and~\ref{tab:response_quality_results_k5}.
+
+\textbf{(chosen, rejected) response quality (mixed).} We provide the full results of our experiments examining the effects of mixing preference pairs with different margins between the (chosen, rejected) responses in Tables~\ref{tab:response_quality_results_mix_k4} and~\ref{tab:response_quality_results_mix_k5}.
+
+\setlength{\tabcolsep}{11pt}
+\begin{table}[!h]
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{training k=4}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        RS, (c=3, r=0) & 79.04 / 85.87 & 39.45 / 78.30 & 20.86 / 72.23 & 13.82 / 70.45\\
+        RS, (c=3, r=1) & 78.66 / 85.51 & 38.47 / 78.15 & 20.56 / 72.37 & 14.02 / 70.13\\
+        RS, (c=3, r=2) & 74.60 / 82.39 & 33.59 / 75.58 & 18.46 / 70.62 & 11.23 / 68.15\\\midrule
+        RS, (c=4, r=1) & 79.24 / 85.78 & 37.49 / 77.50 & 20.54 / 72.06 & 13.78 / 70.23\\
+        RS, (c=4, r=2) & 77.44 / 84.43 & 37.69 / 77.68 & 20.33 / 72.06 & 13.77 / 70.04\\
+        RS, (c=4, r=3) & 74.09 / 82.16 & 33.38 / 75.30 & 17.65 / 70.21 & 10.73 / 67.79\\\midrule
+        MCTS, (c=3, r=0) & 78.30 / 85.19 & 37.86 / 77.42 & 20.52 / 71.92 & 12.81 / 69.30\\
+        MCTS, (c=3, r=1) & 77.58 / 84.69 & 38.03 / 77.74 & 19.76 / 71.84 & 13.71 / 70.08\\
+        MCTS, (c=3, r=2) & 75.05 / 82.63 & 34.96 / 76.33 & 18.69 / 71.25 & 11.53 / 68.67\\\midrule
+        MCTS, (c=4, r=1) & 79.48 / 85.92 & 39.16 / 78.11 & 20.39 / 72.04 & 14.11 / 70.10\\
+        MCTS, (c=4, r=2) & 77.76 / 84.65 & 38.25 / 77.63 & 20.00 / 71.92 & 14.26 / 69.91\\
+        MCTS, (c=4, r=3) & 75.65 / 82.99 & 35.03 / 75.68 & 18.80 / 71.88 & 12.36 / 68.81\\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results studying the effects of (chosen, rejected) response quality.
+    We provide results for $k=4$, as well as for both RS- and MCTS-based data curation methods.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:response_quality_results_k4}
+\end{table}
+
+\begin{table}[!h]
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{training k=5}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        RS, (c=4, r=1) & 76.56 / 83.74 & 36.08 / 76.81 & 19.44 / 71.42 & 11.88 / 68.84 \\
+        RS, (c=4, r=2) & 74.57 / 82.17 & 34.09 / 75.82 & 17.95 / 70.71 & 10.93 / 68.35 \\
+        RS, (c=4, r=3) & 72.80 / 80.97 & 31.50 / 74.37 & 16.68 / 69.94 & 10.01 / 67.19 \\\midrule
+        RS, (c=5, r=2) & 76.32 / 83.55 & 35.70 / 76.64 & 19.46 / 71.51 & 12.61 / 69.39 \\
+        RS, (c=5, r=3) & 74.13 / 81.92 & 33.30 / 75.35 & 17.31 / 70.15 & 11.21 / 68.08 \\
+        RS, (c=5, r=4) & 72.40 / 80.42 & 30.72 / 73.75 & 16.26 / 69.31 & 9.51 / 66.76 \\\midrule
+        MCTS, (c=4, r=1) & 76.71 / 83.90 & 37.24 / 77.23 & 19.49 / 71.52 & 12.37 / 69.19\\
+        MCTS, (c=4, r=2) & 75.23 / 82.86 & 35.65 / 76.47 & 18.74 / 71.32 & 12.17 / 69.06 \\
+        MCTS, (c=4, r=3) & 74.23 / 82.16 & 32.39 / 74.63 & 17.22 / 69.78 & 9.73 / 67.25 \\\midrule
+        MCTS, (c=5, r=2) & 76.59 / 83.81 & 37.81 / 77.58 & 20.06 / 72.01 & 12.93 / 69.85 \\
+        MCTS, (c=5, r=3) & 76.14 / 83.50 & 36.04 / 76.61 & 19.39 / 71.49 & 12.37 / 69.32 \\
+        MCTS, (c=5, r=4) & 74.06 / 81.84 & 32.14 / 74.62 & 17.81 / 70.37 & 10.52 / 67.89 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results studying the effects of (chosen, rejected) response quality.
+    We provide results for $k=5$, as well as for both RS- and MCTS-based data curation methods.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:response_quality_results_k5}
+\end{table}
+
+\begin{table}[!h]
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{training k=4}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        MCTS, (c=4, r=1) & 78.49 / 85.36 & 39.03 / 77.76 & 22.19 / 72.10 & 14.89 / 69.76 \\
+        MCTS, (c=4, r=(1,2)) & 79.77 / 86.31 & 38.97 / 78.03 & 21.99 / 71.91 & 15.24 / 70.26 \\
+        MCTS, (c=4, r=(1,2,3)) & 79.97 / 86.51 & 39.31 / 78.22 & 22.19 / 72.14 & 15.89 / 70.36 \\\midrule
+        MCTS, (c=(3,4), r=(0,1)) & 78.60 / 85.31 & 39.01 / 77.06 & 22.90 / 71.89 & 14.01 / 69.06\\
+        MCTS, (c=(3,4), r=(0,1,2)) & 79.60 / 86.05 & 39.89 / 78.71 & 22.69 / 72.70 & 16.10 / 70.60 \\
+        MCTS, (c=(3,4), r=(0,1,2,3)) & 79.42 / 85.84 & 39.37 / 78.38 & 22.24 / 72.48 & 15.20 / 70.26 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results studying the effects of mixing preference pairs with different margins between the (chosen, rejected) responses.
+    We provide results for $k=4$ with MCTS-based data curation methods.
+    Each $(c=n_0,r=(n_1, n_2, n_3))$ indicates that the chosen response correctly addresses $n_0$ constraints and the rejected response correctly addresses either $n_1$, $n_2$ or $n_3$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:response_quality_results_mix_k4}
+\end{table}
+
+\begin{table}[!h]
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{training k=5}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        MCTS, (c=4, r=1) & 78.88 / 85.69 & 39.55 / 78.35 & 21.88 / 71.98 & 14.59 / 69.56 \\
+        MCTS, (c=4, r=(1,2)) & 78.50 / 85.30 & 37.67 / 77.55 & 21.29 / 71.51 & 14.39 / 69.15 \\
+        MCTS, (c=4, r=(1,2,3)) & 78.47 / 85.25 & 39.03 / 78.06 & 22.63 / 72.49 & 15.25 / 70.05 \\\midrule
+        MCTS, (c=(4,5), r=(1,2)) & 78.82 / 85.60 & 39.28 / 78.37 & 22.31 / 72.30 & 14.50 / 69.71 \\
+        MCTS, (c=(4,5), r=(1,2,3)) & 78.99 / 85.57 & 38.74 / 77.89 & 21.85 / 71.87 & 13.89 / 69.00 \\
+        MCTS, (c=(4,5), r=(1,2,3,4)) & 77.89 / 84.82 & 38.17 / 77.81 & 22.00 / 72.19 & 14.38 / 69.63 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results studying the effects of mixing preference pairs with different margins between the (chosen, rejected) responses.
+    We provide results for $k=5$ with MCTS-based data curation methods.
+    Each $(c=n_0,r=(n_1, n_2, n_3))$ indicates that the chosen response correctly addresses $n_0$ constraints and the rejected response correctly addresses either $n_1$, $n_2$ or $n_3$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:response_quality_results_mix_k5}
+\end{table}
+
+\newpage
+\subsection{Prompt Difficulty Results}
+We provide the full results of our experiments investigating the effects of varying the difficulty of the training prompts, as measured by the number of verifiable constraints, in Tables~\ref{tab:prompt_difficulty_full_results_rs} and~\ref{tab:prompt_difficulty_full_results_mcts}.
+
+\setlength{\tabcolsep}{8pt}
+\begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{Rejection Sampling (RS)}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        $k=4$, (c=3, r=0) & 79.70 / 86.13 & 38.41 / 77.93 & 21.15 / 72.36 & 14.27 / 69.90\\
+        $k=5$, (c=4, r=1) & 79.51 / 86.02 & 38.66 / 78.17 & 21.48 / 72.23 & 14.70 / 70.04\\
+        $k=6$, (c=5, r=2) & 77.83 / 84.86 & 36.42 / 77.23 & 20.15 / 71.18 & 12.28 / 68.34\\\midrule
+        $k=4$, (c=3, r=1) & 79.36 / 85.95 & 39.22 / 78.51 & 22.00 / 72.54 & 14.78 / 70.07\\
+        $k=5$, (c=4, r=2) & 78.58 / 85.46 & 37.70 / 77.60 & 21.42 / 71.84 & 13.61 / 69.14\\
+        $k=6$, (c=5, r=3) & 76.73 / 83.89 & 36.16 / 76.62 & 19.96 / 70.97 & 12.87 / 68.15\\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results investigating the effects of training prompt difficulty ($k\in \{4, 5, 6\}$) on downstream performance for evaluation sets of varying difficulties.
+    We provide results for RS-based preference data curation, as well as for different margins between the (chosen, rejected) responses.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:prompt_difficulty_full_results_rs}
+\end{table}
+
+\begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{Monte Carlo Tree Search (MCTS)}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        $k=4$, (c=3, r=0) & 78.94 / 85.62 & 39.00 / 78.10 & 21.60 / 72.54 & 14.40 / 70.04 \\
+        $k=5$, (c=4, r=1) & 78.72 / 85.40 & 39.42 / 78.36 & 21.43 / 72.27 & 14.25 / 69.95 \\
+        $k=6$, (c=5, r=2) & 78.13 / 85.05 & 38.55 / 77.88 & 21.64 / 72.23 & 14.45 / 69.81 \\\midrule
+        $k=4$, (c=3, r=1) & 79.12 / 85.83 & 38.81 / 78.24 & 21.72 / 72.48 & 15.66 / 70.45 \\
+        $k=5$, (c=4, r=2) & 77.53 / 84.65 & 38.93 / 78.16 & 21.69 / 72.41 & 15.20 / 70.62 \\
+        $k=6$, (c=5, r=3) & 77.18 / 84.53 & 37.06 / 77.10 & 20.16 / 71.25 & 12.84 / 68.57 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results investigating the effects of training prompt difficulty ($k\in \{4, 5, 6\}$) on downstream performance for evaluation sets of varying difficulties.
+    We provide results for MCTS-based preference data curation, as well as for different margins between the (chosen, rejected) responses.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:prompt_difficulty_full_results_mcts}
+\end{table}
+
+\subsection{SFT vs. DPO}
+We provide the full results of our additional experiments comparing the performances of models trained via SFT and DPO in Tables~\ref{tab:sft_dpo_full_results_rs} and~\ref{tab:sft_dpo_full_results_mcts}.
+
+\setlength{\tabcolsep}{8.0pt}
+\begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{Rejection Sampling (RS)}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        policy (\texttt{llama-3.1-8b-instruct}) & 71.71 / 80.12 & 27.77 / 71.53 & 14.15 / 67.76 & 7.34 / 64.43 \\\midrule
+        SFT, $k=4$, (c=4, r=1/2/3) & 74.77 / 82.58 & 28.17 / 72.40 & 15.10 / 68.04 & 7.10 / 64.36 \\
+        DPO, $k=4$, (c=4, r=1/2/3) & 78.70 / 85.48 & 36.68 / 76.78 & 20.20 / 70.71 & 13.57 / 68.45 \\\midrule
+        SFT, $k=5$, (c=4, r=1/2/3) & 74.75 / 82.59 & 28.36 / 72.42 & 14.53 / 68.37 & 7.74 / 65.07 \\
+        DPO, $k=5$, (c=4, r=1/2/3) & 79.08 / 85.56 & 37.98 / 77.83 & 20.50 / 71.48 & 13.42 / 68.86 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results comparing the performance of training on our preference datasets via DPO compared to the base policy model or running SFT on the chosen responses only.
+    We provide results for RS-based preference data curation, as well as for different training prompt difficulties ($k=4$ or $k=5$).
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:sft_dpo_full_results_rs}
+\end{table}
+
+\begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccc}
+    \toprule
+        & \multicolumn{4}{c}{\textbf{Monte Carlo Tree Search (MCTS)}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        policy (\texttt{llama-3.1-8b-instruct}) & 71.71 / 80.12 & 27.77 / 71.53 & 14.15 / 67.76 & 7.34 / 64.43 \\\midrule
+        SFT, $k=4$, (c=4, r=1/2/3) & 73.30 / 81.83 & 29.70 / 73.48 & 15.02 / 69.16 & 7.50 / 65.56 \\
+        DPO, $k=4$, (c=4, r=1/2/3) & 79.97 / 86.51 & 39.31 / 78.22 & 22.19 / 72.14 & 15.89 / 70.36 \\\midrule
+        SFT, $k=5$, (c=4, r=1/2/3) & 73.87 / 81.89 & 28.54 / 72.37 & 13.49 / 67.54 & 6.68 / 64.13 \\
+        DPO, $k=5$, (c=4, r=1/2/3) & 78.47 / 85.25 & 39.03 / 78.06 & 22.63 / 72.49 & 15.25 / 70.05 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results comparing the performance of training on our preference datasets via DPO compared to the base policy model or running SFT on the chosen responses only.
+    We provide results for MCTS-based preference data curation, as well as for different training prompt difficulties ($k=4$ or $k=5$).
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The left score indicates the hard score (i.e., the proportion of responses that get \textit{all} constraints correct), and the right score indicates the soft score (i.e., the proportion of all constraints that are satisfied by the responses).
+    }
+    \label{tab:sft_dpo_full_results_mcts}
+\end{table}

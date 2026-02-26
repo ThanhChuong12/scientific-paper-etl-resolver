@@ -1,0 +1,397 @@
+\newcommand{\CLASSINPUTtoptextmargin}{2.1cm} 
+\newcommand{\CLASSINPUTbottomtextmargin}{4.07cm}
+\newcommand{\CLASSINPUTinnersidemargin}{1.35cm} 
+\newcommand{\CLASSINPUToutersidemargin}{1.35cm} 
+\documentclass[conference,a4paper]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{verbatim}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+
+\usepackage{setspace}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\DeclareRobustCommand{\bbone}{\text{\usefont{U}{bbold}{m}{n}1}}
+\usepackage{adjustbox}
+\DeclareMathOperator{\EX}{\mathbb{E}}% expected value
+\usepackage{float}
+\floatstyle{plaintop}
+\restylefloat{table}
+\usepackage{adjustbox}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage[flushleft]{threeparttable}
+\usepackage{subfigure} 
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\begin{document}
+
+\title{PCA-Featured Transformer for Jamming Detection in 5G UAV Networks}
+
+\author{\IEEEauthorblockN{
+Joseanne Viana\IEEEauthorrefmark{1}\IEEEauthorrefmark{2}\textsuperscript{\textsection},Hamed Farkhari\IEEEauthorrefmark{3}\textsuperscript{\textsection}, 
+Pedro Sebastião \IEEEauthorrefmark{3},
+Victor P Gil Jimenez \IEEEauthorrefmark{2},
+Lester Ho\IEEEauthorrefmark{1}}
+
+\IEEEauthorblockA{\IEEEauthorrefmark{1} Tyndall National Institute, Dublin, Ireland;}
+\IEEEauthorblockA{\IEEEauthorrefmark{2} UC3M - Universidad Carlos III de Madrid, Madrid, Spain;} 
+\IEEEauthorblockA{\IEEEauthorrefmark{3} ISCTE – Instituto Universitário de Lisboa, Av. das Forças Armadas, 1649-026 Lisbon, Portugal} \\
+
+Email: 
+\{joseanne.viana\}@tyndall.ie\vspace{-2em} 
+}
+
+
+\maketitle
+
+\begingroup\renewcommand\thefootnote{\textsection}
+% \nnfootnote{Collaborative authors with equal contribution}
+\footnotetext{Collaborative authors with equal contribution.}
+\endgroup
+
+\begin{abstract}
+Jamming attacks pose a threat to Unmanned Aerial Vehicle (UAV) wireless communication systems, potentially disrupting essential services and compromising network reliability. Current detection approaches struggle with sophisticated artificial intelligence (AI) jamming techniques that adapt their patterns dynamically, while existing machine learning solutions often require extensive feature engineering and fail to capture complex temporal dependencies in attack signatures. Furthermore, 5G networks using either Time Division Duplex (TDD) or Frequency Division Duplex (FDD) methods can face service degradation from intentional interference sources. 
+To address these challenges, we present a novel transformer-based deep learning framework for jamming detection with Principal Component Analysis (PCA) added features. Our architecture leverages the transformer's self-attention mechanism to capture complex temporal dependencies and spatial correlations in wireless signal characteristics, enabling more robust jamming detection techniques. The U-shaped model incorporates a modified transformer encoder that processes signal features including received signal strength indicator (RSSI) and signal-to-noise ratio (SINR) measurements, alongside a specialized positional encoding scheme that accounts for the periodic nature of wireless signals. In addition, we propose a batch size scheduler and implement chunking techniques to optimize training convergence for time series data. These advancements contribute to achieving up to a ten times improvement in training speed within the advanced U-shaped encoder-decoder transformer model introduced in this study.
+Simulation results demonstrate that our approach achieves a detection accuracy of 90.33 \% in Line-of-Sight (LoS) and 84.35 \% in non-Line-of-Sight (NLoS) and outperforms machine learning methods and existing deep learning solutions such as the XGBoost (XGB) classifier in approximately 4\%.
+\end{abstract}
+
+\begin{IEEEkeywords}
+UAVs, Security, Transformers, Deep Learning, Jamming Detection, Jamming Identification, UAV, Unmanned Aerial Vehicles, 5G, 6G.
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+The rapid proliferation of Unmanned Aerial Vehicles (UAVs) has revolutionized wireless communications, spawning two distinct research directions: enhancing networks using UAVs \cite{Bekkouche2020} and adapting networks to support UAV operations \cite{Azari2019}, \cite{Wenbo2020},\cite{Giovanni2022} . While UAV-mounted base stations offer promising solutions for disaster response, border surveillance, and temporary coverage enhancement \cite{Ho24} \cite{Galkin2023}, the integration of UAVs as network end-devices in UAV delivery use cases presents unique security challenges in 5G networks. Of particular concern is the vulnerability to sophisticated jamming attacks, which can exploit the characteristics of both Time Division Duplex (TDD) and Frequency Division Duplex (FDD) systems to achieve devastating effects - up to 99\% disruption in TDD uplink and 82\% in FDD downlink scenarios \cite{Skokowski2024}, \cite{Viana2024}.
+
+Conventional jamming detection approaches, which rely on metrics like packet delivery ratio and received signal strength, face two significant limitations. First, they often detect attacks only after substantial service degradation has occurred. Second, they struggle in ultra-dense network environments where local jammers can be obscured by legitimate network traffic, especially when dealing with narrowband selective jamming targeting specific OFDM subcarriers.\cite{Lu2014}, \cite{Shi2021}, \cite{Skokowski2024}, \cite{Viana2024}.
+
+Machine learning approaches, particularly deep learning architectures, have emerged as promising solutions for early and accurate jamming detection in 5G networks \cite{Hachimi2020}, \cite{Krayani2022}. While early research explored Convolutional Neural Networks (CNNs) for spatial feature extraction and Long Short-Term Memory (LSTM) networks for temporal modeling, these architectures struggle to capture the complex relationships between different jamming patterns, especially in scenarios involving both 5G New Radio (NR) \cite{Viana2024} and Narrowband Internet of Things (NB-IoT) interfaces.
+
+The introduction of transformer architectures represents a paradigm shift in jamming detection capabilities. Transformers' self-attention mechanisms excel at modeling sequential data and capturing long-range dependencies in wireless signals - crucial for detecting sophisticated jamming patterns that may span multiple time scales and frequency bands. The multi-head attention mechanism enables simultaneous analysis of different signal characteristics, from immediate jamming effects to subtle, persistent interference patterns, making it particularly well-suited for identifying energy-efficient selective jamming techniques. \cite{Elleuch2024}, 
+As 5G networks continue to expand and potential security threats evolve, the development of efficient and reliable jamming detection methods remains crucial \cite{Xue2023}. 
+
+The integration of transformer architectures with other machine learning techniques offers promising directions for addressing these challenges, particularly in detecting jamming attacks that current methods may miss. This paper introduces a novel transformer-based architecture specifically designed to address these challenges in UAV-integrated 5G networks. Our approach leverages the power of multi-head attention mechanisms and the Principal Component Analysis (PCA) features \cite{Greenacre2022} to simultaneously analyze Received Signal Strength Indicator (RSSI) and the Signal to Interference plus Noise Ratio (SINR) signals characteristics while maintaining computational efficiency for edge deployment. By focusing on the early detection of jamming attacks, our solution aims to protect critical UAV communications before significant service degradation occurs. The proposed architecture not only advances the state-of-the-art in jamming detection but also provides a framework for developing robust security solutions in dynamic 5G environments.
+
+\subsection{\textbf{Contributions and Motivation}}
+
+Recent advancements in cellular networks, particularly in UAV and 5G technologies, have revealed significant vulnerabilities to jamming attacks. While research exists on various detection methods, there remains a critical gap in leveraging transformer architectures for jamming detection. This paper presents the listed key contributions:
+\begin{itemize}
+\item Developed an innovative transformer-based architecture for detecting jamming attacks in UAV-integrated 5G networks. The system features a custom deep neural network that combines state-of-the-art CNNs with specialized activation functions in a U-Net architecture, optimized for analyzing jamming signatures across 5G NR interfaces.
+
+\item Introduced time-series PCA-features and efficient tokenization method for detecting jamming patterns in UAV-integrated 5G networks.
+
+\item Optimized deep network training algorithm by introducing batch\_size scheduler and chunking (grouping) in the training dataset. 
+
+\item Comprehensive experimental validation demonstrating superior detection capabilities compared to existing methods for jamming attacks.
+
+\end{itemize}
+
+\section{System Model}
+
+The system model comprises an authenticated UAV operating within a small cell network environment designed to detect malicious jamming activities through power variation analysis. In other to train our model, we generated a dataset that has two distinct communication scenarios: Line-of-Sight (LoS), Non-Line-of-Sight (NLoS). Each scenario category contains four unique experimental configurations that vary key parameters including UAV mobility patterns, operational speeds, attack intensities, and network user density. The dataset architecture specifically accounts for urban environment dynamics, where building structures and other obstacles can significantly impact signal propagation. To ensure robust detection capabilities, we simulate various attack patterns using different numbers of hostile UAVs (ranging from 1 to 4 attackers) with varying transmission powers. The dataset inherently presents an unbalanced distribution between attack and non-attack scenarios, necessitating careful preprocessing to maintain classification accuracy. Each simulation captures temporal sequences of received power measurements of RSSI and SINR. More on the dataset is presented in \cite{Viana2024}, \cite{SyntheticJViana}.
+
+\subsection{\textbf{Dataset on Jamming Detection}}
+
+A sample from the dataset on the jamming effects is presented in Figure \ref{fig:distributions}, which illustrates the distributions of RSSI and SINR. These simulation results capture the predicted signal propagation characteristics under both LoS and NLoS conditions. 
+
+\begin{figure}[!ht]
+ \centering
+ \includegraphics[width=0.40\textwidth]{Figures/RSSI_SINR_.png}
+ \caption{Jamming distributions: (a) RSSI and (b) SINR}
+ \label{fig:distributions}
+\end{figure}
+\vspace{-1mm}
+The RSSI measurements exhibit a distinct bimodal distribution pattern between LoS and NLoS conditions. The NLoS signals demonstrate a concentrated distribution with $\mu=-95.7$ dBm, indicating substantial signal attenuation. Conversely, the LoS signals present a more dispersed distribution centered at $\mu=-84.0$ dBm, reflecting superior signal strength characteristics typical of direct path propagation. The NLoS distribution's pronounced, narrow peak suggests consistent attenuation patterns, while the broader LoS distribution indicates more diverse signal propagation paths despite maintaining direct visibility.
+
+The SINR distributions effectively illustrate the jamming environment's impact on signal quality. NLoS signals exhibit multiple distinct peaks in the range of -50 dB to -20 dB, with a mean value of $\mu=-31.2$ dB, demonstrating severe interference effects. The LoS signals display a more favorable distribution extending into positive values, characterized by $\mu=-7.7$ dB. The broader, right-skewed distribution observed in LoS conditions indicates that despite direct visibility, jamming significantly degrades signal quality, albeit to a lesser extent compared to NLoS scenarios.
+
+
+\subsection{\textbf{Jamming Detection algorithm for UAVs}}
+
+The proposed approach combines PCA features with transformer architectures to create an efficient and robust detection system.
+
+\subsubsection{\textbf{Feature Engineering with PCA for Time Series Data}}
+
+Using PCA for time series data often does not yield satisfactory results directly. Initially, we trained our model using PCA components, but the results were suboptimal. To address this, we employed PCA to generate additional features and incorporated these features into the raw data. This approach led to an improvement of up to 5\% in accuracy for both LoS and NLoS datasets.
+
+\paragraph{\textbf{Feature Creation Process.}}
+
+To create new features, we first computed moving averages (MA) with window sizes of 2, 3, and 5 for each RSSI and SINR sample separately. Additionally, we created new signals by sub-sampling the original signals as follows:
+
+- Selecting every alternate feature (\texttt{signal[:,::2]} and \texttt{signal[:,1::2]}).
+- Selecting every third feature, starting at different offsets (\texttt{signal[:,::3]}, \texttt{signal[:,1::3]}, and \texttt{signal[:,2::3]}).
+
+As a result, for each original signal (RSSI or SINR), we generated the following derived signals:
+\begin{itemize}
+ \item Moving averages: \texttt{ma\_2(signal)}, \texttt{ma\_3(signal)}, \texttt{ma\_5(signal)}.
+ \item Sub-sampled signals: \texttt{signal[:,::2]}, \texttt{signal[:,1::2]}, \texttt{signal[:,::3]}, \texttt{signal[:,1::3]}, \texttt{signal[:,2::3]}.
+\end{itemize}
+In total, this process resulted in 8 additional signals derived from each original signal.
+
+\paragraph{\textbf{PCA Application and Dimensionality Reduction}}
+
+For each of the 9 signals (the original signal and the 8 derived signals), we applied PCA and selected the first 5 principal components (PCs), resulting in 45 new features per signal. For RSSI and SINR combined, this approach yielded 90 new features. Before integrating these features with the raw data, we normalized each feature to the range defined by the minimum and maximum values of the corresponding original signal. This normalization ensured consistency in feature scaling and avoided the need to redefine token ranges during tokenization.
+
+For the LoS samples, all 90 new features were retained. However, for the NLoS samples, only 54 features were used because, for certain derived signals, PCA captured 99\% of the signal variance in the first PC, making additional components unnecessary.
+
+The detailed steps for the feature creation process are outlined in Algorithm \ref{alg:feature_creation}.
+
+\begin{algorithm}[H]
+\caption{Feature Creation Process}
+\label{alg:feature_creation}
+\begin{algorithmic}[1]
+\State \textbf{Input:} RSSI and SINR signals
+\State \textbf{Output:} Normalized PCA features
+\For{each signal $S$ (RSSI, SINR)}
+ \State Compute moving averages: \texttt{ma\_2(S)}, \texttt{ma\_3(S)}, \texttt{ma\_5(S)}
+ \State Generate sub-sampled signals: \texttt{S[:,::2]}, \texttt{S[:,1::2]}, \texttt{S[:,::3]}, \texttt{S[:,1::3]}, \texttt{S[:,2::3]}
+ \State Combine all signals (original and derived)
+ \For{each signal $S'$ in combined signals}
+ \State Apply PCA to $S'$
+ \State Retain first 5 PCs of $S'$
+ \EndFor
+ \State Normalize each PC to the range of the original signal $S$
+\EndFor
+\State Combine all normalized PCA features
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{\textbf{Deep Network Design}}
+Following the implementation of a multi-headed deep network with attention on the same dataset, as discussed in \cite{Viana2024}, we propose a novel deep network architecture designed to achieve state-of-the-art results without requiring post-processing techniques. 
+
+To enhance feature representation, we employed PCA to generate new features and applied flipping as a data augmentation strategy, building on the techniques outlined in \cite{Viana2024}. The dataset signals, including new features, were divided into 50 bins based on percentiles to ensure uniform distribution of data across bins. This method resulted in 100 bins for the complete dataset (RSSI/SINR and new features) by assigning tokens to each bin. Additional tokens were included for special purposes, such as \texttt{PAD}, \texttt{CLS}, \texttt{MASK}, and two output tokens (\texttt{ATTACKED/JAMMED} or \texttt{NO\_ATTACK}), culminating in a vocabulary size of 109 tokens.
+
+The proposed model is inspired by a U-Net-like structure with modifications to incorporate attention mechanisms and hierarchical embedding dimensions. The network comprises three encoder blocks and three decoder blocks, connected through skip connections to facilitate efficient gradient flow from the output to the initial layers. Skip connections ensure that gradients pass through with minimal degradation, reducing the error propagation to earlier layers.
+
+\paragraph{\textbf{Network Architecture}}
+Each encoder and decoder block operates at varying embedding dimensions:\newline
+\textbf{Encoder Dimensions:} 256, 128, 64\newline
+\textbf{Decoder Dimensions:} 64, 128, 256\newline
+
+Each block consists of the following components:
+\begin{itemize}
+ \item RMS normalization layer.
+ \item CNN layer with kernel size 3 and padding 1.
+ \item Linear transformation with SiLU activation.
+ \item Multi-headed attention (8 heads), including differential attention computation.
+ \item Residual connections integrated with Multi-Layer Perceptron (MLP) blocks activated via SwiGLU.
+\end{itemize}
+
+The embedding dimensions reduce hierarchically in the encoder blocks and are reversed in the decoder blocks, ensuring symmetry in the network structure.
+
+\paragraph{\textbf{Attention Mechanism and Differentiation}}
+Each attention block processes input embeddings through various groups:\newline
+\begin{itemize}
+ \item Heads 0, 1 operate directly on normalized inputs.
+ \item Heads 2, 3 process CNN-transformed embeddings via an MLP.
+ \item Heads 4, 5 use CNN transformations exclusively.
+ \item Heads 6, 7 compute differences between normalized inputs and CNN-transformed outputs.
+\end{itemize}
+
+Differential computation is applied to attention outputs of specific heads to enhance representation. Skip connections between encoder and decoder blocks are inspired by U-Net and YOLO architectures, which have demonstrated efficacy in gradient flow preservation.
+
+\subsubsection{\textbf{Proposed Training Algorithm}}
+To efficiently train time series data and achieve faster convergence, we propose a training framework leveraging three key techniques: \\ \emph{Chunking}, \emph{Batch Size Scheduling}, and \emph{Weight Moving Average}. Each of these techniques is described in detail below.
+
+\paragraph{Chunking}
+To handle time series data effectively, we utilize a chunking strategy to reduce training time while maintaining diversity in the training samples. The time series sequences are first segmented using a rolling window of size 300 with a stride of one. After preprocessing and tokenization, the data is split into a user-defined number of chunks (e.g., 10). Rather than shuffling the entire dataset, chunks are randomly selected for training within each epoch, following the steps in the Algorithm \ref{alg:chunking}.
+
+\begin{algorithm}
+\caption{Sample Chunking Algorithm}
+\label{alg:chunking}
+\begin{algorithmic}[1]
+\Require Number of chunks \texttt{chunks}, current epoch \texttt{epoch}, main samples dictionary \texttt{samples\_dict\_main}.
+\State \texttt{chunks} $\gets 10$ \Comment{User-defined number of chunks}
+\State \texttt{start} $\gets$ \texttt{epoch} \textbf{mod} \texttt{chunks}
+\If{\texttt{start} \texttt{==} 0}
+ \State \texttt{start\_list} $\gets$ \texttt{permutation(range(chunks))}
+\Else
+ \State \texttt{start} $\gets$ \texttt{start\_list[start]}
+\EndIf
+\State \texttt{samples\_dict} $\gets$ \texttt{copy(samples\_dict\_main)}
+\State \texttt{samples\_dict['train']} $\gets$ \texttt{samples\_dict['train'][start::chunks,:]}
+\State \textbf{Use} \texttt{samples\_dict} \textbf{in the current epoch for the training loop.}
+\end{algorithmic}
+\end{algorithm}
+
+
+
+For each epoch, one chunk is selected, shuffled, and used for training. After all chunks are utilized (e.g., in 10 epochs), they are reshuffled and reused in the subsequent cycles. This method ensures reduced correlation between adjacent samples, as each sample in a chunk maintains a minimum distance (e.g., 10 time steps) from its neighbors. Additionally, by iterating through all chunks, the diversity of training data increases, improving model generalization and reducing the risk of over-fitting. Our results demonstrate that this chunking strategy not only accelerates training but also enhances model accuracy.
+
+\paragraph{Batch Size Scheduling}
+To optimize training efficiency and model convergence, we employ a dynamic batch size scheduler alongside a learning rate scheduler. Initially, the batch size scheduler is deactivated. However, if validation loss or accuracy fails to improve in a given epoch, the batch size scheduler activates and adjusts the batch size for the subsequent epoch. This adjustment is simulated using the gradient accumulation technique in PyTorch, allowing larger batch sizes without memory overhead. Once validation metrics improve, the scheduler locks the batch size at its current value and deactivates. This approach accelerates convergence, reduces training epochs, and enhances validation performance.
+
+\paragraph{Weight Moving Average}
+Inspired by reinforcement learning algorithms, we incorporate a weight moving average technique to stabilize training and prevent over-fitting. When validation metrics improve, the current model weights are stored. Upon the next improvement, the moving average of the weights is computed and updated in the model:
+\[
+W_{\text{new}} = 0.001 \cdot W_{\text{prev}} + 0.999 \cdot W_{\text{current}},
+\]
+where \(W_{\text{prev}}\) and \(W_{\text{current}}\) denote the weights of the previous and current checkpoints, respectively. This approach mitigates sudden changes in weights, stabilizing training and improving generalization, especially in early epochs. 
+
+
+In summary, the combination of chunking, batch size scheduling, and weight moving average techniques provides a robust training framework, achieving faster convergence and better generalization in time series tasks. Experimental results demonstrate the efficacy of this approach in improving validation performance while reducing training time.
+
+\section {Results}
+
+This section presents the results and insights gained from our UAV jamming detection algorithms experiment using \text{PCA-featured} (proposed), DNN, DNN+M1, DNN+M2 algorithms from \cite{Viana2024} and XGB classifier algorithm along with details of the data used to train all the algorithms. Unless explicitly stated, the general network and U-shaped transformer model parameters employed in the experiment are described in Tables \ref{table:1} and \ref{table:2}, respectively.
+
+\begin{table}[!ht]
+\begin{threeparttable}
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+%\cmidrule{1-2} 
+Scenario Parameters & Values \\ \midrule
+Terrestrial Users & 0, 5, 10 \\
+Authenticated UAVs & 1 \\
+Small Cells & 10 \\
+Small cell height & 10 m \\
+Attackers & 0, 1, 2, 3, and 4 \\
+Speeds & 10 m/s \\
+Small cell power & 4 dBm \\
+Authenticated UAV power & 2 dBm \\
+Attackers power & 0, 2, 5, 10, and 20 dBm \\
+Authenticated UAV position & URD* \\
+Attackers position & URD* \\
+Small cells position & URD* \\
+Scenario & UMi \\
+Distance & 100, 200, 500, and 1000 m\\
+\bottomrule
+\end{tabular}
+ \begin{tablenotes}
+ \small
+ \item *URD - Uniformly Random Distributed.
+ \end{tablenotes}
+ \end{threeparttable}
+\caption{Dataset Parameters. \cite{Viana2024}}
+\label{table:1}
+\end{table}
+\vspace{-1mm}
+
+\begin{table}
+\centering
+\begin{tabular}{lc} % Changed to two columns with centered alignment for second column
+\toprule
+Parameter & \multicolumn{1}{c}{\text{LoS} and \text{NLoS}} \\ % Spans both columns
+\midrule
+Block size (LoS, NLoS) & \multicolumn{1}{c}{(692, 656)} \\
+Layer number & \multicolumn{1}{c}{6} \\
+Learning Rate & \multicolumn{1}{c}{1e-4} \\
+Heads number & \multicolumn{1}{c}{8} \\
+Vocab size & \multicolumn{1}{c}{110} \\
+Encoder Embedding & \multicolumn{1}{c}{[256, 128, 64]} \\
+Decoder Embedding & \multicolumn{1}{c}{[64, 128, 256]} \\
+Dropout & \multicolumn{1}{c}{0.4} \\
+Batch Size & \multicolumn{1}{c}{64} \\
+Noise & \multicolumn{1}{c}{0.03} \\
+(Mask Prob., Target Prob.) (training) & \multicolumn{1}{c}{(0.25, 0.85)} \\
+(Mask Prob., Target Prob.) (prediction) & \multicolumn{1}{c}{(0.0, 1.0)} \\
+Model Parameters & \multicolumn{1}{c}{2.2 M} \\
+\bottomrule
+\caption{U-shaped Transformer Model configuration}
+\label{table:2}
+\end{tabular}
+\end{table}
+\vspace{-1mm}
+
+
+
+\subsection{\textbf{Convergence Analysis}}
+
+Figure \ref{fig:acc} illustrates the classification performance of our transformer-based approach under jamming conditions, evaluated across the LoS and NLoS scenarios. The convergence analysis reveals distinctive learning patterns over 14 epochs of training. Initially, the model demonstrates remarkable learning efficiency, with both LoS and NLoS scenarios showing rapid accuracy improvements, achieving approximately 70\% accuracy within the first epoch. As training progresses, the LoS scenario achieves a superior classification performance, converging to approximately 90\% accuracy, while the NLoS scenario stabilizes at 84\%. This performance differential can be attributed to the inherent complexity of signal propagation in NLoS environments, where multipath effects and signal degradation present additional classification challenges.
+
+\begin{figure}[!ht]
+ \centering
+ \includegraphics[width=0.40\textwidth]{Figures/acc.png}
+ \caption{Classification accuracy convergence analysis using test data under LoS and NLoS conditions.}
+ \label{fig:acc}
+\end{figure}
+\vspace{-1mm}
+\subsection{\textbf{Loss Convergence}}
+The loss convergence analysis, presented in Figure \ref{fig:loss}, provides deeper insights into the model's learning dynamics. Starting from an initial loss value of approximately 5.5, both scenarios demonstrate rapid optimization during the first two epochs, indicating efficient parameter adaptation. The subsequent training phases reveal gradual but consistent improvement, with the LoS scenario maintaining marginally lower loss values throughout the training process. By epoch 14, both scenarios achieve robust convergence with loss values of 0.23 and 0.58 for LoS and NLoS respectively. The LoS scenario exhibiting slightly superior stability.
+
+The U-shaped transformer architecture demonstrates remarkable adaptation capabilities in both propagation scenarios. The consistent performance, characterized by rapid initial convergence and stable final states, underscores the model's robustness in challenging jamming environments. 
+
+\begin{figure}[!ht]
+ \centering
+ \includegraphics[width=0.40\textwidth]{Figures/Loss.png}
+ \caption{Loss convergence analysis using test data under LoS and NLoS conditions.}
+ \label{fig:loss}
+\end{figure}
+\vspace{-1mm}
+\subsection{\textbf{Alternative Methods and Validation}}
+
+We also experimented with alternative methods for creating derived signals, such as first and second differentiation. However, PCA applied to these signals resulted in a large number of PCs, with the leading components capturing only a small proportion of the signal variance. Consequently, these methods were not included in our final approach.
+
+The methods we adopted ensured that the new PCs captured over 70\% of the signal variance, indicating that the derived features were both informative and valuable. This dimensionality reduction approach enhanced the training efficiency of our model while preserving the most critical information from the original data, ultimately improving model accuracy.
+
+\subsection{\textbf{Classification Comparison with Other Algorithms}}
+
+The simulation results presented in Table~\ref{tab:accuracy_comparison} provide a comprehensive comparison of classification accuracies across different approaches using the dataset with a window size of 300. In LoS scenarios, our proposed method demonstrates robust performance with an accuracy of 90.33\%, nearly matching the highest performance achieved by DNN+Method 2 at 90.80\%. The conventional DNN approach and its variant with Method 1 show competitive performance at 89.59\% and 89.98\% respectively, indicating that the additional complexity of Method 1 offers only marginal improvements in LoS conditions. The XGB classifier, despite its general effectiveness in many machine learning tasks, shows the lowest LoS accuracy at 86.33\%, suggesting that deep learning approaches are more suitable for this specific classification task.
+Note: DNN, DNN+M1, DNN+M2 algorithms design are available in \cite{Viana2024}.
+
+\begin{table}[!ht]
+\small
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Category} & \textbf{Proposed} & \textbf{DNN} & \textbf{DNN+M1} & \textbf{DNN+M2} & \textbf{XGB} \\
+\midrule
+LoS & \textbf{90.33} & 89.59 & 89.98 & \textbf{90.80} & 86.33 \\
+NLoS & \textbf{84.35} & 75.60 & 83.07 & 79.00 & 80.58 \\
+\bottomrule
+\end{tabular}
+\caption{Classification accuracy (\%) comparison on dataset with window size 300. Best results are in bold.}
+\label{tab:accuracy_comparison}
+\end{table}
+
+The performance differences become more pronounced in NLoS conditions, which present greater classification challenges due to signal propagation complexities and environmental factors. Our proposed method significantly outperforms all other approaches with an accuracy of 84.35\%, demonstrating its robustness in challenging scenarios. The basic DNN shows a substantial performance drop to 75.60\% in NLoS conditions, highlighting the limitations of conventional deep learning approaches. While the integration of Method 1 with DNN improves performance considerably to 83.07\%, it still falls short of our proposed method. Interestingly, DNN+Method 2, despite its superior LoS performance, achieves only 79.00\% accuracy in NLoS conditions, suggesting that its optimization may be biased towards LoS scenarios. The XGB classifier maintains relatively consistent performance at 80.58\%, but this is still significantly lower than our proposed method. These results empirically validate the effectiveness of our approach, particularly in handling the more challenging NLoS scenarios while maintaining strong performance in LoS conditions.
+
+
+\section{Conclusions}
+
+This research presents a novel approach to jamming attack detection in UAV-integrated 5G networks through the development of a U-shaped transformer-based architecture enhanced with Principal Component Analysis (PCA) features. The experimental results demonstrate significant detection capabilities, achieving 90.33\% accuracy in Line-of-Sight conditions and 84.35\% in non-Line-of-Sight scenarios. This represents an approximate 4\% improvement over conventional machine learning methods such as XGBoost (XGB). The architecture's success can be attributed to its effective processing of signal features, including RSSI and SINR measurements, while leveraging self-attention mechanisms to capture complex temporal dependencies in wireless signal patterns.
+The demonstrated performance improvements over existing solutions highlight the potential of transformer-based architectures in wireless security applications. Several promising directions emerge for future research in this domain. Primary considerations include optimizing the computational efficiency for real-time deployment, advancing the framework's ability to adapt to emerging jamming techniques, and exploring applications in next-generation wireless technologies. The increasing integration of Unmanned Aerial Vehicles (UAVs) in wireless networks underscores the growing importance of sophisticated jamming detection systems. While our transformer-based architecture represents a significant advancement in wireless security, further research will be crucial to address evolving challenges in this dynamic field. Future developments should prioritize enhancing the system's resilience against novel attack patterns while ensuring efficient implementation across diverse deployment scenarios.
+
+
+% \bibliographystyle{IEEEtran}
+% \bibliography{IEEEabrv,bibliographia} 
+% \typeout{BBL FILE: \jobname.bbl}
+\begin{thebibliography}{99}
+\bibitem{Azari2019} M. M. Azari, F. Rosas, and S. Pollin (2019), \textquotedblleft Cellular Connectivity for UAVs: Network Modeling, Performance Analysis, and Design Guidelines\textquotedblright, \textit{IEEE Transactions on Wireless Communications}, Vol. 18, No. 7, pp. 3366--3381.
+\bibitem{Bekkouche2020} O. Bekkouche, K. Samdanis, M. Bagaa, and T. Taleb (2020), \textquotedblleft A Service-Based Architecture for Enabling UAV Enhanced Network Services\textquotedblright, \textit{IEEE Network}, Vol. 34, No. 4, pp. 328--335.
+\bibitem{Elleuch2024} I. Elleuch, A. Pourranjbar, and G. Kaddoum (2024), \textquotedblleft Leveraging Transformer Models for Anti-Jamming in Heavily Attacked UAV Environments\textquotedblright, \textit{IEEE Open Journal of the Communications Society}, Vol. 5, pp. 5337--5347.
+\bibitem{Farkhari2022} H. Farkhari, J. Viana, L. M. Campos, P. Sebastião, and L. Bernardo (2022), \textquotedblleft New PCA-based Category Encoder for Efficient Data Processing in IoT Devices\textquotedblright, \textit{IEEE Globecom Workshops (GC Wkshps)}, pp. 789--795.
+\bibitem{Galkin2023} B. Galkin, L. Ho, K. Lyons, G. Celik, and H. Claussen (2023), \textquotedblleft Experimental Evaluation of Air-to-Ground VHF Band Communication for UAV Relays\textquotedblright, \textit{IEEE International Conference on Communications Workshops (ICC Workshops)}, pp. 1428--1432.
+\bibitem{Giovanni2022} G. Geraci, A. Garcia-Rodriguez, M. M. Azari, A. Lozano, M. Mezzavilla, S. Chatzinotas, Y. Chen, S. Rangan, and M. Di Renzo (2022), \textquotedblleft What Will the Future of UAV Cellular Communications Be? A Flight From 5G to 6G\textquotedblright, \textit{IEEE Communications Surveys and Tutorials}, Vol. 24, No. 3, pp. 1304--1335.
+\bibitem{Greenacre2022} M. Greenacre, P. J. F. Groenen, T. Hastie, and others (2022), \textquotedblleft Principal component analysis\textquotedblright, \textit{Nature Reviews Methods Primers}, Vol. 2, pp. 100.
+\bibitem{Hachimi2020} M. Hachimi, G. Kaddoum, G. Gagnon, and P. Illy (2020), \textquotedblleft Multi-stage Jamming Attacks Detection using Deep Learning Combined with Kernelized Support Vector Machine in 5G Cloud Radio Access Networks\textquotedblright, \textit{International Symposium on Networks, Computers and Communications (ISNCC)}, pp. 1--5.
+\bibitem{Ho24} L. Ho and S. Jangsher (2024), \textquotedblleft UAV Trajectory Optimization based on Predicted User Locations\textquotedblright, \textit{IEEE Wireless Communications and Networking Conference (WCNC)}.
+\bibitem{Wenbo2020} W. Jin, J. Yang, Y. Fang, and W. Feng (2020), \textquotedblleft Research on Application and Deployment of UAV in Emergency Response\textquotedblright, \textit{ICEIEC 2020 - Proceedings of 2020 IEEE 10th International Conference on Electronics Information and Emergency Communication}, pp. 277--280.
+\bibitem{Krayani2022} A. Krayani, A. S. Alam, L. Marcenaro, A. Nallanathan, and C. Regazzoni (2022), \textquotedblleft Automatic Jamming Signal Classification in Cognitive UAV Radios\textquotedblright, \textit{IEEE Transactions on Vehicular Technology}, Vol. 71, No. 12, pp. 12972--12988.
+\bibitem{Lu2014} Z. Lu, W. Wang, and C. Wang (2014), \textquotedblleft Modeling, Evaluation and Detection of Jamming Attacks in Time-Critical Wireless Applications\textquotedblright, \textit{IEEE Transactions on Mobile Computing}, Vol. 13, No. 8, pp. 1746--1759.
+\bibitem{Shi2021} Y. Shi, X. Lu, Y. Niu, and Y. Li (2021), \textquotedblleft Efficient Jamming Identification in Wireless Communication: Using Small Sample Data Driven Naive Bayes Classifier\textquotedblright, \textit{IEEE Wireless Communications Letters}, Vol. 10, No. 7, pp. 1375--1379.
+\bibitem{Skokowski2024} P. Skokowski, K. Malon, M. Kryk, K. Maślanka, J. M. Kelner, P. Rajchowski, and J. Magiera (2024), \textquotedblleft Practical Trial for Low-Energy Effective Jamming on Private Networks With 5G-NR and NB-IoT Radio Interfaces\textquotedblright, \textit{IEEE Access}, Vol. 12, pp. 51523--51535.
+\bibitem{SyntheticJViana} J. Viana, H. Farkhari, P. Sebastiao, S. Lagen, K. Koutlia, B. Bojovic, and R. Dinis (2022), \textquotedblleft A Synthetic Dataset for 5G UAV Attacks Based on Observable Network Parameters\textquotedblright, arXiv:2211.09706.
+\bibitem{3GPP23255} 3GPP (2024), \textquotedblleft Technical Specification Group Services and System Aspects; Application layer support for Uncrewed Aerial System (UAS) - Functional architecture and information flows (Release 19)\textquotedblright, 3rd Generation Partnership Project.
+\bibitem{Viana2024} J. Viana, H. Farkhari, P. Sebastião, L. M. Campos, K. Koutlia, B. Bojovic, S. Lagén, and R. Dinis (2024), \textquotedblleft Deep Attention Recognition for Attack Identification in 5G UAV Scenarios: Novel Architecture and End-to-End Evaluation\textquotedblright, \textit{IEEE Transactions on Vehicular Technology}, Vol. 73, No. 1, pp. 131--146.
+\bibitem{VianaConv2022} J. Viana, H. Farkhari, L. M. Campos, P. Sebastião, K. Koutlia, S. Lagén, L. Bernardo, and R. Dinis (2022), \textquotedblleft A Convolutional Attention Based Deep Learning Solution for 5G UAV Network Attack Recognition over Fading Channels and Interference\textquotedblright, \textit{IEEE 96th Vehicular Technology Conference (VTC2022-Fall)}, pp. 1--5.
+\bibitem{Xue2023} K. Xue, J. Rodríguez-Piñeiro, Y. Yu, J. Hong, X. Yin, and X. Shunqin (2023), \textquotedblleft Performance and Reliability of 5G Communications for USV-UAV Critical Applications\textquotedblright, \textit{17th European Conference on Antennas and Propagation (EuCAP)}, pp. 1--5.
+\end{thebibliography}
+
+\vspace{9pt}
+
+
+
+\end{document}

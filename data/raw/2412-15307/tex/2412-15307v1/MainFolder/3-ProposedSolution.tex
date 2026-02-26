@@ -1,0 +1,327 @@
+\section{Proposed Methods}\label{sec:proposedmethods}
+\subsection{Ethical Approval}
+The protocol and the request for a waiver of informed consent for retrospective data collection and the use of existing biosamples (REC No. 2021-05-002B) were approved during the 136th meeting of the Institutional Review Board of Taipei Veterans General Hospital on May 14, 2021. In accordance with Good Clinical Practice guidelines and applicable government laws and regulations, all experiments were conducted under the oversight of the committee. Written informed consent from participants was not required for this study.
+
+% \subsection{Federated Learning}\label{sec: federated_learning}
+A federated learning framework is proposed for plaque segmentation on distributed IVUS datasets, utilizing self-designed U-Net models. The procedures of the federated learning framework are illustrated in Figure \ref{fig: Methods FL Procedure.}. In this framework, local models are aggregated into a global model ($W_G$) using the FedAvg algorithm \cite{McMahan2017FedAvg}. The client repeatedly exchanges model weights ($W_j$) with the server, a process referred to as "communication." The framework is tested with \textit{N} clients, where \textit{N} represents the number of participants in the federated learning environment. This study involves a limited number of participating clients ($N=3$). Local clients implement the proposed U-Net architecture with consistent hyperparameter settings across the federated learning framework. 
+
+\begin{equation}
+\label{eqn: Dice Score}
+ w_{G} \leftarrow \sum_{j=1}^{N}{\frac{D_{j}}{D} \ w_{j}},
+\end{equation}
+
+% McMahan2017FedAvg
+
+% In Fig. \ref{fig: seqFedavg}
+% In Algorithm \ref{alg: FedAVG}
+
+where $D$ represents the total dataset, while $D_{j}$ denotes the proportion of data held by client $j$ relative to the total dataset ($D$). In Algorithm \ref{alg: FedAVG}, the global model is denoted by $w_{G}$, and the model weights of each client are represented by $w_{j}$. The server aggregates all received parameters from clients to generate an updated global model, $w_{G}^{r+1}$, as the iteration $r$ increases. Once the server model is updated, it is broadcast to all local clients, instructing them to retrain using their local datasets ($D_j$). After completing local training, each client sends their updated model parameters ($w_{j}^{r+1}$) back to the server. This process continues until the training program concludes or no further performance improvements are observed.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.55]{figures/fl_seq.pdf}
+% \caption{Sequence chart of FedAvg.}
+% \label{fig: seqFedavg}
+% \end{figure} 
+
+% Algorithm 1 FedAVG
+% 畫水平線
+\newcommand{\algrule}[1][.2pt]{\vskip.5\baselineskip\hrule height #1\vskip.5\baselineskip}
+% 定義 in parallel do 的指令
+\algnewcommand\algorithmicinparalleldo{\textbf{in parallel do}}
+\algdef{S}[FOR]{ForParallel}[1]{\algorithmicfor\ #1\ \algorithmicinparalleldo}
+
+\begin{algorithm}[ht]
+\small
+\caption{FedAvg \cite{McMahan2017FedAvg}}
+\label{alg: FedAVG}
+
+ \begin{algorithmic}[1]
+ \Require{
+ Number of communication rounds $R$,\newline
+ Number of local epochs $E$,\newline
+ Local minibatch size $B$,\newline
+ Learning rate $\eta$
+ }
+ \Ensure{Global Model $W_G$}
+ \algrule
+ 
+ \Function{SERVERPROCESS}{}\Comment{Run on the server}
+ \State initialize $w_{0}$
+ \State $S$ $\leftarrow$ (a set of $N$ clients)
+ \For{each round $r$ from $1$ to $R$}
+ \ForParallel{each client $j \in S$}
+ \State $w_{j}^{r+1} \leftarrow \text{CLIENTUPDATE}(j, w, E)$
+ \EndFor
+ \State $w_{G}^{r+1} \leftarrow \sum_{j \in S}{\frac{D_{j}}{D} \ w_{j}^{r+1}}$
+ \EndFor
+ \EndFunction
+ \\
+ \Function{CLIENTUPDATE}{$j, w, E$}\Comment{Run on client $j$}
+ \State $\mathcal{B} \leftarrow$ (split $D_j$ into batches of size $B$)
+ \For{each local epoch $e$ from $1$ to $E$}
+ \For{batch $b \in \mathcal{B}$}
+ \State $w \leftarrow w - \eta \triangledown l(w,b)$
+ \EndFor
+ \EndFor
+ \State return $w$ to server
+ \EndFunction
+ \end{algorithmic}
+\end{algorithm}
+
+\subsection{Parallel Model Architecture and Data Coordinate Conversion}
+Physicians locate the plaque burden area within the cardiovascular by observing the EEM border and lumen border because plaque grows between those two areas. To simulate the diagnostic process, the plaque segmentation task is divided into two stages. The first step generates segmentation masks for each input image by identifying the EEM and lumen areas. The next step involves subtracting the segmentation masks of the EEM and lumen areas to form a plaque mask. A two-stage procedure is performed sequentially to determine the plaque burden. Thus, the federated learning framework is used to train the model. In each hospital, the diagram shows the overall process and details (Figure \ref{fig: Methods system process.}).  
+
+% \subsubsection{Data Coordinate Conversion}
+Coordinate systems for plane images include Cartesian and polar systems. Cartesian coordinates, being the most intuitive for human interpretation, allow for straightforward observation of spatial relationships and preserve object shapes, making them highly effective for image analysis. Plaque detection is commonly performed using Cartesian coordinate images due to their ease of interpretation, where each pixel is defined by two indices, such as \textit{(x, y)}. In this study, IVUS frames were extracted from the Digital Imaging and Communications in Medicine (DICOM) raw cross-sectional view in Cartesian coordinates. All images and masks utilized in the proposed deep learning model are formatted in a 512×512 shape, with both inputs and outputs processed in Cartesian coordinates. This ensures consistency and compatibility throughout the analysis pipeline.
+
+In polar coordinates, images present differently than in Cartesian coordinates. Each pixel is defined by its distance from a reference point and its angle relative to a reference direction. Cross-sectional views of vessels appear approximately circular in this coordinate system. Cartesian coordinate images and masks can be transformed into polar coordinates to incorporate angular information \cite{CHO2021polar}. Assuming the center of the original image as the reference point, the radius of the largest circle is set to 256 pixels, and polar coordinates are sampled every 0.5 degrees for precision. In the resulting polar images, the horizontal axis represents the angle ($\theta$), and the vertical axis denotes the distance ($r$) from the pixel to the center. This transformation produces images sized 256×720 pixels, approximately 70\% of the original size.
+
+As shown by Cho \emph{et al.} \cite{CHO2021polar}, converting IVUS images from Cartesian to polar coordinates allows for angle-wise plaque classification, enabling accurate determination of plaque orientation. Medical images were collected in the DICOM format, representing cardiovascular structures in three dimensions. This study employs two-dimensional frames represented in both Cartesian and polar coordinate systems. Figure \ref{fig: IVUS images in polar coordinate system.} illustrates an IVUS frame, its EEM mask, and its lumen mask converted to polar coordinates. The transformation filters out the background from the corners of the original image and reveals how boundaries change when viewed from different angles in the converted images.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.26]{figures/systemprocess.pdf}
+\caption{Proposed parallel plaque segmentation diagram. }
+\label{fig: Methods system process.}
+\end{figure} 
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.27]{figures/IVUS_polar.pdf}
+\caption{(A) Original 2D IVUS image (B) EEM mask (C) lumen mask in polar coordinate system.}
+\label{fig: IVUS images in polar coordinate system.}
+\end{figure} 
+
+% \begin{itemize}
+% \item \textbf{IVUS images in Cartesian coordinate system: }
+
+% % \begin{figure}[ht]
+% % \centering
+% % \includegraphics[scale=0.3]{figures/IVUS Cartesian.pdf}
+% % \caption{(A) Original 2D IVUS image (B) EEM mask (C) Lumen mask in Cartesian coordinate system.}
+% % \label{fig: IVUS images in the Cartesian coordinate system}
+% % \end{figure} 
+
+% \item \textbf{IVUS images in polar coordinate system: } 
+
+
+% \item \textbf{Post-processing: }IVUS images were input into the proposed model in polar coordinates. With an encoder-decoder architecture, the proposed U-Net model outputs an image with the same shape as the input image, which is a mask in polar coordinates. The output mask should be converted back to the Cartesian coordinate system for doctors to promptly interpret the segmentation results. As a result of this conversion, the images may have tiny holes and jagged borders. Consequently, some pixels in the transformed image do not have values, hence they are empty. Imperfect images are refilled using the closing operation, a mathematical morphology operation. An erosion operation follows a dilation operation in the closing operation. A given kernel will operate on the image. The dilation operation fills an empty pixel when at least one of its adjacent pixels is marked, whereas the erosion operation eliminates the pixel when all adjacent pixels are marked. Post-processing is expected to fill in the tiny gaps. 
+% % Figure \ref{fig: Results of post-processing.} shows the post-processing results.
+
+% % \begin{figure}[ht]
+% % \centering
+% % \includegraphics[scale=0.28]{figures/IVUS polar_Post-processing_closing.pdf}
+% % \caption{Results of post-processing.}
+% % \label{fig: Results of post-processing.}
+% % \end{figure}
+
+% \end{itemize}
+
+% The U-Net model is well known for its ability to develop automatic segmentation quickly and effectively. The proposed U-Net model architecture consists of four convolution blocks, each consisting of a convolution layer, a batch normalization layer, a ReLU activation layer, and a max-pooling layer in sequence. It is an encoder-decoder framework that has demonstrated excellent performance in various biomedical segmentation applications \cite{ronneberger2015unet}. Fusion helps the model to learn more semantic features.
+
+% From the plaque segmentation, the model could calculate the plaque burden, thus helping physicians make informed treatment decisions.  Three phases make up the entire procedure. After loading the IVUS images and preprocessing the data, a model for training and inference is constructed. A min-max normalization process is used to rescale the pixels, and data augmentation techniques are used to enrich the dataset. We then construct a segmentation model. 
+
+
+% \subsubsection{Parallel U-Net Architecture}
+% Because IVUS images have poor resolution, determining the EEM and lumen boundaries is crucial to concentrating atherosclerosis plaques. We use two models to segment the EEM and lumen areas, as shown in Figure \ref{fig: Methods system process.}. The two models use the same U-Net architecture.  Hsiao \emph{et al.} \cite{OPLAB2022kidney} evaluated the U-Net model with several encoder models, achieving satisfactory performance with low computational effort. U-Nets have three main components: encoders, decoders, and skip connections. The input images can be down-sampled, and the features get extracted at different scales. A decoder can up-sample the feature map to a larger scale and provide an output with the same shape as the input. In the model, skip connections are essential for presenting a feature fusion of the encoder and decoder feature maps.  Encoders and decoders can be customized in the U-Net model. Despite models with deeper layers being able to handle more complex tasks, owing to the limited volume of distributed datasets, we modified a lightweight U-Net model to prevent overfitting the segmentation model. Therefore, a complex U-Net model with deeper layers might not be suitable for this case.  This U-Net model has a smaller parameter amount than the one using the state-of-the-art deep classifier as the encoder \cite{ronneberger2015unet}.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.28]{figures/Unet.pdf}
+% \caption{Designed 2D U-Net architecture.}
+% \label{fig:Methods Unet.}
+% \end{figure} 
+
+% As IVUS images have poor resolution, determining the EEM and lumen boundaries is crucial to concentrating atherosclerosis plaques. We use two models to segment the EEM and lumen area, as shown in Figure \ref{fig: Methods system process.}. The two models use the same U-Net architecture. The U-Net model is well known for its ability to develop automatic segmentation quickly and effectively. It is an encoder-decoder framework that has shown excellent performance in various biomedical segmentation applications \cite{ronneberger2015unet}. Hsiao \emph{et al.} \cite{OPLAB2022kidney} investigated the U-Net model with several encoder models, achieving satisfactory performance with low computational effort.
+
+% U-Nets have three main components: encoders, decoders, and skip connections. Input images can be down-sampled, and features extracted at different scales. A decoder can up-sample the feature map to a larger scale and provide an output with the same shape as the input. In the model, skip connections are essential for presenting a feature fusion of encoder and decoder feature maps. The fusion helps the model learn more semantic features. In the U-Net model, encoders and decoders can be customized. Despite models with deeper layers being able to handle more complex tasks, due to the limited volume of distributed datasets, we modified a lightweight U-Net model to prevent overfitting the segmentation model. Hence, a complex U-Net model with deeper layers might not suit this case. Figure \ref{fig:Methods Unet.} shows that the proposed U-Net model architecture consists of four convolution blocks, each consisting of two-dimensional convolutional layers, two-dimensional batch normalization layers, two-dimensional activation layers (ReLU layers), and two-dimensional max pooling layers in sequence. This U-Net model has a smaller parameter amount than the one using the state-of-the-art deep classifier as the encoder.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.3]{figures/Unet.pdf}
+% \caption{The designed 2D U-Net architecture.}
+% \label{fig:Methods Unet.}
+% \end{figure} 
+
+% \subsubsection{Data Augmentation}
+% Grayscale IVUS frames have pixel intensities ranging from 0 to 255, where 0 represents a black pixel, and 255 represents a white pixel. The min-max normalization is used to rescale pixels from 0 $\sim$ 255 to 0 $\sim$ 1 to make the model training more stable. Moreover, some data augmentation operations are performed. A 2D IVUS image of blood vessels, roughly circular in cross-section, can be enhanced by flipping or rotating because blood vessels have no specific directionality. During training, one of the following augmentation methods is randomly applied to each image: rotation by {0, 90, 180, 270} degrees, vertical flip, or horizontal flip. This data augmentation method allows the segmentation model to learn IVUS images from rich training datasets with different directions and angles.
+
+% % Grayscale IVUS frames have pixel intensities ranging from 0 to 255, where 0 represents a black pixel, and 255 represents a white pixel. The min-max normalization is used to rescale pixels from 0 $\sim$ 255 to 0 $\sim$ 1 to make model training more stable. In addition, some data augmentation operations are performed. A 2D IVUS image of blood vessels, roughly circular in cross-section, can be enhanced by flipping or rotating it because blood vessels have no specific directionality. During training, randomly apply one of the following augmentation methods to each image: rotation by {0, 90, 180, 270} degrees, vertical flip, or horizontal flip. This data augmentation method allows the segmentation model to learn IVUS images from rich training datasets with different directions and angles.
+
+% %\newpage
+
+
+% Coordinate systems for plane images include the Cartesian coordinate system and the polar coordinate system. Cartesian coordinates, most intuitive to the human eye, allow easy observation of spatial relationships and preserve objects' shapes, making them useful for image analysis. According to Li \emph{et al.} \cite{Saito2024}, plaques can be detected using Cartesian coordinate images. The image, however, appears differently in polar coordinates. Every pixel is distanced from the reference point and angled towards the reference direction using polar coordinates. According to Cho \emph{et al.} \cite{CHO2021polar}, IVUS images are converted from Cartesian coordinates to polar coordinates for angle-wise plaque classification. Therefore, it is possible to determine the plaque's direction with accuracy. Medical images were collected in the Digital Imaging and Communications in Medicine (DICOM) format, representing cardiovascular images in three dimensions. This study presents two-dimensional frames using Cartesian and polar coordinate systems. 
+
+% \begin{itemize}
+ % \item \textbf{IVUS images in Cartesian coordinate system} 
+
+% Images can be easily interpreted in Cartesian coordinates. Each pixel can be located using two indexes, such as \textit{(x,y)}. This study uses IVUS frames extracted from DICOM's raw cross-section view in Cartesian coordinates. Figure \ref{fig: IVUS images in the Cartesian coordinate system} shows an IVUS frame, an external elastic membrane (EEM) mask, and an associated lumen mask in the Cartesian coordinate system. All images and masks in the proposed deep learning model have 512x512 shapes, and their inputs and outputs are also in Cartesian coordinates.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.25]{figures/IVUS Cartesian.pdf}
+% \caption{(A) Original 2D IVUS image (B) EEM mask (C) Lumen mask in Cartesian coordinate system.}
+% \label{fig: IVUS images in the Cartesian coordinate system}
+% \end{figure} 
+
+ % \item \textbf{IVUS images in polar coordinate system}
+
+% It appears that vessels are approximately circular when viewed cross-sectionally. A Cartesian coordinate image and mask could be transformed to a polar coordinate image and mask to extract the angle information \cite{CHO2021polar}. Assuming the center point of the original image is the center, the radius of the largest circle is 256 pixels. In order to ensure precision, polar coordinates are converted every 0.5 degrees. The horizontal axis of the images represents the angle ($\theta$), and the vertical axis represents the distance ($r$) between the pixel and the center point. It results in 256x720 images, about 70\% of the original ones. Figure \ref{fig: IVUS images in polar coordinate system.} shows an IVUS frame, its external elastic membrane (EEM) mask, and its lumen mask converted to polar coordinates. It is possible to filter out the background of the original image's four corners and observe how the borders change when viewed from different angles on the converted images.
+ 
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.28
+% ]{figures/IVUS polar.pdf}
+% \caption{(A) Original 2D IVUS image (B) EEM mask (C) Lumen mask in polar coordinate system}
+% \label{fig: IVUS images in polar coordinate system.}
+% \end{figure} 
+
+ % \item \textbf{Post-processing} 
+
+% IVUS images will be input into the proposed model in polar coordinates. With an encoder-decoder architecture, the proposed U-Net model would output an image with the same shape as the input image, which is a mask in polar coordinates. The output mask should be converted back to the Cartesian coordinate system for doctors to interpret the segmentation results quickly. As a result of this conversion, the images may have tiny holes and jagged borders. Consequently, some pixels in the transformed image do not have values, so they are empty. Imperfect images are refilled using the closing operation, a mathematical morphology operation. An erosion operation follows a dilation operation in a closing operation. A given kernel will operate on the image. A dilation operation fills an empty pixel when at least one of its adjacent pixels is marked. An erosion operation eliminates the pixel when all adjacent pixels are marked. Post-processing is expected to fill in tiny gaps. Figure \ref{fig: Results of post-processing.} shows the post-processing results.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.3]{figures/IVUS polar_Post-processing_closing.pdf}
+% \caption{The results of post-processing.}
+% \label{fig: Results of post-processing.}
+% \end{figure}
+
+% \end{itemize}
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%
+% A min-max normalization process is used to rescale the pixels, and data augmentation techniques are used to enrich the dataset. Then, we construct a segmentation model. Typically, physicians locate the plaque burden area within the cardiovascular by looking at the EEM border and the lumen border since plaque grows between those two areas. In order to simulate the diagnostic process, the plaque segmentation task is divided into two stages. The first step generates segmentation masks for each input image by identifying the EEM and lumen areas. The next step is subtracting the segmentation masks for the EEM and lumen areas to form a plaque mask. As a result of plaque segmentation, the model could calculate plaque burden, thus helping physicians make informed treatment decisions. A two-stage procedure is performed sequentially to determine plaque burden. Thus, the federated learning framework is used to train the model.
+% We propose an automatic architecture for segmenting plaque burden areas on IVUS images based on a federated learning framework. For locating plaque burdens, the procedure involves two stages. In this work, we will first segment the EEM and lumen and then determine the plaque. In addition, the proposed federated learning framework illustrates the roles of clients and servers. The client will train local models on their datasets and deliver the hyperparameters to the server for updating the global model. Further details are provided in the following sections.
+
+% \textit{FedAvg} \cite{McMahan2017FedAvg} is a state-of-the-art federated learning algorithm implemented through several communication rounds. 
+% In \textit{FedAvg}, every communication round is composed of two steps: local and global training. 
+% There are two critical parameters, the global training/communication round (\textbf{\textit{R}}) and the local training epoch (\textbf{\textit{E}}), which determine the algorithm's computational resource requirements. 
+% During the local training step, the server broadcasts the model parameters ($w_0$) to all participants from the beginning of the communication round.    
+%  As mentioned above, the process is repeated until the stopping criterion is met, and then a global model ($\boldsymbol{W_G}$) is created for the distributed dataset. However, an early stopping mechanism can be used to monitor the model performance during training on both the client and server sides. Training is terminated if performance does not improve. The procedure ensures data regulations and patient privacy compliance by exchanging only the model parameters, and not the patient data. 
+% The complete pseudocode of the \textit{FedAvg} algorithm is presented in Algorithm \ref{alg: FedAVG}.
+
+
+% Algorithm 1 FedAVG
+% % 畫水平線
+% \newcommand{\algrule}[1][.2pt]{\vskip.5\baselineskip\hrule height #1\vskip.5\baselineskip}
+% % 定義 in parallel do 的指令
+% \algnewcommand\algorithmicinparalleldo{\textbf{in parallel do}}
+% \algdef{S}[FOR]{ForParallel}[1]{\algorithmicfor\ #1\ \algorithmicinparalleldo}
+
+% \begin{algorithm}[ht]
+% \caption{FedAvg \cite{McMahan2017FedAvg}}
+% \label{alg: FedAVG}
+
+%  \begin{algorithmic}[1]
+%  \Require{
+%  Number of communication rounds $R$,\newline
+%  Number of local epochs $E$,\newline
+%  Local minibatch size $B$,\newline
+%  Learning rate $\eta$
+%  }
+%  \Ensure{Global Model $W_G$}
+%  \algrule
+ 
+%  \Function{SERVERPROCESS}{}\Comment{Run on the server}
+%  \State initialize $w_{0}$
+%  \State $S$ $\leftarrow$ (a set of $N$ clients)
+%  \For{each round $r$ from $1$ to $R$}
+%  \ForParallel{each client $j \in S$}
+%  \State $w_{j}^{r+1} \leftarrow \text{CLIENTUPDATE}(j, w, E)$
+%  \EndFor
+%  \State $w_{G}^{r+1} \leftarrow \sum_{j \in S}{\frac{n_{j}}{n} \ w_{j}^{r+1}}$
+%  \EndFor
+%  \EndFunction
+%  \\
+%  \Function{CLIENTUPDATE}{$j, w, E$}\Comment{Run on client $j$}
+%  \State $\mathcal{B} \leftarrow$ (split $D_j$ into batches of size $B$)
+%  \For{each local epoch $e$ from $1$ to $E$}
+%  \For{batch $b \in \mathcal{B}$}
+%  \State $w \leftarrow w - \eta \triangledown l(w,b)$
+%  \EndFor
+%  \EndFor
+%  \State return $w$ to server
+%  \EndFunction
+%  \end{algorithmic}
+% \end{algorithm}
+
+
+% A federated learning framework is proposed for plaque segmentation on distributed IVUS datasets. The experiments in this study used self-designed U-Net models. Figure \ref{fig: Methods FL Procedure.} illustrates the procedures of the federated learning framework. In federated learning, local models are aggregated into a global model. The client exchanges model weights repeatedly with the server, and this behavior is known as "communication." We test the federated learning framework with \textit{N} clients that \textit{N} represents the number of participants in the federated learning environment. This study has a limited number of participating clients ($N=3$). Local clients employ the proposed U-Net architecture and the same hyperparameter settings in the federated learning framework.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.32]{figures/FLFramework.pdf}
+% \caption{The federated learning framework among multi-hospitals.}
+% \label{fig: Methods FL Procedure.}
+% \end{figure} 
+
+% \textit{FedAvg} \cite{McMahan2017FedAvg} is a state-of-the-art federated learning algorithm implemented through several communication rounds. In \textit{FedAvg}, every communication round is composed of two steps: local and global training. There are two critical parameters, the global training/communication round (\textbf{\textit{R}}) and the local training epoch (\textbf{\textit{E}}), which determine the algorithm's computational resource requirements. During the local training step, the server broadcasts the model parameters ($w_0$) to all participants starting at the beginning of the communication round. A client $j$ downloads the model parameters and sets them as initial parameters ($w_{j}$). Following local training, each client sends their model parameters ($w_{j}^{r+1}$) to the server after training with their dataset $D_j$ . In the step of global training, the server aggregates all the parameters it receives from clients to create a revised server model ($w_{G}^{r+1}$). After the updated server model has been broadcast to all local clients, the clients are instructed to retrain locally. As mentioned above, repeat the process until the stopping criterion is met, and then create a global model ($\boldsymbol{W_G}$) for the distributed dataset. However, an early stopping mechanism can be used to monitor model performance during training on both the client and server sides. Training is terminated if performance does not improve. The procedure ensures data regulations and patient privacy compliance by exchanging only model parameters, not patient data. The complete pseudocode of \textit{FedAvg} algorithm is presented in Algorithm \ref{alg: FedAVG}.
+
+
+
+%Algorithm 1 FedAVG
+%畫水平線
+% \newcommand{\algrule}[1][.2pt]{\vskip.5\baselineskip\hrule height #1\vskip.5\baselineskip}
+%定義 in parallel do 的指令
+% \algnewcommand\algorithmicinparalleldo{\textbf{in parallel do}}
+% \algdef{S}[FOR]{ForParallel}[1]{\algorithmicfor\ #1\ \algorithmicinparalleldo}
+
+% \begin{algorithm}[ht]
+% \caption{FedAvg \cite{McMahan2017FedAvg}}
+% \label{alg: FedAVG}
+
+ % \begin{algorithmic}[1]
+ % \Require{
+ % Number of communication rounds $R$,\newline
+ % Number of local epochs $E$,\newline
+ % Local minibatch size $B$,\newline
+ % Learning rate $\eta$
+ % }
+ % \Ensure{Global Model $W_G$}
+ % \algrule
+ 
+ % \Function{SERVERPROCESS}{}\Comment{Run on the server}
+ % \State initialize $w_{0}$
+ % \State $S$ $\leftarrow$ (a set of $N$ clients)
+ % \For{each round $r$ from $1$ to $R$}
+ % \ForParallel{each client $j \in S$}
+ % \State $w_{j}^{r+1} \leftarrow \text{CLIENTUPDATE}(j, w, E)$
+ % \EndFor
+ % \State $w_{G}^{r+1} \leftarrow \sum_{j \in S}{\frac{n_{j}}{n} \ w_{j}^{r+1}}$
+ % \EndFor
+ % \EndFunction
+ % \\
+ % \Function{CLIENTUPDATE}{$j, w, E$}\Comment{Run on client $j$}
+ % \State $\mathcal{B} \leftarrow$ (split $D_j$ into batches of size $B$)
+ % \For{each local epoch $e$ from $1$ to $E$}
+ % \For{batch $b \in \mathcal{B}$}
+ % \State $w \leftarrow w - \eta \triangledown l(w;b)$
+ % \EndFor
+ % \EndFor
+ % \State return $w$ to server
+ % \EndFunction
+ % \end{algorithmic}
+ 
+% \end{algorithm}
+% A diagram shows the overall process and details in Figure \ref{fig: Methods system process.}. Three phases make up the whole procedure. After loading the IVUS images and preprocessing the data, a model for training and inference will be constructed.
+
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[scale=0.25]{figures/systemprocess.pdf}
+% \caption{The proposed plaque segmentation flow diagram. }
+% \label{fig: Methods system process.}
+% \end{figure} 
+
+
+

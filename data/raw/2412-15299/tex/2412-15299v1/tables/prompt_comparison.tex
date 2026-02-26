@@ -1,0 +1,15 @@
+\begin{table*}[]
+\centering
+\small
+\begin{tabular}{c||c|cc|cc|cc|cc|cc}
+\toprule
+\multirow{4}{*}{Model} & \multirow{4}{*}{\begin{tabular}[c]{@{}c@{}}Repetition \\ \enspace Rate (\%) $\downarrow$  \end{tabular}}  & \multicolumn{10}{c}{Prompting Strategy}                                          \\ %cline{3-12}%\cmidrule{3-12}
+                        & & \multicolumn{2}{c}{Zero-Shot} & \multicolumn{2}{c}{\begin{tabular}[c]{@{}c@{}}Few-Shot (5)\end{tabular}} & \multicolumn{2}{c}{Zero-Shot CoT} & \multicolumn{2}{c}{\begin{tabular}[c]{@{}c@{}}Few-Shot (5) +\\ Zero-Shot CoT\end{tabular}} & \multicolumn{2}{c}{\begin{tabular}[c]{@{}c@{}}Prompt\\ Chaining\end{tabular}} \\
+                       &  & CER $\downarrow$           & WER $\downarrow$           & CER $\downarrow$                                  & WER $\downarrow$                                 & CER $\downarrow$                                 & WER $\downarrow$                                 & CER $\downarrow$                                       & WER $\downarrow$                                      & CER $\downarrow$                                  & WER $\downarrow$                                  \\ \midrule\midrule
+ LLaMA-8B                      & 12        &  35.1             & 70.6              &   22.7                                   &                        49.6             &   37.2                                   &  77.4                                    &    22.1                                      &                                       49.8    &              35.9                        &                              70.8         \\
+                        LLaMA-70B           & 1          &       24.3        &        53.8       &       17.4                               &        43.8                             &                       25.4               &     54.6                                 &          16.8                                  &                      43.7                     &      26.7                                 &         55.2                              \\
+                        \textbf{GPT-4o-mini}      & \textbf{0.2}               &        \textbf{16.6}       &     \textbf{39.3}          &           \textbf{15.3}                           &                      \textbf{37.2}               &                           18.2           &         41.0                           &                     15.7            &          37.9   &      16.9          &               38.7                   \\ \bottomrule     
+\end{tabular}%
+\caption{Effects of prompting strategy and model type on the universal converter. The repetition rate indicates the proportion of samples with format errors (e.g., no section enclosed in three backticks until the maximum token limit) due to word repetition.}
+\label{tab_ablation}
+\end{table*}

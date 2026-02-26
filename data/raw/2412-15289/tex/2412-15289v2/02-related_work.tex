@@ -1,0 +1,127 @@
+\vspace{-3pt}
+\secvspace
+\section{Related Work}
+\subsecvspace
+\subsection{Jailbreak Attacks on LLMs}
+% Traditional algorithmic systems: GCG, Low-Resource Lanuguage (side-channel), AutoDAN, PAIR
+    A collection of works regard LLMs as computational systems from the security perspective, thus jailbreaking LLMs using search and side-channel methods.
+    % search (gradient-based search)
+    Combining greedy and gradient-based discrete optimization, GCG \cite{zouUniversalTransferableAdversarial2023a} computes an adversarial suffix and append to the harmful instruction, achieving universal jailbreak attacks. % multi-prompt and
+    % search (autodan: genetic algorithm-based search; PAIR: brutal search; GPTFuzzer: a search framework)
+    AutoDAN \cite{liuAutoDANGeneratingStealthy2023a} leverages genetic algorithm-based search to generate and refine jailbreak prompts iteratively.  
+    PAIR \cite{chaoJailbreakingBlackBox2024a}, AdvPrompter~\cite{paulus2024advprompter} and GPTFuzzer \cite{yuGPTFUZZERRedTeaming2024a} also belong to this line of work. 
+    % side-channel
+    Beyond search-based methods, \citealt{dengMultilingualJailbreakChallenges2023a} exploit low-resource languages as side channels for jailbreak.
+
+% Exploit LLMs' defect (deficiency, imperfection) in understanding and reasoning to cheat LLMs: ReNeLLM, ArtPrompt
+    Another line of studies regard LLMs as instruction followers, and disguise harmful instructions inside designed scenarios or present harmful instructions to LLMs in a fragmented form or transform them into visual symbolic representation that LLMs are less adept at understanding in order to bypass safety check. % adversaries
+    \citealt{dingWolfSheepsClothing2024a} propose the "scenario nesting" to coax the model into generating harmful responses. 
+    DrAttack~\cite{liDrAttackPromptDecomposition2024} jailbreaks LLMs through the decomposition and reconstruction of the original malicious instruction. 
+    ArtPrompt~\cite{jiangArtPromptASCIIArtbased2024a} identifies LLM's incapability to effectively recognize ASCII art representation. They propose to transform a single harmful word in query into ASCII art format, and reveal the word from the ASCII art representation by writing instructions in jailbreak prompts. %, creating a pathway for potential jailbreak attempts. 
+    % Puzzler \cite{changPlayGuessingGame2024a} implicitly expresses the malicious intent of harmful query through the combination of clues obtained from preliminary queries, achieving jailbreak.
+    
+
+% Humanizing LLMs (personification): DAN, DeepInception, How johny, Cognitive overload
+    % Finally, a number of works jailbreak LLMs by humanizing them. 
+    % DeepInception leverages the personification ability of LLMs, \ie LLMs can be obedient to human authority and thus override its safety-check boundary~\cite{liDeepInceptionHypnotizeLarge2024a}. \citealt{zengHowJohnnyCan2024a} generate persuasive adversarial prompts to persuade LLMs to respond to harmful inputs. \citealt{xuCognitiveOverloadJailbreaking2024c} propose to leverage cognitive overload to jailbreak LLMs.
+    % % since the learning and reasoning ability of humans will be obstructed when the cognitive load exceeds the amount of information they can process.
+    Finally, several studies jailbreak LLMs by humanizing them, such as DeepInception~\cite{liDeepInceptionHypnotizeLarge2024a}, persuasive adversarial prompts (PAP)~\cite{zengHowJohnnyCan2024a} and Cognitive Overload~\cite{xuCognitiveOverloadJailbreaking2024c}.
+
+
+    % Differences
+    Previous works utilize multiple iterations and/or jailbreak prompt candidates, or require sophisticated instructions (hints) in jailbreak prompt (\eg recognizing ASCII art representation) and the ability of victim LLMs to effectively understand and follow them in subsequent jailbreak , which we argue can hinder the performance when victim LLMs fail to perform the instructions in jailbreak prompt.
+    %(\eg cannot successfully reveal the word from the ASCII art representation due to their relatively small parameter size).
+    % In contrast, SATA is effective due to its designed simple assistive task and is cost-efficient in terms of input token usage for a single jailbreak. % difficult task (e.g. visual symbolic enconding) v.s. semantic encoding
+
+\subsecvspace
+\subsection{Jailbreak Defense for LLMs}  
+    Despite of extensive research efforts on safety alignment, safety weakness of LLMs still exist. Thus, many works directly defense against jailbreaks to alleviate the safety alignment problem, and there are four main types of methods:
+    (1) filter-based jailbreak detection, which checks the perplexity of input \cite{jainBaselineDefensesAdversarial2023} or leverages an additional inspector to detect if the response is harmful \cite{phuteLLMSELFDEFENSE2024,xieGradSafeDetectingJailbreak2024a,wangDefendingLLMsJailbreaking2024a}; % censor, examiner, inspector component
+    (2) modification-based mitigation, which perturbs multiple copies of the input via permutation then aggregates the outputs \cite{robeySmoothLLMDefendingLarge2024,caoDefendingAlignmentBreakingAttacks2024a}, or directly paraphrases or re-tokenizes the input \cite{jainBaselineDefensesAdversarial2023}; 
+    (3) prompt-based reminder, which uses in-context demonstrations or explicit description to remind LLMs of generating ethical response \cite{xieDefendingChatGPTJailbreak2023,weiJailbreakGuardAligned2024,zhangDefendingLargeLanguage2024a};
+    % (4)Safedecoding
+    (4) optimization-based defense, which computes a defensive prompt suffix~\cite{zhouRobustPromptOptimization2024} or steers the decoding process via manipulating the inner state of LLMs~\cite{xuSafeDecodingDefendingJailbreak2024a,zouImprovingAlignmentRobustness}
+    % Safedecoding, Circuit breakers, Layer-AdvPatcher(arXiv).
+
+
+%\subsection{Jailbreak Benchmark}
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% stealthy jailbreak prompts and refine them iteratively.
+
+    % Beyond search-based methods, \citealt{dengMultilingualJailbreakChallenges2023a} find that low-resource languages are weakly safety-aligned and exploit low-resource languages as side channels to perform jailbreak.
+    % Beyond search-based methods, \citealt{dengMultilingualJailbreakChallenges2023a} show that low-resource languages, being weakly safety-aligned, can be exploited as side channels for jailbreak.
+
+    % specific tasks that LLMs are inherently less adept at handling in order to bypass safety check.
+    % \citealt{dingWolfSheepsClothing2024a} proposes the "scenario nesting" technique, where harmful instructions are concealed within code-completion tasks or embedded in a fabricated story, thereby coaxing the model into generating jailbreak responses.
+
+    % ArtPrompt\cite{jiangArtPromptASCIIArtbased2024a} identifies a specific vulnerability in LLMs: their incapability to effectively recognize visual symbolic representation (e.g., ASCII art). They propose a method where each non-stop word in an instruction is rewritten into ASCII art, and reveal the word from the ASCII art representation by following instructions in jailbreak prompts. %, creating a pathway for potential jailbreak attempts. 
+
+    % To evade safety check, Puzzler \cite{changPlayGuessingGame2024a} implicitly expresses the malicious intent of harmful instruction through the combination of the clues obtained from preliminary queries, and elicit unethical response from LLMs.
+
+% \citealt{zengHowJohnnyCan2024a} use taxonomy-guided method to automatically generate persuasive adversarial prompts to persuade LLMs to respond to harmful inputs.
+    
+
+    % Finally, a number of works jailbreak LLMs from the perspective of humanizing them. 
+    % % DAN \cite{} introduces a novel "character role-playing" approach to jailbreak LLMs, which involves enforcing the LLM to play a specific persona named "DAN" (Do Anything Now, i.e. jailbreak) and compelling the model to maintain the character consistently. % Any deviations from the character's principles are corrected to ensure adherence to the persona's behavior.
+    % DeepInception leverages the personification ability of LLMs, \ie LLMs can be obedient to human authority and thus overrides its safety-check boundary, just as humans are willing to obey an authority figure's instructions, even dangerous ones~\cite{liDeepInceptionHypnotizeLarge2024a}. % Thus, they construct a nested scene as the inception for victim LLMs and use indirect (nested) instructions to perform jailbreak. 
+    % \citealt{zengHowJohnnyCan2024a} perform jailbreak via treating LLMs as human-like communicators. Specifically, they use taxonomy-guided method to automatically generate persuasive adversarial prompts which are used to persuade LLMs to respond to harmful inputs. 
+    % % Given the increasing capability of LLMs to align with humans in thinking and reasoning, 
+    % \citealt{xuCognitiveOverloadJailbreaking2024c} propose to leverage cognitive overload, a concept derived from cognitive psychology, to jailbreak LLMs via three types of format that can trigger cognitive overload. The theory shows that the learning and reasoning ability of humans will be obstructed when the cognitive load exceeds the amount of information they can process at any given time.
+
+
+    % % Differences
+    % Previous works either rely on dozens of iterations and/or multiple jailbreak prompt candidates, or leverage certain incapability of LLMs (\eg recognizing ASCII art representation), which we believe can hinder the jailbreak performance when the victim LLMs fail to understand and follow the instructions in jailbreak prompt (\eg cannot successfully reveal the word from the ASCII art representation due to their relatively small parameter size).
+    % In contrast, SATA is effective due to its designed simple assistive task and is cost-efficient in terms of input token usage for a single jailbreak. % difficult task (e.g. visual symbolic enconding) v.s. semantic encoding
+
+
+% Different from prior works, BAZINGA directly camouflage the malicious intent by masking the harmful contents in the harmful instruction in multiple granularities (see section ABC), then implicitly and explicitly recover the semantics of the instruction by constructing helper tasks that LLMs can perfectly perform, respectively. BAZINGA does not use structure encoding (ASCII art, ArtPrompt), which we believe is impractical when dealing with complex instructions, jailbreaking simple models or perplexity-based defense.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{Safety Alignment and Jailbreak Defense for LLMs}
+%     Safety aligned LLMs aim to align LLMs with human values and the goal is mainly explored in the following ways:
+%     (1) Training data curation \cite{welblChallengesDetoxifyingLanguage2021, wangExploringLimitsDomainAdaptive,jiBEAVERTAILSImprovedSafetya}; 
+%     (2) Supervised fine-tuning (SFT) \cite{bakkerFinetuningLanguageModels2024,alpaca}; 
+%     (3) Reinforcement learning from human feedback or AI feedback (RLHF or RLAIF) \cite{ouyangTrainingLanguageModels2022a,baiConstitutionalAIHarmlessness2022,touvronLlama2Open2023,christianoDeepReinforcementLearning2023a,rafailovDirectPreferenceOptimization2023a,daiSAFERLHFSAFE2024a}. 
+%     % (4) Constitutional AI uses a set of human-written principles to guide AI to critique and revise its own responses, and then learn preference through reinforcement learning from AI feedback (RLAIF).
+%     Other works uses prompt engineering in inference stage. For instance, BPO \cite{chengBlackBoxPromptOptimization2024a} created an automatic prompt optimizer that rewrites human prompts into LLM-preferred ones, delivering human-preferred response; RAIN integrates self-evaluation and rewind mechanisms to generate human-preferred safe responses \cite{liRAINYourLanguage2023}.
+    
+    
+%     Despite of extensive research efforts on safety alignment, safety weakness of LLMs still exist. Thus, another line of works directly defense against jailbreaks to alleviate the problem, and there are three main types of methods:
+%     (1) filter-based jailbreak detection, which checks the perplexity of input \cite{jainBaselineDefensesAdversarial2023} or leverage an additional inspector to detect if the response is harmful \cite{phuteLLMSELFDEFENSE2024,xieGradSafeDetectingJailbreak2024a,wangDefendingLLMsJailbreaking2024a}; % censor, examiner, inspector component
+%     (2) modification-based mitigation, which perturbs multiple copies of the input via permutation then aggregates the outputs \cite{robeySmoothLLMDefendingLarge2024,caoDefendingAlignmentBreakingAttacks2024a}, or directly paraphrase or re-tokenize the input \cite{jainBaselineDefensesAdversarial2023}; 
+%     (3) prompt-based reminder, which use in-context demonstrations or explicit description to remind LLMs of generating ethical response \cite{xieDefendingChatGPTJailbreak2023,weiJailbreakGuardAligned2024,zhangDefendingLargeLanguage2024a}.
+%     % (4)Safedecoding
+
+%\subsection{Jailbreak Benchmark}
+
+
+%%%%%%%%%%%%%%%%%%%
+% \subsection{Jailbreak Defense for LLMs}
+%     Safety aligned LLMs aim to align LLMs with human values and the goal is mainly explored in the following ways:
+%     (1) Training data curation \cite{welblChallengesDetoxifyingLanguage2021, wangExploringLimitsDomainAdaptive,jiBEAVERTAILSImprovedSafetya}; 
+%     (2) Supervised fine-tuning (SFT) \cite{bakkerFinetuningLanguageModels2024,alpaca}; 
+%     (3) Reinforcement learning from human feedback or AI feedback (RLHF or RLAIF) \cite{ouyangTrainingLanguageModels2022a,baiConstitutionalAIHarmlessness2022,touvronLlama2Open2023,christianoDeepReinforcementLearning2023a,rafailovDirectPreferenceOptimization2023a,daiSAFERLHFSAFE2024a}; 
+%     (4) prompt engineering in inference stage~\cite{chengBlackBoxPromptOptimization2024a,liRAINYourLanguage2023}.
+    
+%     Despite of extensive research efforts on safety alignment, safety weakness of LLMs still exist. Thus, another line of works directly defense against jailbreaks to alleviate the problem, and there are three main types of methods:
+%     (1) filter-based jailbreak detection, which checks the perplexity of input \cite{jainBaselineDefensesAdversarial2023} or leverage an additional inspector to detect if the response is harmful \cite{phuteLLMSELFDEFENSE2024,xieGradSafeDetectingJailbreak2024a,wangDefendingLLMsJailbreaking2024a}; % censor, examiner, inspector component
+%     (2) modification-based mitigation, which perturbs multiple copies of the input via permutation then aggregates the outputs \cite{robeySmoothLLMDefendingLarge2024,caoDefendingAlignmentBreakingAttacks2024a}, or directly paraphrase or re-tokenize the input \cite{jainBaselineDefensesAdversarial2023}; 
+%     (3) prompt-based reminder, which use in-context demonstrations or explicit description to remind LLMs of generating ethical response \cite{xieDefendingChatGPTJailbreak2023,weiJailbreakGuardAligned2024,zhangDefendingLargeLanguage2024a}.
+%     % (4)Safedecoding
+
+
+% %\subsection{Jailbreak Benchmark}
+

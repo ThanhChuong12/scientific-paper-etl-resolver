@@ -1,0 +1,27 @@
+\textbf{Preference Learning.}
+Preference learning is a technique that is used to align LLMs during their post-training phase, involving pairs of (chosen, rejected) responses in the training dataset.
+It aligns LLMs by steering them towards generating the chosen responses and away from generating the rejected responses.
+The Bradley-Terry model~\citep{DBLP:journals/corr/bradleyterry1952} provides the probabilistic framework for preference learning by modeling the pairwise comparison between two responses ($y_1$, $y_2$) provided by the LLM to a given prompt $x$:
+$$p(y_1 \succ y_2 | x) = \frac{\text{exp}(r^*(x, y_1))}{\text{exp}(r^*(x, y_1)) + \text{exp}(r^*(x, y_2))}$$
+Common methods for preference learning such as Direct Preference Optimization (DPO,~\cite{DBLP:conf/nips/RafailovSMMEF23}) directly optimize the model to update its parameters to increase the likelihood of generating the chosen response over the rejected response.
+Meanwhile, other methods such as Proximal Policy Optimization (PPO,~\cite{DBLP:journals/corr/SchulmanWDRK17}) indirectly perform this optimization by first training a reward model to assign scores corresponding to the preferences in the training data, and then optimizing a policy model with the guidance of the reward model.
+Both approaches have been instrumental in aligning LLMs with human preferences and enhancing their capabilities for a wide array of downstream tasks.
+
+\textbf{Data Curation for Preference Learning.} 
+The success of preference learning for LLM post-training has naturally led researchers to propose methods for automatically curating preference pairs designed to further boost model capabilities~\citep{DBLP:conf/icml/YuanPCLSXW24, DBLP:conf/naacl/KhakiLMYR24, DBLP:journals/corr/abs-2405-00451}.
+Such methods assign scores to LLM-generated outputs using verifiers to determine which outputs should be preferred during training. 
+% -- this explains why many preference data curation methods specifically address mathematics, as it contains ground-truth labels that are easy and quick to verify.
+While various other methods have been proposed for curating preference data~\citep{DBLP:journals/corr/abs-2402-11411, DBLP:journals/corr/abs-2404-02078, DBLP:journals/corr/abs-2406-18629}, in this paper we focus on two popular methods: rejection sampling (RS) and Monte Carlo Tree Search (MCTS).
+% A common method to obtain preference pairs is to use rejection sampling (RS).
+During rejection sampling, the policy model generates $N$ independent responses to the given prompt and a verifier scores each response according to some evaluation metric or a reward model.
+Responses with (high, low) scores are selected as the (chosen, rejected) responses, respectively.
+% Another method for preference pair curation is Monte Carlo Tree Search (MCTS).
+Meanwhile, in the MCTS framework, the policy model performs tree search for the given prompt by generating a fixed number of tokens at each iteration and builds the tree with nodes that represent each subsequence of generated tokens.
+During MCTS, the policy model performs rollouts by generating full responses and backpropagates the reward scores assigned to the rollouts.
+This results in a tree of possible responses generated for a given prompt, with each node being assigned a Q-value which measures the quality of the response generated so far.
+Here, sibling nodes with sufficient differences in Q-values or reward scores are selected such that the preference pairs contain common prefixes and the suffixes account for the quality difference between the two responses.
+
+While such methods return preference pairs that are effective for alignment and capability improvements, there is a lack of studies into exactly \textit{how} the preference pairs should be curated based on these methods.
+In this work we perform a systematic investigation of how different characteristics of preference datasets affect downstream performance of LLMs, using instruction following accompanied with verifiable constraints as our task of interest.
+We choose instruction-following as our task in order to incorporate multiple constraints into the prompt and score the response on a fine-grained level based on the ratio of constraints that are satisfied. 
+We use verifiable constraints to assign quality scores to our responses in a reliable and efficient manner.

@@ -1,0 +1,275 @@
+ % !TEX root = ../main.tex
+
+
+%\let\contextbf\textbf
+\let\contextbf\null
+\definecolor{Gray}{gray}{0.9}
+\newcolumntype{g}{>{\columncolor{Gray}}c}
+
+
+
+\section{Experiments}
+\label{sec:exp}
+
+%This section presents the details of our experiment settings and the empirical results in computer vision and natural language processing domains.
+
+
+
+
+%%%%%%%%% WATERBIRDS TABLE  %%%%%%%%%
+\input{sections/waterbirds_table}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Experimental Setup}
+\label{sec:exp_setup}
+
+
+\paragraph{Implementation details}
+Following prior works, we adopt ResNet-18, ResNet-50~\cite{he2016deep}, and DenseNet-121~\cite{huang2017densely}, pretrained on ImageNet~\cite{deng2009imagenet}, as our backbone networks for the CelebA, Waterbirds, and FMoW-WILDS datasets, respectively.
+For the text classification dataset, CivilComments-WILDS, we use DistillBert~\cite{sanh2019distilbert}.
+%and DenseNet-121~ for FMoW-WILDS datasets~\cite{koh2021wilds} following previous works.
+%We train our models using the stochastic gradient descent method with the Adam optimizer for 50 epoch, where the learning rate is $1 \times 10^{-4}$, the weight decay is $1 \times 10^{-4}$, and the batch size is 128.
+%We employ the same ResNet-18 architecture for the spurious-attribute estimator in Section~\ref{sec:ars}.
+We employ the standard $K$-means clustering for IRS, where the number of clusters is set to 20, \ie, $K=20$, for all experiments.
+We select the final model with the scaling factor that gives the best unbiased coverage in the validation split.
+%We set the number of slices $C=1000$ in~\eqref{eq:coverage} to calculate the robust coverage.
+Our implementations are based on the Pytorch~\cite{paszke2019pytorch} framework and all experiments are conducted on a single NVIDIA Titan XP GPU.
+%We are planning to release our source codes.
+Please refer to our supplementary file for the details about the dataset usage.
+
+\vspace{-2mm}
+\paragraph{Evaluation metrics}
+We evaluate all algorithms in terms of the proposed unbiased and worst-group coverages for comprehensive evaluation, and additionally use the average, unbiased, and worst-group accuracies for comparisons. 
+%We compare all algorithms in terms of the average, unbiased, and worst-group accuracies. 
+%For a more comprehensive evaluation, the proposed unbiased and worst-group coverages are adopted as additional metrics.
+Following previous works~\cite{GroupDRO, JTT}, we report the adjusted average accuracy instead of the na\"ive version for the Waterbirds dataset due to its dataset imbalance issue; we first calculate the accuracy for each group and then report the weighted average, where the weights are given by the relative portion of each group in the training set.
+We ran the experiments three times for each algorithm and report their average and standard deviation.
+
+
+
+%%%%%%%%% CIVIL /  FMOW TABLE  %%%%%%%%%
+\input{sections/civil_fmow_table}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Results}
+
+
+
+
+\paragraph {CelebA}
+Table~\ref{tab:celebA} presents the experimental results of our robust scaling methods (RS and IRS) on top of the existing approaches including CR, SUBY, LfF, JTT, Group DRO$^\ast$, GR$^\ast$, and SUBG$^\ast$\footnote{A brief introduction to these methods is provided in the supplementary document.}} on the CelebA dataset, where `$\ast$' indicates the method that requires the group supervision in training sets.
+In this evaluation, RS and IRS choose scaling factors to maximize individual target metrics---worst-group, unbiased, and average accuracies\footnote{Since our robust scaling strategy is a simple post-processing method, we do not need to retrain models for each target measure and the cost is negligible, taking only a few seconds for each target metric.}.
+%Group supervision indicates that the method requires training examples with group supervision.
+As shown in the table, our robust scaling strategies consistently improve the performance for all target metrics.
+In terms of the robust coverage and robust accuracy after scaling, LfF and JTT are not superior to ERM on the CelebA dataset although their robust accuracies without scaling are much higher than ERM.
+%\revision{As well, LfF gives inferior trade-off results compared to ERM on the Waterbirds dataset.}
+The methods that leverage group supervision such as Group DRO and GR achieve better robust coverage results than the others, which verifies that group supervision helps to improve overall performance.
+For the group-supervised methods, our scaling technique achieves relatively small performance gains in robust accuracy since the gaps between robust and average accuracies are small and the original results are already close to the optimal robust accuracy.
+Note that, compared to RS, IRS further boosts the robust coverage and all types of accuracies consistently in all algorithms.
+
+\vspace{-2mm}
+\paragraph{Waterbirds}
+Table~\ref{tab:waterbirds} demonstrates the outstanding performance of our approaches with all baselines on the Waterbirds dataset.
+Among the compared algorithms, GR and SUBG are reweighting and subsampling methods based on group frequency, respectively.
+Although the two baseline approaches exhibit competitive robust accuracy, the average accuracy of SUBG is far below than GR (87.3\% vs. 95.1\%).
+This is mainly because SUBG drops a large portion of training samples ($95\%$) to make all groups have the same size, resulting in the significant loss of average accuracy.
+Subsampling generally helps to achieve high robust accuracy, but it degrades the overall trade-off as well as the average accuracy, consequently hindering the benefits of robust scaling.
+{This observation is coherent to our main claim; the optimization towards the robust accuracy is incomplete and more comprehensive evaluation criteria are required to understand the exact behavior of debiasing algorithms.}
+Note that GR outperforms SUBG in terms of all accuracies after adopting the proposed RS or IRS.
+
+
+
+
+
+
+
+
+
+
+ 
+
+ 
+\vspace{-2mm}
+\paragraph{CivilComments-WILDS}
+
+We also validate the effectiveness of the proposed approach in a large-scale text classification dataset, CivilComments-WILDS~\cite{koh2021wilds}, which has 8 attribute groups.
+%We employ ERM, GR, and Group DRO as baselines, and apply our robust scaling methods, including the standard robust scaling (RS) and instance-wise robust scaling (IRS), to them.
+As shown in Table~\ref{tab:civilcomments}, our robust scaling strategies still achieve meaningful performance improvements for all baselines on this dataset.
+Although group-supervised baselines such as GR and Group DRO accomplish higher robust accuracies than the ERM without scaling, ERM benefits from RS and IRS greatly.
+ERM+IRS outperforms both Group DRO and GR in average accuracy while achieving competitive worst-group and unbiased accuracies, even without group supervision in training samples and extra training. 
+
+
+\vspace{-2mm}
+\paragraph{FMoW-WILDS}
+FMoW-WILDS~\cite{koh2021wilds} is a high-resolution satellite imagery dataset with 65 classes and 5 attribute groups, which involves domain shift issues as train, validation, and test splits come from different years.
+We report the results from our experiments in Table~\ref{tab:fmow}, which shows that GR and Group DRO have inferior performance even compared with ERM.
+On the other hand, our robust scaling methods do not suffer from any performance degradation and  even enhance all kinds of accuracies substantially.
+This fact supports the strengths and robustness of our framework in more challenging datasets with distribution shifts. 
+
+
+
+
+
+ %%%%%%%%% 	ANALYSIS  %%%%%%%%% %%%%%%%%%
+ 
+
+\subsection{Analysis}
+
+\paragraph{Validation set sizes}
+We analyze the impact of the validation set size on the robustness of our algorithm.
+Table~\ref{tab:val_size} presents the ERM results on the CelebA dataset by varying the validation set size to $\{100\%, 50\%, 10\%, 1\%\}$ of its full size.
+Note that other approaches also require validation sets with group annotations for early stopping and hyperparameter tuning, which are essential to achieve high robust accuracy.
+As shown in the table, with only $10\%$ or $50\%$ of the validation set, both RS and IRS achieve almost equivalent performance to the versions with the entire validation set.
+Surprisingly, even only $1\%$ of the validation set is enough for RS to gain sufficiently high robust accuracy but inevitably entails a large variance of results.
+On the other hand, IRS suffers from performance degradation when only $1\%$ of the validation set is available.
+This is mainly because IRS takes advantage of feature clustering on the validation set, which would need more examples for stable results.
+In overall, our robust scaling strategies generally improve performance substantially even with a limited number of validation examples with group annotations for all cases.
+
+\begin{table}[t]
+\begin{center}
+\caption{Ablation study on the size of validation set in our robust scaling strategies on CelebA.
+}
+\vspace{-1mm}
+\label{tab:val_size}
+ \scalebox{0.8}{
+\hspace{-0.2cm}
+\setlength\tabcolsep{6pt} 
+\begin{tabular}{lc|cccc}
+\toprule
+Method & Valid set size & Worst-group & Gain & Unbiased & Gain \\
+\hline
+ERM & - & 34.5 (6.1) &- & 77.7 (1.8) &- \\
+\hline
++ RS & 100\%  & 82.8 (3.3) & \textbf{+48.3} & 91.2 (0.5) & \textbf{+13.5} \\
++ RS & \ \ 50\%  & 83.3 (3.7) & \textbf{+48.8}  & 91.5 (0.9) & \textbf{+13.8} \\
++ RS & \ \ 10\%  & 82.4 (4.3) & \textbf{+48.0} & 91.4 (0.8) & \textbf{+13.7}  \\
++ RS & \ \ \ \ 1\% & 79.2 (10.3) & \textbf{+44.7}  & 90.8 (2.2) & \textbf{+13.1} \\
+\hline
++ IRS & 100\%  & 88.7 (0.9) & \textbf{+54.2}  & 92.0 (0.3) & \textbf{+14.3}  \\
++ IRS & \ \ 50\%  & 86.9 (2.0) & \textbf{+52.4} & 91.8 (0.4) & \textbf{+14.1} \\
++ IRS & \ \ 10\%  & 84.4 (6.3) & \textbf{+50.0} & 91.4 (1.0)& \textbf{+13.7}  \\
++ IRS & \ \ \ \ 1\% & 60.4 (14.4) & \textbf{+25.9} & 85.8 (3.2) & \textbf{\ \ +8.0} \\
+\bottomrule
+\end{tabular}
+ }
+\vspace{-5mm}
+\end{center}
+\end{table}
+
+
+
+
+\vspace{-2mm}
+\paragraph{Accuracy trade-off}
+Figure~\ref{fig:robust_all_celeba} depicts the robust-average accuracy trade-offs of several existing algorithms on the CelebA dataset.
+The black markers denote the points without scaling, implying that there is room for improvement in robust accuracy along the trade-off curve.
+
+
+ \begin{figure}[t!]
+\centering
+ \begin{subfigure}[m]{0.85\linewidth}
+    	\includegraphics[width=\linewidth]{figures/worst_curve_all.png}
+	\subcaption{With the worst-group accuracy}
+%\subcaption{Robust-average accuracy trade-off curves}
+	\label{fig:worst_curve_all_celeba}
+	\vspace{2mm}
+	\end{subfigure} 
+%	\hspace{0.5cm}
+	    \begin{subfigure}[m]{0.85\linewidth}
+    	\includegraphics[width=\linewidth]{figures/unbias_curve_all.png}
+	\subcaption{With the unbiased accuracy}
+	\label{fig:unbias_curve_all_celeba}
+%	\vspace{0.2cm}
+	\end{subfigure}
+%	 \begin{subfigure}[m]{0.9\linewidth}
+%    	\includegraphics[width=\linewidth]{figures/worst_curve_all_pareto}
+%%	\subcaption{Worst-group accuracy}
+%\subcaption{Robust-average accuracy Pareto frontiers}
+%	\label{fig:worst_curve_all_pareto_celeba}
+%	\end{subfigure} 
+%	\hspace{0.5cm}
+%	    \begin{subfigure}[m]{0.47\linewidth}
+%    	\includegraphics[width=\linewidth]{figures/unbias_curve_all_pareto}
+%	\subcaption{Unbiased accuracy}
+%	\label{fig:unbias_curve_all_pareto_celeba}
+%	\end{subfigure}
+%    \vspace{-2mm}
+    \caption{
+    The robust-average accuracy trade-off curves of various baselines on the CelebA dataset.
+        The black marker denotes the original point, where the uniform scaling is applied. 
+    }
+    \vspace{-1mm}
+    \label{fig:robust_all_celeba}
+\end{figure}
+ 
+ 
+\vspace{-2mm}
+\paragraph{Number of clusters}
+
+We adjust the number of clusters for feature clustering in IRS on the Waterbirds dataset.
+Figure~\ref{fig:abl_k} illustrates that the worst-group and unbiased accuracies gradually improve as $K$ increases and are stable with a sufficiently large $K (>10)$.
+The leftmost point ($K=1$) denotes RS in each figure.
+We also plot the robust coverage results in the validation split, which are almost consistent with the robust accuracy measured in the test dataset.
+
+
+
+
+\vspace{-2mm}
+\paragraph{Comparison to reweighting or resampling techniques}
+As mentioned in Section~\ref{sec:related}, most existing debiasing techniques~\cite{GroupDRO, JTT, LfF, seo2021unsupervised, idrissi2022simple, kirichenko2022last}, in principle, perform reweighting and/or resampling of training data.
+Our approach has a similar idea, but, instead of giving favor to the examples in minority groups during training and boosting their classification scores indirectly via iterative model updates, we directly adjust their classification scores by class-wise scaling after training, thus it gives similar but clearer effects on the results.
+As shown in Figure~\ref{fig:robust_all_celeba}, although class reweighting (CR) improves the robust accuracy, this in fact identifies one of the Pareto optimal points on the trade-off curve of ERM obtained by class-specific scaling.
+However, because class reweighting employs a single fixed reweighting factor during training based on class frequency, it only reflects a single point and has limited flexibility compared to our wide range of scaling search.
+If CR employs a wide range of reweighting factors, then it can identify additional optimal points and achieve additional performance gains, but it requires training separate models for each factor, which is not realistic.
+% If the reweighting factor is too large or small, it makes training unstable.
+Note that our method can be easily applied to CR or other methods, which allows us to identify more desirable optimal points on the trade-off curve with negligible computational overhead.
+
+
+
+
+
+ 
+ 
+%
+\begin{figure}[t!]
+\centering
+ \begin{subfigure}[m]{0.85\linewidth}
+    	\includegraphics[width=\linewidth]{figures/abl_k_worst.png}
+	\subcaption{With the worst-group accuracy}
+	\label{fig:abl_k_worst}
+%	\vspace{0.3cm}
+\vspace{2mm}
+	\end{subfigure} 
+%	\hspace{1cm}
+	    \begin{subfigure}[m]{0.85\linewidth}
+    	\includegraphics[width=\linewidth]{figures/abl_k_unbias.png}
+	\subcaption{With the unbiased accuracy}
+	\label{fig:abl_k_unbias}
+	\end{subfigure}
+%    \vspace{-1mm}
+    \caption{Sensitivity analysis with respect to the number of clusters in IRS on Waterbirds.
+The tendency of the robust coverage in the validation split (orange) is similar with the robust accuracy in the test split (blue).
+    }
+    \label{fig:abl_k}
+\vspace{-3mm}
+\end{figure}
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

@@ -1,0 +1,55 @@
+\section{Related Work}
+\paragraph{\textbf{Mobility Prediction}}
+% 各自完成任务
+% flow增强traj: GETNext
+% traj增强flow: TrGNN
+Mobility prediction can be divided into individual and collective categories. Individual prediction focuses on personal preferences~\cite{qingyue2024privacy}. For example, Qiao et al.~\cite{gao2019predicting} and Wang et al.~\cite{wang2021attentional} developed a Markov-based model by considering the spatiotemporal characteristics of individual mobility. Collective flow prediction emphasizes modeling collective mobility trends. For example, DeepSTN+~\cite{feng2021context} uses a context-aware spatiotemporal neural network for flow prediction. CrowdNet utilizes graph convolutional networks to achieve flow prediction adapted to various spatial and temporal granularities~\cite{cardia2022enhancing}. 
+Researchers have integrated individual and collective mobility data better to understand human mobility~\cite{chen2023multi, bontorin2024mixing,li2023learning}. TrGNN~\cite{li2021traffic} uses vehicle trajectories to infer short-term traffic flow, predicting unseen and non-recurring traffic patterns. GETNext~\cite{yang2022getnext} constructs a global flow graph to integrate transition patterns into trajectory prediction. With the emergence of large language models (LLMs), researchers have begun exploring their potential in mobility prediction, such as LLM-Mob~\cite{wang2023would},  AgentMove~\cite{feng2024agentmove}, TrajAgent~\cite{du2024trajagent} and CoPB~\cite{shao2024beyond}.
+However, there is still a gap in using LLM to understand and reason about human behavior. Thus, it is necessary to develop foundational models from scratch, specifically trained on pure mobility data. Table~\ref{tab:model_comparison} compares the advantages of our model with existing solutions. 
+In this work, we build a universal model using different types of mobility data, which can effectively predict both trajectories and flows, demonstrating exceptional robustness.
+
+
+\paragraph{\textbf{Diffusion Models and Foundation Models}}
+We focus on human mobility studies based on diffusion models. 
+DiffTraj~\cite{zhou2023towards} and ControlTraj~\cite{zhu2024controltraj} combine the generative capabilities of diffusion models with spatiotemporal features derived from trajectories. PriSTI~\cite{liu2023pristi} uses a conditional diffusion framework for spatiotemporal imputation with enhanced prior modeling. TrajGDM~\cite{chu2024simulating} utilizes diffusion models to capture the universal mobility pattern in a trajectory dataset.
+Foundation models have revolutionized natural language processing~\cite{achiam2023gpt} and computer vision~\cite{liu2024sora} through their ability to generalize across different applications. 
+% For example, GPT~\cite{achiam2023gpt}, as a foundation model in natural language processing, learns general language features by pre-training on text datasets and then adapts better to specific tasks through fine-tuning on task-specific data.
+% In other fields, such as computer vision, most foundation models are based on diffusion models. For example, Sora~\cite{liu2024sora} works by breaking down videos into visual patches and utilizing the diffusion transformer to create cohesive and detailed video content.
+% DiffusionSat~\cite{khanna2023diffusionsat} addresses the issue that existing diffusion models cannot support remote sensing data and build a foundation model for satellite imagery.
+Building on the success of foundation models in these fields, extending them to the spatiotemporal domain is a natural next step. Although models like UniST~\cite{yuan2024unist} and GPD~\cite{yuan2024spatio}, have made some progress in predicting collective dynamics, there remains a significant gap in universal models capable of adapting to various types of mobility data. 
+In this work, we present the UniMob model, marking the first attempt to apply a universal mobility prediction model based on a diffusion transformer.
+We provide more discussions of diffusion models in Appendix~\ref{sec::diffusion}.
+
+\begin{table}[t]
+    \centering
+    \caption{Comparison of UniMob with other mobility prediction models regarding important properties.}
+    \vspace{-0.3cm}
+    \label{tab:model_comparison}
+    {\fontsize{8}{10}\selectfont
+    \begin{tabular}{ccccc}
+    \toprule
+    \makecell{Model} & \makecell{Trajectory\\ Prediction} & \makecell{Flow\\ Prediction} & \makecell{Data \\  Fusion$^{(1)}$} & \makecell{Robustnes$^{(2)}$} \\ 
+    \midrule
+
+    DeepMove~\cite{feng2018deepmove} & \cmark & \xmark & \xmark & \xmark \\ 
+    SNPM~\cite{yin2023next} & \cmark & \xmark & \xmark & \xmark \\ 
+    TrajGDM~\cite{chu2024simulating} & \cmark & \xmark & \xmark & \cmark \\ 
+    ST-ResNet~\cite{zhang2017deep} & \xmark & \cmark & \xmark & \xmark \\ 
+    STID~\cite{shao2022spatial} & \xmark & \cmark & \xmark & \xmark \\ 
+    PriSTI~\cite{liu2023pristi} & \xmark & \cmark & \xmark & \cmark \\ 
+    TrGNN~\cite{li2021traffic} & \xmark & \cmark & \cmark & \xmark \\ 
+    GETNext~\cite{yang2022getnext} & \cmark & \xmark & \cmark & \xmark \\ 
+    LLM-Mob~\cite{wang2023would} & \cmark & \xmark & \xmark & \cmark \\ \midrule
+    UniMob & \cmark & \cmark & \cmark & \cmark \\ 
+    \bottomrule
+    \end{tabular}
+
+    \vspace{2mm} % Add a little space between tables
+
+    \footnotesize
+    \begin{tabular}{ll}
+        (1) & Use of multi-source data (trajectory and flow). \\
+        (2) & Keep ability with noisy or scarce data. \\
+    \end{tabular}}
+\vspace{-0.5cm}
+\end{table}

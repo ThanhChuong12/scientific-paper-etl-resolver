@@ -1,0 +1,117 @@
+We now investigate the flux-induced GS splitting in a bosonization framework taylored to \gls{obc} \cite{Bosonization_OBC}. To this end, we interpret the lattice model as the discretization of a continuous theory defined on the interval $[0, \tilde{L}]$, where $\tilde{L} = (L + 1) a_0$ with the lattice constant $a_0$. The continuum fields obey \gls{obc} $\psi_\gamma(0) = \psi_\gamma(\tilde{L}) = 0$ and the lattice operators are taken to be field operators evaluated at discrete positions $c_{\gamma, j} = \sqrt{a_0} \psi_\gamma(j a_0)$ \cite{Giamarchi}. The field operators can be decomposed into a left- and right-moving part as
+\begin{align}
+    \psi_\gamma(x) = e^{i k_\mathrm{F} x} \psi_{\gamma, \mathrm{R}}(x) + e^{-i k_\mathrm{F} x} \psi_{\gamma, \mathrm{L}}(x),
+\end{align}
+where $k_\mathrm{F}$ denotes the Fermi vector. Due to \gls{obc}, the left-movers are related to the right movers by $
+    \psi_{\gamma, \mathrm{L}}(x) = -\psi_{\gamma, \mathrm{R}}(-x)$, with the field $\psi_{\gamma, \mathrm{R}}(x)$ being defined on the interval $[-\tilde{L}, \tilde{L}]$ with \gls{pbc} \cite{Bosonization_OBC}. It is thus sufficient to employ a regular bosonization identity for the right movers alone. In doing so, we follow a constructive bosonization approach \cite{Halperin_Sarma, Bosonization_Delft, Bosonization_Schoenhammer} that yields the identity
+\begin{align}
+    \psi_\mathrm{a, R}(x) &=  \frac{1}{\sqrt{2 \pi \alpha}} e^{i \hat k_\mathrm{a}} e^{i \frac{\pi}{\tilde{L}} \Delta N_\mathrm{a} x} e^{i [\theta_\mathrm{a}(x) + \phi_\mathrm{a}(x)]}, \nonumber                                            \\
+    \psi_\mathrm{b, R}(x) &=  \frac{(-1)^{N_\mathrm{a}}}{\sqrt{2 \pi \alpha}} e^{i \hat k_\mathrm{b}} e^{i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{b} x} e^{i [\theta_\mathrm{b}(x) + \phi_\mathrm{b}(x)]}. \label{Eqn:Bosonization_identity}
+\end{align}
+In the above equation, $\alpha$ plays the role of a regularization parameter, $\Delta  N_\gamma = N_\gamma - \tilde{L} k_\mathrm{F} / \pi$ counts the number of $\gamma = \mathrm{a, b}$ particles relative to the Fermi surface, and the Hermitian operator $\hat k_\gamma$ is conjugate to the particle number in the sense that $[N_\gamma, e^{\pm i \hat k_{\gamma'}}] = \mp e^{\pm i \hat k_\gamma}\delta_{\gamma, \gamma'}$. Thus, the terms $e^{\pm i \hat k_\gamma}$ will decrease / increase the number of $\gamma$ particles by one and act as Klein factors together with the parity $(-1)^{N_\mathrm{a}}$. The fields $\theta_\gamma$, $\phi_\gamma$ are the usual phase fields constructed from the Fourier components of the electron density.
+
+Using this identity, we will proceed to bosonize \eq{Eqn:Zoller_model} and \eq{Eqn:H_phi}, which is in principle straightforward albeit a bit tedious. Consequently, we only present the resulting bosonized theory here and compare its predictions to DMRG results. A detailed derivation can be found in Appendix \ref{App:Sec:Bosonization}.
+
+\subsection{Bosonization of Majorana Hamiltonian}
+After performing a canonical transformation to antisymmetric/symmetric combinations of the fields
+\begin{align}
+    \hat \theta_{\pm}(x) &=  \frac{1}{\sqrt{2}} [\hat k_\mathrm{a} \pm  \hat k_\mathrm{b} + \theta_\mathrm{a}(x) \pm \theta_\mathrm{b}(x)], \nonumber \\
+    \phi_{\pm}(x) &=         \frac{1}{\sqrt{2}} [\phi_\mathrm{a}(x) \pm \phi_\mathrm{b}(x)],  \label{Eqn:theta_pm_phi_pm}
+\end{align}
+where the operators $\hat k_\gamma$ are absorbed by the fields $\hat \theta_{\pm}$, the bosonization of \eq{Eqn:Zoller_model} can be expressed as
+
+\begin{align}
+    H_0 &\sim  \frac{v_\mathrm{F}}{2 \pi} \sum_{s = {\pm}} \int_{0}^{\tilde{L}} :\left \{ [\partial_x \hat \theta_s(x)]^2 + [\partial_x \phi_s(x)]^2 \right\} : \mathrm{d} x, \label{Eqn:H_0_bosonized} \\
+    H_W &\sim  \frac{4[\cos(2 k_\mathrm{F} a_0) - 1] W a_0}{(2 \pi \alpha)^2} \int_0^{\tilde{L}} \cos(\sqrt{8} \hat \theta_-) \mathrm{d} x. \label{Eqn:H_W_bosonized}
+\end{align}
+The Fermi velocity $v_\mathrm{F} = 2 t a_0 \sin(k_\mathrm{F} a_0)$ and the Fermi vector $k_\mathrm{F} = \frac{\nu  \pi}{a_0}$ depend on the filling fraction $\nu$.
+
+Since the $+$ and $-$ fields commute, the Hamiltonian $H_0 + H_W$ decouples into a Sine-Gordon model and a free gapless bosonic theory. The free theory in the symmetric sector leads to a closing of the excitation gap $\propto 1 / \tilde{L}$. For sufficiently large values of $W$, spontaneous breaking of the wire parity symmetry $P_\mathrm{a} = (-1)^{N_\mathrm{a}}$ occurs in the antisymmetric sector, pinning the value of $\hat \theta_-$ to one of the two minima of the cosine \cite{Tu_et_al, Fidkowski_et_al, Halperin_Sarma}. The location of these minima depends on the sign of $W$, the two degenerate GS are thus characterized by $\hat \theta_- \approx \pm \pi / \sqrt{8}$ for $W<0$ and $\hat \theta_- \approx 0, \pi / \sqrt{2}$ for $W > 0$. More accurately, one should think of the two \gls{gs} being distinguished by the order parameter $\sin(\sqrt{2} \hat \theta_-)$ for $W < 0$ and $\cos(\sqrt{2} \hat \theta_-)$ for $W > 0$.
+
+The parity operator $P_\mathrm{a}$ anticommutes with $e^{i \hat k_\mathrm{a}}$ and thus roughly speaking shifts $\hat k_\mathrm{a}$ by $\pi$, which corresponds to a shift of $\hat \theta_-$ by $\pi / \sqrt{2}$. Therefore, $P_\mathrm{a}$ exchanges the the two symmetry broken \gls{gs} characterized by $\hat \theta_- \approx \theta_1, \theta_2$, rendering their symmetric and anti-symmetric superposition parity eigenstates \cite{Fidkowski_et_al}:
+\begin{align}
+    \ket{P_\mathrm{a} = \pm 1} = \frac{1}{\sqrt{2}} \left [\ket{\hat \theta_- \approx \theta_1} \pm \ket{\hat \theta_- \approx \theta_2} \right].
+\end{align}
+These states correspond to the Majorana zero modes. Note that the above analysis is valid for \gls{obc}, in the case of \gls{pbc} only one of the two parity eigenstates is compatible with the boundary conditions on the fields $\phi_-$, $\hat \theta_-$ \cite{Fidkowski_et_al}.
+
+\subsection{Bosonization of flux tunneling}
+To investigate how and under which circumstances $H_\phi$ may split the GS degeneracy, we start by expressing it through the chiral fermionic fields in the continuum limit
+\begin{align}
+    H_\phi &\sim  r \int_{0}^{\tilde{L}} \left\{ e^{2 \pi i \phi x/a_0} \left[ \psi_\mathrm{R, a}^\dagger \psi_\mathrm{R, b} + \psi_\mathrm{L, a}^\dagger\psi_\mathrm{L, b} \right .  \right . \nonumber                                                      \\
+                & \quad\left. \left.  +\, e^{-2i k_\mathrm{F} x} \psi_\mathrm{R, a}^\dagger \psi_\mathrm{L, b}+  e^{2 i k_\mathrm{F} x} \psi_\mathrm{L, a}^\dagger \psi_\mathrm{R, b}\right] + \text{H.c.} \right \}\mathrm d x, \label{Eqn:H_phi_continuum}
+\end{align}
+where we have suppressed the $x$-dependence of the fields for brevity. All rapidly oscillating terms can be dropped from the effective low-energy theory \cite{Giamarchi}, therefore we are left with interchain \gls{fs} for $\phi = 0$ and one of the two interchain BS terms in the second line for $\phi = \pm \nu$.
+
+\subsubsection{Regular tunneling at $\phi = 0$}
+The application of \eq{Eqn:Bosonization_identity} yields for the case without flux
+\begin{align}
+    H_{\phi = 0} &\sim  \frac{r(-1)^{N_\mathrm{a}}}{2 \pi \alpha} \int_{0}^{\tilde{L}}  \left[e^{i \frac{\pi}{\tilde{L}} (N_\mathrm{b}  - N_\mathrm{a} + 1) x} e^{i\sqrt{2}  [\hat \theta_-(x) + \phi_-(x)]} \right . \nonumber \\
+                      & \quad+ \left . e^{- i \frac{\pi}{\tilde{L}} (N_\mathrm{b}  -  N_\mathrm{a} + 1) x} e^{i\sqrt{2} [\hat \theta_-(x) - \phi_-(x)]} - \text{H.c.} \right] \mathrm d x. \label{Eqn:H_phi_0_bosonized}
+\end{align}
+We retain the finite-size terms $\propto \frac{1}{\tilde{L}}$ because they will provide insight into the edge physics. As a consequence of
+$\theta_-$ being pinned to a fixed value, the field $\phi_-$ is totally disordered in the bulk of the GS. The GS expectation value of the associated Hamiltonian density $\mathcal H_{\phi = 0}(x)$ is thus zero far away from the ends, therefore it cannot split the degeneracy \cite{Tu_et_al, Halperin_Sarma}. Close to the ends however, OBC enforce $\phi_- = 0$ \cite{Bosonization_OBC} and we may write
+
+\begin{align}
+    \mathcal H_{\phi = 0}(x \approx 0) &= r \frac{2 i}{\pi \alpha} (-1)^{N_\mathrm{a}} \sin[\sqrt{2} \hat \theta_-(x)], \nonumber \quad \\
+    \mathcal H_{\phi = 0}(x \approx \tilde{L}´) &= -r \frac{2 i}{\pi \alpha} (-1)^{N_\mathrm{b}} \sin[\sqrt{2} \hat \theta_-(x)],
+\end{align}
+where the finite size term generates a relative minus sign between the contributions of the two ends if the total particle number $N_\mathrm{tot} = N_\mathrm{a} + N_\mathrm{b}$ is even. In conclusion, single-particle tunneling near the ends can only split the GS degeneracy for $W < 0$, but even then the contributions from both ends will cancel for even $N_\mathrm{tot}$. We give an argument that this cancellation happens on an exact level based on inversion symmetry in Appendix \ref{App:Sec:Bosonization}. Finally, we stress that while $H_{\phi = 0}$ may split the exponential degeneracy between the ground states in some cases, it cannot lift the finite size gap as it does not couple to the symmetric sector of the bosonized theory, cf. \eq{Eqn:H_0_bosonized}.
+
+The subtle effects of the total fermion parity and the sign of $W$ predicted by our constructive bosonization approach can be readily observed in DMRG simulations as we demonstrate in Fig.~\ref{Fig:DMRG_data_bosonization_phi_0} for a system of $L = 24$ sites with parameters $W = -1.8$, $t = 1$, $\mu = 0$, and $\phi = 0$. Fig.~\ref{Fig:DMRG_data_bosonization_phi_0_a} shows the gaps $\Delta_\mathrm{M}$ and $\Delta_\mathrm{B}$ as a function of the interchain hopping amplitude $r$ for even particle number $N_\mathrm{tot} = 16$. Neither the degeneracy of the Majorana modes nor the bulk gap are affected by moderate values of $r$. This is contrasted by the data in Fig.~\ref{Fig:DMRG_data_bosonization_phi_0_b}, where odd total fermion parity at a similar filling fraction $\nu \approx 1/3$ is achieved by taking $N_\mathrm{tot} = 15$ particles. Then, the \gls{gs} degeneracy is immediately split by interchain hopping, but without lifting the finite-size gap to the bulk states. As predicted by the bosonization analysis, we observe no \gls{gs} splitting for either odd or even total parity if $W > 0$ (not shown in Fig.~\ref{Fig:DMRG_data_bosonization_phi_0}). 
+
+\begin{figure}[htp!]	
+{
+        \vbox to 0pt {
+                \raggedright
+                \textcolor{white}{
+                    \subfloatlabel[1][Fig:DMRG_data_bosonization_phi_0_a]
+                    \subfloatlabel[2][Fig:DMRG_data_bosonization_phi_0_b]
+                }
+            }
+    } 
+    \includegraphics{plots/Ramp_r_with_phi_0_pyplot/ramp_r_with_phi_0.pdf}
+\caption{The gaps $\Delta_\mathrm{M} = E_1 - E_0$ and $\Delta_\mathrm{B} = E_2 - E_0$ as a function of $r$ for a system size of $L = 24$ with \gls{obc}. Other parameters are $t = 1$, $W = -1.8$, $\mu = 0$, and $\phi = 0$. (a) Result for $N_\mathrm{tot} = 16$ particles, corresponding to exactly $\nu = 1/3$ and even total parity. (b) Result for $N_\mathrm{tot} = 15$ particles, corresponding to $\nu \approx 1/3$ and odd total parity.}\label{Fig:DMRG_data_bosonization_phi_0}
+\end{figure}
+
+\subsubsection{Tunneling with commensurate flux at $\phi = \nu$}
+At commensurate flux $\phi = \nu$, \eq{Eqn:H_phi_continuum} effectively reduces to interchain \gls{bs}, which bosonizes to
+\begin{align}
+    H_{\phi = \nu} &\sim  \frac{-i r (-1)^{N_\mathrm{a}}}{\pi \alpha}  \int_{0}^{\tilde{L}} \left \{ \cos \left[ \sqrt{2} \hat \theta_-(x) \right] \right . \nonumber                                 \\
+                        & \quad \times  \sin \left [ \frac{\pi}{\tilde{L}} (\Delta N_\mathrm{tot} + 1 - 2 \nu) x + \sqrt{2} \phi_+(x) \right]   \nonumber                                                   \\
+                        & \quad + \sin \left[ \sqrt{2} \hat \theta_-(x) \right]   \nonumber                                                                                                         \\
+                        & \quad \times \left.  \cos \left [ \frac{\pi}{\tilde{L}} (\Delta N_\mathrm{tot} + 1 - 2 \nu) x +  \sqrt{2} \phi_+(x) \right] \right \} \mathrm d x, \label{Eqn:H_phi_nu_bosonized}
+\end{align}
+where $\Delta N_\mathrm{tot} = N_\mathrm{a} + N_\mathrm{b} - 2 \nu L$ is the deviation from filling fraction exactly $\nu$ of the underlying lattice model. Depending on the sign of $W$, either the term in the first or second line will distinguish the two symmetry-broken \gls{gs}, which is why a splitting of the degeneracy is expected in either case. Furthermore, the finite-size terms will generally not conspire to an integer multiple of $\pi$ at $x \approx \tilde{L}$, meaning that there will be no exact cancellation of the contributions to \gls{gs} splitting from the two ends in contrast to the case $\phi = 0$, even though the result is still sensitive to the total fermion parity. To explain the effect of \eq{Eqn:H_phi_nu_bosonized} on the bulk properties of the system, the finite-size terms can be neglected and the $\hat \theta_-$ term can be replaced by a mean-field value due to the large gap in the antisymmetric sector (see appendix \ref{App:Sec:Bosonization} for more details). Then, a Sine-Gordon theory remains in the symmetric sector, which subsequently flows to a massive phase under RG \cite{Giamarchi} and implies the formation of a finite gap in the bulk.
+
+\begin{figure}[htp!]	 
+{
+        \vbox to 0pt {
+                \raggedright
+                \textcolor{white}{
+                    \subfloatlabel[1][Fig:DMRG_data_bosonization_phi_nu_a]
+                    \subfloatlabel[2][Fig:DMRG_data_bosonization_phi_nu_b]
+                }
+            }
+    } 
+    \includegraphics{plots/Ramp_r_with_phi_nu_pyplot/ramp_r_with_phi_nu.pdf}
+\caption{The gaps $\Delta_\mathrm{M} = E_1 - E_0$ and $\Delta_\mathrm{B} = E_2 - E_0$ as a function of $r$ for a system size of $L = 24$ with \gls{obc}. Other parameters are $t = 1$, $W = -1.8$, $\mu = 0$, and $\phi = 1/3$. (a) Result for $N_\mathrm{tot} = 16$ particles, corresponding to exactly $\nu = 1/3$ and even total parity. (b) Result for $N_\mathrm{tot} = 15$ particles, corresponding to $\nu \approx 1/3$ and odd total parity.}\label{Fig:DMRG_data_bosonization_phi_nu}
+\end{figure}
+
+Again, we compare the field-theoretical prediction with \gls{dmrg} data in Fig.~\ref{Fig:DMRG_data_bosonization_phi_nu} for a system of size  $L = 24$ with \gls{obc} and $t = 1$, $W = -1.8$, $\mu = 0$, and $\phi = \nu = 1/3$. Fig.~\ref{Fig:DMRG_data_bosonization_phi_nu_a} shows the gaps $\Delta_\mathrm{M}$ and $\Delta_\mathrm{B}$ as a function of $r$ for the even parity case $N_\mathrm{tot} = 16$ and $\Delta N_\mathrm{tot} = 0$, clearly indicating the splitting of the \gls{gs} degeneracy and the formation of a bulk gap. Comparing this to the case of odd parity at similar filling fraction $N_\mathrm{tot} = 15$, $\Delta N_\mathrm{tot} = 1$, and $\nu \approx 1/3$ in Fig.~\ref{Fig:DMRG_data_bosonization_phi_nu_b}  shows a similar behavior of the bulk gap but a smaller \gls{gs} splitting. These numerical results precisely reflect \eq{Eqn:H_phi_nu_bosonized}: the bulk gap should not depend on slowly varying finite-size terms, the \gls{gs} splitting however is expected to be carried by the two ends of the chain \cite{Tu_et_al, Halperin_Sarma} and is thus sensitive to the relative sign between their respective contributions. For negative $W$, only the second term of \eq{Eqn:H_phi_nu_bosonized} contributes to the splitting; after taking into account the boundary conditions on the field in the symmeric sector $\phi_+(0) = \phi_+(\tilde{L}) = 0$, we find that the right end is weighted by  a factor $\cos[\pi(\Delta N_\mathrm{tot} + 1/3)]$ relative to the left end, amounting to an amplification or cancellation for $\Delta N_\mathrm{tot}$ even and odd, respectively. 
+
+We close this section by emphasizing that while $H_\phi$ breaks the protecting $\mathbb{Z}_2$ symmetry for any value of $\phi$, the simple case of $H_{\phi = 0}$ only splits the topological \gls{gs} degeneracy under certain circumstances and never takes the system away from the critical point. Thus, tunneling with commensurate flux $H_{\phi = \nu}$ provides the necessary ``mass'' term for the efficient preparation of the critical state \cite{crit_state_prep_1, crit_state_prep_2, crit_state_prep_3, Review_QPT_Dziarmaga, crit_state_prep_4}. 
+To further exemplify this fundamental difference between the cases of $\phi = 0$ and $\phi = \nu$, we calculate the superconducting correlator $c_{\mathrm{a}, 1} c_{\mathrm{a}, 2} c_{\mathrm{a}, j}^\dagger c_{\mathrm{a}, j+1}^\dagger$ for both in Fig.~\ref{Fig:cooper_correlator_a}. There, we set $r = 0.05$ and choose a system size of $L = 96$ at filling exactly $\nu = 1/3$. At zero flux, the algebraic \gls{sc} order clearly persists, hallmarking the criticality of the state. By contrast, the commensurate flux $\phi = \nu$ leads to the expected breakdown of criticality, resulting in an exponential decay of the \gls{sc} correlator. This is complemented by data on the associated Schmidt spectrum arising from a spatial bipartition plotted as a function of $r$ in Fig.~\ref{Fig:cooper_correlator_b}. Here, we resort to \gls{pbc} to avoid complications resulting from \gls{gs} degeneracy. The two-fold degeneracy expected from a $\mathbb Z_2$ protected topological phase in \gls{1d} \cite{1d_topological_phases_1, 1d_topological_phases_2, 1d_topological_phases_3} is clearly split for $\phi = \nu$ while it remains intact at $\phi = 0$, even though both cases break the protecting symmetry. This behavior is consistent with our analysis of the \gls{gs} degeneracy splitting for the case of even parity presented earlier, since the \gls{gs} degeneracy for \gls{obc} is closely related to the degeneracy of the entanglement spectrum across a spatial cut.
+
+\begin{figure}[htp!]	 
+{
+        \vbox to 0pt {
+                \raggedright
+                \textcolor{white}{
+                    \subfloatlabel[1][Fig:cooper_correlator_a]
+                    \subfloatlabel[2][Fig:cooper_correlator_b]
+                }
+            }
+    } 
+    {\includegraphics[trim={0.75cm 0cm 0.75cm 0.cm}, width=0.85\linewidth]{plots/cooper_pair_correlator/fig_cooper_pair_correlator.pdf}}
+    \caption{In (a), the Cooper pair correlator  $c_{\mathrm{a}, 1} c_{\mathrm{a}, 2} c_{\mathrm{a}, j}^\dagger c_{\mathrm{a}, j+1}^\dagger$ on the a-wire with and without flux $\phi$ close to the end of the protocol for $r=0.1$ and a system size of $L = 96$ with \gls{obc} and $N_\mathrm{tot} = 64$ particles corresponding to $\nu = 1/3$ is shown. Other parameters are $t = 1$, $W = -1.8$, and $\mu = 0$. While the correlation function decays algebraically without flux, this order is destroyed with flux. This is complemented by the Schmidt spectrum for a state with \gls{pbc} in (b) indicating a breaking of the topological phase as the Schmidt weights split.}\label{Fig:cooper_correlator}
+\end{figure}

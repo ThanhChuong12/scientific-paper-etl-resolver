@@ -1,0 +1,323 @@
+
+% \section{Using LLMs for Election Result Prediction}
+% \section{Constructing a Multi-Step LLM Pipeline for Election Predictions: Validation on 2020 Data}
+
+\section{Accurate Simulation of Human Voting Behavior via a Multi-Step LLM Pipeline (RQ1, 2)}
+\label{sec:pipeline}
+\vspace{-0.1in}
+% How can we effectively leverage LLMs to predict election results?
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figs/IntroP.pdf}  
+        \vspace{-0.25in}
+\caption{
+Progressive design of LLM pipelines for voter simulation. 
+\textbf{V1: Demographic-Only Prompting} (\S \ref{subsec:v1}) uses static personas but lacks temporal context.
+\textbf{V2: Time-Based Prompting} (\S \ref{subsec:v2}) adds election-year data
+\textbf{V3: Multi-Step Reasoning} (\S \ref{subsec:v3}) structures decision-making into steps, improving reasoning and alignment.
+}
+
+\vspace{-0.25in}
+    \label{fig:example}
+\end{figure*}
+How can we use LLMs to simulate human voting behavior in political science? In this work, we simulate \textit{each voter's decision-making process} by providing LLMs with detailed voter information and asking them to predict voter preferences.
+
+To achieve this, we focus on two key components: (1) building a robust evaluation framework using datasets that contain voter-level information, and (2) designing a theory-driven \cite{bafumi2009new, pew2014polarization} LLM-based pipeline for accurate election simulation.
+
+In \S\ref{subsec:data_verification}, we present the datasets and evaluation methods.  
+Next, we outline our design approach in \S\ref{subsec:overview}, introducing three progressive pipelines, incorporating demographics, political context, and ideological inference at each step.
+Finally, we evaluate these pipelines by comparing their predictions with real-world outcomes in \S\ref{subsec:evaluation_results}.
+
+    \vspace{-0.1in}
+% To achieve this,
+% we focus on two key aspects: (1) establishing an evaluation framework with appropriate datasets that contain voter-level information, and (2) designing an theory driven\cite{bafumi2009new, pew2014polarization} LLM-based pipeline for accurate election predictions.
+% % In \S \ref{subsec:data_verification}, we introduce the datasets 
+% % % used in this study 
+% % and describe the primary evaluation process. 
+% In \S \ref{subsec:data_verification}, we describe the datasets and the evaluation methods. 
+% We then provide an overview of our design approach in \S \ref{subsec:overview} with three progressive pipelines.
+% % , with a discussion of three progressive pipelines in \S \ref{subsec:v1}, \S \ref{subsec:v2}, and \S \ref{subsec:v3}, ranging from simple prompting to multi-step reasoning based on observations.
+% Finally, we evaluate the performance of the pipelines on datasets in \S \ref{subsec:evaluation_results}.
+
+
+\subsection{Datasets, Evaluation, and Settings}
+\label{subsec:data_verification}
+    \vspace{-0.1in}
+\np{Datasets}
+This study leverages two primary data sources: 
+(1) Public Benchmarks: The American National Election Studies (ANES) 2016 and 2020 Time Series data \cite{ANES2016, ANES2020}, which provide detailed demographic, ideology, and party affiliation information from real respondents. This dataset serves as a benchmark to evaluate how well LLMs simulate voter-level behavior in alignment with real-world patterns.
+(2) Large-Scale State-level Synthetic Voter Persona Dataset: A dataset of over 330,000 synthetic personas, generated using advanced ML techniques based on aggregated population census data and commercial datasets \cite{li2020sync}. Personas are randomly sampled for each state at specified ratios, and their predicted voting outcomes are compared to actual U.S. election results from 2020 \cite{federal2020elections} and 2024 \cite{nbc2024election}.
+Both datasets contain non-personally identifiable voter-level information\footnote{This project has been reviewed by the IRB and exempt, as the datasets do not include personally identifiable info.}. Detailed partitioning and sampling methodologies are provided in Appx. \ref{appx:datasets}.
+
+\vspace{0.1in}
+\np{Evaluation Method}
+To evaluate performance on public benchmarks and state-level simulations, we assess how closely LLM simulations align with actual voting results. The calculation follows the approach outlined in \cite{Argyle_Busby_Fulda_Gubler_Rytting_Wingate_2023}:
+
+\paragraph{Predicted Voting Ratio $P(s)$}
+\begin{small}
+\begin{equation}
+P(s) = \frac{\textit{Republican Votes}}{\textit{Republican Votes} + \textit{Democratic Votes}}
+\label{eq:prob}
+\end{equation}
+\end{small}
+
+Here, $s$ represents the unit of analysis, which can refer to cross-regional samples (e.g., public benchmarks like ANES) or an entire state (e.g., state-level simulations). The ratio $P(s)$ measures the number of votes predicted for the Republican Party relative to the total votes for the two major parties, excluding those who express no preference.
+    \vspace{-0.2in}
+
+% \np{Hardware and LLM Settings}
+
+% Our experiments were conducted on a GPU server with an AMD EPYC Milan 7763 processor with  
+% % 1 TB (64x16 GB) DDR4 memory, 15 TB SSD storage, and 
+% 6 NVIDIA RTX A6000 Ada GPUs. 
+% For the LLM, we use OpenAI’s GPT-4o model for election predictions. Meta’s LLaMA 3.1 (405B) model is employed in intermediate steps to provide neutral summarizations of time-dependent information, enhancing certain pipelines 
+% for capturing temporal dynamics\cite{feng2023pretrainingdatalanguagemodels}.
+
+\vspace{0.1in}
+\np{LLMs and Hardware Settings}
+Our experiments utilized OpenAI's GPT-4o and Meta's LLaMA 3.1-70B model for the primary simulations. Meta’s LLaMA 3.1 (405B) model was employed in intermediate steps to provide neutral summarizations of time-dependent information \cite{feng2023pretraining}. Furthermore, we tested Qwen-72B and DeepSeek-V3 to measure systematic differences between models.
+For the hardware setup, we employed six NVIDIA RTX A6000 Ada GPUs and an 8-way NVIDIA A100 GPU cluster, with AMD Milan processors to execute tasks across different models.
+
+\subsection{Our Progressive Design of LLM Pipelines}
+\label{subsec:overview}
+
+In this section, we present our progressive design for generating voter-level behavior simulation using LLMs.
+As shown in Fig.~\ref{fig:example}, we develop three versions of the pipeline. Each version addresses a key shortcoming of its predecessor and integrates more detailed information and reasoning processes.
+
+\begin{enumerate}[label=\textbf{V\arabic*:}, leftmargin=*]
+    \item \textbf{Demographic-Only Prompting (\S \ref{subsec:v1}):}  
+    This baseline approach uses static demographic personas for voter-level simulations. While straightforward, it does not account for shifts in presidential candidates' policy priorities over time.
+    \vspace{-0.1in}
+    
+    \item \textbf{Single-Step Prompting with Time-Sensitive Information (\S \ref{subsec:v2}):}  
+    Here, we add election-year-specific details, like policy agendas and candidate backgrounds. However, packing all information into a single prompt may overwhelm the model, limiting reasoning depth.
+    \vspace{-0.25in}
+
+    \item \textbf{Multi-Step Reasoning with Ideology Inference (\S \ref{subsec:v3}):}  
+    This version structures the simulation into sequential steps, allowing the model to better integrate demographics, political ideology, and political context for more accurate real-world predictions.
+    \vspace{-0.05in}
+\end{enumerate}
+
+
+\subsubsection{V1: Demographic-Only Prompting}
+\label{subsec:v1}
+
+This initial version prompts the LLM with a persona's demographics (e.g., age, gender, income) to simulate voting behavior \cite{Argyle_Busby_Fulda_Gubler_Rytting_Wingate_2023}.
+To prevent confusion, we specify the year as 2020, ensuring alignment with the LLM's training data, which extends through 2023. The listed voting options follow Pew Research Center's 2014 Political Polarization and Typology Survey \cite{pew2014polarization}.
+
+\begin{promptbox}
+\noindent \textbf{Task:} You are persona [age, gender, ethnicity, marital status, household size, presence of children, education level, occupation, individual income, family income, and place of residence.] The current year is [year].\\
+\vspace{-0.05in}
+\noindent Please answer the following question as if you were the resident:
+\vspace{-0.05in}
+\begin{enumerate}[leftmargin=*, itemsep=0pt]
+    \item As of today, will you vote for the Democratic Party (Joe Biden), the Republican Party (Donald Trump), or do you have no preference?\\
+    \textbf{Options}: Democratic, Republican, No Preference
+\end{enumerate}
+\end{promptbox}
+
+\noindent
+\textbf{Limitations:}  
+This version lacks adaptability to different election cycles. Without accounting for shifts in candidate agendas or public opinion, its predictions remain static, limiting relevance in changing electoral contexts.
+
+
+\subsubsection{V2: Single-Step Prompting with Time-Sensitive Information}
+\label{subsec:v2}
+
+Accurately modeling elections requires accounting for macro-level factors and time-specific variations \cite{10.1371/journal.pone.0270194}. 
+To improve realism, we extend our pipeline by incorporating election-year data from Ballotpedia\footnote{\url{https://ballotpedia.org/Main_Page}}, a widely used platform that provides campaign agendas, key policy positions, and candidate biographies. 
+Given the documented political biases in LLMs \cite{feng2023pretraining}, ensuring that this time-based information is conveyed neutrally is crucial. We compared GPT-4o and LLaMA3-405B for summarizing these details and found that LLaMA3-405B produced more balanced outputs. These refined summaries were then integrated into the prompts.
+
+
+\begin{promptbox}
+\textbf{Task:}  
+You are persona [demographics]. The current year is [year]. [Two parties' policy agenda]. [Presidential candidates' biographical and professional backgrounds].\\
+
+\vspace{-0.05in}
+Please answer the following question as if you were the resident:
+
+\vspace{-0.05in}
+\begin{enumerate}[leftmargin=*, itemsep=0pt]
+    \item As of today, will you vote for the Democratic Party (Joe Biden), the Republican Party (Donald Trump), or do you have no preference? \\
+    \textbf{Options}: Democratic, Republican, No Preference
+\end{enumerate}
+\end{promptbox}
+
+\noindent
+\textbf{Limitations:} 
+While incorporating time-dependent context makes predictions more dynamic, it does not eliminate inherent political biases \cite{feng2023pretraining}, which can still distort simulations of human behavior (see \S \ref{subsec:evaluation_results}).
+
+%it introduced a skew towards Democratic candidates in both ``deep red” states and key swing states. For example, predictions across five historically Republican states (e.g., Alabama, South Carolina) and multiple swing states (e.g., Texas, Florida) leaned more Democratic than expected.
+%\yz{If needed, further quantitative results can be deferred to an appendix.} 
+% This pattern aligns with earlier observations that GPT-4o leans liberal \cite{feng2023pretrainingdatalanguagemodels}. 
+% Interestingly, when tested on the ANES 2020 dataset \cite{ANES2020}, which includes ideological self-placement, the skew was less pronounced. Additional analysis showed that removing ideological self-placement shifted outcomes significantly, suggesting that such ideological cues help correct biases introduced by purely demographic or time-based prompts.
+
+
+
+\subsubsection{V3: Multi-Step Reasoning with Ideology Inference}
+\label{subsec:v3}
+
+Domain theory-driven design has been demonstrated to significantly improve the performance of LLMs in modeling the human decision-making process \cite{chuang2024simulating, xie2024largelanguagemodelagents}. Over the past few decades, political ideology has become increasingly aligned with party affiliation and partisanship \cite{bafumi2009new}, as well as with policy preferences and voting behavior in the United States \cite{pew2014polarization, levendusky2009partisan, abramowitz2008polarization} and in global political contexts \cite{bornschier2021us}.
+
+Building on these insights, we introduce a multi-step prompting pipeline inspired by Chain of Thought prompting \cite{wei2022chain}. This approach decomposes the prediction process into structured steps, enhancing reasoning and improving accuracy. The method consists of two key stages: 
+(\textbf{1}) \textit{Political Ideology Inference:} The model receives a persona along with current party policy positions and determines where the persona falls on the conservative-liberal spectrum.
+(\textbf{2}) \textit{Extended Persona and Voting Simulation:} The inferred ideology is integrated into the persona, combined with time-based contextual information, and used to simulate voting behavior.
+
+\begin{promptbox}
+\textbf{Step 1:}  
+You are a persona with [demographics]. The current year is [year]. [Two parties' policy agenda].  
+
+When it comes to politics, would you describe yourself as:
+
+\begin{center}
+\begin{tabularx}{\linewidth}{X X}
+    No answer & Very liberal\\
+    Somewhat liberal & Closer to liberal\\
+    Moderate& Closer to conservative\\ 
+    Somewhat conservative & Very conservative\\
+\end{tabularx}
+\end{center}
+
+\textbf{Step 2:}  
+You are a persona with [demographics]. Your [conservative-liberal spectrum]. The current year is [year]. [Two parties' policy agenda]. [Presidential candidates' biographical and professional backgrounds]. \\ 
+
+\vspace{-0.05in}
+Please answer the following question as if you were the resident:
+\vspace{-0.05in}
+\begin{enumerate}[leftmargin=*]
+    \item As of today, will you vote for the Democratic Party (Joe Biden), the Republican Party (Donald Trump), or do you have no preference?\\
+        \textbf{Options}: Democratic, Republican, No Preference
+\end{enumerate}
+\end{promptbox}
+
+Our theory-driven multi-step pipeline significantly improves the LLM's ability to model real voting behavior in both public benchmark validation and state-level simulations. Therefore, we adopt V3 as our \textbf{final pipeline} for voter behavior simulation. By structuring reasoning into multiple steps, this approach helps mitigate bias and better captures voter dynamics across diverse states. In the following section, we will provide a detailed discussion of our simulation results.
+
+% The application of this theory-driven multi-step pipeline significantly improves the LLM's ability to fit real human voting behavior in both public benchmarks and state-level simulations. Given these accuracy gains and the enhanced alignment with real-world data, we adopt Version 3 as our \textbf{final pipeline} for voter behavior simulation. By structuring the reasoning process into multiple steps, this approach effectively mitigates bias and captures the complex dynamics of voter behavior across diverse state contexts.
+% In the following section \ref{subsec:evaluation_results}, we will provide a detailed discussion of these results.
+
+% Applying the multi-step method at the state level for the 2020 election, we evaluated its performance across a range of scenarios, including ``deep red'' states (e.g., Alabama), ``deep blue'' states (e.g., California), and 11 swing and tipping-point states (details in Appendix \ref{appx:validation}). This method demonstrated significantly improved accuracy, with predicted vote distributions closely aligning with actual results across almost all Chosen states.
+
+% Given these accuracy gains and enhanced alignment with real-world data, we adopt Version 3 as our \textbf{final pipeline} for election prediction. By structuring the reasoning process into multiple steps, this approach effectively mitigates skewness and captures the complex dynamics of voter behavior across diverse state contexts.
+% \ref{subsec:evaluation_results}
+
+
+
+\subsection{Empirical Validation and Cross-Model Evaluation of the Proposed Pipelines}
+
+\label{subsec:evaluation_results}
+
+% \subsubsection{Public ANES Benchmark Evaluation}  
+% We first evaluated the pipelines using the ANES 2016 and 2020 Time Series datasets \cite{ANES2016,ANES2020} to assess their overall performance and to verify V3’s ability to generate the Conservative-Liberal Spectrum feature. 
+% % For V1 (Demographic-only Prompting) and V2 (Single-step Prompting with Time-based Information), we excluded the ideological spectrum, relying solely on demographic data. In contrast, V3 employs multi-step reasoning, inspired by Chain of Thought prompting \cite{wei2022chain}, to incorporate ideological alignment alongside demographics and time-sensitive factors. 
+% % While the 2020 dataset lacked certain demographic variables—requiring restoration of the spectrum—the 2016 dataset allowed a direct comparison between LLM-generated (\textit{3rd Pipeline\_G}) and restored (\textit{3rd Pipeline\_featureBack}) spectra.
+
+
+\subsubsection{Public ANES Benchmark Evaluation}  
+
+We first validate our proposed framework using GPT-4o on ANES 2016 and 2020 Time Series datasets \cite{ANES2016, ANES2020}, which include demographic information, political ideology, and actual voting records from human respondents. Testing our models on these public benchmarks allows for a direct comparison between LLM-generated predictions and real-world human voting behavior.
+
+As shown in Fig.~\ref{fig:validation-anes}, we assess our three pipeline versions on ANES. \textbf{V1 (\S\ref{subsec:v1}): Demographic-Only Prompting} directly simulates voting behavior using real demographic personas from the ANES dataset. \textbf{V2 (\S\ref{subsec:v2}): Time-Based Prompting} enhances these personas by incorporating election-year-specific details (2016 and 2020). \textbf{V3 (\S\ref{subsec:v3}): Multi-Step Reasoning} introduces an additional step to infer ideological alignment, evaluated through two methods: one using real political ideology from ANES (\textit{3rd Pipeline\_Real\_Ideology}) and another relying on LLM-generated ideology (\textit{3rd Pipeline\_Generated\_Ideology}).
+
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\linewidth]{figs/pipelines_benchmark-cropped.pdf} 
+    \caption{
+    Comparison of the Three Pipelines on ANES 2016 and 2020. The y-axis represents the predicted voting ratio (Eq.~\ref{eq:prob}). The red baseline indicates the ground truth voting ratios from the ANES dataset.}
+    \label{fig:validation-anes}  
+    \vspace{-0.2in}
+\end{figure}
+
+
+Directly prompting an LLM with persona data alone fails to accurately simulate real human voting behavior. Both the vanilla pipeline (V1) and time-based pipeline (V2) show significant distortions from the baseline, particularly favoring the Republican Party in 2016, with predicted vote shares of 63.25\% (V1) and 66.38\% (V2)---substantially higher than the actual proportion. Conversely, in 2020, both pipelines underestimated Democratic support, predicting 30.14\% (V1) and 10.02\% (V2), far below the baseline.
+
+Introducing political ideology inference (V3) significantly improves alignment with real voting patterns. For instance, V3 predicts 46.84\% Republican support in 2016 (actual: 47.7\%) and 46.79\% in 2020 (actual: 41.2\%), demonstrating enhanced accuracy. Notably, in 2016, LLM-generated ideology in V3 slightly outperforms the original ANES ideology, suggesting LLMs can generate meaningful ideological features.\footnote{Due to missing demographic variables in the 2020 ANES dataset, we conducted ideology generation only on 2016.} These findings provide strong evidence that our multi-step pipeline effectively simulates human decision-making using real-world persona data.
+
+
+% \subsubsection{2020 State-Level Evaluation}
+% State-level simulations using synthetic data were conducted to compare the model predictions against the official 2020 election outcomes reported by the Federal Election Commission (FEC). 
+% We selected five red states, five blue states, and 11 swing or tipping-point states. The V1 pipeline (Demographic-only Prompt) displayed a consistent bias toward the Democratic Party, even in historically Republican states such as South Carolina (SC) and Ohio (OH), underscoring the limitations of relying solely on demographic features. Introducing time-dependent, election-year-specific information in V2 (Time-dependent Prompt) reduced this bias, but the predictions still skewed Democratic.
+
+% In contrast, the V3 pipeline (Multi-step Reasoning) demonstrated the highest accuracy and effectively mitigated bias, closely aligning its predictions with real outcomes. 
+% It correctly forecasted the results in 9 out of 11 swing states, with only minor misestimations in North Carolina (NC) and Arizona (AZ), and accurately captured voter behavior in deeply red and blue states. These findings highlight V3’s capability to model complex voter dynamics and closely track actual election trends. Detailed results are provided in Appx. \ref{appx:validation}.
+
+\subsubsection{2020 U.S. Election Simulation: State-Level Evaluation}
+
+Building on the successful validation of our proposed framework on the ANES dataset, we scale up the simulation with synthetic persona data designed to reflect the U.S. population distribution. Specifically, we use GPT-4o to simulate the 2020 U.S. presidential election, selecting five traditionally Republican states, five traditionally Democratic states, and 11 competitive (swing or tipping-point) states for state-level simulations. We then compare the predicted outcomes with official results from the Federal Election Commission (FEC).
+
+To effectively measure simulation accuracy, we introduced two metrics: \textbf{Weighted Absolute Error (WAE)} (Eq. \ref{WAE}) and \textbf{Weighted Mean Squared Error (WMSE)} (Eq. \ref{WMSE}). WAE measures overall alignment between simulated and actual outcomes, while WMSE assigns greater penalties to larger deviations due to its squared formulation. Together, these metrics provide a comprehensive and robust evaluation of aggregate simulation accuracy.
+
+\begin{table}[t]
+\centering
+\normalsize
+\scalebox{0.7}{
+\begin{tabular}{lccc}
+        \toprule
+        \multicolumn{4}{c}{\textbf{GPT-4o Simulation of 2020 U.S. Election}} \\ 
+        \midrule
+        \textbf{Metric} & \textbf{V1 (\%)} & \textbf{V2 (\%)} & \textbf{V3 (\%)} \\
+        \midrule
+        WAE  & 22.78  & 14.97  & \textbf{5.24}  \\
+        WMSE  & 5.46  & 2.34  & \textbf{0.37}  \\
+        Bias Metric (BM)  & -22.78  & -14.97  & \textbf{0.34}  \\
+        \bottomrule
+    \end{tabular}
+    }
+% \caption{Evaluation results across three pipelines for the selected states 2020}
+\caption{
+Comparison of simulation accuracy metrics across three pipelines for 2020 U.S. election (GPT-4o).
+% Lower Weighted Absolute Error (WAE) and Weighted Mean Squared Error (WMSE) indicate more accurate predictions. The Bias Metric (BM) measures directional bias (positive: Republican bias; negative: Democratic bias). 
+% V3 achieves the lowest errors and minimal bias, showing substantial improvement over the simpler approaches.
+}
+\vspace{-0.2in}
+\label{tab:evaluation_results_2020}
+\end{table}
+
+As shown in Table~\ref{tab:evaluation_results_2020}, and consistent with the public benchmark evaluation, V1 and V2 exhibited significant distortions from actual outcomes due to higher WAE and WMSE values. In contrast, V3 demonstrated substantially greater accuracy, achieving 5.24\% WAE and 0.37\% WMSE, indicating a closer alignment with real voting behavior. At the state level, V3 correctly predicted outcomes in all traditionally Republican and Democratic states and 9 of 11 swing states, with only minor deviations in North Carolina (NC) and Arizona (AZ). A detailed breakdown of state-level results is provided in Appx.~\ref{appx:validation}. These findings underscore V3's ability to model complex voter dynamics and closely reflect real-world electoral trends.
+
+
+\subsubsection{2024 U.S. Election Simulation: State-Level Cross-Model Evaluation}\vspace{-1mm}
+
+Evaluating only the 2020 U.S. election simulation results risks conflating an LLM’s ability to simulate voter behavior with its memorization of well-documented election outcomes \cite{wang2024generalizationvsmemorizationtracing}. Since the 2020 election is widely covered in most LLMs' pretraining corpora, results may reflect recall rather than true generalization. To rigorously assess LLMs' ability to generalize to unseen data---and to evaluate the robustness of our multi-step pipeline across models---we conducted extensive simulations for the 2024 U.S. election using LLMs trained on corpora predating 2024.
+
+Our primary simulation used GPT-4o with the multi-step reasoning pipeline (V3) to predict voting outcomes across all 50 U.S. states. To enable cross-model comparisons while optimizing computational resources, we further evaluated multiple models on the 11 swing and tipping-point states analyzed in the 2020 simulation. This evaluation included three GPT-4o pipelines (V1, V2, V3), three LLaMA 3.1 70B pipelines (V1, V2, V3), and the V3 pipelines for Qwen 72B and DeepSeek-V3. Additionally, we compared these results with an existing LLM-based election prediction study \cite{zhang2024electionsimmassivepopulationelection}. The overall cross-model results are summarized in Table~\ref{tab:evaluation_results_2024}.
+
+\begin{table*}[!ht]
+    \centering
+    \small
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lccccccccc}
+        \toprule
+        \multicolumn{10}{c}{\textbf{Multi-LLM Simulation of 2024 U.S. Election}} \\ 
+        \midrule
+        \textbf{Metric} & \textbf{GPT-4o V1} & \textbf{GPT-4o V2} & \textbf{GPT-4o V3} & \textbf{LLaMA3-70B V1} & \textbf{LLaMA3-70B V2} & \textbf{LLaMA3-70B V3} & \textbf{Qwen-72B V3} & \textbf{DeepSeek-V3 V3} & \textbf{Zhang et al., 2024} \\ 
+        \midrule
+        WAE  & 21.35 & 25.96 & \textbf{3.49}  & 19.97 & 10.23 & \textbf{6.88}  & 10.66 & 14.57 & 4.70  \\ 
+        WMSE & 4.83  & 6.89  & \textbf{0.22}  & 4.15  & 1.42  & \textbf{0.68}  & 1.47  & 2.43  & 0.30  \\ 
+        BM   & -21.35 & -25.96 & -2.95 & -19.97 & -10.23 & -5.44 & -9.47 & -14.57 & 1.26 \\ 
+        \bottomrule
+    \end{tabular}
+    }
+    \vspace{-0.1in}
+    \caption{Evaluation metrics for the 2024 U.S. election simulations across different LLMs and pipelines.}
+    \vspace{-0.2in}
+    \label{tab:evaluation_results_2024}
+\end{table*}
+
+
+Consistent with the 2020 election simulation, our theory-driven multi-step pipeline (V3) outperformed V1 and V2 within the same LLM, enabling more accurate simulations of human voting behavior. Notably, GPT-4o achieved the lowest errors with 3.49\% WAE and 0.22\% WMSE, while LLaMA 3.1-70B followed with 6.88\% WAE and 0.68\% WMSE. These results confirm that our multi-step approach enhances LLMs' ability to produce human-like voting simulations compared to single-prompt methods. To examine systematic differences across models, we further tested V3 on Qwen-72B and DeepSeek-V3. The cross-model evaluation showed that GPT-4o's simulation aligned most closely with real human voting behavior, demonstrating its superior ability to capture voter dynamics. A detailed breakdown of state-level simulation results for 2024 election is provided in Appx. \ref{appx:2024results}.
+    \vspace{-0.1in}
+
+
+% V3 performed robustly in 2024,
+% % , projecting a narrow Harris victory over Trump (270 to 268). It 
+% which accurately predicted outcomes in all traditional red and blue states (with the exception of Alaska) and successfully forecasted Trump’s wins in Arizona (AZ), Wisconsin (WI), Florida (FL), and Texas (TX), as well as Harris’s victories in New Hampshire (NH) and Minnesota (MN). 
+% Although V3 slightly mispredicted several swing states, these errors were significantly smaller than the pronounced Democratic bias exhibited by V1 and V2.
+
+% Overall, these evaluations confirm V3’s strong ability to simulate voter behavior, reduce political bias, and improve alignment with real-world election patterns. 
+
+
+
+
+
+

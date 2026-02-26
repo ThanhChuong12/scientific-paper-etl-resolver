@@ -1,0 +1,55 @@
+\section{PRELIMINARIES}
+% framework
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figure/framework.pdf}
+\vspace{-0.3cm}
+\caption{The overview architecture of UniMob, which consists of four modules: (1) Multi-view Mobility Tokenizer, (2) Bidirectional Individual-Collective Alignment, (3) Joint Noise Predictor, (3) Mobility Predictor.} \label{fig:framework}
+%\vspace{-0.3cm}
+\end{figure*} 
+
+\subsection{Problem Definition}
+Human mobility data can be divided into two types: individual and collective. Trajectories can describe individual mobility, while flow data can characterize collective mobility.
+
+\para{Definition 1: (Individual Trajectory).} An individual trajectory can be defined as $X^{traj}=\{(l_1, t_1),(l_2, t_2),...,(l_n, t_n)\}$, where each location $l_i$ is represented as the form in latitude and longitude coordinates or a region ID.
+
+\para{Definition 2: (Crowd Flow).} Crowd flow includes inflow and outflow, defined as the number of people entering or leaving a region within a given time interval. The crowd flow for a region $l$ can be represented as $X^{flow}_l \in \mathbb{R}^{N \times T}$, where $T$ is the number of
+time intervals, and $N$ is the dimension of the flow, such as $N = 2$ for inflow and outflow. The entire city's flow can be represented as $Y \in \mathbb{R}^{N \times T \times L}$, where $L$ is the number of regions.
+
+\para{Problem Statement: (Mobility Prediction).} Given $p$ historical records of mobility data (which can be trajectory $X^{traj}_{[t-p:t]}$ or flow $X^{flow}_{[t-p:t]}$), our goal is to predict the future $k$ steps $X^{traj}_{[t:t+k]}$ or $X^{flow}_{[t:t+k]}$.
+
+
+\subsection{Denoising Diffusion Probabilistic Model}
+Diffusion models use latent variable models, denoted as $p_\theta(x_0) :=\int p_\theta(x_{0:T}) dx_{1:T}$. The latent variables $x_1, ..., x_T$ have the same dimension as the data $x_0 \sim q(x_0)$. The model uses two Markov chains: a forward chain that perturbs data into noise and a reverse chain that converts noise back into data.
+The forward diffusion process:
+\begin{equation}\label{equ:DDPM1}
+q\left(\mathbf{x}_{1: T} \mid \mathbf{x}_{0}\right):=\prod_{t=1}^{T} q\left(\mathbf{x}_{t} \mid \mathbf{x}_{t-1}\right),
+\end{equation}
+where $q\left(\mathbf{x}_{t} \mid \mathbf{x}_{t-1}\right):=\mathcal{N}\left(\sqrt{1-\beta_{t}} \mathbf{x}_{t-1}, \beta_{t} \mathbf{I}\right)$. Equivalently, $x_t$ can be expressed as $x_{t}=\sqrt{\alpha_{t}} x_{0}+\left(1-\alpha_{t}\right) \epsilon$ for $\epsilon \sim \mathcal{N}(0, \mathbf{I})$, with $\alpha_{t}=\sum_{i=1}^{t}\left(1-\beta_{i}\right)$.
+
+The reverse process denoises $x_t$ to retrieve $x_0$, where $\mathbf{x}_{T} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$. Assuming $p_\theta(x_{t-1}|x_t)$ follows a normal distribution:
+\begin{equation}\label{equ:DDPM2}
+\left\{
+\begin{array}{l}
+p_{\theta}\left(\mathbf{x}_{0: T}\right) := p\left(\mathbf{x}_{T}\right) \prod_{t=1}^{T} p_{\theta}\left(\mathbf{x}_{t-1} \mid \mathbf{x}_{t}\right), \\
+p_{\theta}\left(\mathbf{x}_{t-1} \mid \mathbf{x}_{t}\right) := \mathcal{N}\left(\mathbf{x}_{t-1}; \boldsymbol{\mu}_{\theta}\left(\mathbf{x}_{t}, t\right), \sigma_{\theta}\left(\mathbf{x}_{t}, t\right) \mathbf{I}\right)
+\end{array}
+\right.
+\end{equation}
+
+Ho et al.~\cite{ho2020denoising} introduced denoising diffusion probabilistic models:
+\begin{equation}\label{equ:DDPM4}
+\begin{cases}
+\boldsymbol{\mu}_{\theta}\left(\mathbf{x}_{t}, t\right)=\frac{1}{\alpha_{t}}\left(\mathbf{x}_{t}-\frac{\beta_{t}}{\sqrt{1-\alpha_{t}}} \boldsymbol{\epsilon}_{\theta}\left(\mathbf{x}_{t}, t\right)\right),\\
+\sigma_{\theta}\left(\mathbf{x}_{t}, t\right)=\tilde{\beta}_{t}^{1 / 2}, \tilde{\beta}_{t}=\left\{\begin{array}{ll}
+\frac{1-\alpha_{t-1}}{1-\alpha_{t}} \beta_{t} & t>1 \\
+\beta_{1} & t=1
+\end{array}\right.
+\end{cases}
+\end{equation}
+where $\epsilon_\theta$ is a trainable denoising function. The objective for training the reverse process is:
+\begin{equation}\label{equ:DDPM5}
+\min _{\theta} \mathcal{L}(\theta):=\min _{\theta} \mathbb{E}_{\mathbf{x}_{0} \sim q\left(\mathbf{x}_{0}\right), \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}), t}\parallel\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_{\theta}\left(\mathbf{x}_{t}, t\right)\parallel_{2}^{2},
+\end{equation}
+where $\mathbf{x}_{t}=\sqrt{\alpha_{t}} \mathbf{x}_{0}+\left(1-\alpha_{t}\right) \boldsymbol{\epsilon}$. This can be seen as a weighted variational constraint on the negative log-likelihood, reducing the significance of terms at low $t$ when little noise is present.
+

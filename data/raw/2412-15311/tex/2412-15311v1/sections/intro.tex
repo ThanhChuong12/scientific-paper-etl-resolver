@@ -1,0 +1,161 @@
+ % !TEX root = ../main.tex
+
+\section{Introduction}
+\label{sec:intro}
+
+\begin{figure}[t]
+\centering
+    \begin{subfigure}[m]{1\linewidth}
+    	\includegraphics[width=\linewidth]{figures/worst_tradeoff_new3.png}\vspace{-0mm}
+%	\subcaption{Worst-group accuracy}
+	\label{fig:observation_worst}
+%	    \vspace{3mm}
+    \end{subfigure} 
+%    \hspace{5mm}
+%        \begin{subfigure}[m]{0.9\linewidth}
+%    	\includegraphics[width=\linewidth]{figures/unbias_tradeoff_new3.png}\vspace{-0mm}
+%	\subcaption{Unbiased accuracy}
+%	\label{fig:observation_unbias}
+%	\end{subfigure} 
+    \vspace{-2mm}
+    \caption{The scatter plots illustrate trade-offs between robust and average accuracies of existing algorithms with ResNet-18 on CelebA.
+    We visualize the results from multiple runs of each algorithm and present the relationship between the two accuracies.
+    The lines denote the linear regression results of individual algorithms and $r$ in the legend indicates the Pearson coefficient correlation.
+    %which validates the strong negative correlation between both accuracies.
+%    Compared to ERM baseline, CR, GR, and Group DRO achieve high robust accuracy at the expense of average accuracy.
+    }
+%    \vspace{-2mm}
+    \label{fig:observation_tradeoff}
+\end{figure}
+% 
+
+
+%
+\begin{figure*}[t]
+\centering
+    \begin{subfigure}[m]{0.45\linewidth}
+    	\includegraphics[width=\linewidth]{figures/teaser_worst_new.pdf} \vspace{-5mm}
+	\subcaption{Worst-group accuracy}
+	\label{fig:teaser_worst}
+%	\vspace{3mm}
+    \end{subfigure}     
+    	\hspace{10mm}
+        \begin{subfigure}[m]{0.45\linewidth}
+    	\includegraphics[width=\linewidth]{figures/teaser_unbias_new.pdf} \vspace{-5mm}
+	\subcaption{Unbiased accuracy}
+	\label{fig:teaser_unbias}
+	\end{subfigure} 
+%    \vspace{-2mm}
+    \caption{Comparison between the baseline ERM and existing debiasing approaches with ResNet-50 on CelebA.
+%    $\ast$ indicates that the method exploits group supervision during training.
+    Existing works have improved robust accuracy substantially compared to ERM, but our robust scaling strategies such as RS and IRS enable ERM to catch up with or even outperform them without further training.
+%    Group DRO requires group supervision during training while all the other methods do not utilize it.
+%    For some methods, we use their reported numbers because the source codes are unavailable.
+    }
+%    \vspace{-2mm}
+    \label{fig:teaser}
+\end{figure*}
+%
+
+Machine learning models achieve remarkable performance across various tasks via empirical risk minimization (ERM).
+However, they are often vulnerable to spurious correlations and dataset biases, resulting in poor classification performance for minority groups despite high average accuracy.
+For example, in the Colored MNIST dataset~\cite{IRM, ReBias}, a strong correlation exists between digit labels and foreground colors. 
+Consequently, trained models tend to rely on these unintended patterns, resulting in significant performance degradation when classifying digits with rare color associations that are underrepresented in the training data.
+%For instance, because most of the blonde people are women, when trained to classify \textit{hair color}, a model learns an unintended correlation with \textit{gender} and performs poorly in minority groups, such as men with blonde hair. 
+%This can be problematic especially when the test distributions shift apart from the training ones.
+
+%To mitigate spurious correlation, ...
+Since spurious correlations are well-known to degrade generalization performance in minority groups, group distributionally robust optimization~\cite{GroupDRO} has been widely adopted to address algorithmic bias. 
+%Although numerous approaches~\cite{huang2016learning, GroupDRO, seo2021unsupervised, LfF, sohoni2020no, levy2020large, JTT} have been proposed and have presented high worst-group accuracy in a variety of tasks and datasets, they clearly sacrifice the average accuracy and often ignore the trade-off in performance evaluation by focusing only on the robust accuracy such as worst-group and unbiased accuracies.
+Numerous approaches~\cite{huang2016learning, GroupDRO, seo2021unsupervised, LfF, sohoni2020no, levy2020large, JTT} have achieved high robust accuracies, such as worst-group or unbiased accuracies, across various tasks and datasets. 
+However, despite these improvements, they often come at the expense of average accuracy, and little effort has been made to comprehensively evaluate the robust and average accuracies together.
+Figure~\ref{fig:observation_tradeoff} demonstrates the trade-offs of existing algorithms.
+%often ignore this trade-off in performance evaluation by focusing only on the robust accuracy.
+
+This paper addresses the limitations of current research trends by introducing a simple post-processing technique, \textit{robust scaling}, which efficiently performs class-specific scaling on prediction scores and conveniently controls the trade-off between robust and average accuracies at test time.
+It allows us to identify any desired performance points under various metrics such as average accuracy, unbiased accuracy, worst-group accuracy, or balanced accuracy, along the accuracy trade-off curve derived from a pretrained model with negligible extra computational overhead.
+%The proposed robust-scaling method can be easily plugged into various existing debiasing algorithms to achieve improved accuracies at various target objectives within the trade-off.
+The proposed robust-scaling method can be seamlessly plugged into various existing debiasing algorithms to improve target objectives within the trade-off.
+
+An interesting observation is that, by adopting the proposed robust scaling, even the ERM baseline accomplishes competitive performance without extra training compared to the recent group distributionally robust optimization approaches~\cite{JTT, LfF, GroupDRO, kim2022learning, seo2021unsupervised, creager2021environment, levy2020large, kirichenko2022last, zhang2022correct}, as illustrated in Figure~\ref{fig:teaser}.
+%We will present the results from other debiasing algorithms in the experiment section.
+%\footnote{Group DRO achieves better results than ERM+Scaling, mainly because it utilizes the supervision of group information during training. When we exploit group information for robust scaling, ERM+Scaling also achieves competitive performance to Group DRO, which will be discussed later.}.
+%Furthermore, we propose a more advanced robust scaling algorithm, which selects a model for each example based on its cluster membership at test time to maximize performance.
+Furthermore, we propose an advanced robust scaling algorithm that adaptively applies scaling to individual examples adaptively based on their cluster membership at test time to maximize performance.
+This instance-wise adaptive scaling strategy effectively mitigates the trade-off and delivers performance improvements in both robust and average accuracies.
+
+By taking advantage of the robust scaling technique, we develop a novel comprehensive evaluation metric that consolidates insights into the trade-off of group robustness algorithms, providing a unique perspective on group distributionally robust optimization. 
+We argue that assessing robust accuracy in isolation, without accounting for average accuracy, provides an incomplete picture and a unified evaluation of debiasing algorithms is required.
+For a comprehensive performance evaluation, we introduce \textit{robust coverage}, a new measure that effectively captures the trade-off between average and robust accuracies from a Pareto optimal perspective, summarizing each algorithm's performance with a single scalar value.
+
+
+\iffalse
+The evaluation metric is realized by a simple post-processing technique, \textit{robust scaling}, which efficiently performs class-specific scaling on prediction scores and conveniently controls the trade-off between robust and average accuracies.
+%Motivated by the observation, we propose \textit{robust scaling}, a novel class-specific scaling strategy that controls the trade-off by considering both accuracies, which allow us to identify any desired performance points on the trade-off curve with a single model.
+It allows us to identify any desired performance points, \eg, average accuracy, unbiased accuracy, worst-group accuracy, or balanced accuracy, on the accuracy trade-off curve using a single model with marginal computational overhead.
+The proposed robust-scaling method can be easily plugged into various existing debiasing algorithms to achieve improved accuracies at various target objectives within the trade-off.
+One interesting observation is that, by adopting the proposed robust scaling, even the ERM baseline accomplishes competitive performance compared to the recent group distributionally robust optimization approaches~\cite{JTT, LfF, GroupDRO, kim2022learning, seo2021unsupervised, creager2021environment, levy2020large, kirichenko2022last, zhang2022correct} without extra training, as illustrated in Figure~\ref{fig:teaser}\footnote{Group DRO achieves better results than ERM+Scaling, mainly because it utilizes the supervision of group information during training. When we use group information for robust scaling, ERM+Scaling achieves competitive performance to Group DRO, which will be discussed later.}.
+We will present the results from other debiasing algorithms in the experiment section.
+%In other words, the performance improvement in robust accuracy may be exaggerated.
+\fi
+
+%Figure~\ref{fig:teaser} shows the observation, where even the ERM baseline applied with class-specific scaling can achieve comparable performance to most of existing works.
+%Motivated by the observation, we propose \textit{robust scaling}, a novel non-uniform scaling strategy that controls the trade-off by considering both robust and average accuracies and identifies the desired performance point.
+
+
+
+% Moreover, it is possible to find optimal scaling factor.
+% This enables that even the baseline model can achieve comparable performance to the existing group robustness approaches without any additional training.
+%As presented in Figure~\ref{fig:teaser}, ERM with the robust scaling achieves competitive performance compared to the recent group distributionally robust optimization approaches with no additional training.
+%From this point on, we argue that comparing only the robust accuracy without considering the average accuracy should be regarded as incomplete.
+
+
+%Furthermore, we propose a more advanced robust scaling algorithm, which apply a class-specific scaling strategy to each example based on its cluster membership, to overcome the trade-off and achieve performance gains in both the accuracies.
+%Those methods are referred to as attribute- and cluster-specific robust scaling, respectively, where the former requires group supervision while the latter is an unsupervised method.
+%The two extensions provide more flexible trade-offs and match or even outperform the state-of-the-art models.
+%Our approach is effective to capture the full landscape of the Pareto optimal points by adjusting non-uniform scaling factors and identify an appropriate model for robust prediction compared to the selection by simple hyper-parameter tuning.  
+
+\vspace{-2mm}
+\paragraph{Contribution} 
+%We present a simple but effective approach for bias control by the analysis of trade-off between robust and average accuracies.
+We propose a simple yet effective approach for group robustness by analyzing the trade-off between robust and average accuracies.
+Our framework captures the complete landscape of robust-average accuracy trade-offs, facilitates understanding the behavior of existing debiasing techniques, and enables optimization of arbitrary objectives along the trade-off curve without additional training.
+We emphasize that our framework does not solely focus on performance improvement in robust accuracy; more importantly, \textbf{our method not only highlights the inherent trade-offs in existing debiasing approaches but also facilitates the identification of desired performance points based on target objectives, paving the way for accurate, fair, and comprehensive evaluations of group robustness.}
+%We believe our framework will help guide future research in the right direction.
+%is effective to understand the exact behavior of existing debiasing approaches by effectively capturing the overall landscape of trade-off, and find the desired performance points with a single model without further training.
+%
+Our main contributions are summarized as follows.%     
+%\vspace{-1mm}
+
+ \begin{itemize} 
+     \item[$\bullet$] We propose a training-free class-specific scaling strategy to capture and control the trade-off between robust and average accuracy with negligible computational cost. 
+     %This approach plays a crucial role for comprehensive evaluation and advance of algorithm performance.
+     This approach allows us to optimize a debiasing algorithm towards arbitrary objectives within the trade-off, building on top of any existing models. %\vspace{-1mm}
+
+    \item[$\bullet$] We develop an instance-wise robust scaling algorithm by extending the original class-specific scaling with joint consideration of feature clusters. This technique is effective to alleviate the trade-off and improve both robust and average accuracy. %\vspace{-1mm}
+    
+    \item[$\bullet$] We introduce a novel comprehensive and unified performance evaluation metric based on the robust scaling method, which summarizes the trade-off as a scalar value from the Pareto optimal perspective. %\vspace{-1mm}
+%    , which provides an accurate and straightforward performance evaluation of group robust optimization methods. \vspace{0.1cm}
+%    \item[$\bullet$] We empirically show the trade-off between robust and average accuracies, which is often ignored in the existing robust optimization techniques, and argue that two accuracies should be considered simultaneously.
+%    \item[$\bullet$] Unlike previous works, we argue that focusing only on the robust accuracy without considering the average accuracy is not sufficient.
+%    \item[$\bullet$] We empirically show that existing robust optimization techniques achieve high robust accuracy at the expense of average accuracy, but such trade-off is often ignored.
+%    , and argue that focusing only on the robust accuracy without considering the average accuracy should be regarded as incomplete.
+%    \item[$\bullet$] We present two extensions of the robust scaling---with and without group supervision---which consider underlying attributes and clusters, respectively; they provide better flexibility to control the trade-offs and have the potential to further improve performance.
+%    \item[$\bullet$] We propose a more sophisticated robust scaling method that can overcome trade-offs to improve both robust and average accuracies further.
+
+    \item[$\bullet$] The extensive experiments analyze the characteristics of existing methods and validate the effectiveness of our frameworks on the multiple standard benchmarks.
+\end{itemize}
+
+%The rest of the paper is organized as follows.
+%We review the prior works in Section~\ref{sec:related} and preliminaries in Section~\ref{sec:prelim}.
+%Section~\ref{sec:robust_scaling} presents our proposed post-processing methods for group robustness and introduces a new measurement for its comprehensive evaluation.
+%We validate their effectiveness in Section~\ref{sec:exp}.
+%We conclude our paper in Section~\ref{sec:conclusion}.
+
+
+
+ 
+
+
+
+

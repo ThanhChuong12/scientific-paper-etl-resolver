@@ -1,0 +1,45 @@
+\section{Experiments}
+\subsection{Dataset}
+\subsubsection{FLEURS.} FLEURS~\cite{conneau2022fleursfewshotlearningevaluation} is a multilingual speech corpus encompassing 102 languages. It provides a relatively small amount of data per language (approximately 12 hours) while ensuring an unbiased distribution of data across the languages.
+Given our focus on demonstrating effective multilingual ASR with minimal data, we utilize the FLEURS and its official splits for experiments.
+\subsubsection{CommonVoice.} CommonVoice~\cite{ardila-etal-2020-common} is a multilingual speech dataset crowdsourced from speakers of various languages. For unseen languages, we leverage the official test split of 25 languages from CommonVoice 17.0, which offers sufficient samples for evaluation.
+
+\subsection{Data Preprocessing}
+We initially applied NFKC normalization and lowercase transformation to the text transcriptions. 
+Subsequently, we excluded samples containing parentheses or numbers from the dataset for the following reasons:
+parentheses and digits in transcriptions introduced ambiguity, as some enclosed phrases were pronounced while others were not, and digits had one-to-many pronunciation mappings across languages (e.g. `1' can be pronounced as `one', `eins', `uno', `yi', etc.).
+Finally, we utilized the Python library \textit{Uroman}~\cite{hermjakob-etal-2018-box} to obtain Romanized transcription and \textit{Phonemizer}~\cite{Bernard2021} for IPA transcription.
+For Japanese, we employed \textit{Pykakasi}~\cite{takahashi1992kakasi} due to the limitation of \textit{Uroman}, which treats Japanese kanji as Chinese characters.
+Following these preprocessing steps, we obtained approximately 6 to 8 hours of speech-transcription paired data per language on average.
+
+\input{tables/unification_method}
+\input{tables/model_comparison}
+\subsection{Training Detail}
+We performed fine-tuning on all layers except the feature extractor for 3,000 steps with a CTC loss and a batch size of 128.
+We bypassed the two-stage fine-tuning pipeline from prior studies~\cite{xu2021simpleeffectivezeroshotcrosslingual, JMLR:v25:23-1318} because our distinct methodology, which used a smaller dataset, caused the divided fine-tuning approach to result in premature convergence and instability.
+For hyperparameters, we employed the default AdamW optimizer~\cite{kingma2017adammethodstochasticoptimization, loshchilov2018decoupled} with a tri-stage learning rate scheduler. The warm-up, hold, and decay phases were configured to 10\%, 60\%, and 30\% of the total training steps, respectively.
+We then performed a series of experiments to determine the optimal learning rate schedule within the range of 5e-6 to 5e-4.
+Finally, the entire training pipeline was conducted on two RTX-3090 GPUs with 24GB of VRAM each, and we leveraged gradient accumulation techniques to address memory issues.
+
+\subsection{Inference Detail}
+\subsubsection{Universal Transcription Generator.} 
+We leveraged a beam search decoder from flashlight~\cite{kahn2022flashlight} with a beam size of 100. 
+No additional lexicons or LMs were utilized in the decoding pipeline to maintain a universal pipeline without relying on language-specific elements.
+
+\subsubsection{Prompting Strategy.}
+For the prompting strategy, we utilized language information and a subset of the training data to construct our hypothesis prompt. The specific format of the prompt employed is detailed in Table~\ref{prompt_example_tab}.
+In zero-shot prompting, the universal converter automatically transforms Romanized transcriptions into language-specific ones using only the Romanized transcriptions and language information. We employed zero-shot prompting to evaluate the performance of the LLM with minimal input.
+Few-shot prompting~\cite{NEURIPS2020_1457c0d6} involves providing examples to help the model generate responses to subsequent instances. 
+We hypothesized that this approach would be particularly effective for low-resource or unseen languages by inducing in-context learning. 
+Specifically, we randomly sampled five Romanized transcription and target transcription pairs for each few-shot example.
+Zero-shot CoT prompting~\cite{NEURIPS2022_8bb0d291} is a technique that supports complex reasoning by inducing the decomposition of intricate tasks into detailed steps. 
+Specifically, we appended the phrase ``Let's think step by step'' to the input prompt to encourage the reasoning of the model.
+Prompt chaining employs a sequence of prompts, with each prompt building upon the output of the previous one, to manage complex multi-step tasks.
+In this aspect, we concentrated on the decomposable process of converting predicted Romanized transcriptions into language-specific transcriptions through \textit{(i) reverse-Romanization} and \textit{(ii) error correction}.
+We considered that errors in Romanized transcriptions could propagate during transliteration to language-specific ones, potentially reducing system performance.
+
+\input{tables/upper_bound}
+\subsubsection{Universal Converter.}
+Finally, we required the output of the universal converter to conform to a specific format.
+We instruct the model to enclose the output within three backticks (e.g., \texttt{```}), which allows us to isolate and sort only the language-specific transcription from the output of the model.
+We set the temperature value to 0.0 for all LLMs to obtain deterministic results.

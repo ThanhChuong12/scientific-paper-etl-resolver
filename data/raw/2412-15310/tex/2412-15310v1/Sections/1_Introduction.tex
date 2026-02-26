@@ -1,0 +1,97 @@
+\section{Introduction}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{Sections/figs/pipeline.pdf}
+    \vspace{-10pt}
+    \caption{Comparison between self-contained webpage and multi-page resource-aware webpage (MRWeb). MRWeb supports multi-page navigation, real-image loading and backend routing.}
+    \label{fig:pipeline}
+    \vspace{-15pt}
+\end{figure}
+
+%%% Importance of website
+Websites are important in today's digital landscape, serving as essential platforms for diverse applications in our daily lives~\cite{website_statistics_2024}.
+%%%% the prevalence and advantages of multi-page
+
+They can be categorized into two types: single-page and multi-page. Single-page websites update content dynamically on a single page without reloading, while multi-page websites consist of multiple interconnected pages. In reality, multi-page websites are dominant due to their scalability and structured navigation functionality~\cite{waytogrow2024spa, web2024onepage}. To examine this, we conducted a preliminary study by sampling the top 300 most visited websites ranked by the Tranco list~\footnote{https://tranco-list.eu}. For each website, we analyzed its structure by recursively visiting all internal links to identify distinct internal pages, as well as counting the number of external links, internal links, and images present on each webpage. The results showed that 271 (90.3\%) of the sampled websites are multi-page, highlighting their widespread usage and the complex structures they often exhibit. Appendix~\ref{sec:motivating-study} describes the study in detail.
+
+Practical solutions for generating multi-page web user interfaces (UIs) from designs remain underexplored. Existing work focuses on the simpler task of design-to-code, which generates self-contained web pages (Figure~\ref{fig:pipeline}). This leaves a gap in addressing the complexities of multi-page, resource-aware web UI development, where \textbf{(1) webpages link to internal pages with unlimited navigation paths, (2) webpages link to external resources like websites and images, and (3) webpages route to backends for data exchange}. We term this task \underline{\taskname} to highlight the shift from design-to-code to \underline{M}ulti-Page \underline{R}esource-Aware \underline{Web}page generation. Figure~\ref{fig:pipeline} contrasts self-contained webpages with MRWebs, which \textbf{enable code-free development from UI designs to resource-aware, navigable websites, democratizing web development}.
+
+
+% \begin{figure*}[ht]
+%     \centering
+%     \includegraphics[width=0.8\linewidth]{Sections/figs/comparison.pdf}
+%     \vspace{-5pt}
+%     \caption{Comparison between design-to-code webpage and our multipages resource-aware webpages (MRWebs). Design-to-code webpages contain placeholder images and empty links, whereas MRWebs contain real images and links.}
+%     \label{fig:data-compare}
+%     \vspace{-10pt}
+% \end{figure*}
+
+%%% technical challenge
+Unfortunately, constructing such a framework poses several challenges. First, there is no established data structure that integrates visual design elements with internal or external resources and tracks their correspondences. Unlike the design-to-code task that generates self-contained code from design images, \taskname should incorporate resources, navigation paths, and their links to visual design elements, necessitating a new data structure. 
+Second, there is a lack of high-quality datasets for \taskname since the previousn-to-code task did not contain real images or internal/external links. 
+Third, there are no standardized metrics for evaluating the performance of the \taskname task.  This makes it difficult to measure the accuracy of generated links, images, and their correspondence with visual design elements. As a result, there is insufficient understanding of how effectively MLLMs produce \taskname code from designs.
+
+To bridge this gap, we propose the first evaluation framework for \taskname generation. Specifically, we define a novel data structure, the \textbf{resource list}, which uses a dictionary-like format to store internal/external resources, such as links and images, and their correspondence with visual designs (e.g., screenshots). Next, we collect the first \taskname dataset, comprising 500 websites (300 synthetic, 200 real-world), along with their associated resource lists, screenshots, and ground truth code. The generation framework accepts the resource lists and screenshots as inputs and calls MLLMs to generate functional \taskname code directly. To assess the generated code, we introduce a suite of metrics designed to evaluate and analyze both the visual and functional performance of MLLMs on the \taskname task. Additionally, we implement this framework as a user-friendly tool for \taskname generation, releasing all code and data to encourage future research.
+
+\begin{table*}[ht]
+    \centering
+    \caption{Comparison and statistics of benchmarks and datasets. All statistics are in the ``average $\pm$ standard deviation'' format.}
+    \label{tab:comparison}
+    \vspace{-5pt}
+    \begin{adjustbox}{width=\textwidth}
+    \begin{tabular}{|l|c|c|c|c|c|c|}
+        \toprule
+        & \textbf{WebSight} & \textbf{VISION2UI} & \textbf{Design2Code} & \textbf{DWCG} & \textbf{Interaction2Code} & \textbf{MRWeb } \\
+        & \cite{laurençon2024unlocking} & \cite{Gui2024VISION2UIAR} & \cite{Si2024Design2CodeHF} & \cite{Yun2024Web2CodeAL} & \cite{xiao2024interaction2code} & (Ours) \\
+        \midrule
+        \textbf{Scope} & Self-contained & Self-contained & Self-contained & Self-contained & Self-contained & \taskname \\
+        \textbf{Int. navigation} & \XSolidBrush & \XSolidBrush & \XSolidBrush & \XSolidBrush& \XSolidBrush & \Checkmark \\
+        \textbf{Ext. navigation } & \XSolidBrush & \XSolidBrush & \XSolidBrush & \XSolidBrush & \XSolidBrush & \Checkmark \\
+        \textbf{Backend routing} & \XSolidBrush & \XSolidBrush & \XSolidBrush & \XSolidBrush & \XSolidBrush & \Checkmark \\
+        \textbf{Real img insertion} & \XSolidBrush & \XSolidBrush & \XSolidBrush & \XSolidBrush & \XSolidBrush & \Checkmark \\
+        \midrule
+        \textbf{Source} & Synthetic & Real-World & Real-World & Synthetic & Real-World & Synthetic / Real-World \\
+        \textbf{Size} & 823K & 20k & 484 & 60K & 97 & 500 (300 / 200) \\
+        \textbf{Avg. Len (tokens)} & $647\pm216$ & $8460\pm7120$ & $31216\pm23902$ & $471.8\pm162.3$ & $141084\pm160438$ & $692\pm227$ / $113724\pm139761$ \\
+        \textbf{Avg. Tags} & $19\pm8$ & $175\pm94$ & $158\pm100$ & $28.1\pm10.6$ & $1291\pm1574$ & $18\pm7$ / $543\pm768$ \\
+        \textbf{Avg. DOM Depth} & $5\pm1$ & $15\pm5$ & $13\pm5$ & $5.3\pm1.0$ & $18\pm6$ & $5\pm1$ / $15\pm6$ \\
+        \textbf{Avg. Unique Tags} & $10\pm3$ & $21\pm5$ & $22\pm6$ & $13.6\pm2.7$ & $31\pm9$ & $10\pm3$ / $22\pm8$ \\
+        \textbf{Avg. Resource List Len.} & - & - & - & - & - & $3\pm2$ / $92\pm130$ \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\vspace{-15pt}
+\end{table*}
+
+% To demonstrate the effectiveness of the framework, we conduct extensive experiments and human evaluations on three SOTA MLLMs, formulating the following research questions:
+% \paragraph{RQ1: What is the most suitable metric for Web UI similarity? (Section~\ref{sec:rq1})} 
+% A critical challenge in the \taskname task is accurately evaluating web UI similarity. To address this, we initiated an image quality assessment (IQA) in the Web UI domain, where we compare various image similarity methods and discuss their alignment with human preferences.
+
+% \textbf{Results:} Pixel-based metrics outperform semantic and structural metrics. Specifically, Mean Absolute Error (MAE) achieves the best overall alignment with human perception, with a rank-order correlation coefficient of 0.542, followed by Normalized Earth Mover’s Distance (NEMD), which performs well in both low and medium similarity cases. In high-similarity cases, semantic and structural metrics like SSIM, CLIP, and LPSIS perform better but exhibit weaker alignment in low-similarity scenarios. 
+
+
+% \paragraph{RQ2: Is the resource list useful? (Section~\ref{sec:rq2})} 
+% Central to our framework is a novel data structure, the resource list, which encodes links, external resources, and their correspondences with design elements. To assess its impact, we evaluate the ability of MLLMs to generate multi-page web UI code using various prompting strategies. 
+
+% \textbf{Results:} The resource list significantly enhances both visual and functional similarity. With resource lists, functional similarity scores improve from 0\% to 66\%-80\%, as MLLMs become capable of generating pages with valid internal/external links and backend routing. Moreover, visual similarity also benefits from resource lists, as they provide MLLMs with explicit cues about navigation paths, images, and resource links.
+
+% \paragraph{RQ3: What are the challenges for MLLMs in the \taskname task? (Section~\ref{sec:rq3})}
+% To understand the limitations of current MLLMs in generating multi-page resource-aware web UIs, we explore various production challenges, including layout generation, design complexity, and external resource integration. 
+
+% \textbf{Results:} One of the major challenges for MLLMs is the visual grounding problem, where MLLMs struggle to accurately position and size elements within a webpage. Quantitatively, MLLMs exhibit a 15\%-25\% positional shift and a 30\%-40\% size difference in the placement of elements compared to the original design. Additionally, as design complexity increases, the performance of MLLMs deteriorates, particularly in maintaining alignment between visual components and functional elements like links and images.
+
+% \paragraph{RQ4: Can the \taskname tool help real-world development workflows? (Section~\ref{sec:rq4})} Finally, we assess the real-world applicability of our \taskname tool in practical development scenarios. We create a user-friendly UI-to-\taskname tool that allows developers to convert visual design assets into functional multi-page web UI code. This tool supports the automatic generation of internal/external navigation paths, valid link structures, and backend routing, streamlining the integration of frontend design with backend functionality.
+
+% \textbf{Results:} Our real-world testing confirms that the tool bridges the gap between design assets and production-ready web UI code, providing direct support for development workflows.
+
+To sum up, the contributions of this study are:
+\begin{itemize}[leftmargin=*]
+    \item Define the \taskname problem, introduce the first \taskname benchmark with an innovative resource list data structure, and construct the first \taskname dataset consisting of \textit{500} websites.
+    \item Propose a suite of metrics, conduct the first comprehensive image quality assessment (IQA) in the web UI domain to determine the best evaluation metric for web UI code generation, and collect an annotated IQA dataset for future studies.
+    \item Conduct a comprehensive study to evaluate the performance of SOTA MLLMs on \taskname generation and highlighting some challenges faced by MLLMs.
+    \item Develop a user-friendly tool for \taskname tasks and release all code and data to foster further research and development in this emerging area.
+\end{itemize}
+
+
+

@@ -1,0 +1,207 @@
+ % !TEX root = ../main.tex
+ 
+ 
+ 
+
+
+ \iffalse
+ \begin{table*}[t]
+\begin{center}
+\caption{Experimental results on CivilComments-WILDS (text classification) and FMoW-WILDS (satellite image recognition) datasets, which have multiple classes, groups, or domain shift.
+}
+%\vspace{0.2cm}
+\label{tab:multi_datasets_all}
+ \scalebox{0.8}{
+ \hspace{-0.2cm}
+\setlength\tabcolsep{7pt} 
+\begin{tabular}{cl|cc|cccccc}
+\toprule
+%Method & Worst-. Acc. & Unbiased Acc. &  Average Acc.  & Worst-. Cover. & Unbiased Cover. \\
+ & & \multicolumn{2}{c|}{Robust Coverage} & \multicolumn{6}{c}{Accuracy (\%)} \\
+Dataset & Method & Worst. & Unbiased & Worst. &  (Gain) & {Unbiased} & (Gain) &  Average & (Gain) \\
+\hline
+ \multirow{9}{*}{CivilComments} &ERM & - & - & 54.5 (6.8) & - &75.0 (1.2)  & - & 92.3 (0.4) &-  \\
+ &ERM + RS  & 57.2 (5.1)  & 70.9 (1.5) & 65.5 (1.2) & +11.0 (2.5) & 78.6 (1.5) & +3.7 (2.4) & \textbf{92.5 (0.3)} &+0.2 (0.1)    \\
+ &ERM + IRS & \textbf{59.2 (5.3)} & \textbf{71.2 (2.3)} & \textbf{67.0 (2.3)} & +12.5 (2.7) & \textbf{78.8 (1.1)} & +3.8 (1.7) & \textbf{92.5 (0.3)} & +0.2 (0.1)  \\
+ \cdashline{2-10}
+ & GR$^\ast$   & - & - & 64.7 (1.1) & - & 78.4 (0.2) & - & 87.2 (1.0) & -  \\
+ & GR$^\ast$ + RS  & 59.0 (2.8) & 69.8 (1.0) & 66.0 (0.5) & +1.3 (0.6) & 78.5 (0.1) & +0.1 (0.1)  & 89.3 (0.8) & +0.7 (0.3) \\
+ & GR$^\ast$ + IRS & \textbf{59.7 (1.6)} & \textbf{70.1 (0.7)} & \textbf{66.2 (0.4)}& +1.6 (0.7)  & \textbf{78.6 (0.1)}& +0.2 (0.2) & \textbf{91.0 (0.6)} & +1.2 (0.6) \\
+ \cdashline{2-10}
+ & GroupDRO$^\ast$  & - & - &67.7 (0.6) & - & 78.4 (0.6) & - & {90.0 (0.1)} & -  \\
+ & GroupDRO$^\ast$ + RS  & 60.6 (0.6) & 71.5 (0.3) & 68.8 (0.7) & +1.1 (0.5) & \textbf{78.8 (0.4)} & +0.4 (0.3) & 91.5 (0.2) & +0.5 (0.3) \\
+ & GroupDRO$^\ast$ + IRS & \textbf{62.1 (0.7)} & \textbf{71.9 (0.2)} & \textbf{69.6 (0.4)} & +1.9 (0.6) & \textbf{78.8 (0.5)} & +0.4 (0.6)  & \textbf{91.8 (0.3)} & +0.8 (0.3)  \\
+ \hline
+  \multirow{9}{*}{FMoW} &ERM & - & - & 34.5 (1.4) & - & 51.7 (0.5) & - & 52.6 (0.8) & -\\
+ &ERM + RS   & 32.9 (0.4) & 39.4 (1.3) & 35.7 (1.6) & +1.2 (0.4) & 52.3 (0.3)& +0.6 (0.3) & 53.1 (0.8) & +0.6 (0.3) \\
+ &ERM + IRS   & \textbf{35.1 (0.2)} & \textbf{40.2 (1.1)} & \textbf{36.2 (1.4)} & +1.7 (0.3) & \textbf{52.4 (0.2)} & +0.7 (0.4) &  \textbf{53.4 (0.9)} & +0.8 (0.4)  \\
+ \cdashline{2-10}
+ & GR$^\ast$   & - & - & 31.4 (1.1)	 & - & 49.0 (0.9) & - & 50.1 (1.3)& - \\
+ & GR$^\ast$ + RS  & 30.2 (1.2) & 37.7 (0.6) & 35.5 (0.4) & +4.2 (0.7) & 49.8 (0.7) & +0.8 (0.3) & 50.7 (1.2) & +0.6 (0.1)  \\
+ & GR$^\ast$ + IRS & \textbf{31.7 (1.0)} & \textbf{38.9 (2.1)} & \textbf{35.7 (0.9)} & +4.4 (0.4) & \textbf{50.1 (0.6)} & +1.1 (0.3) & \textbf{50.8 (1.4)}& +0.7 (0.1) 	\\
+ \cdashline{2-10}
+ & GroupDRO$^\ast$  & - & - & 33.7 (2.0) & - & 50.4 (0.7) & - & 52.0 (0.4) & -  \\
+ & GroupDRO$^\ast$ + RS  & 30.8 (1.8) & 38.2 (0.7) & 36.0 (2.4)	 & +2.3 (0.4) & 50.9 (0.6) & +0.4 (0.4) & 52.4 (0.2) & +0.5 (0.2)\\
+ & GroupDRO$^\ast$ + IRS & \textbf{34.1 (0.8)} & \textbf{40.7 (0.5)} & \textbf{36.4 (2.3)}& +2.7 (0.4)  & \textbf{51.1 (0.3)} & +0.7 (0.5) & \textbf{52.7 (0.2)} & +0.7 (0.2) \\
+\bottomrule
+\end{tabular}
+ }
+ \vspace{-0.cm}
+\end{center}
+
+\end{table*}
+\fi
+
+
+
+
+\iffalse
+
+
+ \begin{table*}[t]
+\begin{center}
+\caption{Experimental results on the CivilComments-WILDS dataset using DistilBert.
+{RS and IRS achieve consistent performance gains in all settings.}
+% (standard deviations in parenthesis).
+}
+\label{tab:civilcomments}
+\vspace{-2mm}
+\scalebox{0.8}{
+\hspace{-0.3cm}
+\setlength\tabcolsep{4.5pt} 
+\begin{tabular}{l|cc|cccccc}
+\toprule
+ & \multicolumn{2}{c|}{Robust Coverage}  & \multicolumn{6}{c}{Accuracy (\%)}\\
+Method & Worst-group & Unbiased &  Worst-group & (Gain) & Unbiased & (Gain) &  Average  & (Gain) \\
+\hline
+ERM &- & - & 54.5 (6.8) & - &75.0 (1.2)  & - & 92.3 (0.4) &-  \\
+ ERM + RS  &57.2 (5.1)  & 70.9 (1.5) & 65.5 (1.2) & +11.0 (2.5) & 78.6 (1.5) & +3.7 (2.4) & \textbf{92.5 (0.3)} &+0.2 (0.1)    \\
+ ERM + IRS & \textbf{59.2 (5.3)} & \textbf{71.2 (2.3)} & \textbf{67.0 (2.3)} & +12.5 (2.7) & \textbf{78.8 (1.1)} & +3.8 (1.7) & \textbf{92.5 (0.3)} & +0.2 (0.1)  \\
+% \cdashline{1-10}
+\hline
+  GR$^\ast$   & - & - & 64.7 (1.1) & - & 78.4 (0.2) & - & 87.2 (1.0) & -  \\
+ GR$^\ast$ + RS  & 59.0 (2.8) & 69.8 (1.0) & 66.0 (0.5) & +1.3 (0.6) & 78.5 (0.1) & +0.1 (0.1)  & 87.9 (0.8) & +0.7 (0.3) \\
+ GR$^\ast$ + IRS & \textbf{59.7 (1.6)} & \textbf{70.1 (0.7)} & \textbf{66.2 (0.4)}& +1.6 (0.7)  & \textbf{78.6 (0.1)}& +0.2 (0.2) & \textbf{88.4 (0.6)} & +1.2 (0.6) \\
+% \cdashline{1-10}
+\hline
+ Group DRO$^\ast$ & - & - &67.7 (0.6) & - & 78.4 (0.6) & - & {90.0 (0.1)} & -  \\
+ Group DRO$^\ast$ + RS  & 60.6 (0.6) & 71.5 (0.3) & 68.8 (0.7) & +1.1 (0.5) & \textbf{78.8 (0.4)} & +0.4 (0.3) & 90.5 (0.2) & +0.5 (0.3) \\
+ Group DRO$^\ast$ + IRS & \textbf{62.1 (0.7)} & \textbf{71.9 (0.2)} & \textbf{69.6 (0.4)} & +1.9 (0.6) & \textbf{78.8 (0.5)} & +0.4 (0.6)  & \textbf{90.8 (0.3)} & +0.8 (0.3)  \\
+\bottomrule
+\end{tabular}
+}
+\end{center}
+\vspace{-2mm}
+\end{table*}
+
+
+
+ \begin{table*}[t]
+\begin{center}
+\caption{Experimental results on the FMoW-WILDS dataset using DenseNet-121.
+{RS and IRS are effective even when training, validation, and test splits involve substantial domain shifts and the number of classes is large.}
+%(standard deviations in parenthesis).
+}
+\label{tab:fmow}
+\vspace{-2mm}
+ \scalebox{0.8}{
+ \hspace{-0.3cm}
+\setlength\tabcolsep{5pt} 
+\begin{tabular}{l|cc|cccccc}
+\toprule
+& \multicolumn{2}{c|}{Robust Coverage}  & \multicolumn{6}{c}{Accuracy (\%)}\\
+Method & Worst-group & Unbiased &  Worst-group & (Gain) & Unbiased & (Gain) &  Average  & (Gain) \\
+\hline
+ERM & - & - & 34.5 (1.4) & - & 51.7 (0.5) & - & 52.6 (0.8) & -\\
+ ERM + RS  & 32.9 (0.4) & 39.4 (1.3) & 35.7 (1.6) & +1.2 (0.4) & 52.3 (0.3)& +0.6 (0.3) & 53.1 (0.8) & +0.6 (0.3) \\
+ ERM + IRS  & \textbf{35.1 (0.2)} & \textbf{40.2 (1.1)} & \textbf{36.2 (1.4)} & +1.7 (0.3) & \textbf{52.4 (0.2)} & +0.7 (0.4) &  \textbf{53.4 (0.9)} & +0.8 (0.4)  \\
+\hline
+ GR$^\ast$  & - & - & 31.4 (1.1)	 & - & 49.0 (0.9) & - & 50.1 (1.3)& - \\
+ GR$^\ast$ + RS  & 30.2 (1.2) & 37.7 (0.6) & 35.5 (0.4) & +4.2 (0.7) & 49.8 (0.7) & +0.8 (0.3) & 50.7 (1.2) & +0.6 (0.1)  \\
+ GR$^\ast$ + IRS & \textbf{31.7 (1.0)} & \textbf{38.9 (2.1)} & \textbf{35.7 (0.9)} & +4.4 (0.4) & \textbf{50.1 (0.6)} & +1.1 (0.3) & \textbf{50.8 (1.4)}& +0.7 (0.1) 	\\
+\hline
+ Group DRO$^\ast$  & - & - & 33.7 (2.0) & - & 50.4 (0.7) & - & 52.0 (0.4) & -  \\
+ Group DRO$^\ast$ + RS  & 30.8 (1.8) & 38.2 (0.7) & 36.0 (2.4)	 & +2.3 (0.4) & 50.9 (0.6) & +0.4 (0.4) & 52.4 (0.2) & +0.5 (0.2)\\
+ Group DRO$^\ast$ + IRS & \textbf{34.1 (0.8)} & \textbf{40.7 (0.5)} & \textbf{36.4 (2.3)}& +2.7 (0.4)  & \textbf{51.1 (0.3)} & +0.7 (0.5) & \textbf{52.7 (0.2)} & +0.7 (0.2) \\
+\bottomrule
+\end{tabular}
+}
+\end{center}
+\vspace{-3mm}
+\end{table*}
+
+
+\fi
+
+
+
+
+
+
+
+
+
+  \begin{table*}[t]
+\begin{center}
+\caption{Experimental results on the CivilComments-WILDS dataset using a DistilBert architecture with the average of 3 runs.
+}
+\label{tab:civilcomments}
+ \scalebox{0.8}{
+ \hspace{-0.3cm}
+\setlength\tabcolsep{6pt} 
+\begin{tabular}{lc|cc|cccccc}
+\toprule
+& Group  & \multicolumn{2}{c|}{Robust Coverage}  & \multicolumn{6}{c}{Accuracy (\%)}\\
+Method & Supervision & Worst-group & Unbiased &  Worst-group & (Gain) & Unbiased & (Gain) &  Average  & (Gain) \\
+\hline
+ERM & & - & - & 54.5 (6.8) & - &75.0 (1.2)  & - & 92.3 (0.4) &-  \\
+ ERM + RS  & &57.2 (5.1)  & 70.9 (1.5) & 65.5 (1.2) & +11.0 (2.5) & 78.6 (1.5) & +3.7 (2.4) & \textbf{92.5 (0.3)} &+0.2 (0.1)    \\
+ ERM + IRS & & \textbf{59.2 (5.3)} & \textbf{71.2 (2.3)} & \textbf{67.0 (2.3)} & +12.5 (2.7) & \textbf{78.8 (1.1)} & +3.8 (1.7) & \textbf{92.5 (0.3)} & +0.2 (0.1)  \\
+ \cdashline{1-10}
+  GR   & \multirow{3}{*}{\checkmark} & - & - & 64.7 (1.1) & - & 78.4 (0.2) & - & 87.2 (1.0) & -  \\
+ GR + RS  & & 59.0 (2.8) & 69.8 (1.0) & 66.0 (0.5) & +1.3 (0.6) & 78.5 (0.1) & +0.1 (0.1)  & 87.9 (0.8) & +0.7 (0.3) \\
+ GR + IRS & & \textbf{59.7 (1.6)} & \textbf{70.1 (0.7)} & \textbf{66.2 (0.4)}& +1.6 (0.7)  & \textbf{78.6 (0.1)}& +0.2 (0.2) & \textbf{88.4 (0.6)} & +1.2 (0.6) \\
+ \cdashline{1-10}
+ Group DRO  & \multirow{3}{*}{\checkmark} & - & - &67.7 (0.6) & - & 78.4 (0.6) & - & {90.0 (0.1)} & -  \\
+ Group DRO + RS  & & 60.6 (0.6) & 71.5 (0.3) & 68.8 (0.7) & +1.1 (0.5) & \textbf{78.8 (0.4)} & +0.4 (0.3) & 90.5 (0.2) & +0.5 (0.3) \\
+ Group DRO + IRS & & \textbf{62.1 (0.7)} & \textbf{71.9 (0.2)} & \textbf{69.6 (0.4)} & +1.9 (0.6) & \textbf{78.8 (0.5)} & +0.4 (0.6)  & \textbf{90.8 (0.3)} & +0.8 (0.3)  \\
+\bottomrule
+\end{tabular}
+}
+\end{center}
+\vspace{-2mm}
+\end{table*}
+
+
+
+ \begin{table*}[t]
+\begin{center}
+\caption{Experimental results on the FMoW-WILDS dataset using a DenseNet-121 architecture with the average of 3 runs.
+}
+\label{tab:fmow}
+ \scalebox{0.8}{
+ \hspace{-0.3cm}
+\setlength\tabcolsep{6pt} 
+\begin{tabular}{lc|cc|cccccc}
+\toprule
+& Group  & \multicolumn{2}{c|}{Robust Coverage}  & \multicolumn{6}{c}{Accuracy (\%)}\\
+Method & Supervision & Worst-group & Unbiased &  Worst-group & (Gain) & Unbiased & (Gain) &  Average  & (Gain) \\
+\hline
+ERM & & - & - & 34.5 (1.4) & - & 51.7 (0.5) & - & 52.6 (0.8) & -\\
+ ERM + RS  & & 32.9 (0.4) & 39.4 (1.3) & 35.7 (1.6) & +1.2 (0.4) & 52.3 (0.3)& +0.6 (0.3) & 53.1 (0.8) & +0.6 (0.3) \\
+ ERM + IRS  & & \textbf{35.1 (0.2)} & \textbf{40.2 (1.1)} & \textbf{36.2 (1.4)} & +1.7 (0.3) & \textbf{52.4 (0.2)} & +0.7 (0.4) &  \textbf{53.4 (0.9)} & +0.8 (0.4)  \\
+ \cdashline{1-10}
+ GR   & \multirow{3}{*}{\checkmark} & - & - & 31.4 (1.1)	 & - & 49.0 (0.9) & - & 50.1 (1.3)& - \\
+ GR + RS  & & 30.2 (1.2) & 37.7 (0.6) & 35.5 (0.4) & +4.2 (0.7) & 49.8 (0.7) & +0.8 (0.3) & 50.7 (1.2) & +0.6 (0.1)  \\
+ GR + IRS & & \textbf{31.7 (1.0)} & \textbf{38.9 (2.1)} & \textbf{35.7 (0.9)} & +4.4 (0.4) & \textbf{50.1 (0.6)} & +1.1 (0.3) & \textbf{50.8 (1.4)}& +0.7 (0.1) 	\\
+ \cdashline{1-10}
+ Group DRO  & \multirow{3}{*}{\checkmark} & - & - & 33.7 (2.0) & - & 50.4 (0.7) & - & 52.0 (0.4) & -  \\
+ Group DRO + RS  & & 30.8 (1.8) & 38.2 (0.7) & 36.0 (2.4)	 & +2.3 (0.4) & 50.9 (0.6) & +0.4 (0.4) & 52.4 (0.2) & +0.5 (0.2)\\
+ Group DRO + IRS & & \textbf{34.1 (0.8)} & \textbf{40.7 (0.5)} & \textbf{36.4 (2.3)}& +2.7 (0.4)  & \textbf{51.1 (0.3)} & +0.7 (0.5) & \textbf{52.7 (0.2)} & +0.7 (0.2) \\
+\bottomrule
+\end{tabular}
+}
+\vspace{-4mm}
+\end{center}
+
+\end{table*}

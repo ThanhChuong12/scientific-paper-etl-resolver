@@ -1,0 +1,226 @@
+\section{experiments}
+\subsection{Experimental Settings}
+\subsubsection{Dataset}
+We conduct extensive experiments on three real-world mobility datasets from Shanghai, Senegal, and Xinjiang. Each dataset includes both trajectory and flow data. The details of datasets are summarized in Appendix~\ref{sec::datasets_info}. The experiment section only presents the results for the Shanghai and Senegal datasets. Detailed results for the Xinjiang dataset can be found in Appendix~\ref{sec::Results}.
+
+
+\subsubsection{Baselines}
+
+We compare the performance of our model with state-of-the-art baselines. Previous methods could only accomplish one type of mobility data prediction task, so the baseline methods are divided into trajectory and flow prediction. 
+For \textit{Flow Prediction}, we compared our model with six SOTA baselines (\textbf{HA}~\cite{sun2020predicting}, \textbf{VAR}~\cite{lu2016integrating}, \textbf{ST-ResNet}~\cite{zhang2017deep}, \textbf{MSDR}~\cite{liu2022msdr}, \textbf{STID}~\cite{shao2022spatial}, and \textbf{PriSTI}~\cite{liu2023pristi}.
+For \textit{Trajectory Prediction}, we compared our model with seven SOTA baselines (\textbf{Markov}~\cite{gambs2012next}, \textbf{LSTM}~\cite{Kong2018HST}, \textbf{DeepMove}~\cite{feng2018deepmove}, \textbf{STAN}~\cite{luo2021stan}, \textbf{SNPM}~\cite{yin2023next},
+\textbf{TrajGDM}~\cite{chu2024simulating}, and \textbf{GETNext}~\cite{yang2022getnext}.
+We provide the details of baselines in Appendix~\ref{sec::baselines}.
+
+
+
+\subsubsection{Metrics}
+For trajectory prediction, we use \textit{Accuracy@k} to sort candidate locations by model-predict probabilities and check if the true position falls within the top k predictions.
+For flow prediction, we choose mean absolute errors (\textit{MAE}), Mean Absolute Percentage Error (\textit{MAPE}), and root mean squared errors (\textit{RMSE}) as the evaluation metrics. \textit{MAE} is the mean absolute error between predicted and ground truth values. \textit{MAPE} is the mean absolute percentage error between the predicted and ground truth values. \textit{RMSE} is the square root of the mean squared error between the predicted and ground truth values. %Combining these three metrics provides a comprehensive evaluation of the model's performance.
+
+
+
+\begin{table*}[t]
+\centering
+\caption{Overall Performance on Shanghai and Senegal datasets.}
+\vspace{-0.3cm}
+\scalebox{0.78}{ % Scale the table to fit within the page width
+\begin{tabular}{lcccccccccccc}
+\toprule
+& \multicolumn{6}{c}{\textbf{Shanghai Dataset}} & \multicolumn{6}{c}{\textbf{Senegal Dataset}} \\
+\cmidrule(lr){2-7} \cmidrule(lr){8-13}
+& \multicolumn{3}{c}{\textbf{Flow Prediction}} & \multicolumn{3}{c}{\textbf{Trajectory Prediction}} & \multicolumn{3}{c}{\textbf{Flow Prediction}} & \multicolumn{3}{c}{\textbf{Trajectory Prediction}}\\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+\textbf{} & \textbf{MAE} & \textbf{MAPE(\%)} & \textbf{RMSE} & \textbf{Acc@1} & \textbf{Acc@3} & \textbf{Acc@5} & \textbf{MAE} & \textbf{MAPE(\%)} & \textbf{RMSE} & \textbf{Acc@1} & \textbf{Acc@3} & \textbf{Acc@5} \\
+\midrule
+HA & 35.19 & 29.76 & 42.72 & - & - & - & 20.75 & 19.32 & 31.17 & - & - & - \\
+VAR & 28.25 & 25.61 & 40.14 & - & - & - & 17.20 & 15.95 & 28.43 & - & - & - \\
+ST-ResNet & 21.54 & 19.02 & 34.18 & - & - & - & 15.95 & 13.84 & 26.37 & - & - & - \\
+MSDR & 20.01 & 17.84 & 32.63 & - & - & - & 14.08 & 13.26 & 25.04 & - & - & - \\
+STID & 18.72 & 15.17 & 30.40 & - & - & - & 13.52 & 12.31 & 23.19 & - & - & - \\
+PriSTI & \underline{18.40} & \underline{14.59} & \underline{29.71} & - & - & - & \underline{13.28} & \underline{12.15} & \underline{22.80} & - & - & - \\
+Markov & - & - & - & 0.2825 & 0.3986 & 0.5012 & - & - & - & 0.3894 & 0.4418 & 0.5828 \\
+LSTM & - & - & - & 0.3401 & 0.4298 & 0.5737 & - & - & - & 0.4573 & 0.5185 & 0.6509 \\
+DeepMove & - & - & - & 0.3813 & 0.4672 & 0.6191 & - & - & - & 0.4980 & 0.5764 & 0.7125 \\
+STAN & - & - & - & 0.3975 & 0.4746 & 0.6303 & - & - & - & 0.5105 & 0.6042 & 0.7303 \\
+SNPM & - & - & - & 0.4012 & 0.4797 & 0.6378 & - & - & - & 0.5236 & 0.6260 & 0.7591 \\
+GETNext  & - & - & - & 0.4063 & 0.4836 & 0.6415 & - & - & - & 0.5251 & 0.6287 & 0.7638 \\
+TrajGDM & - & - & - & \underline{0.4103} & \underline{0.4875} & \underline{0.6434} & - & - & - & \underline{0.5295} & \underline{0.6302} & \underline{0.7674} \\
+UniMob-v1 & 17.93 & 14.01 & 28.65 & 0.4205 & 0.5024 & 0.6570 & 12.70 & 11.65 & 21.94 & 0.5403 & 0.6412 & 0.7889 \\
+UniMob-v2 & 17.89 & 13.98 & 28.60 & 0.4228 & 0.5057 & 0.6615 & 12.52 & 11.50 & 21.57 & 0.5439 & 0.6450 & 0.7924 \\
+UniMob-v3 & 17.90 & 13.96 & 28.63 & 0.4213 & 0.5040 & 0.6593 & 12.61 & 11.59 & 21.73 & 0.5415 & 0.6436 & 0.7907 \\
+UniMob-v4 & \textbf{17.76} & \textbf{13.93} & \textbf{28.50} & \textbf{0.4267} & \textbf{0.5091} & \textbf{0.6653} & \textbf{12.08} & \textbf{11.12} & \textbf{21.03} & \textbf{0.5486} & \textbf{0.6515} & \textbf{0.7993} \\
+%Improvement & 3.48\% & 4.52\% & 4.07\% & 4.00\% & 4.43\% & 2.81\% & 9.04\% & 8.48\% & 7.76\% & 3.61\% & 3.38\% & 4.16\% \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:two datasets}
+\end{table*}
+
+
+\begin{table*}[t]
+\small
+\centering
+\caption{Ablation study on Shanghai datasets.}
+\vspace{-0.3cm}
+\scalebox{1.}{
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Trajectory Prediction}} & \multicolumn{3}{c}{\textbf{Flow Prediction}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+& \textbf{Acc@1} & \textbf{Acc@3} & \textbf{Acc@5}
+& \textbf{MAE} & \textbf{MAPE(\%)} & \textbf{RMSE}\\
+\midrule
+Ours & 0.4205 & 0.5024 &  0.6570 & 17.93 & 14.01 & 28.65 \\
+w/o I2C loss & 0.4165 (-0.95\%) & 0.4906 (-2.35\%) &  0.6487 (-1.26\%) & 18.48 (-2.98\%) & 14.76 (-5.35\%) & 29.91 (-4.21\%) \\
+w/o C2I loss & 0.4053 (-3.61\%) & 0.4849 (-3.48\%) &  0.6442 (-1.95\%)
+ & 18.27 (-1.86\%) & 14.41 (-2.78\%) & 29.25 (-2.05\%)\\
+w/o shared transformer & 0.4115 (-2.14\%) & 0.4882 (-2.83\%) & 0.6461 (-1.66\%) & 18.40 (-2.55\%)
+ & 14.60 (-4.21\%) & 29.67 (-3.44\%) \\
+w/o flow data & 0.4036(-4.02\%) & 0.4840(-3.66\%) & 0.6421(-2.27\%) & - & - & - \\
+w/o trajectory data & - & - & - & 18.56(-3.51\%) & 14.86(-6.07\%) & 30.02(-4.78\%) \\
+\bottomrule
+\end{tabular}
+}
+%\vspace{-0.3cm}
+\label{tab:Ablation1}
+\end{table*}
+
+
+
+\begin{table*}[t]
+\small
+\centering
+\caption{Ablation study on Senegal datasets.}
+\vspace{-0.3cm}
+\scalebox{1.}{
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Trajectory Prediction}} & \multicolumn{3}{c}{\textbf{Flow Prediction}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+& \textbf{Acc@1} & \textbf{Acc@3} & \textbf{Acc@5}
+& \textbf{MAE} & \textbf{MAPE(\%)} & \textbf{RMSE}\\
+\midrule
+Ours & 0.5403 & 0.6412 &  0.7889 & 12.70 & 11.65 & 21.94 \\
+w/o I2C loss & 0.5371 (-0.59\%)
+ & 0.6356 (-0.87\%)
+ & 0.7620 (-3.41\%)
+ & 13.32 (-4.88\%)
+ & 12.12 (-4.03\%)
+ & 22.91 (-4.42\%) \\
+w/o C2I loss & 0.5285(-2.18\%)
+ & 0.6327 (-1.33\%)
+ & 0.7476 (-5.24\%)
+ & 12.89 (-1.50\%)
+ & 11.73 (-0.69\%)
+ & 22.10 (-0.73\%)
+ \\
+w/o shared transformer & 0.5314 (-1.65\%)
+ & 0.6331 (-1.26\%)
+ & 0.7538 (-4.45\%)
+ & 13.20 (-3.94\%)
+ & 11.97 (-2.75\%)
+ & 22.62 (-3.10\%)
+ \\
+w/o flow data & 0.5262(-2.61\%) & 0.6297(-1.80\%)
+ & 0.7548(-4.32\%) & - & - & - \\
+w/o trajectory data & - & - & - & 13.40(-5.51\%)
+ & 12.18(-4.55\%) & 22.98(-4.74\%) \\
+\bottomrule
+\end{tabular}
+}
+%\vspace{-0.3cm}
+\label{tab:Ablation3}
+\end{table*}
+
+
+\subsection{Overall Performance}
+As shown in Tables~\ref{tab:two datasets}, our method demonstrates similar or better performance than the state-of-the-art baselines for all tasks on Shanghai and Senegal datasets (Please refer to Table~\ref{tab:Xinjiang} in Appendix~\ref{sec::Overall Performance} for Xingjiang dataset). We conducted multiple experiments and reported the average performance.
+In flow and trajectory prediction tasks conducted on multiple real-world datasets, our UniMob model demonstrated the best performance across all evaluation metrics. Specifically, it achieved a performance improvement of over 6\% in flow prediction and 3.73\% increase in trajectory prediction.
+Additionally, compared to other baseline methods, only our model can simultaneously perform flow and trajectory predictions, demonstrating that our model design effectively achieves unified human mobility prediction.
+Furthermore, we used four model variants for each task. Each variant outperformed other baseline methods, maintaining flexibility to handle different scenarios while demonstrating excellent performance.
+The above conclusions fully demonstrate the feasibility of a unified model in human mobility prediction. Our UniMob model can handle various types of mobility data, showcasing exceptional scalability and robustness. As the first attempt to propose a universal model paradigm for mobility prediction, we have successfully expanded the boundaries of this field.
+
+
+Notably, mobility prediction models based on diffusion models, such as PriSTI and TrajGDM, demonstrate superior performance compared to other baselines. This underscores the powerful modeling capability of diffusion models in capturing the spatiotemporal correlations of mobility data. Diffusion models effectively handle dynamics and uncertainties in mobility data through an iterative denoising process, significantly enhancing prediction performance. Therefore, our UniMob model leverages diffusion models to accurately capture spatiotemporal dependencies in mobility data accurately, proving its effectiveness.
+
+
+
+\subsection{Ablation Study}
+To evaluate the impact of each module in UniMob, we conducted ablation experiments, divided into ablations of model design and data usage.
+\textbf{Model Design:}
+(1) w/o I2C loss: This variant keeps the model structure unchanged but removes the I2C loss.
+(2) w/o C2I loss: Similar to the previous one, this variant only removes the C2I loss.
+(3) w/o shared transformer: In this variant, the flow and trajectory losses no longer share a transformer; instead, each has its independent transformer.
+\textbf{Data Usage:}
+(4) w/o flow data: The model is trained using only trajectory data.
+(5) w/o trajectory data: The model is trained using only flow data.
+
+The results of the ablation experiments conducted on the Shanghai and Senegal datasets are shown in Tables~\ref{tab:Ablation1} and ~\ref{tab:Ablation3} (see Table~\ref{tab:Ablation2} in Appendix~\ref{sec::ablation} for the Xinjiang dataset). For the ablation experiments on model design, it is evident that the shared transformer offers limited benefits for interacting with different mobility data types. The most significant performance improvements come from task-specific loss functions. For instance, the I2C loss enhances flow prediction by using aggregated trajectory and flow data for spatiotemporal alignment. Similarly, the C2I loss uses contrastive learning to construct positive samples of flow and trajectory with similar spatiotemporal patterns, thereby aligning macro and micro mobility distribution. These experiments highlight the effectiveness of our approach in aligning trajectory and flow data.
+
+We removed different data types for the ablation experiments on data usage and trained the model using only a single type of mobility data. The results showed a significant performance decline. This demonstrates the effectiveness and importance of our model in utilizing different types of mobility data. By combining multiple data types, UniMob can more comprehensively understand and predict human mobility behavior, thereby significantly enhancing the model's overall performance.
+
+
+
+%\vspace{-0.2cm}
+\subsection{Noise Perturbation}
+In real life, mobility data often contains noise. This noise can arise from various sources, such as errors produced by sensors during the collection process or intentionally added by data operators to protect user privacy.  To assess our UniMob model's robustness, we added noise to the data and evaluated its performance.
+
+For flow data, we introduced varying noise levels to simulate different degrees of data quality. Figure~\ref{fig:noisy_flow} shows that our model's improvement over the best baseline is relatively small without noise. When the noise level reaches 0.3, our model demonstrates a relative improvement of more than 10\%. This indicates that compared to other baseline models, UniMob exhibits better robustness in handling noisy data, making it more capable of adapting to flow data with noise for prediction. Moreover, we experimented with adding different noise levels to trajectories. Figure~\ref{fig:noisy_trajectory} shows that as the noise ratio increases, the improvement of our model relative to the best baseline also increases, achieving a maximum gain of up to 17.82\%. Because UniMob integrates two types of mobility data, allowing one type of data to provide the same spatiotemporal dynamics as a supplement when the other type of data is noisy, thereby enhancing the model's robustness. The synergistic effects between different data types can still provide reliable predictions even in noisy data.
+
+% Flow
+\begin{figure}[t]
+\centering
+\subfigure[Shanghai]{\includegraphics[width=.23\textwidth]{figure/shanghai_noisy_flow.pdf}}
+\vspace{-0.3cm}
+%\subfigure[Xinjiang]{\includegraphics[width=.30\textwidth]{figure/xinjiang_noisy_flow.pdf}}
+\subfigure[Senegal]{\includegraphics[width=.23\textwidth]{figure/sainei_noisy_flow.pdf}}
+\caption{Flow prediction with noisy data on Shanghai and Senegal datasets.} 
+\vspace{-0.3cm}
+\label{fig:noisy_flow}
+\end{figure}
+
+% Trajectory
+\begin{figure}[t]
+\centering
+\subfigure[Shanghai]{\includegraphics[width=.23\textwidth]{figure/shanghai_noisy_trajectory.pdf}}
+\vspace{-0.3cm}
+%\subfigure[Xinjiang]{\includegraphics[width=.30\textwidth]{figure/xinjiang_noisy_trajectory.pdf}}
+\subfigure[Senegal]{\includegraphics[width=.23\textwidth]{figure/sainei_noisy_trajectory.pdf}}
+\caption{Trajectory prediction with noisy data on Shanghai and Senegal datasets.} 
+\vspace{-0.3cm}
+\label{fig:noisy_trajectory}
+\end{figure}
+
+
+\subsection{Few-shot Performance}
+Similarly, the amount of mobility data may be limited in real-world scenarios due to privacy concerns, data collection challenges, or other constraints. To simulate this situation, we reduce the amount of flow and trajectory data through different operations.
+
+As shown in Figure~\ref{fig:low_flow}, we constructed scenarios with varying proportions of locations having missing flow records. As the proportion of regions with missing flow data increased, our model still demonstrated a significant performance improvement compared to the best baseline. For instance, in the Shanghai dataset, UniMob achieves an improvement of up to 14\% when 75\% of the region is missing. UniMob's robustness is evident in its ability to maintain high performance despite the absence of a substantial amount of flow data. This is due to its ability to leverage the available trajectory data, compensating for the missing flow information through its joint modeling approach. 
+As shown in Figure~\ref{fig:low_trajectory}, we used datasets of different sizes for trajectory data to explore the performance of trajectory prediction with limited data. When the amount of trajectory data is very limited (e.g., only 25\% of the dataset), our model shows a 25\% improvement in the Shanghai dataset compared to the best baseline. This indicates that when trajectory data is scarce, the flow data provides more diverse mobility patterns, effectively compensating for the lack of trajectory data.
+
+By effectively utilizing the spatiotemporal correlations between different types of mobility data, UniMob can provide accurate predictions even in data-scarce environments. UniMob's ability to deliver reliable predictions with limited data highlights its robustness and practical applicability in various scenarios, ensuring dependable performance regardless of data constraints.
+
+% Flow
+\begin{figure}[t]
+\centering
+\subfigure[Shanghai]{\includegraphics[width=.23\textwidth]{figure/shanghai_low_flow.pdf}}
+\vspace{-0.3cm}
+%\subfigure[Xinjiang]{\includegraphics[width=.30\textwidth]{figure/xinjiang_low_flow.pdf}}
+\subfigure[Senegal]{\includegraphics[width=.23\textwidth]{figure/sainei_low_flow.pdf}}
+\caption{Flow prediction with scarce data on Shanghai and Senegal datasets.} 
+\vspace{-0.3cm}
+\label{fig:low_flow}
+\end{figure}
+
+% Trajectory
+\begin{figure}[t]
+\centering
+\subfigure[Shanghai]{\includegraphics[width=.23\textwidth]{figure/shanghai_low_trajectory.pdf}}
+\vspace{-0.3cm}
+%\subfigure[Xinjiang]{\includegraphics[width=.30\textwidth]{figure/xinjiang_low_trajectory.pdf}}
+\subfigure[Senegal]{\includegraphics[width=.23\textwidth]{figure/sainei_low_trajectory.pdf}}
+\caption{Trajectory prediction with scarce data on Shanghai and Senegal datasets.} 
+\vspace{-0.3cm}
+\label{fig:low_trajectory}
+\end{figure}

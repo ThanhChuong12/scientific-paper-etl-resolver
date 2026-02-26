@@ -1,0 +1,114 @@
+\section{Preliminaries}
+
+\textbf{NeRF.} NeRF \cite{mildenhall2021nerf} uses multilayer perceptrons (MLPs) $f_{\sigma}$ and $f_{\mathbf{c}}$ to map the 3D location $\mathbf{x}\in \mathbb{R}^3$ and viewing direction $\mathbf{d}\in\mathbb{R}^2$ to a color value $\mathbf{c}\in\mathbb{R}^3$ and a geometric value $\sigma \in \mathbb{R}^+$:
+\begin{equation}
+    \sigma, \mathbf{z} = f_\sigma(\gamma_\mathbf{x}(\mathbf{x})),
+    \label{eq:sigma}
+\end{equation}
+\begin{equation}
+    \mathbf{c}=f_\mathbf{c}(\mathbf{z}, \gamma_\mathbf{d}(\mathbf{d})),
+    \label{eq:color}
+\end{equation}
+where $\gamma_{\mathbf{x}}, \gamma_{\mathbf{d}}$ are fixed encoding functions for location and viewing direction, respectively. The intermediate variable $\mathbf{z}$ is a feature output by the first MLP $f_\sigma$. To render a $H\times W$ image with the given viewport $\mathbf{p}$, the rendering process casts rays $\{r_i\}_{i=1}^{H\times W}$ from pixels and computes the weighted sum of the color $\mathbf{c}_j$ of the sampling points along each ray to composite the color of each pixel:
+\begin{equation}
+    \hat{\mathbf{C}}(r_i)=\sum_j T_j(1-\exp(-\sigma_j \delta_j))\mathbf{c}_j,
+    \label{eq:ray_color}
+\end{equation}
+where $T_j=\prod_k^{j-1} \exp (-\sigma_k\delta_k)$, and $\delta_k$ is the distance between adjacent sample points. In later chapters, we use $\mathbf{g}(\theta, \mathbf{p})\in [0,1]^{H\times W\times 3}$ to represent the above rendering process, where $\theta$ represents parameters of a NeRF, and $\mathbf{g}$ takes viewport $\mathbf{p}$ as input and outputs a normalized image.
+
+\textbf{Diffusion models.} A diffusion model \cite{song2020score, ho2020denoising, song2020denoising} involves a forward process $\{q_t\}_{t\in [0,1]}$ to gradually add noise to a data point $\mathbf{x}_0\sim q_0(\mathbf{x}_0)$ and a reverse process $\{p_t\}_{t\in[0,1]}$ to denoise/generate data. The forward process is defined by $q_t(\mathbf{x}_t|\mathbf{x}_0):=\mathcal{N}(\alpha_t\mathbf{x}_0,\sigma^2_t\mathbf{I})$ and $q_t(\mathbf{x}_t):=\int q_t(\mathbf{x}_t|\mathbf{x}_0)q_0(\mathbf{x}_0)d\mathbf{x}_0$, where $\alpha_t,\sigma_t>0$ are hyperparamaters; and the reverse process is defined by denoising from $p_1(\mathbf{x}_1):=\mathcal{N}(\mathbf{0}, \mathbf{I})$ with a parameterized noise prediction network $\mathbf{\epsilon}_\phi(\mathbf{x}_t, t)$ to predict the noise added to a clean data $\mathbf{x}_0$, which is trained by minimizing:
+\begin{equation}
+    %\mathcal{L}_{\text{Diff}}=\mathbb{E}_{\mathbf{x}_0\sim q_0(\mathbf{x}_0),t\sim \mathcal{U}(0,1),\mathbf{\epsilon}\sim \mathcal{N}(\mathbf{0},\mathbf{I})}\left[w(t)\lVert \epsilon_\phi(\alpha_t \mathbf{x}_0+\sigma_t\mathbf{\epsilon})-\epsilon\rVert _2^2\right]
+    \mathcal{L}_{\text{Diff}}(\phi)=\mathbb{E}_{\mathbf{x}_0,t,\epsilon}\left[w(t)\lVert \epsilon_\phi(\alpha_t \mathbf{x}_0+\sigma_t\mathbf{\epsilon})-\epsilon\rVert _2^2\right],
+    \label{eq:diffusion}
+\end{equation}
+where $w(t)$ is a time-dependent weighting function. After training, we have $p_t \approx q_t$; thus, we can draw samples from $p_0\approx q_0$. One of the most important applications is text-to-image generation \cite{rombach2022high, ramesh2022hierarchical}, where the noise prediction model $\epsilon_\phi(\mathbf{x}_t,t,y)$ is conditioned on a text prompt $y$.
+
+\textbf{Text-to-3D generation by score distillation sampling (SDS) \cite{poole2022dreamfusion}.} SDS is widely used in text-to-3D generation \cite{lin2023magic3d, wang2024prolificdreamer, liang2024luciddreamer}, which lift 2D information upto 3D NeRF by distilling pre-trained diffusion models. Given a pre-trained text-to-image diffusion model $p_t(\mathbf{x}_t|y)$ with the noise prediction network $\epsilon_\phi(\mathbf{x}_t,t,y)$, SDS optimizes a single NeRF with parameter $\theta$. Given a camera viewport $\mathbf{p}$, a prompt $y$ and a differentiable rendering mapping $\mathbf{g}(\theta,\mathbf{p})$, SDS optimize the NeRF $\theta$ by minimizing:
+\begin{equation}
+    \begin{aligned}
+        \mathcal{L}_{\text{SDS}}(\theta)=\mathbb{E}_{t, \mathbf{p}}\left[\frac{\sigma_t}{\alpha_t}w(t)D_{\text{KL}}(q_t^\theta(\mathbf{x}_t|c)\lVert p_t(\mathbf{x}_t|y^c))\right],
+    \end{aligned}
+    \label{eq:sds}
+\end{equation}
+where $\mathbf{x}_t=\alpha_t\mathbf{g}(\theta,\mathbf{p})+\sigma_t\epsilon$. Its gradients are approximated by:
+\begin{equation}
+    \begin{aligned}
+        \nabla_\theta \mathcal{L}_{\text{SDS}}=\mathbb{E}_{t,\mathbf{p}}\left[w(t)\left(\epsilon_\phi(\mathbf{x}_t,t,y)-\epsilon\right)\frac{\partial \mathbf{g}(\theta, \mathbf{p})}{\partial \theta}\right].
+    \end{aligned}
+\end{equation}
+
+
+
+\section{Proposed Method}
+
+\begin{figure*}[htb]
+    \centering
+    \includegraphics[width=\linewidth]{figures/pipeline.pdf}
+    \caption{Overview. (a) We first pre-train a watermark encoder $W_E$ to embed a watermark into images and a watermark decoder $W_D$ to decode a watermark from images. (b) We generate trigger viewports $\{\mathbf{p}_T^i\}$ from the given secret message $m$ and optimize a NeRF such that the secret message can be decoded from images rendered from arbitrary trigger viewport $\mathbf{p}_T^i$.}
+    \label{fig:pipeline}
+\end{figure*}
+
+\tool watermarks generation process of neural radiance fields (NeRF) by injecting backdoors during score distillation sampling (SDS). The message can be extracted from the rendered image of trigger viewports through a fixed watermark decoder. Our method is conducted in two phases. First, we pre-train the watermark decoder $W_D$. Then, we inject backdoors into a high-resolution NeRF during SDS optimization, such that images rendered from the trigger viewports yield a secret message.
+
+\subsection{Pre-train the watermark decoder}
+
+Different from CopyRNeRF \cite{luo2023copyrnerf}, which trains a separate watermark decoder for each watermarked NeRF, \tool employs a unique watermark decoder. This allows the NeRFs generated by our method to be verified using this unique decoder.
+
+\textbf{Building watermark decoder training pipeline.} For simplicity, we use HiDDeN \cite{zhu2018hidden} as our $W_D$ architecture, a well-established image watermarking pipeline. It optimizes watermark encoder $W_E$ and watermark decoder $W_D$ for signature embedding and extraction. The encoder $W_E$ takes a cover image $x_o\in \mathbb{R}^{H\times W \times 3}$ and a $k$-bit message $m\in \{0,1\}^k$ as input and outputs a watermarked image $x_w\in \mathbb{R}^{H\times W \times 3}$. The decoder takes watermarked image $x_w$ as input and outputs a predicted secret message $m'$. The extracted message $m'$ is restricted to $[0,1]$ by utilizing a sigmoid function. The message loss is calculated with Binary Cross Entropy (BCE) between $m$ and sigmoid $sg(m')$:
+\begin{equation}
+    \mathcal{L}_{msg}=-\sum_{i=0}^{L-1}m_i\cdot \log sg(m'_i)+(1-m_i)\cdot \log (1-sg(m'_i)).
+\end{equation}
+The $W_E$ is discarded in the later phase since only $W_D$ serves our purpose.
+
+Original HiDDeN architecture combines message loss and perceptual loss to optimize both $W_E$ and $W_D$. However, since $W_E$ is discarded and the perceptual loss is not needed, we follow the tradition \cite{fernandez2023stable, jang2024waterf} to optimize $W_E$ and $W_D$ by message loss only. We find that when the decoder receives a vanilla-rendered image, there is a bias between the extracted message bits. Thus, after training the decoder, we conduct PCA whitening to a linear decoder layer to remove the bias without reducing the extraction ability.
+
+\textbf{Transformation layers.} For robustness consideration, a transformation layer is added between $W_E$ and $W_D$, which applies additional distortions to $x_w$, such as Gaussian blur, to make the decoder $W_D$ robust to multiple attacks. During training, it takes in a watermarked image $x_w$ produced by image encoder $W_E$ and outputs a noised version of the watermarked image, which will be further fed to the decoder $W_D$. This transformation layer is made of cropping, resizing, rotation and identity. Within each iteration, one type of transformation is chosen randomly for image editing. In detail, we add random cropping with parameters 0.3 and 0.7, resizing with parameters 0.3 and 0.7 and rotation with a degree range from $-\pi/6$ to $\pi/6$.
+
+
+\subsection{Dreamark}
+
+
+Inspired from existing black-box model watermarking \cite{adi2018turning, zhang2018protecting, jia2021entangled, le2020adversarial, chen2019blackmarks, szyller2021dawn}, where they root backdoors in a deep neural network to achieve DNN watermarking, we watermark NeRF by rooting backdoors during SDS optimization. Formally, given a NeRF with parameter $\theta$, a prompt $y$, a secret message $m$, we aim to optimize the NeRF such that the message $m$ can be decoded by $W_D$ from the image $\mathbf{g}(\theta, \mathbf{p}_T)$ rendered from arbitrary trigger viewport $\mathbf{p}_T$.
+
+\textbf{Generate Trigger Viewports.} We wish to generate a set of trigger viewports $\{\mathbf{p}_T^i\}_{i=1}^N$ from the secret message $m$ such that the watermark verifier does not need to keep a replica of the trigger viewport set. Besides, different messages should generate different viewports because a constant trigger viewport set is easy to predict, leading to potential vulnerability. We use a pseudo-random number generator (PRNG) to generate the $m$-dependent trigger viewport set $\{\mathbf{p}_T^i\}_{i=1}^N$ as shown in Algorithm \ref{alg:trigger-viewport-generation}.
+
+\begin{algorithm}
+\caption{Trigger Viewport Generation}
+\label{alg:trigger-viewport-generation}
+\hspace*{\algorithmicindent} \textbf{Input:} Secret message $m$\\
+\hspace*{\algorithmicindent} \textbf{Output:} $m$-dependent Trigger viewport $\{\mathbf{p}_T^i\}_{i=1}^N$
+\begin{algorithmic}[1]
+\State $seed \gets \text{SHA256}(m)$ \Comment{SHA-256 hash of the message}
+\State $\text{Initialize random generator with } seed$
+\State $\{\mathbf{p}_T^i\}_{i=1}^N \gets \text{Generate $N$ viewports with initialized generator}$
+\State \Return $\{\mathbf{p}_T^i\}_{i=1}^N$
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Choosing Trigger Embedding Media.} After generating $m$-dependent trigger viewport set $\{\mathbf{p}_T^i\}_{i=1}^N$, the question is how to choose suitable cover media to hide secret message $m$, such that $m$ can be decoded from the image rendered from arbitrary trigger viewport $\mathbf{p}_T^i$. In the text-to-NeRF generation \cite{wang2024prolificdreamer, liang2024luciddreamer, lin2023magic3d}, NeRF sample a set of points and obtains their colors $\mathbf{c}$ and geometry values $\sigma$ through two $\mathrm{MLP}$s: $f_\sigma, f_\mathbf{c}$ (Eq. \eqref{eq:sigma}, \eqref{eq:color}). For brevity, we can view the way NeRF computes point colors as $\mathbf{c}=\mathrm{MLP}(x,d)$. However, CopyRNeRF must learn a separate message feature field to get the point color $\mathbf{c}=\mathrm{MLP}(x,d,m)$. When integrating CopyRNeRF with an arbitrary text-to-NeRF pipeline, modifications to the NeRF structure are necessary to accommodate CopyRNeRF.
+
+If we expect no additional changes to the NeRF structure, there are two options to hide triggers in the geometric mapping $f_\sigma$ or the color mapping $f_\mathbf{c}$. In practice, we find that the generated NeRF has low rendering quality once we incorporate geometric mapping $f_\sigma$ into backdooring. This may be because changing the geometric density of a sampled point will affect its color rendered from all viewing directions (Eq.(\ref{eq:color})). Therefore, we decide to backdoor in color mapping $f_\mathbf{c}$.
+
+
+\textbf{Two-stage Trigger Embedding.} To backdoor in color mapping $f_\mathbf{c}$ only, we divide SDS optimization into two stages. In the first stage, we optimize a high-resolution NeRF (\eg, 512) by SDS (Eq.(\ref{eq:sds})) with joint optimization of both $f_\mathbf{c}$ and $f_\sigma$. The aim of the first stage is to generate scenes with complex geometry. In the second stage, we freeze $f_\sigma$ to fine-tune $f_\mathbf{c}$ by the following combined loss to conceal watermarks in trigger viewports $p_T$:
+\begin{equation}
+    \begin{aligned}
+        \mathcal{L}_{\text{comb}}(\theta)=\mathcal{L}_{\text{sds}}+\mathbb{E}_{\mathbf{p}_T^i}\left[\mathrm{BCE}(W_D(\mathbf{g}(\theta, \mathbf{p}_T^i)), m)\right].
+    \end{aligned}
+    \label{eq:comb}
+\end{equation}
+Note that equation \ref{eq:comb} optimizes $\theta$ by SDS across arbitrary viewports $\mathbf{p}$, and $\mathrm{BCE}$ across trigger viewports $\mathbf{p}_T^i$.
+
+\textbf{Watermark Extraction.} Given a suspicious NeRF $\mathbf{g}(\theta, \mathbf{p})$, the NeRF creator can first generate the trigger viewport set $\{\mathbf{p}_T^i\}_{i=1}^N$ following Algorithm \ref{alg:trigger-viewport-generation} based on his secret message $m$. Then the decoded message $m'$ can be extracted from the image rendered from arbitrary trigger viewport $\mathbf{p}_T\in \{\mathbf{p}_T^i\}_{i=1}^N$. The ownership can be verified by evaluating the bitwise accuracy between $m'$ and $m$.
+
+\subsection{Implementation Details}
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/visual_results.pdf}
+    \caption{Images rendered from trigger viewports. Top: generated non-watermarked NeRF. Bottom: Watermarked NeRF generated by \tool. We aim to show that generated NeRF has the same visual quality as the non-watermarked NeRF instead of showing they are perceptually the same since there is no such the ``original NeRF" in the generation context.}
+    \label{fig:visual-results}
+\end{figure*}
+\textbf{Pretrained Watermark Extractor.} We pretrain the watermark encoder $W_E$ and extractor $W_D$ using COCO \cite{lin2014microsoftcoco} dataset. We build $W_E$ with four-layer MLPs and $W_D$ with eight-layer MLPs, with all intermediate channels set to 64. During pretraining, the input image resolution is set to $256\times 256$, and the output message length is set to 48 to satisfy the capacity requirements of downstream watermarking tasks. We use Lamb \cite{you2019lamb} and CosineLRScheduler to schedule the learning rate, which decays to $1\times 10^{-6}$. This process is done in 500 epochs.
+
+\textbf{NeRF.} We choose Instant NGP \cite{muller2022instant} for efficient high-resolution (\eg, up to 512) rendering. Given input coordinate $\mathbf{x}$, we use a 16-level progressive grid for input encoding with the coarsest and finest grid resolution set to 16 and 2048, respectively. The encoded input is further fed into $f_\mathbf{c}$ and $f_\sigma$, which are both built with one-layer MLPs with 64 channels, to predict the color $c_j$ and density $\sigma_j$ of input $\mathbf{x}$. We follow the object-centric initialization used in Magic3D \cite{lin2023magic3d} to initialze density for NeRF as $\sigma_{\text{init}}(\mathbf{x})=\lambda_\sigma(1-\frac{\lVert \mathbf{x}\rVert_2}{r})$, where $\lambda_\sigma=10$ is the density strength, $r=0.5$ is the density radius and $\mathbf{x}$ is the coordinate. We use Adam optimizer with learning rate $10^{-3}$ to optimize NeRF in both stages. The guidance model is Stable Diffusion \cite{rombach2022high} with the guidance scale set to 100. During SDS optimization, we sample time $t\sim \mathcal{U}(0.02, 0.98)$ in each iteration. We jointly optimize $f_\mathbf{c}$ and $f_\sigma$ for 40000 iterations in stage one and fine-tune $f_\mathbf{c}$ only for 30000 iterations in stage two.

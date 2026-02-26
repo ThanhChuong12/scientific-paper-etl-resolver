@@ -1,0 +1,839 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[preprint]{acl}
+\usepackage{multirow}
+
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{float}
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    breaklines=true,    
+    breakatwhitespace=false,
+    % basicstyle=\ttfamily
+    % basicstyle=\footnotesize\ttfamily,
+    basicstyle=\scriptsize\ttfamily,
+    lineskip=2pt,   % 增加行距，使得行与行之间的间距更大
+    xleftmargin=1em, % 左边距
+    xrightmargin=1em % 右边距
+}
+
+
+
+
+
+
+
+
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
+
+\title{Tree-of-Code: A Tree-Structured Exploring Framework for End-to-End Code Generation and Execution in Complex Task Handling}
+
+% Author information can be set in various styles:
+% For several authors from the same institution:
+% \author{Author 1 \and ... \and Author n \\
+%         Address line \\ ... \\ Address line}
+% if the names do not fit well on one line use
+%         Author 1 \\ {\bf Author 2} \\ ... \\ {\bf Author n} \\
+% For authors from different institutions:
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \And  ... \And
+%         Author n \\ Address line \\ ... \\ Address line}
+% To start a separate ``row'' of authors use \AND, as in
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \AND
+%         Author 2 \\ Address line \\ ... \\ Address line \And
+%         Author 3 \\ Address line \\ ... \\ Address line}
+
+
+\author{
+ \textbf{Ziyi Ni\textsuperscript{1,2}},
+ \textbf{Yifan Li\textsuperscript{4}},
+ \textbf{Ning Yang\textsuperscript{1}},
+ \textbf{Dou Shen\textsuperscript{3}},
+ \textbf{Pin Lv\textsuperscript{1}},
+ \textbf{Daxiang Dong\textsuperscript{3}},
+\\
+ \textsuperscript{1}The Key Laboratory of Cognition and Decision Intelligence for Complex Systems, \\Institute of Automation, Chinese Academy of Sciences,
+ \\
+  \textsuperscript{2}School of Artificial Intelligence, University of Chinese Academy of Science \\
+ \textsuperscript{3}Baidu, Inc.,
+ \textsuperscript{4}Global Innovation Exchange Institution, Tsinghua University,
+\\
+ \small{
+   \textbf{Correspondence:} \href{mailto:email@domain}{dongdaxiang@baidu.com}, \href{mailto:email@domain}{pin.lv@ia.ac.cn}, 
+ }
+}
+
+
+
+
+\begin{document}
+\maketitle
+\begin{abstract}
+
+Solving complex reasoning tasks is a key real-world application of agents. 
+Thanks to the pretraining of Large Language Models (LLMs) on code data, recent approaches like CodeAct successfully use code as LLM agents' action, achieving good results. 
+However, CodeAct greedily generates the next action's code block by relying on fragmented thoughts, resulting in inconsistency and instability.
+Moreover, CodeAct lacks action-related ground-truth (GT), making its supervision signals and termination conditions questionable in multi-turn interactions.
+To address these issues, we first introduce a simple yet effective end-to-end code generation paradigm, CodeProgram, which leverages code's systematic logic to align with global reasoning and enable cohesive problem-solving.
+Then, we propose Tree-of-Code (ToC), which self-grows CodeProgram nodes based on the executable nature of the code and enables self-supervision in a GT-free scenario.
+Experimental results on two datasets using ten popular zero-shot LLMs show
+ToC remarkably boosts accuracy by nearly 20\% over CodeAct with less than 1/4 turns.
+Several LLMs even perform better on one-turn CodeProgram than on multi-turn CodeAct.
+To further investigate the trade-off between efficacy and efficiency, we test different ToC tree sizes and exploration mechanisms. We also highlight the potential of ToC’s end-to-end data generation for supervised and reinforced fine-tuning.
+
+\end{abstract}
+\section{Introduction}
+
+Large language models (LLMs) significantly improve agents' ability to leverage external tools. \cite{chen2023autoagents,hong2023metagpt,paul2024continually}.
+Effectively and efficiently handling complex real-world problems \cite{blount1994agi}, especially those requiring multiple tools and calls \cite{li2023api, wang2024codeact}, has become a key focus across industry and academia.
+Currently, the widely used paradigm, ReAct, \cite{yao2022react}, combines reasoning with action strategies, allowing for actions to be performed incrementally and adjusted based on environmental feedback. 
+
+The application of code generation techniques to complex task planning and execution has garnered significant attention~\cite{holtl2mac,wen2024learning,xu2024wizardlm}, particularly with the emergence of CodeAct~\cite{wang2024codeact} approaches. 
+% CodeAct shifts the smallest unit of interaction from ReAct’s individual tool calls to generating blocks of code with local reasoning, and uniquely leverages code logic and libraries. 
+CodeAct moves the interaction unit from ReAct's individual tool calls to generating code blocks with local reasoning, while uniquely using code logic and libraries.
+Rather than JSON \cite{Qin2023ToolLLMFL} or text \cite{Park2023GenerativeAI}, it treats code as action, utilizing LLM's pre-trained coding skills for efficient handling of complex tasks.
+
+However, each turn of CodeAct is based on individual actions rather than the entire program. It can not autonomously reason and generate complete code in one turn. Instead, it follows a step-by-step generation and interaction process. 
+This is akin to the brain's control of motor actions, processing tasks iteratively and incrementally, with the basal ganglia supporting step-granularity execution and the cerebellum refining and sequencing for the complete complex motor task \cite{Shenjing2023}.
+
+On the one hand, the fragmented and stalled thinking in code can hinder a thorough understanding of the logical chains embedded within it, potentially leading to redundant code \cite{wang2023leti, guo2024deepseek}. 
+% LLM code reasoning is becoming an increasingly popular area. 
+Repeatedly integrating all prior thoughts causes context overload due to long histories, making it more prone to accumulating significant model hallucinations~\cite{ji2023survey}. 
+
+On the other hand, solving complex problems can have multiple solutions \cite{Mialon2023GAIAAB}, such as calling tools in different sequences. LLMs also tend to explore randomly, resulting in varied solutions, making it difficult to set a standard answer for each step. Long action sequences over multiple turns only provide sparse rewards \cite{Xu2023SparseJ}. When using these trajectories as training data for supervised fine-tuning (SFT), they can only be combined into an overall program response as one sample \cite{wang2024codeact}. Applying reinforcement learning is challenging due to the lack of necessary process supervision \cite{zelikman2024quiet}, leading to fundamental issues.
+
+Therefore, we are considering how to use task-level feedback as a supervision signal for each turn. Additionally, how can we design a framework that incorporates reflection and refinement based on environmental feedback to create real multi-turn trajectory data?  
+
+Here, we are inspired by the Dorsolateral Prefrontal Cortex (DPC), which is involved in high-level global cognitive circuits~\cite{Kaller2015PredictingPP}, to simulate how programmers form systematic representations and utilizations of code. We first propose an end-to-end code reasoning and generation paradigm, dubbed CodeProgram. In this way, the final answer can serve as a direct evaluation metric. 
+
+To utilize environmental feedback from code execution, we further develop a framework called Tree-of-Code (ToC). In this method, task-level CodePrograms serve as nodes, forming a self-expanding exploration tree driven by the verifiability of code execution.
+This differs from "Tree-of-Thoughts" (ToT) \cite{yao2024tree}, which enhances "Chain-of-Thought" (CoT) \cite{wei2022cot} by exploring varied approaches within the same solution. In contrast, we generate diverse solutions through random settings, with each node representing a complete solution. This concept is akin to a Code "Random Forest" \cite{rigatti2017randomforest}.
+Experimental results on two types of multi-turn, multi-tool, complex task datasets, using ten LLMs, demonstrate that ToC outperforms CodeAct in both accuracy and efficiency.
+The core contributions of this paper are summarized as follows:
+% The main approach can be summarized in three parts:
+\begin{enumerate}
+\item We introduce CodeProgram, an end-to-end paradigm designed to continuously generate complete code solutions using necessary tools. 
+The purpose and its advantages are analyzed.
+\item We present Tree-of-Code (ToC), which self-grows CodeProgram nodes by leveraging the executable nature of the code. By exploring random settings, ToC enhances performance in solving complex tasks through ensembling.
+\item Empirical validation on two complex task datasets, M3ToolEval and API-Bank, demonstrates significant improvements in both problem-solving performance and efficiency.
+\end{enumerate}
+
+\section{Design Motivation}
+
+\begin{figure}[t]
+  \centering 
+  \includegraphics[width=0.48\textwidth]{figs/Figure_4.pdf}
+  \caption{Illustration of our design motivation.
+  % A conceptual diagram to illustrate our design motivation.
+  }
+  \label{fig:cute}
+  \vspace{-5pt}
+\end{figure}
+
+
+In industry, complex tasks requiring multiple tools and function calls, are typically driven by open-ended user queries. This creates two key challenges: (1) 
+For zero-shot queries, it is challenging to pre-obtain task-level ground-truth (GT). Manual annotation or assigning different rewards to responses is required for subsequent SFT \cite{chung2024flant5} or reinforced fine-tuning (ReFT) \cite{Luong2024ReFT}. Moreover, without GT, the termination criteria become unclear.
+(2) 
+Multi-turn interactions lack a fixed trajectory, making it difficult to define the process supervised signals \cite{Luo2024ImproveMR}. 
+Current methods often rely on a 'judge' model to evaluate whether the user’s needs from the task query are met at each step \cite{Chen2024JumpCoderGB, Li2024CodeTree}. 
+However, each evaluation demands strong analytical and reasoning skills from the model, making it costly and time-consuming.
+Existing methods deliberately avoid these challenges by assuming GT is known, matching task-level GT with action-related outcomes at each step. 
+The process stops if they match, or continues until the step limit is reached. The tool agent in Figure \ref{fig:cute} illustrates this.
+
+We aim to explore whether it is possible to develop a method that can self-provide supervision and termination criteria at each step while approximating GT in a GT-free scenario. 
+
+Unlike cerebellum-controlled step-by-step motor tasks, we learn from the DPC to treat each turn as a complete task. 
+By iteratively approaching the feasible region, we collect a batch of feasible solutions and then consider the optimal one. 
+Inspired by it, we represent the program agent in Figure \ref{fig:cute} to simulate the cognitive process of senior programmers. When working on a project, they start with global planning, complete the entire code, and iteratively debug until no errors are reported, leveraging the systematic logic and environmental feedback inherent to the code project.
+
+
+\begin{figure}[!th]
+  \centering  \includegraphics[width=0.48\textwidth]{figs/CodeProgram.pdf}
+  \caption{Illustration of CodeProgram.}
+  \label{fig:codeprogram}
+  \vspace{-4pt}
+\end{figure}
+
+
+\section{CodeProgram}
+\label{codeprogram}
+A block of code in CodeAct's actions corresponds to the eyes or mouths of the smiley face in Figure \ref{fig:cute}, when faces represent complex tasks. We propose CodeProgram, which can draw the complete face in one turn. Figure \ref{fig:codeprogram} illustrates how it works.
+Specifically, code serves as a bridge, aligning with natural language reasoning and connecting it to execution outcomes in the environment. 
+By decoupling the reasoning process from code execution, 
+% And the reasoning process is decoupled from code execution, 
+we achieve flexibility while ensuring consistency. 
+
+\subsection{Code as Reasoning}
+Code generation plays a crucial role in the concept of "code-as-reasoning," where the process of writing code itself reflects a reasoning process.
+
+Global reasoning is required to guide complete code generation in a single end-to-end process. This enables the seamless integration of various reasoning methods for large language models (LLMs), 
+such as prompt engineering \cite{chen2023prompteng}, Chain-of-Thoughts (CoT) \cite{wei2022cot}, Tree-of Thoughts (ToT) \cite{yao2024tree}, in-context learning \cite{kojima2022step_by_step}, self-reflection ~\cite{zhang2024selfcontrastreflect}, and System2 reasoning \cite{frankish2010system2reason, openai2024o1, yudong2024}. 
+Furthermore, longer chains of thought have consistently been shown to improve task performance \cite{wei2022cot, zelikman2024quiet}.
+
+Building on this foundation of global reasoning, we write the root prompt based on previous work \cite{wang2024codeact} to guide the generation of step-by-step CoT thoughts and the corresponding complete code. 
+LLMs are prompted to first analyze and break down the problem, generate reasoning-based thoughts for solving it, and then produce the complete code that reflects and executes that reasoning.
+% and generate reasoning-based thoughts for problem-solving, followed by the complete code that reflects and executes that reasoning. 
+The thoughts and codes are enclosed using the "\textit{<thought>-</thought>}" and "\textit{<execute>-</execute>}" tags, respectively.
+The root prompt is shown in Appendix  \ref{Appendix Prompt}. 
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=1\textwidth]{figs/Figure_1.pdf}
+  \caption{An Overview of \textbf{CodeAct} and \textbf{ToC}.
+(a) CodeAct regards code as action with step-by-step reasoning.
+(b) ToC applies execution-based reflection in the tree structure, where each node generates end-to-end code with global planning as its thoughts. 
+At each layer, different nodes are executed in parallel; if executed successfully, they are collected for voting. 
+Yellow boxes with dashed borders indicate invalid nodes that fail execution. 
+Both red and green boxes represent valid nodes: red boxes are discarded through LLM voting, while green boxes are finally accepted.
+The query is "Find nearby restaurants within 1km of San Francisco" from API-Bank level-3 dataset. } 
+\label{fig:overview}
+% \vspace{-2pt}
+\end{figure*}
+
+
+\subsection{Two Helper Tools}
+\label{Two Helper Tools}
+CodeProgram struggles when LLMs must rely on tool outputs to determine the next steps. For example, we can only provide the final summary answer based on all tool outputs; in web browsing tasks, 
+the next action is determined only after the page content is viewed. 
+To maintain end-to-end flow, we introduce two additional functions that call the LLM into our code: a general \textbf{res\_handler}, which defines a prompt to generate results that meet the prompt requirements for final summarization, and a specific \textbf{next\_action} for web tasks, 
+which decides the next action from a given set of possible browsing actions based on the page content, visited URLs, and task query. 
+Their tool descriptions and functions are shown in  Appendix \ref{Helper Tool}. 
+They help better understand the semantic relationships between tools, ensuring a smooth and cohesive sequence of tool calls during code generation.
+
+\subsection{Execution Outcome can be Label}
+The code solution is task-level, and its execution outcome is a self-provided annotation that can be directly used as labels. 
+Specifically, it includes supervision signals to select the "successfully executed" samples for SFT, 
+and various rich comments (such as specific results or error messages) that can be quantified as rewards for ReFT, as long as we repeat the CodeProgram in different settings multiple times to receive feedback. In this way, the code acts as a verifier. 
+This idea inspires us to build a single-layer multi-node Tree-of-Code (ToC).
+% SFT 为了更好的action生成， ReFT是为了更好的reward生成，实现对action的判断
+Thanks to the task-level granularity, the code's execution outcomes align with the task query and the thought-code output, facilitating the generation of valuable training data, as the thoughts, code, and execution-based labels are tightly synchronized.
+
+% \subsection{Conclusion}
+% 总结参考
+% We argue that code as an executable language, inherently supports both execution and reasoning-based generation while fully decoupling the two processes. 
+In summary, CodeProgram is an annotation-free, end-to-end generation approach well-suited for producing large-scale training data, increasing efficiency, and improving task-solving performance. 
+
+
+
+\section{Tree-of-Code Method}
+Following the design motivation in Figure \ref{fig:cute}, we need to collect all successfully executed solutions and identify the one closest to the GT. 
+% the one mostly approximating the groundtruth.
+CodeProgram introduced in Section \ref{codeprogram} has allowed us to achieve two key goals: (1) to directly reflect on and refine the task-level code, 
+and (2) to use its execution results as terminal criteria. 
+% and (2) to  provide terminal criteria based on its execution results. 
+We now propose an execution-based, self-growing, and self-filtering tree, with CodeProgram as its nodes. 
+
+\begin{figure*}[th]
+\centering
+  \includegraphics[width=0.95\textwidth]{figs/Figure_2.pdf}
+  \caption{Illustrative example of a branch of ToC. We demonstrated the process of a node expanding into deeper levels. Based on the user query, tool descriptions, and previous execution outcomes, ToC first thinks about how to do it and then writes the end-to-end code. The example is selected from M3ToolEval dataset.
+  }
+  \label{fig:example}
+  % \vspace{-1pt}
+\end{figure*}
+
+
+\subsection{Overview of Tree-of-Code}
+We represent the ToC framework as $\textbf{\textit{T}}=(\textbf{\textit{N}, \textit{S}})$, where $\textbf{\textit{N}}$ denotes a set of nodes ($N$), and $\textbf{S}$ represents the stems (unidirectional arrows in Figure \ref{fig:overview})
+,  modeling the reflection reasoning process of LLMs when expanding the nodes. 
+The overview of ToC and how it works is illustrated in Figure \ref{fig:overview}. 
+% , modeling the reflection reasoning process based on the previous node's execution outcomes. 
+Let $L$ denote the max depth,
+$l$ the layer index, $M$ the expanded layer's max width, 
+$m$ the node index,
+$l \in \{1, \dots, L\}$, $m \in \{1, \dots, M\}$. 
+We use 
+$T$ for the thoughts of the $N$, 
+$C$ for code, and 
+$E$ for its execution result.  
+The next-layer $N$ is denoted as: 
+\[N_{(l+1)\text{-}m} =S_{l\to {(l+1)}} (f, \sum_{j=0}^{l} (T_{j\text{-}m} + C_{j\text{-}m} + E_{j\text{-}m}))\]
+where $f$ represents the basic information of the task, such as the user's query,  and all tool descriptions. The sum $\sum_{j=0}^{l}$ indicates that each reflection reasoning process for generating the next node relies on the thoughts, code, and execution results from all ancestor nodes in the history. 
+The node index is fixed for simplicity in the formula.
+
+\subsection{Tree Expansion}
+We initialize from a root node and recursively expand the tree. 
+The expansion process follows:
+(1) The breadth-first search (BFS) strategy is applied, with each parent node branching into $M$ child nodes.
+(2) Whether the node continues to grow depends solely on the evaluation of its own execution state (success or failure). 
+% 强调只是它自己，与其他支路或其他节点无关，独立性
+For each $N_{l}$,   
+\vspace{-3pt}
+\[
+\left\{
+  \begin{array}{ll}
+    \text{\textit{stop and collect},}
+    & \text{\textit{if} } E_{l} \neq \text{\textit{None or error}},\\
+  \text{\textit{grow} } \textbf{\textit{N}}_{(l+1)}, & \text{\textit{otherwise}.}
+  \end{array}
+  \vspace{-3pt}
+\right.
+\]
+(3) Expansion continues until all child nodes stop or the maximum depth ($L$) of 3 is reached.
+
+% The overview of ToC and how it works is illustrated in Figure \ref{fig:overview}.
+\vspace{3pt}
+\noindent \textbf{Execution-based Reflection.} 
+We can not guarantee that the end-to-end code solution will be correct on the first attempt. 
+Treating task-level execution errors as continuation signals,
+we propose execution-based reflection, which enables LLMs to self-reflect, identify errors, refine thoughts, and improve code through prompting, significantly enhancing problem-solving. 
+The prompt for reflection is shown in Appendix \ref{Reflection Prompt}.
+
+As long as execution fails, self-reflection continues iteratively, generating new nodes. 
+% This allows a branch to grow as a data sample, where each node in the trajectory provides supervision signals. 
+This allows the branch to grow as a data sample, with each node in the trajectory providing supervision signals. 
+Since these supervision signals are inherently embedded within the CodeProgram node, the growth process is self-driven. Therefore, the whole tree is end-to-end generated. 
+Figure \ref{fig:example} illustrates an example of a branch of ToC. 
+
+Additionally, our flexible tree-structured framework allows for the integration of any reflection method in end-to-end code generation.
+
+
+\vspace{2pt}
+\noindent \textbf{Exploration strategy.} 
+Generating code in a single pass presents two main limitations on diversity:
+\begin{itemize}
+\vspace{-4pt}
+    \item 1) Limited strategy: It easily leads to cognitive narrowing, where the fundamental reasoning mechanism remains unchanged.
+    \vspace{-6pt}
+    \item 2) Limited robustness: 
+    If an error occurs, the only option for the user is to re-run the whole process, without any proactive adjustments, which leads to inefficiencies. 
+    % When an error occurs, the only option is to re-run the entire process, without reflective adjustments, leading to inefficiencies. 
+    \vspace{-4pt}
+\end{itemize}
+Research \cite{renze2024self} has shown that performance benefits from diverse perspectives of error identification, which encourages models to generate multiple solutions. 
+
+
+To enhance the diversity of ToC, we introduce randomness into the expansion process by varying LLMs and prompts, inspired by the random forest \cite{rigatti2017randomforest}. 
+At the system level, 
+different LLMs are randomly explored from our LLM list, which will be introduced in Section \ref{section models}, with a consistent temperature setting of 0.1.  
+At the instruction level, prompts are randomly selected from a diverse pool, designed through self-evolution and human crafting phases. 
+In the first phase, 
+we used our ten LLMs to create ten various prompts based on the prompt evolution with the root prompt (see Appendix \ref{Appendix Prompt}). The prompt for prompt evolution requires maintaining consistent core content with the root prompt while encouraging orthogonal or divergent expressions.
+Then, 
+we manually selected six distinct prompts, randomly applying one or more of the following modifications: (1) Adding more detailed usage examples (beyond just printing "Hello world") to three prompts; (2) Adjusting their format by adding line breaks and indentation; (3) Randomly rearranging components, such as the reflection part, usage examples, role instructions, tool descriptions, and the chat history. 
+
+
+
+\subsection{Final Result Generator}
+Once valid outputs from successfully executed nodes are collected, the same LLM makes the final decision by performing a majority vote and summarization to determine the most likely answer — this corresponds to the green node in Figure \ref{fig:overview}. Other valid responses (red nodes) are discarded. 
+% Only the precise answer is displayed, without explaining the final result.
+
+
+\begin{figure}[ht]
+  \centering  
+  \includegraphics[width=0.4\textwidth]{figs/Figure_3.pdf}
+  \caption{A detailed example illustrating ToC's execution-based reflection and expansion. 
+  % When a node fails, three child nodes are created, each exploring different models and prompts. They then reflect on the feedback and re-plan their reasoning.
+  }
+  \label{fig:tree}
+    \vspace{-6pt}
+\end{figure}
+
+
+
+\begin{table*}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.35}
+\scalebox{0.65}{
+\begin{tabular}{l | c c c c | c c c c}
+\toprule
+\multirow{2}{*}{\textbf{Model}} & \multicolumn{4}{c|}{\textbf{M3ToolEval}} & \multicolumn{4}{c}{\textbf{API-Bank level-3}} \\ \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+ & \textbf{ReAct} & \textbf{CodeAct} & \textbf{CodeProgram} & \textbf{ToC (1-3)} 
+ & \textbf{ReAct} & \textbf{CodeAct} & \textbf{CodeProgram} & \textbf{ToC (1-3)} \\
+ 
+\midrule
+\textbf{claude-instant-1} & 28.0\% (8.7) & 18.0\% (8.9) & 30.5\% (1) & 35.3\% (1) 
+& 0.0\% (10.0) & 2.0\% (10.0) & 6.0\% (1) & 18.0\% (1) \\
+
+\textbf{claude-2} & 40.2\% (8.2) & 54.9\% (7.2) 
+& 57.3\% (1) & 59.8\% (1) 
+& 0.0\% (10.0) & 20.0\% (8.9) & 8.0\% (1) & 18.0\% (1) \\
+
+\textbf{claude-3-haiku} & 24.4\% (9.0) & 9.8\% (9.4) & 29.3\% (1) & 31.7\% (1) 
+& 10.0\% (9.4) & 0.0\% (10.0) & 6.0\% (1) & 8.0\% (1)\\
+
+\textbf{claude-3-5-sonnet} & 48.8\% (7.7) & 73.2\% (5.7)& \textbf{73.2\%} (1) & \textbf{82.9\%} (1) 
+& 14.0\% (9.3) & 32.0\% (7.8) & \textbf{48.0\% }(1) & \textbf{52.0\% }(1) \\
+
+\midrule
+\textbf{gpt-3.5-turbo-1106} & 18.3\% (8.9) & 25.6\% (8.6) & 12.2\% (1) & 17.1\% (1) 
+& 14.0\% (9.2) & 2.0\% (9.9) & 4.0\% (1) & 8.0\% (1) \\
+
+\textbf{gpt-4-1106-preview} & \textbf{54.9\% }(7.5) & \textbf{75.6\% }(5.4) & 72.0\% (1) & 73.2\% (1) 
+& \textbf{18.0\%} (8.2) & 30.0\% (8.2) 
+& 34.0\% (1) & 38.0\% (1)\\
+
+\textbf{gpt-4o-mini-2024-07-18} & 32.9\% (8.4) & 47.6\% (7.0) & 31.7\% (1) & 42.7\% (1) 
+& 10.0\% (9.6) & 16.0\% (9.5) & 14.0\% (1) & 20.0\% (1)\\
+
+\textbf{gpt-4o-2024-08-06} & 35.4\% (8.5) & 56.1\% (6.7) & 51.2\% (1) & 62.2\% (1) 
+& 14.0\% (9.4) & \textbf{36.0\%} (7.8) & 28.0\% (1) & 32.0\% (1) \\
+
+\midrule
+\textbf{qwen2.5-72b-instruct} & 50.0\% (7.9) & 70.7\% (5.6) & 51.2\% (1) & 59.8\% (1) 
+& 2.0\% (9.9) & 30.0\% (8.2) & 24.0\% (1) & 32.0\% (1)\\
+
+\textbf{deepseek-chat} & 47.6\% (7.6) & 62.2\% (5.9) & 40.2\% (1) & 52.4\% (1) 
+& 0.0\% (9.8) & 24.0\% (8.6) & 22.0\% (1) & 26.0\% (1)\\
+
+\midrule
+\textbf{\textit{Avg.}} & \textbf{38.05\% (8.24)} & \textbf{49.37\% (7.04)} & \textbf{43.53\% (1)} & \textbf{50.98\% (1) }
+& \textbf{8.2\% (9.48)} & \textbf{19.2\% (8.89)} & \textbf{19.4\% (1)} & \textbf{24.4\% (1)}\\
+\bottomrule
+\end{tabular}
+}
+\caption{Detailed performance comparison of different models under ReAct, CodeAct, CodeProgram, and one-layer, three-node Tree-of-Code (ToC) on the M3ToolEval and API-Bank level-3 datasets. The correctness is reported, with the average number of turns in parentheses.  The noteworthy point is that since the model is fixed, the ToC mechanism at this time represents the ToC mechanism without model exploration (w/o model exploration).}
+\label{tab:fix}
+  \vspace{-2pt}
+\end{table*}
+
+
+
+
+\section{Experiment and Analysis}
+\subsection{Setup}
+\textbf{Datasets. } 
+Following CodeAct, our evaluation is based on M3ToolEval\footnote{\url{https://github.com/xingyaoww/code-act/tree/main/scripts/eval/m3tooleval}}  (M3) 
+\cite{wang2024codeact}  
+and the test set of API-Bank\footnote{\url{https://huggingface.co/datasets/liminghao1630/API-Bank/tree/main}
+} \cite{li2023api}.
+M3 consists of 82 tasks utilizing 100 tools in code/JSON/txt action space respectively across 5 types of scenarios, including DNA sequencer, message decoder, trade calculator, travel itinerary planning, and web browsing.  
+API-Bank contains 314 tool-use dialogues and 73 API tools, including level-1, 2, 3.
+Unlike CodeAct, which evaluates only on level-1, we focus directly on the 50 most challenging level-3 tasks, 
+on which nearly all non-GPT4 models score 0\%, according to the original paper.
+
+For M3,  we add the "next\_action" tool, which is a customized function introduced in Section \ref{Two Helper Tools}.
+For API-Bank, which only supports JSON format, 
+% we make three modifications to adapt it for code interaction:
+we make the following modifications to adapt it for code interaction:
+(1) functionalize all API tools, 
+(2) add output examples to each function description (shown in Figure \ref{fig:function}). We include all tool signatures in the prompt context and let LLMs inherently search and select tools, instead of using ToolSearch API, deemed the least essential in \cite{li2023api}.
+(3) determine correctness by matching the response to the expected final output through conditional keywords, not by API call matching. 
+
+\noindent \textbf{Models. }
+\label{section models}
+We include the following ten models in our model pool for evaluation:
+the GPT family from OpenAI \cite{achiam2023gpt, bubeck2023sparks, openai2024hello}, including gpt-3.5-turbo-1106, gpt-4o-mini-2024-07-18, gpt-4o-2024-08-06, and gpt-4-1106-preview checkpoints, excels in generation capabilities. From the Anthropic's Claude family \cite{anthropic2023claude, anthropic2024claude}, we select claude-instant-1, claude-2, claude-3-haiku-20240307, and claude-3-5-sonnet-20240620  known for their code generation and problem-solving capabilities. Besides, we incorporate open-sourced deepseek-chat from DeepSeek \cite{guo2024deepseek} and qwen2.5-72b-instruct from Alibaba \cite{bai2023qwen}. 
+
+\noindent \textbf{Baselines. }
+ReAct \cite{yao2022react} combines reasoning and action in a dynamic, step-by-step interaction, providing a flexible approach to task-solving by adjusting action strategies based on environmental feedback.
+CodeAct \cite{wang2024codeact} replaces the JSON in ReAct with a block of code as the LLM agent's action, enabling multi-turn interactions and effectively expanding the action space for solving complex real-world problems. 
+
+\noindent \textbf{Metrics. }
+The evaluation includes accuracy and averaged turns. Accuracy represents the percentage of complex tasks that are correctly solved. 
+Each LLM-generated code is considered one turn. For parallel generation, the number of threads counts as turns in terms of resource usage, but when considering time, multiple parallel generations count as one turn. We use the latter approach. 
+
+\begin{figure}[H]
+\centering
+ \vspace{-4pt}
+  \includegraphics[width=0.46\textwidth]{figs/std_10_light.pdf}
+  \caption{
+  Performance of 10 LLMs on ReAct, CodeAct, CodeProgram, and 1-3 ToC for the M3 dataset is visualized, with average and standard deviation reported.
+  }
+  \label{fig:std}
+  % \vspace{-6pt}
+\end{figure}
+
+
+
+\subsection{One-turn vs. Multi-turn}
+CodeProgram enables global planning and complete solutions in a single turn by leveraging code’s ability to handle long logic chains, aligning with global reasoning in language, and defining clear tool inputs and outputs.
+With a significant advantage in the number of turn, Table \ref{tab:fix} and Figure \ref{fig:std} demonstrate that the performance of some models even surpasses the multi-turn CodeAct, particularly for the Claude series models. 
+We grow CodeProgram into a single-layer, three-node (1-3) Tree-of-Code (ToC). 
+The prompt for each node is randomly sampled from our prompt pool. 
+Compared to CodeProgram, the simple 1-3 tree-structured ToC with random prompts significantly boosts performance. The average performance of 1-3 ToC already surpasses CodeAct, highlighting the power of prompt randomness. 
+Upon reviewing the generated code, we observe that LLMs often produce modular code for each step or add comments before modules, even when not explicitly required.
+
+We highlight the best-performing models in bold. Experimental results show that the top models differ between the CodeAct and ToC, and even within CodeAct, performance varies by dataset. For M3, gpt-4 performs best, while for API-Bank level-3, gpt-4o excels, likely because API-Bank level-3 emphasizes tool usage over scenario understanding, with simpler problem expressions. 
+For ToC, claude-3-5-sonnet stands out due to its strong prompt-following ability, which is key for aligning reasoning with code and tool selection. 
+
+
+
+
+
+\begin{figure}[ht]
+\centering
+ \vspace{-4pt}
+  \includegraphics[width=0.45\textwidth]{figs/function.pdf}
+     \vspace{-2pt}
+  \caption{Example of the function signature in level-3.
+  }
+  \label{fig:function}
+  \vspace{-10pt}
+\end{figure}
+
+
+\subsection{ToC vs. CodeAct and ReAct}
+We primarily compare the ToC framework, which is comprised of CodeProgram nodes, with the CodeAct and ReAct framework, which are comprised of steps, using the M3 and the level-3 datasets.
+For ToC, we randomly sample the LLM and prompt from the LLM list and prompt pool, respectively, at each node exploration. 
+For CodeAct and ReAct, we report the average results across all models used in this paper. 
+Table \ref{tab:main} shows that ToC consistently achieves superior performance and demonstrates a significant advantage with fewer interaction steps, highlighting its efficiency in managing complex tool-use scenarios. 
+
+
+\begin{table}[ht]
+\vspace{-2pt}
+  \centering
+  \resizebox{\columnwidth}{!}{
+    \begin{tabular}{lcc|cc}
+      \toprule
+      \multirow{2}{*}{\textbf{Mechanism}} & \multicolumn{2}{c}{\textbf{M3ToolEval}} & \multicolumn{2}{c}{\textbf{API-Bank level-3}} \\
+      \cmidrule(r){2-3} \cmidrule(r){4-5}
+      & \textbf{Avg Turns} & \textbf{Correct} & \textbf{Avg Turns} & \textbf{Correct} \\
+      \midrule
+      \textbf{ReAct} & 8.2 & 38.1\% & 9.5 & 8.2\%\\
+      \textbf{CodeAct} & 7.0 & 49.4\% & 8.9 & 19.2\% \\
+      \textbf{Tree-of-Code} & 1.7 & 67.1\%\(\uparrow\) & 2.1 & 38.0\% \( \uparrow\) \\
+      \bottomrule
+    \end{tabular}
+  }
+   \vspace{-2pt}
+  \caption{
+    Performance comparison of CodeAct and our ToC in terms of averaged turns and accuracy on M3 and API-Bank level-3 tasks. Note: all numerical results presented in this paper are rounded to one decimal place. 
+  }
+  \label{tab:main}
+    \vspace{-10pt}
+\end{table}
+
+\subsection{Analysis and Ablation Studies}
+% \vspace{-5pt}
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{1.1}
+ \resizebox{\columnwidth}{!}{
+\begin{tabular}{c|c|c|c}
+\hline
+\textbf{Layer / Node Per Layer} & \textbf{1}     & \textbf{2}     & \textbf{3}     \\ \hline
+\textbf{1     }                         & 73.2\% (1)     & 75.6\% (1)     & 82.9\% (1)     \\ 
+\textbf{2        }                      & 73.2\% (1.4)   & 76.8\% (1.4)   & 84.1\% (1.5)   \\
+\textbf{3    }                          & 74.4\% (1.8)   & 79.3\% (1.7)   & 84.1\% (1.6)   \\ \hline
+\end{tabular}
+}
+\vspace{-2pt}
+\caption{The performance of varying tree sizes.}
+\label{tab:tree}
+  \vspace{-6pt}
+\end{table}
+\noindent \textbf{Varying tree sizes.} 
+% Using the best-performing model, claude-3-5-sonnet, we further tested its performance on varying tree sizes to evaluate improvements and the trade-off between efficacy and efficiency. 
+We test the performance of the top model, claude-3-5-sonnet, on different tree sizes to evaluate the trade-off between efficacy and efficiency.
+Table \ref{tab:tree} shows impressive results: 
+with proper prompts and no additional training, 
+% the model achieves an accuracy of 84.1\% on the M3 dataset. 
+the model achieves 84.1\% accuracy (3-3) on the M3, 10.9\% higher than 73.2\% (1-1).
+
+Visualization results for ReAct, CodeAct, and 3-3 ToC on the M3 dataset (Figure \ref{fig:chart}) show that ToC achieves near-perfect accuracy on all tasks except the web browsing task. 
+
+\begin{figure}[htbp!]
+\centering
+  \vspace{-10pt}
+  \includegraphics[height=0.2\textwidth, width=0.45\textwidth]{figs/task_chart.pdf}
+  \vspace{-2pt}
+  \caption{Comparison across five tasks in the M3.
+  }
+  \label{fig:chart}
+  \vspace{-2pt}
+\end{figure}
+
+
+\noindent \textbf{Prompt exploration.} 
+The ablation results in Table \ref{tab:ablation} demonstrate the effectiveness of prompt exploration. 
+By comparing the random model with the fixed model, 
+% prompt exploration proves to be more critical in scenarios with lower diversity.
+prompt exploration proves more crucial in low-diversity scenarios.
+
+\begin{table}[ht]
+\vspace{-3pt}
+\centering
+\renewcommand{\arraystretch}{1} % Adjust row height
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{l |c|c}
+\toprule
+\textbf{Mechanism} 
+& \multicolumn{2}{c}{\textbf{M3ToolEval}} \\ \cmidrule(l){2-3}
+                   & \textbf{Avg Turns} & \textbf{Correct} \\ 
+\midrule
+\multicolumn{3}{c}{Random Model ($\Delta=3.7$\%)} \\ \hline
+ToC                & 1.7                & 67.1\%           \\ 
+ToC w/o prompt exploration & 1.9        & 63.4\% $\downarrow$          \\ 
+\midrule
+\multicolumn{3}{c}{Fixed Model (the best) ($\Delta=8.5$\%)} \\ \hline
+ToC w/o model exploration & 1.6         & 84.1\%           \\ 
+ToC w/o model+prompt exploration & 1.8   & 75.6\% $\downarrow\downarrow$          \\ 
+\bottomrule
+\end{tabular}
+}
+\vspace{-2pt}
+\caption{Results of the ablation study.}
+  \label{tab:ablation}
+\vspace{-12pt}
+\end{table}
+
+
+\section{Discussion}
+\vspace{-3pt}
+\textbf{Why we do not try a search tree? }
+We initially explored using evolutionary algorithms to merge nodes from different branches for the next generation, aiming to reduce the search space. However, after extensive testing, we found this approach impractical and hard to implement.
+We analyzed error cases from ToC and found that a single branch can easily fall into specific errors.  % a specific type of error. 
+% Different branches follow distinct reasoning pathways, making it difficult to learn from one another. 
+Since different branches follow distinct reasoning paths, they struggle to learn from each other. 
+Even with reflection and random exploration, LLMs are prone to early-stage errors that disrupt subsequent reasoning \cite{an2023mistakereasoner, bao2024CoT+reflect, tong2024canmistake}.
+This issue mirrors the human cognitive challenge of breaking out of a "bistable state" — like the famous "duck-rabbit illusion" or Rubin's vase \cite{Hancock2013Bistable}. In such states, a person may generate multiple parallel thoughts, but once one is chosen, it is difficult to switch to another without external intervention \cite{Andreev2020ControlOD}. 
+This highlights the need for introducing random exploration and multiple nodes at each growth step, as these strategies help overcome cognitive bottlenecks.
+
+
+% \vspace{-4pt}
+
+\section{Related Work}
+\vspace{-3pt}
+\textbf{LLM Code Generation.} 
+Chain of Codes framework \cite{li2023coc} expands the range of reasoning tasks that LLMs can solve by "thinking in code."  Similarly, CodePlan \cite{wen2024codeplan} utilizes pseudocode to guide structured reasoning. Additionally, the Structured Chain-of-Thought Prompting (SCoT) technique \cite{esfahani2024understanding} has highlighted the potential of structured prompts in this domain. 
+Recent works combining code with agents have primarily focused on task completion within programming-related domains, such as software development \cite{qian2024chatdev, wang2023leti}, programming assistance \cite{islam2024mapcoder,wen2024program}, and scientific problems \cite{chen2022pot, gao2023palsci, hong2024datasci}. 
+Few methods \cite{wang2024codeact} treat code as a scalable language format to call multiple tools for solving complex real-world tasks. 
+
+Recently, we found a new work, CodeTree \cite{Li2024CodeTreeAT}, which uses a tree structure to explore the search space of code generation tasks. 
+Unlike our approach, it focuses on multi-agent searching rather than an end-to-end self-growing tree. 
+Additionally, it was released three months later than the initial submission of our work. 
+% 但是它的发布远远晚于我们这篇工作的首次投递。
+% 很少有方法结合code实现多轮工具调用解决复杂现实任务
+
+% \vspace{-2pt}
+\section{Conclusion}
+\vspace{-2pt}
+In this paper, we introduced the Tree-of-Code (ToC) method, which combines execution-based reflection with end-to-end thought-code generation for complex task handling. 
+% Node thought-code generation intrigues global reasoning, while tree-structured exploration supports reflection on external execution. 
+With efficient model integration and prompt exploration, ToC significantly outperformed the baselines on two complex task datasets, boosting both efficiency and task-solving capabilities. 
+The ToC framework opens up exciting possibilities for advancing human-like global cognition, inspiring further exploration of tree structures in end-to-end code generation, particularly for complex multi-tool tasks, data generation, and reinforced fine-tuning. 
+
+\newpage
+\section*{Limitations}
+% While the Tree of Code (ToC) framework introduces a novel approach to end-to-end thought-code generation based on execution results, several limitations and areas for future improvement remain.
+\subsection*{Additional engineering effort}
+We efficiently transform multi-turn interactions into a single-turn complete program comprising a series of tool calls.  
+However, this approach demands more detailed usage instructions for the tools.
+For actions with limited semantic information (e.g., webpage clicking and scrolling), an artificially constrained action exploration space is also necessary.
+Consequently, additional engineering efforts are required to fully implement our end-to-end code generation approach.
+% For such cases, we define a constrained set of allowable action sequences and establish logical connections between actions. 
+
+\subsection*{Limited reasoning scope for Program}
+We emphasize that our method operates at the granularity of code "program" rather than "action". However, it is limited in fully open-ended scenarios requiring step-by-step exploration, such as a robot navigating an unfamiliar environment, or in handling tasks with extremely long sequences beyond the capabilities of current reasoning methods, like generating an entire paper. In such cases, it cannot provide a complete final solution. For larger and more complex system programs in the future, our method may serve as a "subprogram" within the overall solution, similar to a single agent's role in multi-agent systems.
+
+\subsection*{Opportunities for Reflection Refinement}
+While our framework provides a solid foundation inspired by human problem-solving, it uses a basic reflection mechanism, relying on execution feedback alone. Whether tracking full execution history or selectively summarizing with LLMs offers better performance remains an open question. Future research could explore enhanced search strategies or adaptive pruning methods to handle more complex real-world tasks.
+
+\subsection*{Vast Potential in Prompt Pool Design}
+We enhanced the diversity of strategies and the robustness of results in our Tree-of-Code by designing a prompt pool composed of multiple prompts. The introduction of multiple reasoning paths guided by diverse prompts represents a significant innovation. However, our current approach relies primarily on simple prompt evolution and manual adjustments. Future work should focus on more in-depth and systematic research into constructing prompt pools. 
+
+
+% Bibliography entries for the entire Anthology, followed by custom entries
+%\bibliography{anthology,custom}
+% Custom bibliography entries only
+\bibliography{ToC}
+
+
+\newpage
+\appendix
+\label{section:appendix}
+\onecolumn
+
+\section{Prompt}
+\label{Appendix Prompt}
+
+
+\subsection{Root Prompt}
+\label{Root Prompt}
+\begin{lstlisting}[breaklines=true, basicstyle=\scriptsize]
+You are a helpful assistant assigned with the task of problem-solving. 
+To achieve this, you will be using an interactive coding environment equipped with a variety of tool functions to assist you throughout the process.\n\n
+At each turn, you should first provide your step-by-step thinking for solving the task, for example: <thought> I need to print "hello world!"</thought>. 
+After that, you can Interact with a Python programming environment and receive the corresponding output. 
+Your code should be enclosed using "<execute>" tag, for example: <execute> print("Hello World!") </execute>.\n\n 
+You can use the following functions:\n{toolset_descs}\n. 
+Ensure the code matches the fn_signature and input-output formats for proper execution.\n
+Here's the chat history for your reference:\n{chat_history}\n\n
+History End:\n
+User's Query:\n{query}\nYour Thought And Code:\n
+\end{lstlisting}
+
+
+
+\subsection{Additional Prompt}
+\subsubsection{Reflection Prompt}
+\label{Reflection Prompt}
+\begin{lstlisting}[breaklines=true, basicstyle=\scriptsize]
+Based on the provided chat history, reflect on the code and its execution. Identify potential issues or areas for optimization and provide specific suggestions to refine and improve the code. Consider edge cases, efficiency, and clarity in your reflections.
+\end{lstlisting}
+
+
+\subsubsection{The Prompt for Prompt Evolution}
+\label{Prompt Evolution}
+\begin{lstlisting}[breaklines=true, basicstyle=\scriptsize]
+In order to guide the diversity of results and enhance the performance through ensemble methods, we need to increase the diversity of prompts. We diversify the current prompt while maintaining consistency in core content, aiming for orthogonal expressions or prompts that lead to different directions and divergent thinking.
+\end{lstlisting}
+
+
+\subsubsection{The Prompt Sample from Prompt Pool for API-Bank}
+\label{Helper Prompt Sample for API-Bank}
+\begin{lstlisting}[breaklines=true, basicstyle=\scriptsize]
+Note:
+The outputs produced by the tool will be formatted like a JSON dictionary. 
+For example, 'result = {{'api_name': 'QueryMeeting', 'input': {{'user_name': 'John'}}, 'output': {{'meetings': [{{'meeting_id': 1, 'meeting_name': 'Meeting with the client', 'meeting_time': '2021-01-01 10:00:00', 'meeting_location': 'Room 1', 'meeting_attendees': ['John', 'Mary', 'Peter']}}, {{'meeting_id': 2, 'meeting_name': 'Meeting about the new project', 'meeting_time': '2021-01-02 10:00:00', 'meeting_location': 'Room 2', 'meeting_attendees': ['John', 'Mary', 'Peter']}}]}}, 'exception': None}}'
+Ensure that the code strictly adheres to the function descriptions and the input-output format provided.
+Navigate through the 'output' key correctly to retrieve results.
+If you encounter any unfamiliar formats, first print the structure to ensure proper handling in the future.
+Consistently focus on the user's request and attempt to produce the complete solution without needing multiple steps.
+\end{lstlisting}
+
+
+\section{Helper tools}
+\label{Helper Tool}
+
+\subsection{ResHandler}
+\subsubsection{ResHandler Tool Description}
+
+\begin{lstlisting}[breaklines=true, basicstyle=\scriptsize]
+res_handler(): 
+    name="res_handler",
+    description='Define a prompt to generate results that meet the prompt requirements. Note that you need to define the requirements for the generated results in the prompt. input: prompt (str): The input prompt for the large language model, defining the task requirements for the generated results. Common tasks include summarization, stylistic writing, translation, question answering, etc. output: completion (str): The inference result generated by the large model, typically a summary, writing output, translation result, or answer that meets the requirements.',
+    function=res_handler,
+    fn_signature='res_handler(prompt: str) -> str')
+\end{lstlisting}
+
+\subsubsection{ResHandler Tool Function}
+
+\begin{lstlisting}[breaklines=true, basicstyle=\scriptsize]
+from some_model_API import llm_playground
+
+def res_handler(prompt):
+    result_str = ""
+    result = llm_playground(prompt[:20000], stream=False)
+    for item in result:
+        result_str += item
+    return result_str
+
+\end{lstlisting}
+
+
+\subsection{NextAction for Web Task}
+\label{NextAction}
+\subsubsection{NextAction Tool Description}
+
+\begin{lstlisting}[breaklines=true, basicstyle=\scriptsize]
+from typing import Tuple
+next_action():
+    name="next_action", 
+    description='Examine the results of the view function to determine if it can answer the user's original question, and decide what to do next. Return the next action and the viewed whole page content.The next possible actions include click_url(URL), go_to_previous_page() and end(), which represent clicking a link, and go_to_previous_page() means you should go to previous page to find answer, and end() means you have found the answer page, respectively. If next action is end(), it means that relevant information to user query is found, you should summarize string result based on res_handler. click_url(URL), go_to_previous_page() can be directly called, and URL should be Clickable url. Note that query should be user's original question and can not be rewritten.',
+    function=next_action,
+    fn_signature="next_action(query: str, current_page_content: str, visited_urls: List[str]) -> Tuple[str, str]")
+\end{lstlisting}
+
+\subsubsection{NextAction Tool Description}
+\begin{lstlisting}[breaklines=true, basicstyle=\scriptsize]
+from some_model_API import llm_playground
+
+def next_action(query="", current_page_content="", visited_urls=[]):
+    visited_urls = [x.replace('\'', '').replace('\"', '') for x in visited_urls]
+    visited_urls = list(set(visited_urls))
+    whole_page_content = current_page_content
+    while True:
+        scroll_down_page = scroll_down()
+        if scroll_down_page == "[Reached the bottom of the page.]\n":
+            break
+        else:
+            whole_page_content += scroll_down_page
+    def extract_clickable_paths(text: str) -> list[str]:
+        import re
+        pattern = r"Clickable '([^']*)'"
+        matches = re.findall(pattern, text)
+        return matches
+    all_urls = extract_clickable_paths(whole_page_content)
+
+    not_visited = []
+    highlight_urls = []
+    
+    for v in all_urls:
+        if v in visited_urls:
+            highlight_urls.append(v)
+        else:
+            not_visited.append(v)
+
+    if len(highlight_urls) == 0:
+        json_str_format = "<thought>your thought of your decision</thought>\n<action>click_url(specific_url) or end() or not_found()</action>"
+        prompt = f"You are viewing page contents, the content is: \n{whole_page_content}\n You should make decision on the next step. given user query {query}, you have the following options, please follow the output format. \n1. end(): it means current user query can be answered by current page content. \n2. click_url(URL): it means current user query should be checked by clicking one of the urls shown on the current page content for more details. specify the detailed url into URL field.\nPlease visit any Clickable urls as many as possible that has not been visited. \n3. not_found(): it means that current page does not contain answer for current query and all Clickable URLS have been clicked. \nYour output format: {json_str_format}\n\nYour Output:\n"
+    else:
+        visited_url_str = ', '.join(['\'' + x + '\'' for x in highlight_urls])
+        json_str_format = "<thought>your thought of your decision</thought>\n<action>click_url(specific_url) or end() or not_found()</action>"
+        prompt = f"You are viewing page contents, the content is: \n{whole_page_content}\n You should make decision on the next step. given user query {query}, you have the following options, please follow the output format. \n1. end(): it means current user query can be answered by current page content. \n2. click_url(URL): it means current user query should be checked by clicking one of the urls shown on the current page content for more details. specify the detailed url into URL field.\n3. not_found(): it means that current page does not contain answer for current query and all Clickable URLS have been clicked. \nRemember that you have visited the url list [{visited_url_str}]. You are not allowed to visit the urls you have visited. Please visit any Clickable urls as many as possible that has not been visited.\nYour output format: {json_str_format}\n\nYour Output:\n"
+    result_str = ""
+    result = llm_playground(prompt[:20000])
+    for item in result:
+        result_str += item
+
+    if not "Clickable" in whole_page_content and not "end()" in result_str:
+        return ("go_to_previous_page()", whole_page_content)
+
+    if not "end()" in result_str and len(not_visited) == 0:
+        return ("go_to_previous_page()", whole_page_content)
+        
+    if "click_url" in result_str:
+        import re
+        pattern = r"click_url\('.*'\)"
+        match = re.search(pattern, result_str)
+        if match:
+            return (match.group(), whole_page_content)
+        else:
+            pattern = r"click_url\(.*\)"
+            match = re.search(pattern, result_str)
+            if match:
+                return (match.group(), whole_page_content)
+    elif "end()" in result_str:
+        return ("end()", whole_page_content)
+    elif "not_found()" in result_str:
+        return ("go_to_previous_page()", whole_page_content)        
+    return ("end()", whole_page_content)
+\end{lstlisting}
+   
+
+
+\end{document}
+   

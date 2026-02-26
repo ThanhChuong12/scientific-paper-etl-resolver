@@ -1,0 +1,102 @@
+\vspace{-18pt}
+\section{Introduction}
+Large Language Models (LLMs) such as GPT-4 \cite{openaiGPT4TechnicalReport2023}, Claude \cite{claude} and LLama3 \cite{dubeyLlama3Herd2024} have demonstrated superior capability of understanding, generation and reasoning, empowering a wide range of tasks such as conversational AI \cite{liSystematicReviewMetaanalysis2023}, creative writing \cite{10.1145/3491102.3501819,10.1145/3544548.3581225}, program synthesis or testing \cite{muClarifyGPTFrameworkEnhancing2024,dengLargeLanguageModels2024} and math problem solving \cite{yue2024mammoth,yang2024qwen2}, and they have been prevalently deployed as an infrastructure to provide service \cite{deepinfra}. 
+
+% To prevent LLMs from responding to malicious queries that contain harmful intent and generating socially biased content,
+To prevent LLMs from responding to malicious queries that contain harmful intent, numerous safety alignment methods have been proposed to align the safety preferences of LLMs with those of humans, such as training data curation \cite{welblChallengesDetoxifyingLanguage2021, wangExploringLimitsDomainAdaptive} and reinforcement learning from human feedback (RLHF) \cite{ouyangTrainingLanguageModels2022a,touvronLlama2Open2023,christianoDeepReinforcementLearning2023a,rafailovDirectPreferenceOptimization2023a}.
+
+Despite of significant progress, safety weakness still exists. Research efforts have been made to expose the safety vulnerabilities via jailbreak attack, where adversarial prompts are carefully computed or constructed and fed into LLMs to elicit  unethical response. 
+
+Automatic jailbreak attacks can be categorized into two types: \textbf{(1)} regarding LLMs as computational systems and jailbreaking them using search-based method~\cite{zouUniversalTransferableAdversarial2023a,liuAutoDANGeneratingStealthy2023a,chaoJailbreakingBlackBox2024a,yuGPTFUZZERRedTeaming2024a}; \textbf{(2)} disguising the original harmful query inside some designed scenarios, or transforming it into certain special representation that LLMs are less adept at understanding (\eg ASCII art) and revealing it from the representation in subsequent steps.
+~\cite{dingWolfSheepsClothing2024a,jiangArtPromptASCIIArtbased2024a}.
+% ; \textbf{(3)} humanizing LLMs and exploiting human's vulnerability~\cite{liDeepInceptionHypnotizeLarge2024a, zengHowJohnnyCan2024a, xuCognitiveOverloadJailbreaking2024c}. % three two types
+
+Existing works either (1) rely on multiple iterations (retries) and jailbreak prompt candidates~\cite{liuAutoDANGeneratingStealthy2023a}, which introduces high input token usage, or 
+(2) require writing sophisticated instructions (hints) in jailbreak prompt and the ability of victim LLMs to effectively understand and follow them, which could hinder the performance~\cite{jiangArtPromptASCIIArtbased2024a}.
+% (2) leverage certain incapability of LLMs to by pass safety check, requiring writing multiple instructions (hints) in jailbreak prompt and the ability of victim LLMs to effectively understand and follow them in jailbreak, which could hinder the performance~\cite{jiangArtPromptASCIIArtbased2024a}.
+% these instructions or hints
+% (\eg follow instructions to reveal the word from the ASCII art representation)
+%, and we believe this is a stumbling block to jailbreak performance. 
+
+To address the limitations, we propose a novel LLM jailbreak paradigm via \ul{s}imple \ul{a}ssistive \ul{t}ask link\ul{a}ge (SATA). % To achieve this, 
+SATA first masks harmful keywords with the \texttt{[MASK]} special token in malicious query to reduce its toxicity, obtaining masked keywords and a masked query. Then, SATA constructs simple assistive task (described below) to encode and convey the semantics of the masked keywords, and links the masked query with the assistive task to collectively perform jailbreak. % jailbreak attack; camouflaged % using versatile masking granularity (one or multiple words or phrases)
+% Jailbreak Attack的引言, polished by GPT
+
+The assistive task serves two purposes: first, it distracts the victim LLM, diverting its attention to the preceding assistive task and causing it to overlook the safety check of the entire query’s intent; second, the assistive task encodes the semantics of the masked contents and conveys this information to the victim LLM, thereby filling in the missing semantic in the masked instruction. The assistive tasks are designed to be simple and can be easily performed by victim LLMs so that \textbf{(1)} the missing semantic can be correctly and efficiently inferred and combined to the masked instruction, improving jailbreak performance; \textbf{(2)} the jailbreak prompt template can be designed to be compact, decreasing both the jailbreak cost and prompt-design effort.  % prompt-design cost, human effort, revealed conveyed; transfers --> conveys
+% Link with Simple Assistive Task的引言
+
+We propose two simple assistive tasks in the SATA paradigm, each of which can be linked with the masked instruction to achieve LLM jailbreak attack. Specifically, we adopt Masked Language Model (MLM)~\cite{devlinBERTPretrainingDeep2018} as an implicit assistive task (see Section~\ref{paragraph:MLM}), and we construct an Element Lookup by Position (ELP) task as an explicit assistive task (see Section~\ref{paragraph:ELP}). The former leverages synthesized wiki entry as the context of MLM task, and then prompts victim LLMs to perform text-infilling for jailbreak while the later asks victim LLMs to identify the element in a \texttt{List} when given a position. We term our jailbreak attacks with the two assistive tasks as SATA-MLM and SATA-ELP, respectively.
+
+% For systematical evaluation, 
+We evaluate the effectiveness of SATA on AdvBench~\cite{zouUniversalTransferableAdversarial2023a} across four closed-source, two open-source, and two reasoning LLMs in terms of harmful score (HS) and attack success rate (ASR) judged by GPT-4o. The experimental results show that both SATA-MLM and SATA-ELP as jailbreak attacks significantly outperform the state-of-the-art baselines. For instance, the SATA-MLM successfully jailbreaks GPT-4o with an ASR of \pt{82} and a HS of 4.57 while SATA-ELP achieves an ASR of \pt{78} and a HS of 4.43. %  (GPT-3.5, Claude, GPT-4o-mini, GPT-4o) (Lama3-8B, LLama3-70B)
+We further evaluate SATA on JBB-Behaviors dataset~\cite{chaoJailbreakBenchOpenRobustness2024} and observe consistent performance.%, indicating the effectiveness of SATA. 
+
+In terms of cost, SATA-ELP with its ensemble setting reaches about an order of magnitude savings in input token usage compared to strong baselines, while maintaining superior jailbreak performance. 
+
+In summary, our contributions are as follows:
+\begin{enumerate}
+    \item We propose a novel LLM jailbreak paradigm via \ul{s}imple \ul{a}ssistive \ul{t}ask link\ul{a}ge (SATA). We propose to employ MLM (Mask Language Model) or ELP (Element Lookup by Position)  as implicit or explicit simple assistive tasks in SATA paradigm, respectively. With these tasks, we propose SATA-MLM and SATA-ELP jailbreak attacks.
+    \vspace{-3pt}
+    \item We conduct extensive experiments to evaluate the effectiveness, cost-efficiency and sensitivity to defense of SATA. Evaluation results against baselines demonstrate SATA is effective, lightweight and resistant to defenses.
+    \vspace{-3pt}
+    \item We analyze the impact of the difficulty level of the assistive task, as well as the effectiveness of the assistive task, on jailbreak performance. Experimental results show the effectiveness of an LLM-friendly assistive task to efficiently convey semantic to victim LLMs. %, improving performance.
+    % 直接说我们想告诉大家的结论： We demonstrate, through ablation study, that the versatile masking granularity exhibits complementarty performance, the simple assistive task should be constructed friendly to LLMs for jailbreak performance, and constructing an assistive task can be a pathway to stealthily convey semantic in jailbreak attack.
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%
+% 12.15
+
+%LLMs still exhibit inadequate safety alignment, and extensive efforts have been made to expose the safety vulnerabilities via jailbreak attack, where adversarial prompts are carefully computed or constructed and fed into LLMs to elicit the unethical response. 
+
+% Despite of extensive efforts, formidable challenges still exists in safety alignment, among which jailbreak attacks expose the safety vulnerabilities of LLMs by carefully computing or constructing adversarial prompts and fed into LLMs to elicit the unethical response. 
+
+% [经验教训]:
+% leverage the incapability
+% need strong ability of
+% ~\footnote{It serves as an indicator of the average inference time cost or economic cost for a jailbreak.}
+
+
+
+
+%%%%%%%%%%%
+% Task Linkage: 
+% 构造隐式的任务进行连接: Implicit Wiki Entry Text-Infilling; 构造显式的任务进行连接: Explicit Element Lookup by Poisition.
+
+%%%%%%%%%%%
+% bypass the safety measurement
+% These methods suffer from 
+% divert LLMs' attention and neglect the malicious intent, thereby bypassing safety checks. 
+
+%%%%%%%%%%%
+% However, LLMs may respond social-biased, dangerous or toxic contents when prompted by an instruction containing harmful behaviors, \eg \textit{how to manipulate someone into committing suicide}, from malicious users.  % discriminative,
+% Such behaviors of violating safety policy have raised safety concerns of the applications of LLMs, and many safety-alignment approaches are proposed to mitigate the safety-preference gap between LLMs and human, such as training data curation \cite{welblChallengesDetoxifyingLanguage2021, wangExploringLimitsDomainAdaptive} and reinforcement learning from human feedback (RLHF)~\cite{ouyangTrainingLanguageModels2022a,touvronLlama2Open2023,christianoDeepReinforcementLearning2023a,rafailovDirectPreferenceOptimization2023a}.
+
+% On the other hand, to expose the safety vulnerabilities, extensive efforts have been made to jailbreak LLMs, where adversarial prompts are carefully computed or constructed and fed into LLMs to elicit the unethical response. A collection of work regard LLMs as algorithmic systems and jailbreak them using search-based method~\cite{zouUniversalTransferableAdversarial2023a,liuAutoDANGeneratingStealthy2023a,chaoJailbreakingBlackBox2024a,yuGPTFUZZERRedTeaming2024a}. Another studies disguise the original harmful instructions as created scenarios, or specific tasks that LLMs are inherently less adept at handling to bypass safety measurement~\cite{dingWolfSheepsClothing2024a,jiangArtPromptASCIIArtbased2024a}. 
+% Similarly, a line of works jailbreak LLM by humanizing LLMs and exploiting human's vulnerability~\cite{liDeepInceptionHypnotizeLarge2024a, zengHowJohnnyCan2024a, xuCognitiveOverloadJailbreaking2024c}.
+
+%, including training data curation \cite{welblChallengesDetoxifyingLanguage2021, wangExploringLimitsDomainAdaptive}, supervised fine-tuning (SFT) \cite{alpaca}, reinforcement learning from human feedback (RLHF) \cite{ouyangTrainingLanguageModels2022a,touvronLlama2Open2023,christianoDeepReinforcementLearning2023a,rafailovDirectPreferenceOptimization2023a} and prompt engineering \cite{chengBlackBoxPromptOptimization2024a}. % misalignment
+
+%%%%%%%%%%%
+
+% % investigate and leverage the incapability in certain tasks
+% Inspired by ArtPrompt~\cite{jiangArtPromptASCIIArtbased2024a}, we seek to jailbreak LLMs via masking the harmful words (phrases) with the special token [MASK] and recovering the malicious semantic of harmful instruction by designing tasks that LLM can perfectly perform, \ie the tasks serves as a semantic passer, and thus should be as easy as possible. 
+% As shown in Figure X, the key idea is based on the hypothesis that current safety measurements can be treated as a black box, and they only leverages the input text of the prompt to decide whether to respond to or reject user's prompt query. 
+% Masking those harmful words or phrases in a harmful instruction that could trigger rejection of a query will decrease the harmfulness of the instruction, increasing the possibility to evade safety check. 
+% After the first deceiving step, passing the semantic of all masked words or phrases back to the victim LLMs via constructed simple linkage tasks can recover the original malicious semantic of harmful instructions, achieving jailbreak. 
+
+% Specifically, to mask a harmful instruction, we design four masking granularities, including single word, single phrase, multiple words and multiple phrases, in order to dealing with comprehensive harmful instruction (\ie containing multiple harmful contents). 
+% To easily recover the semantics, we we construct two simple tasks that LLMs can perfectly perform, named Text-Infilling and SWQ (sequence word query). 
+% Text-Infilling implicitly pass the semantics of harmful words back to the LLMs while SWQ explicitly perform this. Both two tasks are clear enough for LLMs to perform instead of containing any structure information (a severe stumbling block to the collaboration between assistive task and jailbreak task,~\ie task linkage).
+
+

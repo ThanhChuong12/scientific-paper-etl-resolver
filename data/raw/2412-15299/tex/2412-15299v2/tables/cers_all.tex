@@ -1,0 +1,44 @@
+\begin{table*}[!th]
+\centering
+\small
+\begin{tabular}{l||l|l||l|l||l|l||l|l}
+\toprule
+& Language          & CER $\downarrow$ & Language     & CER $\downarrow$ & Language          & CER $\downarrow$ & Language        & CER $\downarrow$ \\ \midrule\midrule
+\multirow{26}{*}{Seen} & Afrikaans         & 18.3        & Ganda        & 10.4        & Luo               & 7.3         & Sindhi          & 29.1        \\
+& \textbf{Amharic}           & \textbf{47.4}        & Georgian     & 23.6        & Luxembourgish     & 16.5        & Slovak          & 3.8         \\
+& Arabic            & 13.9        & German       & 5.5         & Macedonian        & 5.5         & Slovenian       & 9.4         \\
+& \textbf{Armenian}          & \textbf{22.4}        & Greek        & 15.6        & Malay             & 6.9         & Somali          & 15.4        \\
+& Assamese          & 18.9        & Gujarati     & 11.9        & \textbf{Malayalam}         & \textbf{24.1}        & Sorani-Kurdish  & 26.4        \\
+& Asturian          & 9.8         & Hausa        & 10.2        & Maltese           & 9.8         & Spanish         & 2.8         \\
+& Azerbaijani       & 11.9        & \textbf{Hebrew}       & \textbf{35.2}        & \textbf{Mandarin Chinese}  & \textbf{36.0}        & Swahili         & 5.3         \\
+& Belarusian        & 11.3        & Hindi        & 8.3         & Maori             & 12.0        & Swedish         & 9.5         \\
+& Bengali           & 13.8        & Hungarian    & 16.7        & Marathi           & 14.0        & Tajik           & 8.9         \\
+& Bosnian           & 5.9         & Icelandic    & 18.1        & Mongolian         & 21.4        & Tamil           & 19.6        \\
+& Bulgarian         & 8.2         & Igbo         & 17.9        & Nepali            & 13.2        & Telugu          & 15.5        \\
+& \textbf{Burmese}           & \textbf{52.6}        & Indonesian   & 4.3         & Northern-Sotho    & 15.1        & \textbf{Thai}            & \textbf{45.3}        \\
+& \textbf{Cantonese Chinese} & \textbf{61.6}        & Irish        & 34.8        & Norwegian         & 7.0         & Turkish         & 5.1         \\
+& Catalan           & 6.3         & Italian      & 2.0         & Nyanja            & 12.1        & Ukrainian       & 9.7         \\
+& Cebuano           & 7.4         & Javanese     & 6.6         & Occitan           & 19.9        & Umbundu         & 10.5        \\
+& Croatian          & 5.2         & Kabuverdianu & 8.3         & Oriya             & 18.3        & Urdu            & 14.9        \\
+& Czech             & 9.9         & Kamba        & 14.6        & Oromo             & 19.8        & Uzbek           & 14.5        \\
+& Danish            & 12.9        & Kannada      & 13.9        & Pashto            & 32.7        & Vietnamese      & 19.0        \\
+& Dutch             & 8.7         & Kazakh       & 6.7         & Persian           & 11.9        & Welsh           & 12.3        \\
+& English           & 8.2         & \textbf{Khmer}        & \textbf{66.3}        & Polish            & 8.6         & Wolof           & 18.0        \\
+& Estonian          & 5.7         & Korean       & 18.8        & Portuguese        & 7.9         & Xhosa           & 10.5        \\
+& Filipino          & 4.4         & Kyrgyz       & 8.8         & Punjabi           & 19.5        & Yoruba          & 25.5        \\
+& Finnish           & 4.7         & \textbf{Lao}          & \textbf{55.0}        & Romanian          & 11.0        & Zulu            & 9.6         \\
+& French            & 8.2         & Latvian      & 7.9         & Russian           & 6.0         &                 &             \\
+& Fula              & 16.6        & Lingala      & 7.8         & Serbian           & 5.7         &                 &             \\
+& Galician          & 6.0         & Lithuanian   & 8.6         & Shona             & 8.6         &                 &             \\ \midrule
+\multirow{7}{*}{Unseen} & Abkhazian         & 55.9        & Eastern Mari & 35.3        & Latgalian         & 34.7        & Upper Sorbian   & 35.2        \\
+& Albanian          & 35.4        & Erzya        & 35.7        & Norwegian Nynorsk & 23.9        & Western Frisian & 29.6        \\
+& Basa              & 42.1        & Esperanto    & 19.7        & Romansh           & 30.0        & Western Mari    & 41.4        \\
+& Bashkir           & 29.7        & Guarani      & 40.0        & Tatar             & 24.2        & Yakut           & 38.2        \\
+& Basque            & 32.8        & Hakha Chin   & 42.8        & Toki Pona         & 29.0        &                 &             \\
+& Breton            & 49.9        & Interlingua  & 15.2        & Turkmen           & 43.1        &                 &             \\
+& Chuvash           & 44.3        & Kinyarwanda  & 36.7        & Uighur            & 24.5        &                 &             \\ \bottomrule
+\end{tabular}
+\caption{Performance of LAMA-UT in 101 seen and 25 unseen languages. We leveraged a Romanization-based universal transcription generator and GPT-4o-mini model with a few-shot prompting as a universal converter. All of the results are reported in CER, which calculates the character-level difference between ground truth language-specific transcription and predicted language-specific transcription. Japanese was excluded from the results due to the ambiguity in evaluation criteria arising from its mixed use of Hiragana, Katakana, and Kanji.}
+\label{appendix_performance_every_all}
+\vspace{10pt}
+\end{table*}

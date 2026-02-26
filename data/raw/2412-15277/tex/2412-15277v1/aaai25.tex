@@ -1,0 +1,1859 @@
+%File: anonymous-submission-latex-2025.tex
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+% \usepackage[submission]{aaai25}  % DO NOT CHANGE THIS
+\usepackage{aaai25}  
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet}  % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{bm}
+\usepackage{multirow}
+%\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subfig}
+\usepackage[table]{xcolor}
+\usepackage{tabularx}
+\usepackage{subcaption}
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in} % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in} % DO NOT CHANGE THIS
+%
+% These are recommended to typeset algorithms but not required. See the subsubsection on algorithms. Remove them if you don't have algorithms in your paper.
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+%
+% These are are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
+\usepackage{newfloat}
+\usepackage{listings}
+\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+	basicstyle={\footnotesize\ttfamily},% footnotesize acceptable for monospace
+	numbers=left,numberstyle=\footnotesize,xleftmargin=2em,% show line numbers, remove this entire line if you don't want the numbers.
+	aboveskip=0pt,belowskip=0pt,%
+	showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+%
+% Keep the \pdfinfo as shown here. There's no need
+% for you to add the /Title and /Author tags.
+\pdfinfo{
+/TemplateVersion (2025.1)
+}
+
+% DISALLOWED PACKAGES
+% \usepackage{authblk} -- This package is specifically forbidden
+% \usepackage{balance} -- This package is specifically forbidden
+% \usepackage{color (if used in text)
+% \usepackage{CJK} -- This package is specifically forbidden
+% \usepackage{float} -- This package is specifically forbidden
+% \usepackage{flushend} -- This package is specifically forbidden
+% \usepackage{fontenc} -- This package is specifically forbidden
+% \usepackage{fullpage} -- This package is specifically forbidden
+% \usepackage{geometry} -- This package is specifically forbidden
+% \usepackage{grffile} -- This package is specifically forbidden
+% \usepackage{hyperref} -- This package is specifically forbidden
+% \usepackage{navigator} -- This package is specifically forbidden
+% (or any other package that embeds links such as navigator or hyperref)
+% \indentfirst} -- This package is specifically forbidden
+% \layout} -- This package is specifically forbidden
+% \multicol} -- This package is specifically forbidden
+% \nameref} -- This package is specifically forbidden
+% \usepackage{savetrees} -- This package is specifically forbidden
+% \usepackage{setspace} -- This package is specifically forbidden
+% \usepackage{stfloats} -- This package is specifically forbidden
+% \usepackage{tabu} -- This package is specifically forbidden
+% \usepackage{titlesec} -- This package is specifically forbidden
+% \usepackage{tocbibind} -- This package is specifically forbidden
+% \usepackage{ulem} -- This package is specifically forbidden
+% \usepackage{wrapfig} -- This package is specifically forbidden
+% DISALLOWED COMMANDS
+% \nocopyright -- Your paper will not be published if you use this command
+\nocopyright
+% \addtolength -- This command may not be used
+% \balance -- This command may not be used
+% \baselinestretch -- Your paper will not be published if you use this command
+% \clearpage -- No page breaks of any kind may be used for the final version of your paper
+% \columnsep -- This command may not be used
+% \newpage -- No page breaks of any kind may be used for the final version of your paper
+% \pagebreak -- No page breaks of any kind may be used for the final version of your paperr
+% \pagestyle -- This command may not be used
+% \tiny -- This is not an acceptable font size.
+% \vspace{- -- No negative value may be used in proximity of a caption, figure, table, section, subsection, subsubsection, or reference
+% \vskip{- -- No negative value may be used to alter spacing above or below a caption, figure, table, section, subsection, subsubsection, or reference
+
+\setcounter{secnumdepth}{0} %May be changed to 1 or 2 if section numbers are desired.
+
+% The file aaai25.sty is the style file for AAAI Press
+% proceedings, working notes, and technical reports.
+%
+
+% Title
+
+% Your title must be in mixed case, not sentence case.
+% That means all verbs (including short verbs like be, is, using,and go),
+% nouns, adverbs, adjectives should be capitalized, including both words in hyphenated terms, while
+% articles, conjunctions, and prepositions are lower case unless they
+% directly follow a colon or long dash
+\title{PLPP: Prompt Learning with Perplexity Is Self-Distillation for Vision-Language Models}
+\author{
+    %Authors
+    % All authors must be in the same font size and format.
+       Biao Liu\textsuperscript{\rm 1},
+    Wenyi Fang\textsuperscript{\rm 2},
+    Xiaoyu Wu\textsuperscript{\rm 2},
+    Yang Zheng\textsuperscript{\rm 2},
+    Zheng Hu\textsuperscript{\rm 2},
+    Bo Yuan\textsuperscript{\rm 1}
+}
+\affiliations{
+    %Afiliations
+    \textsuperscript{\rm 1}Department of Computer Science and Engineering,
+    Southern University of Science and Technology,
+    Shenzhen,
+    518055\\
+    \textsuperscript{\rm 2}RAMS Lab,
+    Huawei Technologies Co., Ltd.,
+    Shenzhen, 518129
+    % If you have multiple authors and multiple affiliations
+    % use superscripts in text and roman font to identify them.
+    % For example,
+
+    % Sunil Issar\textsuperscript{\rm 2},
+    % J. Scott Penberthy\textsuperscript{\rm 3},
+    % George Ferguson\textsuperscript{\rm 4},
+    % Hans Guesgen\textsuperscript{\rm 5}
+    % Note that the comma should be placed after the superscript
+
+    % 1101 Pennsylvania Ave, NW Suite 300\\
+    % Washington, DC 20004 USA\\
+    % % email address must be in roman text type, not monospace or sans serif
+    % proceedings-questions@aaai.org
+%
+% See more examples next
+}
+
+%Example, Single Author, ->> remove \iffalse,\fi and place them surrounding AAAI title to use it
+\iffalse
+\title{My Publication Title --- Single Author}
+\author {
+    Author Name
+}
+\affiliations{
+    Affiliation\\
+    Affiliation Line 2\\
+    name@example.com
+}
+\fi
+
+\iffalse
+Example, Multiple Authors, ->> remove \iffalse,\fi and place them surrounding AAAI title to use it
+\title{PLPP: Prompt Learning with Perplexity Is Self-Distillation for Vision-Language}
+\author {
+    % Authors
+    Biao Liu\textsuperscript{\rm 1},
+    Wenyi Fang\textsuperscript{\rm 2},
+    Xiaoyu Wu\textsuperscript{\rm 2},
+    Yang Zheng\textsuperscript{\rm 2},
+    Zheng Hu\textsuperscript{\rm 2},
+    Bo Yuan\textsuperscript{\rm 1},
+}
+\thanks{}
+\affiliations {
+    % Affiliations
+    \textsuperscript{\rm 1}Affiliation 1\\
+    \textsuperscript{\rm 2}Affiliation 2\\
+    firstAuthor@affiliation1.com, secondAuthor@affilation2.com, thirdAuthor@affiliation1.com
+}
+\fi
+
+
+% REMOVE THIS: bibentry
+% This is only needed to show inline citations in the guidelines document. You should not need it and can safely delete it.
+\usepackage{bibentry}
+% END REMOVE bibentry
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+% Pre-trained Vision-Language (VL) models such as CLIP have demonstrated their excellent performance across numerous downstream tasks. A recent method, Context Optimization (CoOp), further improves the performance of VL models on downstream tasks by introducing prompt learning. CoOp optimizes a set of learnable vectors, aka prompt, and freezes the whole CLIP model. Nonetheless, only using CLIP loss to tune the prompts tends to cause models for overfitting on datasets for downstream tasks. To address this issue, our work proposes a plug-in prompt-regularization method called PLPP (Prompt Learning with PerPlexity). PLPP designs a two-step operation to compute the perplexity for prompts: (a) calculating cosine similarity between the weight of the embedding layer and prompts to get labels, (b) introducing a language model (LM) head that requires no training behind text encoder to output word probability distribution. PLPP can be integrated in any prompt learning methods during training. Meanwhile, we unveil that the essence of perplexity is inherently a form of self-distillation learning.The experiments conducted on four classification tasks indicate that PLPP exhibits superior performance compared to existing methods.
+Pre-trained Vision-Language (VL) models such as CLIP have demonstrated their excellent performance across numerous downstream tasks. A recent method, Context Optimization (CoOp), further improves the performance of VL models on downstream tasks by introducing prompt learning. CoOp optimizes a set of learnable vectors, aka prompt, and freezes the whole CLIP model. However, relying solely on CLIP loss to fine-tune prompts can lead to models that are prone to overfitting on downstream task. To address this issue, we propose a plug-in prompt-regularization method called PLPP (Prompt Learning with PerPlexity), which use perplexity loss to regularize prompt learning. PLPP designs a two-step operation to compute the perplexity for prompts: (a) calculating cosine similarity between the weight of the embedding layer and prompts to get labels, (b) introducing a language model (LM) head that requires no training behind text encoder to output word probability distribution. Meanwhile, we unveil that the essence of PLPP is inherently a form of self-distillation. To further prevent overfitting as well as to reduce the additional computation introduced by PLPP, we turn the hard label to soft label and choose top-$k$ values for calculating the perplexity loss. For accelerating model convergence, we introduce mutual self-distillation learning, that is perplexity and inverted perplexity loss.  The experiments conducted on four classification tasks indicate that PLPP exhibits superior performance compared to existing methods.
+\end{abstract}
+
+% Uncomment the following to link to your code, datasets, an extended version or similar.
+%
+% \begin{links}
+%     \link{Code}{https://aaai.org/example/code}
+%     \link{Datasets}{https://aaai.org/example/datasets}
+%     \link{Extended version}{https://aaai.org/example/extended-version}
+% \end{links}
+% \begin{figure}[tb]
+% \centering
+% %\includegraphics[width=3in]{fig5}
+% \subfloat[CoOp]{
+% 	\includegraphics[width=1.0\linewidth]{AnonymousSubmission/LaTeX/coop.png}}\\
+% \subfloat[CoOp + PLPP]{
+% 	\includegraphics[width=1.0\linewidth]{AnonymousSubmission/LaTeX/plpp3.png}}
+% % \vspace{10pt}
+% \caption{Illustration of (a) CoOp, (b) CoOp + PLPP. In order to integrate perplexity in the training process, our method obtains the labels of vectors by calculating cosine similarity and incorporating a training-free LM Head to output word probability distribution, and then calculate the perplexity of the prompt. Finally, we optimize the prompt together with the cross-entropy loss.}
+% % \vspace{10pt}
+% \label{fig:plpp}
+% \end{figure}
+
+\section{Introduction}
+In recent years, the advent of CLIP~\cite{clip} and ALIGN~\cite{align} have driven increased exploration of VL models, which are capable of training and reasoning by using both visual and textual data. It is important to note that such models have a high demand for data and require extensive training on a large-scale image-text pairs to achieve good performance. For instance, the training scheme of CLIP model involves a staggering 400 million image-text pairs. Following the pre-training phase, VL models can perform image classification by employing a carefully crafted prompt, such as ``a photo of a \{category\}," as input for the text encoder. Simultaneously, the image encoder processes the visual input. Subsequently, the classification results are obtained by computing the cosine similarity between text and image representations across all categories.
+
+% \begin{figure}[htb]
+% \centering
+% %\includegraphics[width=3in]{fig5}
+% \subfloat[CoOp]{
+% 	\includegraphics[width=1.0\linewidth]{AnonymousSubmission/LaTeX/coop.png}}\\
+% \subfloat[CoOp + PLPP]{
+% 	\includegraphics[width=1.0\linewidth]{AnonymousSubmission/LaTeX/plpp3.png}}
+% % \vspace{10pt}
+% \caption{Illustration of (a) CoOp, (b) CoOp + PLPP.}
+% % \vspace{10pt}
+% \label{fig:plpp}
+% \end{figure}
+
+While the development of high-quality contextual prompts~\cite{goodprompt1} has demonstrated the capacity to enhance the performance of CLIP and other similar VL models, it often relies upon a considerable expenditure of time and the specific domain knowledge of human experts. Furthermore, this resource-intensive process may also prove to be ineffective when confronted with novel or unforeseen scenarios. Moveover, the combination of vast parameter space and constraints on available training data, particularly in a few-shot setting, make it infeasible  to fully fine-tune the entire model for downstream tasks.
+
+%Engaging in such fine-tuning carries the added risk of erasing valuable knowledge acquired during the large-scale pretraining phase and introducing the potential for overfitting to the specific downstream task. 
+Fine-tuning the entire model on specific tasks risks erasing its general knowledge and can lead to overfitting. Such fine-tuning may hinder the model's adaptability to unforeseen scenarios and reduce its generalization to broader applications.
+To address these challenges, inspired by recent advances in Natural Language Processing (NLP)~\cite{attention,nlp1,nlp2,nlp3,nlp4,nlp5,nlp6}, CoOp~\cite{coop} introduces a prompt learning method as an alternative to manually crafting prompts for specific tasks. Diverging from the prior fine-tuning paradigms, CoOp keeps both the image and text encoders of CLIP fixed, exclusively fine-tuning the learnable prompt, which consists of a set of vectors. Following in the footsteps of CoOp, several approaches have been proposed to enhance the training paradigm of prompt or to introduce the learnable prompt to different layers, as exemplified by~\cite{kgcoop,cocoop,maple,proda,prograd,plot,dpt,PromptSRC}. However, these methods still tend to lead models to overfit in downstream tasks.
+
+%\begin{figure}[htbp] 
+%	\centering
+%	\includegraphics[scale=0.4]{energy_inspired2.png}
+%	\caption{Overview of perplexity prediction to two different sentences. Red pot represents the value of perplexity. Low perplexity prediction is assigned to a hand-written sentence, while high perplexity prediction is assigned to a sentence composed of randomly initialized words.}
+%	\label{fig:energy}
+%\end{figure}
+To mitigate the issue of overfitting in prevailing approaches, it is essential to develop new methods that can prevent the model from overtraining. Therefore, we propose a plug-in prompt regularization method called PLPP. The rationale behind our method is straightforward. In the domain of NLP, perplexity is a crucial metric used to evaluate the performance of LMs, where lower perplexity values indicate better model performance in predicting the next word in a sequence of text. In the context of VL models, we fix image and text encoders, integrate perplexity to regularize the process of prompt learning. We use a two-step operation to calculate perplexity. \textbf{a)} obtaining labels: we calculate cosine similarity between the weight of the embedding layer and each vector in prompt, then the index with the largest cosine similarity is used as the corresponding label. \textbf{b)} outputting word probability distribution: We place a LM head, which requires no training, behind the encoder to output the word probability distribution. After these two steps, we can easily calculate the perplexity. 
+% In short, perplexity strictly constrains the direction of prompts optimization. It requires the prompts optimization to not only find prompts with good performance in the training task, but also find prompts that are similar to their own outputs after passing through the text encoder and LM head. If the input vector contains the universal features of the input sequence, then the text encoder can better learn the global features of the input sequence, thereby enhancing the generalization ability of the model.
+%if we fix the text encoder, the theoretical underpinnings of perplexity can be regarded as preventing the output embeddings of prompt far away from .
+%constraining the optimization of prompt within a specific region. 
+%\begin{equation} \label{eq:coop}
+%%	p(y = i|x) = \frac{exp(sim(g(t_i), f)/\tau)}{\sum_{j=1}^{K}exp(sim(g(t_j), f)/\tau)},
+%	\mathbb{E}_{\tilde{s}\sim p_{\theta}(s)}
+%\end{equation}
+
+In summary, our main contributions are as follows:
+\begin{itemize}
+	\item[$\bullet$] We propose PLPP to mitigate the common issue of prompt overfitting in VL models by introducing an explainable metric perplexity. PLPP regularizes prompts optimization by constraining the distribution of prompts close to the output distribution.
+	% \\
+	\item[$\bullet$] PLPP unites prompt learning and perplexity by incorporating a LM Head that without training. PLPP is a plug-in method, which can be easily integrated into any prompt-based learning methods in VL model without increasing the parameters that need to be optimized.
+        \item[$\bullet$] We unveil the essence of PLPP is a self-distillation and turn hard label distribution to soft label distribution to make the model training more stable. We also choose the top-$k$ values in distribution to significantly reduce the computational cost. We introduce mutual self-distillation learning to accelerate model convergence. 
+	% \\
+	% \item[$\bullet$] We systematically investigate the influence of the hyperparameter of perplexity loss on model performance across various VL tasks. The experiments reveal that employing a moderate coefficient for regularizing prompts can enhance the overall effectiveness of our VL models.
+		
+\end{itemize} 
+
+% \begin{figure*}[htbp]
+% \centering
+% %\includegraphics[width=3in]{fig5}
+% \subfloat[CoOp]{
+% 	\includegraphics[width=0.5\linewidth]{AnonymousSubmission/LaTeX/coop.png}}
+% \subfloat[CoOp + PLPP]{
+% 	\includegraphics[width=0.5\linewidth]{AnonymousSubmission/LaTeX/plpp3.png}}
+% \vspace{10pt}
+% \caption{Illustration of (a) CoOp, (b) CoOp + PLPP. In order to integrate perplexity in the training process, our method obtains the labels of vectors by calculating cosine similarity and incorporating a training-free LM Head to output word probability distribution, and then calculate the perplexity of the prompt. Finally, we optimize the prompt together with the cross-entropy loss.}
+% \vspace{10pt}
+% \label{fig:plpp}
+% \end{figure*}
+\begin{figure*}[tb]
+\centering
+\includegraphics[width=1.0\textwidth]{PLPP2.png}
+% \vspace{10pt}
+\caption{Overview of our proposed plug-in PLPP (\textbf{P}rompt \textbf{L}earning with \textbf{P}er\textbf{P}lexity) method for prompt learning in VL models.}
+% \vspace{10pt}
+\label{fig:PLPPSD}
+\end{figure*}
+
+\section{Related Works}
+
+\textbf{Pre-training for VL models.} The pre-training phase of the VL model requires unsupervised learning on a large number of image-text pair datasets, due to its voracious appetite for data.. The goal of this phase is to facilitate the model to align the image features with the corresponding text features. CLIP~\cite{clip} and ALIGN~\cite{align} utilize more than four million image-text pairs for pre-training. To ensure the proximity of analogous inputs within the same modality, TCL~\cite{tcl} employs a combination of cross-modal and intra-modal self-supervision, yielding synergistic advantages in representation learning. In a concerted effort to bolster training efficiency, DeCLIP~\cite{declip} not only exploits cross-modal multi-view and intra-modal supervision but also introduces a novel cross-modal Nearest-Neighbor Supervision mechanism, which leverages information emanating from analogous pairs in a more nuanced manner. OneR~\cite{oner} and MS-CLIP~\cite{msclip} adopt a unified transformer encoder architecture for image-text pairs. HiCLIP~\cite{hiclip} enhances the vision and text encoders of CLIP with hierarchy-aware attentions, enabling the model to learn semantic hierarchies in a layer-by-layer fashion.\\
+\textbf{Enhancement of Modules in Pre-trained VL Models.} CALIP~\cite{calip} introduces an ingenious attention module devoid of parameters, thereby augmenting the zero-shot performance of CLIP~\cite{clip}. CLIP-Adapter~\cite{clip-adapter}, on the other hand, introduces an additional bottleneck layer into the model. This layer is responsible for acquiring novel features and executing residual-style feature fusion with the originally pretrained features. Meanwhile, Tip-Adapter~\cite{tipadap} inherits the advantageous property of being training-free, as seen in CLIP-Adapter. Furthermore, generating weights through a key-value cache model derived from the few-shot training set enhances the adaptability and effectiveness of the downstream task performance. ATC~\cite{ATC} introduces a novel two-branch architecture. One branch employs ConditionNet to synthesize a textual cache from image features, while the other constructs an learnable visual cache to enhance versatility of the model.\\
+% CaFo~\cite{CaFo} leverages four types of prior knowledge from expert models such as CLIP, DINO~\cite{DINO},  DALL-E~\cite{DALL-E}, and GPT-3~\cite{GPT3}, to enrich its limited training data, then aid the few-shot visual recognition tasks. TaskRes~\cite{TaskRes} directly optimize a collection of prior-independent parameters as residual to the features of the text ``a photo of a \{category\}''. ATC~\cite{ATC} introduces a novel two-branch architecture. One branch employs ConditionNet to synthesize a textual cache from image features, while the other constructs an learnable visual cache to enhance versatility of the model.
+\textbf{Learnable Prompt for Pre-trained VL Models.} Prompt learning represents significant advancement in the field of NLP. CoOp~\cite{coop} represents a pioneering effort in the field of computer vision to custom extend VL models using this approach. This innovation yields substantial improvements in performance when compared to manually crafted prompts in downstream tasks, particularly in the realm of few-shot classification. Nonetheless, CoOp has limitations in terms of its ability to generalize to broader, unseen categories within the same dataset. In response, CoCoOp~\cite{cocoop} expands this paradigm by training a lightweight neural network to generate an input-conditional token for each image, which leads to enhancing generalization performance. Prompt-Adapter~\cite{prompt-adapter} integrates pre-trained prompt fine-tuning with an efficient adaptation network, achieving enhanced few-shot classification performance. Using prompts in a single branch of CLIP is suboptimal because it limits the model's adaptability to the two representation spaces for adjusting downstream tasks. MaPLe~\cite{maple}, which pioneers prompt learning in both the visual and language branches, has been shown to significantly enhance the alignment of representations. Moreover, MaPLe introduces a profound prompting strategy that extends the scope of prompt learning not only to the input but also across multiple transformer blocks. DPT~\cite{dpt} proposes a novel paradigm that simultaneously incorporates the insights derived from textual and visual prompts. Furthermore, it develops the Class-Aware Visual Prompt Tuning scheme, which generates visual prompts in a dynamic manner based on both task-related and instance-specific prompts. When CoOp-based methodologies are employed in training downstream tasks, learnable prompts tend to accrue task-specific textual knowledge but overlook the essential reservoir of general textual knowledge that underpins robust generalization. KgCoOp~\cite{kgcoop} intervenes to minimize the divergence between the textual embeddings generated by learned prompts and their hand-crafted prompts, averting the loss of essential knowledge. Besides, ProGrad~\cite{prograd} introduces a selective update mechanism for prompts, exclusively attending to those prompts whose gradients align with the gradients of the Kullback-Leibler (KL) loss, calculated by reconciling learnable prompts and hand-crafted prompts. This alignment criterion necessitates that the angle between the two kinds of gradients falls below $90^\circ$. Plot~\cite{plot} uses optimal transport to align text and image output by minimizing transport cost from prompt features to local features of image. Moreover, Plot uses the optimal transport distance to evaluate the match between images and categories, and convert match score to a prediction probability. PromptSRC~\cite{PromptSRC} proposes a self-regularizing framework, which includes mutual agreement maximization, prompt self-ensembling regularization, and textual diversity regularization.
+
+\section{Methodology}
+%In this section, we provide an overview of vision-language models about pre-training, inference, and prompt learning. Additionally, we present our proposed solution, Prompt Learning with PerPlexity, which aims to Enhance the comprehensibility of prompt with perplexity while maintain comparable performance in downstream tasks.
+In this section, we provide an overview of CoOp, and introduce the evaluation metric perplexity in NLP and what its essence is in the prompt learning of VL models. Additionally, we introduce our method, \textbf{P}rompt \textbf{L}earning with \textbf{P}er\textbf{P}lexity (PLPP), which aims to leverage perplexity to regularize the learning process of prompts, leading to addressing the overfitting issue of prompts.
+
+
+
+\subsection{An Overview of CoOp}
+%CoOp is the first method that brings prompts learning to pretrained VLMs
+CoOp, which is designed to enhance the performance of CLIP in few-shot and domain generalization tasks, introduces prompt learning to VL models. Instead of using hand-crafted prompt templates, CoOp initializes a set of learnable vectors, each vector dimension is 512, which is consistent with the dimension of word embeddings. The number of vectors is usually set to 2, 4, 8, or 16. Concretely, the learnable vector set is denoted as $ \bm{V} = \{\bm{v_1}, \bm{v_2}, \ldots, \bm{v_M}\}$, with $M$ being the count of vectors. Each prompt, denoted as $\bm{p_i} = \{\bm{v_1}, \bm{v_2}, \ldots, \bm{v_M}, \bm{c_i}\}$, amalgamates these learnable vectors with the class token embedding $\bm{c_i}$, where $\bm{c_i}$ represents the tokenized class name corresponding to the $i$-th class. Subsequently, all prompts are feed into CLIP's text encoder, denoted as $g(.)$. Assuming $\bm{f}$ represents the visual embedding of $\bm{x}$, the ultimate prediction probability for predicting the image $x$ as $i$-th class is calculated as follows:
+\begin{equation} \label{eq:coop}
+	p(y = i|x) = \frac{exp(sim(g(\bm{p_i}), \bm{f})/\tau)}{\sum_{j=1}^{K}exp(sim(g(\bm{p_j}), \bm{f})/\tau)},
+\end{equation}
+where $sim(., .)$ signifies a metric function such as cosine similarity, and $\tau$ corresponds to the temperature. Finally, given an image and its label, the prediction probability and the label are utilized to compute the cross-entropy loss. During training, only the learnable vectors $\bm{V}$ can be optimized, while the parameters of text and image encoder are frozen.
+
+\subsection{Perplexity}
+Perplexity~\cite{mauve} serves as a prominent metric used to assess the quality of a LM, quantifying its capacity to predict a given sequence. At its core, the LM strives to output a probability distribution over a predefined vocabulary of words. Consequently, when subjected to test sets comprising hand-crafted sentences, a higher probability assigned to the corresponding output signifies a superior LM, while conversely, a lower probability suggests otherwise.
+For a given sentence in the test set, denoted as $W = \{w_1, w_2, \ldots, w_N\}$, where $N$ signifies the total sentence length, the perplexity of the sentence is calculated as follows:
+\begin{equation} \label{eq:ppl}
+	\begin{split}
+		Perplexity(W) &=P(W)^{-\frac{1}{N}} \\&=  e^{-\frac{1}{N} \sum_{i=1}^{N}\log P(w_i | w_{<i})}
+		\\ &= e^{H(Q, P)}.
+		%		\sqrt[N]{\frac{1}{p(w_1)p(w_2)...p(w_N)}} \\ &=
+	\end{split}
+\end{equation}
+The calculation of perplexity is as Equation~\ref{eq:ppl}. Here, $P(w_i | w_{<i})$ represents the probability of a word appearing at the $i$-th position in a sentence, with the specific word index being denoted earlier, i.e., model prediction distribution. $Q$ corresponds to the indices of these words in $vocab\_size$ which maps words to integers, i.e. ground truth and $H$ signifies the cross-entropy function. It is worth noting that in the realm of NLP, perplexity is employed to evaluate the efficacy of a LM when exposed to human-written sentences. In the context of our work, we freeze the text encoder, and use perplexity to regularize the learning process of the prompt. Minimizing perplexity is to find prompts that closely match their encoded outputs, thus capturing more global information within each prompt vector. KL divergence can be used to measure the difference in information between the two distributions. In the context of prompt learning for VL models, the KL divergence can be related to perplexity as Equation~\ref{eq:kl} shows:
+
+% \begin{equation} \label{eq:kl}
+% 	\begin{split}
+% 		KL(Q||P)
+% 		&=\sum_{x \in X} Q(x) \log \frac{Q(x)}{P(x)} \\&= \sum_{x \in X} Q(x) \log {Q(x)} - \sum_{x \in X} Q(x) \log P(x)
+% 		\\ &= - H(Q)+H(Q, P)=H(Q, P)=\log{PPL}, 
+% 		%		\sqrt[N]{\frac{1}{p(w_1)p(w_2)...p(w_N)}} \\ &=
+% 	\end{split}
+% \end{equation}
+\begin{equation} \label{eq:kl}
+	\begin{split}
+		KL(Q||P)
+		&=\sum_{x \in X} Q(x) \log \frac{Q(x)}{P(x)}
+		\\ &= - H(Q)+H(Q, P)=H(Q, P)=\log{PPL}, 
+		%		\sqrt[N]{\frac{1}{p(w_1)p(w_2)...p(w_N)}} \\ &=
+	\end{split}
+\end{equation}
+
+where $Q$ and $P$ represent input and output distribution, and $PPL$ is a simplified representation of $Perplexity(W)$ in Equation~\ref{eq:ppl}. Since $Q$ is one-hot distribution, it is obviously $H(Q)=0$ and can be omitted. Thus, perplexity can be regarded as a hard label in self-distillation~\cite{self-distill}, which is a kind of model distillation. Perplexity aligns the input prompt distribution with the output distribution of the text encoder, that is to let shadow layer features learn deep layer features.
+\begin{figure*}[htbp]
+	\centering
+	\subfloat{
+		\centering
+		\includegraphics[width=0.33\linewidth]{average.pdf}}
+	%		\caption{Image 1}
+	%		\label{fig:subfig1}
+	%	\end{subfig}
+% \hfill
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{ImageNet.pdf}}
+%		\caption{Image 2}
+%		\label{fig:subfig2}
+%	\end{subfig}
+% \hfill
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{Caltech101.pdf}}
+%		\caption{Image 1}
+%		\label{fig:subfig1}
+%	\end{subfig}
+%	\hfill
+
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{OxfordPets.pdf}}
+%		\caption{Image 2}
+%		\label{fig:subfig2}
+%	\end{subfig}
+% \hfill
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{StanfordCars.pdf}}
+%		\caption{Image 1}
+%		\label{fig:subfig1}
+%	\end{subfig}
+% \hfill
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{Flowers102.pdf}}
+%		\caption{Image 2}
+%		\label{fig:subfig2}
+%	\end{subfig}
+%	\hfill
+
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{Food101.pdf}}
+%		\caption{Image 1}
+%		\label{fig:subfig1}
+%	\end{subfig}
+% \hfill
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{FGVCAircraft.pdf}}
+%		\caption{Image 2}
+%		\label{fig:subfig2}
+%	\end{subfig}
+% \hfill
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{SUN397.pdf}}
+%		\caption{Image 2}
+%		\label{fig:subfig2}
+%	\end{subfig}
+% \hfill
+%	\begin{subfig}[t]{0.24\linewidth}
+
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{DTD.pdf}}
+%		\caption{Image 2}
+%		\label{fig:subfig2}
+%	\end{subfig}
+% \hfill
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{EuroSAT.pdf}}
+%		\caption{Image 2}
+%		\label{fig:subfig2}
+%	\end{subfig}
+% \hfill
+%	\begin{subfig}[t]{0.24\linewidth}
+\subfloat{
+	\centering
+	\includegraphics[width=0.33\linewidth]{UCF101.pdf}}
+%		\caption{Image 2}
+%		\label{fig:subfig2}
+%	\end{subfig}
+%	\hfill
+% 其他子图和垂直空间的类似代码
+% \vspace{10pt}
+\caption{The few-shot classification results on 11 datasets. We compare our PLPP with Liner probe CLIP, CoOp, MaPLe, and PromptSRC, demonstrating consistent and significant performance improvements on most datasets. (The average accuracy on 11 datasets is shown on the left top.)}
+\label{fig:subfigure}
+%	\label{fig:subfigure}
+\end{figure*}
+
+\begin{table*}[tb]
+	
+	\caption{ Accuracy (\%) for the base-to-novel generalization evaluation. All methods are trained on 16 shots from base classes. H: Harmonic mean. }
+ % \fontsize{9pt}{11pt}\selectfont
+	% \vspace{10pt}
+%	\begin{minipage}{0.3\linewidth}
+%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+		\centering
+		\subfloat[Average over 11 datasets. ]{
+            % \setlength{\tabcolsep}{4pt}
+            \centering
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 69.34 & 74.22 & 71.70\\
+			CoOp & 82.69 & 63.22 & 71.66 \\
+			CoCoOp & 80.47 & 71.69 & 75.83 \\
+			MaPLe & 82.28 & 75.14 & 78.55 \\
+			PromptSRC & 84.26& 76.10 & 79.97 \\
+			PLPP (Ours) & \textbf{84.32} & \textbf{76.70} & \textbf{80.33} \\
+			\bottomrule
+		\end{tabular}}
+%	\end{minipage}%
+	% \hfill
+%	\begin{minipage}{0.3\linewidth}
+%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%		\centering
+		\subfloat[ImageNet. ]{
+            % \setlength{\tabcolsep}{4pt}
+            \centering
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 72.43 & 68.14 & 70.22 \\
+			CoOp & 76.47 & 67.88 & 71.92 \\
+			CoCoOp & 75.98& 70.43 &  73.10 \\
+			MaPLe & 76.66 & 70.54 & 73.47 \\
+			PromptSRC & 77.60 & 70.73 & 74.01 \\
+			PLPP (Ours) & \textbf{77.77} &  \textbf{70.87} & \textbf{74.16} \\
+			\bottomrule
+		\end{tabular}}
+%	\end{minipage}%
+	% \hfill
+%	\begin{minipage}{0.3\linewidth}
+%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%		\centering
+		\subfloat[Caltech101. ]{
+              % \setlength{\tabcolsep}{4pt}
+              \centering
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 96.84 & 94.00 & 95.40 \\
+			CoOp & 98.00 & 89.81 & 93.73 \\
+			CoCoOp & 97.96  &  93.81 & 95.84 \\
+			MaPLe &  97.74 & 94.36 & 96.02 \\
+			PromptSRC & 98.10 & 94.03 & 96.02 \\
+			PLPP (Ours) & \textbf{98.20} &  \textbf{94.77} & \textbf{96.53} \\
+			\bottomrule
+		\end{tabular}}
+%	  \hspace{\fill}
+	\\
+%	\end{minipage}
+	% \vspace{5pt} % 增加垂直间距
+%	\begin{minipage}{0.3\linewidth}
+%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%		\centering
+%		\subcaption{OxfordPets. }
+		\subfloat[OxfordPets. ]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 91.17 & 97.26 & 94.12 \\
+			CoOp & 93.67 & 95.29 & 94.47 \\
+			CoCoOp &  95.20 & 97.69 & 96.43 \\
+			MaPLe & 95.43 &\textbf{97.76} & 96.58 \\
+			PromptSRC & 95.33 & 97.30 & 96.30 \\
+			PLPP (Ours) & \textbf{95.60} &  97.47 & \textbf{96.43} \\
+			\bottomrule
+		\end{tabular}}
+%	\end{minipage}%
+	% \hfill
+%	\begin{minipage}{0.3\linewidth}
+%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%		\centering
+%		\subcaption{StanfordCars. }
+		\subfloat[StanfordCars.]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 63.37 & 74.89 & 68.65 \\
+			CoOp & 78.12 & 60.40 & 68.13 \\
+			CoCoOp & 70.49 & 73.59 & 72.01 \\
+			MaPLe & 72.94 & 74.00& 73.47 \\
+			PromptSRC & 78.27 & 74.97 & 76.58 \\
+			PLPP (Ours) &\textbf{78.79} &  \textbf{75.43} & \textbf{77.07} \\
+			\bottomrule
+		\end{tabular}}
+%	\end{minipage}%
+	% \hfill
+%	\begin{minipage}{0.3\linewidth}
+%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%		\centering
+%		\subcaption{Flowers102. }
+		\subfloat[Flowers102.]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 72.08 & \textbf{77.80} & 74.83 \\
+			CoOp & 97.60 & 59.67 & 74.06 \\
+			CoCoOp & 94.87 & 71.75 & 81.71 \\
+			MaPLe & 95.92 & 72.46 & 82.56 \\
+			PromptSRC & \textbf{98.07} & 76.50 & 85.95 \\
+			PLPP (Ours) & 97.85 &  \textbf{77.38} & \textbf{86.42} \\
+			\bottomrule
+		\end{tabular}}
+	\\
+%%	\end{minipage}
+%%	
+	% \vspace{5pt} % 增加垂直间距
+%%	
+%%	\begin{minipage}{0.3\linewidth}
+%%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%%		\centering
+%%		\subcaption{Food101. }
+		\subfloat[Food101.]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 90.10& 91.22 & 90.66 \\
+			CoOp & 88.33 & 82.26 & 85.19 \\
+			CoCoOp & 90.70 & 91.29& 90.99 \\
+			MaPLe & 90.71 & 92.05 & 91.38 \\
+			PromptSRC & 90.67 & 91.53 & 91.10 \\
+			PLPP (Ours) &  \textbf{90.73} &  \textbf{91.57} & \textbf{91.15} \\
+			\bottomrule
+		\end{tabular}}
+%%	\end{minipage}%
+	% \hfill
+%%	\begin{minipage}{0.3\linewidth}
+%%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%%		\centering
+%%		\subcaption{FGVCAircraft. }
+		\subfloat[FGVCAircraft.]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 27.19& 36.29 & 31.09\\
+			CoOp & 40.44 &  22.30 &  28.75 \\
+			CoCoOp & 33.41 & 23.71 & 27.74 \\
+			MaPLe & 37.44 & 35.61 & 36.50 \\
+			PromptSRC & \textbf{42.73} & \textbf{37.87} & \textbf{40.15}\\
+			PLPP (Ours) & 42.50 & 37.67 & 39.94 \\
+			\bottomrule
+		\end{tabular}}
+%%	\end{minipage}%
+	% \hfill
+%%	\begin{minipage}{0.3\linewidth}
+%%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%%		\centering
+%%		\subcaption{SUN397. }
+		\subfloat[SUN397.]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 69.36 & 75.35 & 72.23 \\
+			CoOp & 80.60 & 65.89 & 72.51 \\
+			CoCoOp & 79.74 & 76.86 & 78.27 \\
+			MaPLe &  80.82 & 78.70 & 79.75 \\
+			PromptSRC & \textbf{82.67} & 78.47 & 80.52 \\
+			PLPP (Ours) & 82.43 &  \textbf{78.83} & \textbf{80.59} \\
+			\bottomrule
+		\end{tabular}}
+	\\
+%%	\end{minipage}
+	% \vspace{5pt} % 增加垂直间距
+%%	
+%%	\begin{minipage}{0.3\linewidth}
+%%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%%		\centering
+%%		\subcaption{DTD. }
+		\subfloat[DTD.]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 53.24 & 59.90& 56.37 \\
+			CoOp & 79.44& 41.18 & 54.24 \\
+			CoCoOp & 77.01 &  56.00 & 64.85 \\
+			MaPLe & 80.36 & 59.18 & 68.16 \\
+			PromptSRC & 83.37 & 62.97 & 71.75 \\
+			PLPP (Ours)  & \textbf{83.68} & \textbf{63.81}& \textbf{72.41} \\
+			\bottomrule
+		\end{tabular}}
+%%	\end{minipage}%
+	% \hfill
+%%	\begin{minipage}{0.3\linewidth}
+%%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%%		\centering
+%%		\subcaption{EuroSAT. }
+		\subfloat[EuroSAT.]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 56.48& 64.05 & 60.03 \\
+			CoOp & 92.19 & 54.74 & 68.69\\
+			CoCoOp & 87.49 &  60.04 & 71.21 \\
+			MaPLe & \textbf{94.07} & 73.23 & 82.35 \\
+			PromptSRC & 92.90 & 73.90 & 82.32 \\
+			PLPP (Ours)  & 93.20 & \textbf{76.67} & \textbf{84.13} \\
+			\bottomrule
+		\end{tabular}}
+%	\end{minipage}%
+	% \hfill
+%	\begin{minipage}{0.3\linewidth}
+%		\setlength{\tabcolsep}{2pt} % 减小列之间的间隔
+%		\centering
+%		\subcaption{UCF101. }
+		\subfloat[UCF101.]{
+              % \setlength{\tabcolsep}{4pt}
+		\begin{tabular}{lcc|c}
+			\toprule
+			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+			\midrule
+			% CLIP & 70.53 & 77.50 & 73.85 \\
+			CoOp & 84.69 & 56.05 & 67.46 \\
+			CoCoOp & 82.33 & 73.45& 77.64 \\
+			MaPLe & 83.00 & 78.66 & 80.77 \\
+			PromptSRC & \textbf{87.10} & 78.80 & 82.74 \\
+			PLPP (Ours)  & 86.78 & \textbf{79.19}& \textbf{82.81} \\
+			\bottomrule
+		\end{tabular}}
+%	\end{minipage}
+	\label{tab:btng}
+\end{table*}
+
+% \begin{table*}[htbp]
+	
+% 	\caption{ Accuracy (\%) for the base-to-novel generalization evaluation. All methods are learned from the base classes with 16 shots. H: Harmonic mean. }
+%  % \fontsize{9pt}{11pt}\selectfont
+% 	% \vspace{10pt}
+% 	\begin{minipage}{0.33\linewidth}
+% 		\setlength{\tabcolsep}{3pt} % 减小列之间的间隔
+% 		\centering
+%             % \subcaption{sss}
+% 		% \subfloat[Average over 11 datasets. ]{
+% 		\begin{tabular}{lcc|c}
+%   % \subcaption{a}
+% 			\toprule
+% 			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+% 			\midrule
+% 			CLIP & 69.34 & 74.22 & 71.70\\
+% 			CoOp & 82.69 & 63.22 & 71.66 \\
+% 			CoCoOp & 80.47 & 71.69 & 75.83 \\
+% 			MaPLe & 82.28 & 75.14 & 78.55 \\
+% 			PromptSRC & 84.26& 76.10 & 79.97 \\
+% 			PLPP (Ours) & \textbf{84.35} & \textbf{76.40} & \textbf{80.18} \\
+% 			\bottomrule
+% 		\end{tabular}
+%   % }
+% 	\end{minipage}%
+% 	% \hfill
+% 	\begin{minipage}{0.33\linewidth}
+% 		\setlength{\tabcolsep}{3pt} % 减小列之间的间隔
+% 		\centering
+% 		% \subfloat[ImageNet. ]{
+% 		\begin{tabular}{lcc|c}
+% 			\toprule
+% 			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+% 			\midrule
+% 			CLIP & 72.43 & 68.14 & 70.22 \\
+% 			CoOp & 76.47 & 67.88 & 71.92 \\
+% 			CoCoOp & 75.98& 70.43 &  73.10 \\
+% 			MaPLe & 76.66 & 70.54 & 73.47 \\
+% 			PromptSRC & 77.60 & 70.73 & 74.01 \\
+% 			PLPP (Ours) & \textbf{77.77} &  \textbf{70.87} & \textbf{74.16} \\
+% 			\bottomrule
+% 		\end{tabular}
+%   % }
+% 	\end{minipage}%
+% 	% \hfill
+% 	\begin{minipage}{0.33\linewidth}
+% 		\setlength{\tabcolsep}{3pt} % 减小列之间的间隔
+% 		\centering
+% 		% \subfloat[Caltech101. ]{
+% 		\begin{tabular}{lcc|c}
+% 			\toprule
+% 			& \text{Base} & \text{Novel} & $\mathrm{H}$ \\
+% 			\midrule
+% 			CLIP & 96.84 & 94.00 & 95.40 \\
+% 			CoOp & 98.00 & 89.81 & 93.73 \\
+% 			CoCoOp & 97.96  &  93.81 & 95.84 \\
+% 			MaPLe &  97.74 & 94.36 & 96.02 \\
+% 			PromptSRC & 98.10 & 94.03 & 96.02 \\
+% 			PLPP (Ours) & \textbf{98.20} &  \textbf{94.77} & \textbf{96.53} \\
+% 			\bottomrule
+% 		\end{tabular}
+%         \end{minipage}
+% 	\label{tab:btng}
+% \end{table*}
+\begin{table*}[tb]
+	\centering
+	\caption{Comparison of PLPP with existing methods in cross-dataset evaluation setting. All methods are trained on 16 shots.}
+	% \vspace{10pt}
+	% \resizebox{1.0\textwidth}{!}{
+% \small
+% {\fontsize{10pt}{1mm}
+ % \setlength{\tabcolsep}{1.7mm}{
+		\begin{tabular}{lccccccccccccc}
+			\toprule
+			& \textbf{Source} & &\multicolumn{11}{c}{\textbf{Target}} \\
+			\cmidrule{2-2} \cmidrule{4-14} 
+			& \rotatebox{90}{ImageNet}  && \rotatebox{90}{Caltech101} & \rotatebox{90}{OxfordPets} & \rotatebox{90}{StanfordCars} & \rotatebox{90}{Flowers102} & \rotatebox{90}{Food101} & \rotatebox{90}{Aircraft} & \rotatebox{90}{SUN397} & \rotatebox{90}{DTD} & \rotatebox{90}{EuroSAT} & \rotatebox{90}{UCF101} & \rotatebox{90}{Average}\\
+			\midrule
+			\text{CoOp} & \textbf{71.51} && 93.70 & 89.14 & 64.51 & 68.71 & 85.30 & 18.47 & 64.15 & 41.92 & 46.39 & 66.55 &63.88\\
+			\text{CoCoOp} & 71.02 && 94.43 & 90.14 & 65.32 & 71.88 & 86.06 & 22.94 & 67.36 & 45.73 & 45.37 & 68.21 &65.74\\
+			\text{MaPLe} & 70.72  && 93.53 & \textbf{90.49} & 65.57 & \textbf{72.23} & 86.20 & \textbf{24.74} & 67.01 & 46.49 & \textbf{48.06} & 68.69 &\textbf{66.30}\\
+			\text{PromptSRC} & 71.27 && 93.60 & 90.25 & 65.70 & 70.25 & 86.15 & 23.90 & 67.10 & 46.87& 45.50 & 68.75 &65.81\\
+			\midrule
+			\rowcolor{gray!20}\text{PLPP} & 71.03 && \textbf{94.46} & 90.44 & \textbf{65.87} & 70.89 & \textbf{86.42} & 24.66 & \textbf{67.42}  & \textbf{47.07}	 & 46.83 & \textbf{68.83} &66.29\\
+			\bottomrule
+			% \\
+		\end{tabular}
+  % }
+		\label{tab:cdg}
+	% }
+	% \\
+\end{table*}
+\subsection{Prompt Learning with Perplexity}
+%In this subsection, we introduce the details of PLPP, which transfers the evaluation metric perplexity to the prompt learning of Vision-Language Models.
+%PLPP breaks the mold by bridging the gap between perplexity~\cite{mauve} evaluation and prompt learning. Previously, these two concepts were seen as separate and independent. PLPP unites them in a novel and powerful way.
+% In this subsection, we detail the implementation of PLPP, a novel plug-in method that breaks the mold by bridging the gap between perplexity~\cite{mauve} evaluation and prompt learning. Previously, these two concepts were seen as separate and independent. PLPP unites them in a novel and powerful way. In order to better demonstrate the flowchart of the PLPP method, we choose CoOp, the simplest prompt-based learning method for comparison. The flow chart is shown in Figure~\ref{fig:PLPPSD}. Specifically, we first randomly initialize the learnable vectors $\bm{V} = \{\bm{v_1}, \bm{v_2}, ..., \bm{v_M}\}$, and the input for the text encoder of CLIP is $\bm{p_i} = \{\bm{v_1}, \bm{v_2}, ..., \bm{v_M}, \bm{c_i}\}$ where $i$ is related to the number of categories in the dataset. Given an image $x \in \mathbb{R}^{H \times W \times 3}$ and its ground truth label $y \in Y$, we feed $x$ into the image encoder of CLIP to get the visual embedding $f \in \mathbb{R}^{d}$. $g(p_i) \in \mathbb{R}^{d}$ is regarded as the text embedding of $p_i$ where $i$ represents the index of category. Then we calculate the predicted probabilities for all categories on the corresponding dataset according to Equation \ref{eq:coop}. Subsequently, the cross-entropy loss is based on the prediction probabilities and ground-truth label $y$ for image $x$.%Alignment loss is then calculated by cross-entropy function. 
+
+In this subsection, we detail the implementation of PLPP, a novel plug-in method that breaks the mold by bridging the gap between perplexity~\cite{mauve} evaluation and prompt learning in VL models. Previously, these two concepts were seen as separate and independent. PLPP unites them in a novel and powerful way. 
+
+From the previous subsection we can know that the relationship between self-distillation and perplexity, which is shown in Equation \ref{eq:kl}. The $Q$ distribution is calculated by using cosine similarity between prompts and embedding layer. As for $P$, we introduce an LM head positioned after the text encoder to output the distribution $P$. “The LM head consists of a simple linear layer without bias, with its weights initialized from the transpose of the $embedding.weight$. Besides, we demonstrate that perplexity can serve as hard label for self-distillation. In order to further prevent overfitting, we replace hard label $Q$ with soft label, and soft label is commonly used in knowledge distillation. Since we introduce the soft label technique and the index is over $40,000$, these increase the computation significantly. To mitigate the computational cost, we employ top-$k$ strategy in $Q$ to retrain only the largest $k$ values, resulting in $topk(Q)$ as the updated $Q$. At the same time, we save the indexes of the largest $k$ values and use these indexes to get the final $P$. To ensure training stability and accelerate model convergence, we introduce mutual self-distillation learning. The perplexity loss is then defined as follows:
+
+\begin{equation} \label{eq:plpp1}
+	\mathcal{L}_{PPL} = e^{\frac{1}{2}\cdot KL(Q_1||P_1))} + e^{\frac{1}{2}\cdot KL(P_1||Q_1)},
+\end{equation}
+\begin{equation} \label{eq:plpp1}
+	\mathcal{L}_{IPPL} = e^{\frac{1}{2}\cdot KL(Q_2||P_2))} + e^{\frac{1}{2}\cdot KL(P_2||Q_2)},
+\end{equation}
+
+where $Q_1$ is obtained by $topk(Q)$ and the indexes of the largest $k$ values are saved to obtain $P_1$, and $P_2$ is obtained by $topk(P)$ and the indexes of the largest $k$ values are saved to obtain $Q_2$.
+
+Then we calculate the predicted probabilities for all categories on the corresponding dataset according to Equation \ref{eq:coop}. Subsequently, the cross-entropy loss $\mathcal{L}_{CE}$ is based on the prediction probabilities and ground-truth label $y$ for image $x$. The flow chart is shown in Figure~\ref{fig:PLPPSD}. 
+
+% As for perplexity, we introduce an LM head positioned after the text encoder to output word probability distribution $P$. The LM head comprises a straightforward linear layer devoid of bias, with its weight initialized using the transpose of $embedding.weight$, referencing the weight parameter of the embedding layer. Given that perplexity can be expressed in terms of cross-entropy loss and necessitates the labels of prompts, we utilize the dot product to calculate the cosine similarity between $V$ and the weight parameter of the embedding layer. This operation returns the index corresponding to the maximum similarity as the label for the prompts. After each batch, the prompts are updated, the label assignments for the prompts need to be recomputed. The pseudo-code of our PLPP is provided in Appendix.
+
+In summary, we denote $\mathcal{L}_{CE}$ and $\mathcal{L}_{PPL}$, $\mathcal{L}_{IPPL}$ as the loss for aligning image-text features and for regularizing learnable prompts through perplexity. $\alpha$ controls the importance between $\mathcal{L}_{PPL}$ and $\mathcal{L}_{IPPL}$. $\lambda$ controls the weight of the regularization term. We have the overall loss function of PLPP as in Equation~\ref{eq:plpp}.
+
+\begin{equation} \label{eq:plpp}
+	\mathcal{L}_{PLPP} = \mathcal{L}_{CE} + \lambda \cdot ( \alpha \cdot\mathcal{L}_{PPL} +(1 - \alpha) \cdot\mathcal{L}_{IPPL} ).
+\end{equation}
+
+% \subsection{Theoretical Analysis for PLPP}
+% Perplexity loss can be approximated by self-distillation loss $L$ (Eq (3)), representing the KL divergence between the deep output $P_D(x)$ and the shallow output $P_S(x)$:
+
+% \begin{equation} \label{ta1}
+%     L=D_{KL}(P_D(x)||P_S(x))=\sum_i P_D(i|x)\log\frac{P_D(i|x)}{P_S(i|x)},
+% \end{equation}
+
+% where $x$ is the learnable prompt. In order to minimize $L$, we need to compute the gradient of the input prompt $x$:
+
+% \begin{equation} \label{ta2}
+%     \frac{\partial L}{\partial x}=\frac{\partial}{\partial x}\sum_i P_D(i|x)\log \frac{P_D(i|x)}{P_S(i|x)}.
+% \end{equation}
+
+% By the chain rule, we can get:
+
+% \begin{align} \label{ta3}
+%     \frac{\partial L}{\partial x}&=\frac{\partial}{\partial x}\sum_i P_D(i|x)\log \frac{P_D(i|x)}{P_S(i|x)}\notag\\
+%     &=\sum_i\{\frac{\partial P_D(i|x)}{\partial x} \log \frac{P_D(i|x)}{P_S(i|x)}+P_D(i|x) \frac{\partial}{\partial x}\log\frac{P_D(i|x)}{P_S(i|x)}\}.
+% \end{align}
+
+% Expanding the second item, we can get:
+
+% \begin{equation} \label{ta4}
+%     \frac{\partial}{\partial x}\log \frac{P_D(i|x)}{P_S(i|x)}=\frac{1}{P_D(i|x)}\frac{\partial P_D(i|x)}{\partial x}-\frac{1}{P_S(i|x)} \frac{\partial P_S(i|x)}{\partial x}
+% \end{equation}
+
+% Substituting the result into the Equation \ref{ta3}:
+
+% \begin{equation} \label{ta5}
+%     \frac{\partial L}{\partial x}=\sum_i \{\frac{\partial P_D(i|x)}{\partial x}(1+\log \frac{P_D(i|x)}{P_S(i|x)})-\frac{P_D(i|x)}{P_S(i|x)}\frac{\partial P_S(i|x)}{\partial x}\}.
+% \end{equation}
+
+% As shown in the Equation \label{ta5},
+
+\section{Experiments}
+We conduct a comprehensive evaluation of PLPP across four benchmarks for image recognition task: (1) few-shot classification, (2) base-to-novel generalization, (3) cross-dataset evaluation, domain evaluation, and (4) ablation study for the hyperparameter of perplexity loss. PLPP denotes PropmtSRC + PLPP if not otherwise specified in the experiments.
+
+
+\subsection{Evaluation Settings}
+\textbf{Datasets.} In few-shot classification and base-to-novel generalization, we follow to the methodology established by CoOp and CoCoOp, using a total of 11 datasets to evaluate the performance of our method. The 11 datasets include general object recognition datasets: ImageNet~\cite{imagenet} and Caltech101~\cite{caltech101}, fine-grained image recognition datasets: OxfordPets~\cite{oxfordpets}, StanfordCars~\cite{stanfordcars}, Flowers102~\cite{flowers102}, Food101~\cite{food101}, and FGVCAircraft~\cite{fgvc}, a satellite image classification dataset: EuroSAT \cite{eurosat}, an action classification dataset: UCF101 \cite{ucf101}, a texture classification dataset: DTD \cite{dtd}, a scene recognition: SUN397 \cite{sun397}. For domain generalization, ImageNet serves as the source dataset, and the target datasets include ImageNetV2~\cite{imagenetv2}, ImageNet-Sketch~\cite{imagenetsketch}, ImageNet-A~\cite{imagenet-a} and ImageNet-R~\cite{imagenet-r}.
+% \\
+
+\textbf{Baselines.} In few-shot classification, we compare PLPP with four baseline methods. The first baseline is Linear probe CLIP, involves training a linear classifier after the CLIP image encoder. CoOp is the second baseline, which learns the unified context prompt through data-driven means instead of time-consuming manual design. The third baseline, MaPLe, is a pioneering work that introduces prompt learning to both the visual and language branches. Lastly, PromptSRC, proposes a self-regularizing method that consists of three components: mutual agreement maximization, prompt self-ensembling regularization, and textual diversity regularization. In all tasks, we use the unified context prompt of CoOp, CoCoOp, MaPLe and PromptSRC as the baseline methods. To further verify the effectiveness of PLPP, we use the best baseline method PromptSRC to integrate our PLPP. For simplicity, we use PLPP to denote PromptSRC + PLPP in all experiments. 
+% \\
+
+\textbf{Implementation Details.} In few-shot classification, all the methods are trained with 1, 2, 4, 8, and 16 shots from train set. Subsequently, conducting evaluations on the test dataset. In base-to-novel generalization, cross-dataset evaluation, and domain generalization, all methods are training on 16 shots. To ensure equitable comparisons, we compute the results for all methods and datasets by averaging over three random seeds. For all experiments, we adhere to the guidelines provided in PromptSRC, utilizing vit-b/16~\cite{vit} as the backbone for the image encoder. The number of learnable vectors, denoted as $M$, is consistently set to 4. We adhere to the training epochs, schedule, and data augmentation settings used in PromptSRC. For domain generalization and cross-data evaluation tasks, we set $\lambda$ to 10 and $\alpha$ to 0.2. Since different datasets have different sensitivities to $\mathcal{L}_{PPL}$ and $\mathcal{L}_{IPPL}$, the best $\lambda$ and $\alpha$ varies across different datasets and in few-shot classification and base-to-novel generalization, we list in the appendix the best hyperparameter corresponding to the different datasets. For top-$k$ strategy, we set $k$ to 5 in all tasks.
+
+\subsection{Few-Shot Classification}
+\label{sec:fewshot}
+%Figure \ref{fig:nineimages} illustrates the comparisons over 11 datasets. Overall, our PLPP achieves clear advantages over baseline models for all few-shot settings on average performance. Specifically, PLPP outperforms CoOp by 9.5\%, 6.9\% and 5.1\% on FGVCAircraft, EuroSAT and Flowers102 given 1 shot, and the average improvement over 11 datasets is 3.2\%. These results demonstrate the anti- overfitting ability of our ProGrad when the samples from downstream tasks are extremely limited. When it comes to 16 shots training, the average improvement induced by ProGrad is less appealing to around 0.5\%. The reason is that the sufficient number of samples from downstream tasks can effectively avoid overfitting. Nonetheless, the average performance gains in all shots settings validate the capability of our ProGrad to improve prompt learning in a data-efficient way.
+Figure~\ref{fig:subfigure} demonstrates the comparative analysis across 11 diverse datasets. Overall, our PLPP manifests distinct advantages over the baseline models across various few-shot scenarios, showcasing significant improvement in average performance compared with Linear Probe CLIP, CoOp, and MaPLe. Furthermore, in comparison with PromptSRC, PLPP demonstrates a mean performance lead under 1, 2, 4, 8, and 16 shots across all the datasets. The average improvement in accuracy for each dataset is as follows: OxfordPets (0.4\%), Flowers102 (0.5\%), FGVCAircraft (0.5\%), DTD (0.6\%), EuroSAT (1.3\%), StanfordCars (0.2\%), Food101 (0.3\%), SUN397 (0.2\%), Caltech101 (0.3\%), UCF101 (0.1\%), and ImageNet (0.2\%).
+
+\subsection{Base-to-Novel Generalization}
+\label{sec:btng}
+%Since CoOp has the weak generalizability problem, which leaves a huge gap between base classes accuracy and unseen classes accuracy, CoCoOp proposes image-conditioned to solve the problem. To compared with CoOp and CoCoOp, our Ex-CoOp use the same network architecture as CoOp, e.g., prompt, text encoder, image encoder.To evaluate the generalization performance from seen classes to unseen classes, we equally divide the classes into two groups, i.e., base classes and new classes. All the methods are only trained on base classes and tested on both base classes and novel classes. We also report the harmonic mean of base-class and new-class accuracies to evaluate the trade-off.
+%We compare 
+Base-to-novel generalization is that we first partition the dataset into two groups based on the classes, one called base classes and the other called novel classes. Then, we train our model on base classes and evaluate the performance of the model on novel classes. We use a harmonic mean (HM) as a composite measure to evaluate the base versus novel classes performance trade-off, which as calculated by: $H = 2 \cdot\frac{Base \cdot Novel}{Base + Novel}$. As presented in Table~\ref{tab:btng}, our proposed PLPP exhibits the consistent performance advantages in base-to-novel generalization setting on 11 datasets.
+
+PLPP significantly outperforms CoOp, CoCoOp, and MaPLe in both base and novel classes. Against PromptSRC, PLPP achieves better results on 7 out of 11 datasets for base classes and improves on 10 out of 11 datasets for novel classes, with a notable 2.77\% increase on EuroSAT.
+
+\subsection{Cross-Dataset Evaluation}
+\label{sec:cdg}
+To assess how well PLPP generalizes across different datasets, we train all the methods on ImageNet and test them on 10 other datasets. As shown in Table~\ref{tab:cdg}, PLPP's performance on ImageNet is competitive with other methods. In the 10 target datasets, PLPP exceeds the performance of CoOp and CoCoOp in 10 out of 10 and 9 out of 10 datasets, respectively. PLPP also outperforms MaPLe and PromptSRC in 6 out of 10 and 10 out of 10 datasets. Overall, PLPP performs well compared to PromptSRC. However, its average performance on the target datasets is still lower than MaPLe's, which is mainly due to MaPLe's strong results on the Flowers102 and EuroSAT. The sensitivity of EuroSAT to prompts (due to its only 10 classes) affects performance. Additionally, PromptSRC uses independent vision-language prompt tokens, while MaPLe uses dependent tokens that better capture the relationship between text and images, giving MaPLe an edge in cross-dataset generalization.
+
+
+\subsection{Domain Generalization}
+\label{sec:dg}
+%The domain generalization paradigm assesses the models' capacity for generalization in a target domain distinct from the source domain. Traditional fine-tuning with a limited dataset from a specific domain can potentially mislead the model into acquiring spurious correlations or patterns confined to that domain, thus yielding a biased model that exhibits subpar performance in unfamiliar domains [1, 28, 36]. In contrast, zero-shot CLIP does not exploit such spurious correlations or patterns since it refrains from fine-tuning on that distribution [36]. Given that our PLPP leverages general knowledge from the pre-trained domain to constrain the fine-tuning process for a particular distribution, our PLPP demonstrates resilience in the face of distributional shifts. As exemplified in Table 2, our PLPP unequivocally surpasses CoOp across all target datasets and even outperforms CoCoOp in three out of four target datasets. It is worth noting that CoCoOp achieves commendable performance in domain generalization through dynamic instance-conditional prompts. However, the computation of instance-conditional prompts significantly escalates training time. Conversely, our PLPP employs a static prompt to mitigate training costs while still outperforming CoCoOp (refer to Table 5).
+Domain generalization evaluates a model's ability to generalize to a target domain that is different but related to the source domain.
+We train our model on ImageNet dataset, and evaluate it on four specially designed benchmark datasets.
+% Traditional fine-tuning on limited data from a specific domain can inadvertently lead the model to acquire spurious correlations.This results in a biased model with poor performance on the target domains. 
+As Table~\ref{tab:dge} shows, PLPP consistently outperforms all competing methods across all target datasets with an overall highest average accuracy of 60.8\%. Especially for ImageNet-Sketch, PLPP leads propmtsrc by 0.3\%. The results demonstrate that our PLPP method can get better generalization for datasets with domain shifts.
+
+
+\begin{table}[tbp]
+	\centering
+	\caption{Comparison of PLPP with existing methods in domain generalization setting. All methods are trained on 16 shots.}
+	% \vspace{10pt}
+	% \resizebox{1.0\linewidth}{!}{
+ % {\fontsize{10pt}{1mm}
+         \setlength{\tabcolsep}{1mm}{
+		\begin{tabular}{lccccccc}
+			\toprule
+			& \textbf{Source} & &\multicolumn{5}{c}{\textbf{Target}} \\
+			\cmidrule{2-2} \cmidrule{4-8} 
+			& \text{ImageNet}  && \text{-V2} & \text{-S} & \text{-A} & \text{-R} & \text{Avg.}\\
+			\midrule
+			% \text{CLIP} & 66.7&& 60.8 & 46.2 & 47.8 & 74.0 & 57.2\\
+			\text{CoOp} & \textbf{71.5} && 64.2 & 48.0 & 49.7 & 75.2& 59.3 \\
+			\text{CoCoOp} & 71.0  && 64.1 & 48.8 & 50.6 & 76.2 & 59.9\\
+			\text{MaPLe} & 70.7 && 64.1 & 49.2 & 50.9 & 77.0 & 60.3\\
+			\text{PromptSRC} & 71.3 && 64.4 & 49.6 & 50.9 & 77.8 &60.7 \\
+			\midrule
+			\rowcolor{gray!20}\text{PLPP} & 71.0 && \textbf{64.6} & \textbf{49.7} & \textbf{51.2} & \textbf{77.8} & \textbf{60.8}\\
+			\bottomrule
+		\end{tabular}
+		\label{tab:dge}
+  }
+	% }
+	%	\label{tab:dge}
+\end{table}
+% \\
+
+% \newline
+
+% \begin{table}[htbp]
+% 	\centering
+% 	\caption{Comparison of CoOp + PLPP and CoCoOp + PLPP with CoOp and CoCoOp in domain generalization setting. The prompts are trained with 2 shots.}
+% 	\vspace{10pt}
+% 	\resizebox{0.48\textwidth}{!}{
+% 	\begin{tabular}{lccccccc}
+% 		\toprule
+% 		& \textbf{Source} & &\multicolumn{5}{c}{\textbf{Target}} \\
+% 		\cmidrule{2-2} \cmidrule{4-8} 
+% 		& \text{ImageNet}  && \text{-V2} & \text{-S} & \text{-A} & \text{-R} & \text{Avg.}\\
+% 		\midrule
+% 		\text{CoOp} & 67.60 && 60.40 & 44.90 & 47.57 & 72.23 & 56.28 \\
+% 		\text{CoCoOp} & 70.20  && 63.57 & 48.60 & 50.93 & 76.03 & 59.78 \\
+% 		\midrule
+% 		\rowcolor{gray!20}\text{CoOp + PLPP} & 68.60 && 61.83 & 47.07 & 49.50 & 75.43 & 58.46 \\
+% 		\rowcolor{gray!20}\text{CoCoOp + PLPP} & \textbf{70.23} && \textbf{63.70} & \textbf{48.73} & \textbf{51.07} & \textbf{76.47} & \textbf{59.99}\\
+% 		\bottomrule
+% 	\end{tabular}}
+% 	\label{tab:dge1}
+% \end{table}
+
+% \subsection{Ablation study}
+% \label{sec:vlp}
+% We conducted a systematic study of the influence of the hyperparameter $\lambda$ on the performance of the model described in Equation~\ref{eq:plpp}. The regularization term, controlled through the hyperparameter $\lambda$, presents a trade-off between mitigating prompt overfitting and maximizing the performance of the VL model. Table~\ref{tab:abs} shows that as long as the coefficient controlling our perplexity loss is within a certain range, it can steadily improve the performance of the model in downstream tasks. While moderate $\lambda$ effectively constrains prompt optimization to prevent overfitting, and a excessively large value can significantly restrict the search space of prompt, hindering better generalization performance on downstream tasks. More details about the influence of hyperparameter $\lambda$ on 11 datasets can be founded in the Appendix.
+% \\
+
+% \begin{table}[htbp]
+% 	%	\small
+% 	\setlength{\extrarowheight}{3pt} % 为每一行添加5pt的额外高度
+% 	\centering
+% 	\caption{Ablation study on hyperparameter $\lambda$ for the average base-to-novel generalization performance on 11 datasets.}
+% 	\vspace{10pt}
+% 	\begin{tabular}{c|c|c|c|c|c|c}
+% 		\hline
+% 		$\lambda$ & 0 & 0.01 & 0.05 & 0.1 & 0.5 & 1.0 \\ \hline
+% 		Base & 84.26 & \textbf{84.41} & 84.32 &  84.35 & 84.32 & 83.21 \\ \hline
+% 		Novel & 76.10 & 76.27 & 76.33 & \textbf{76.40} & 75.99 & 74.89 \\ \hline
+% 		H & 79.97 & 80.13 & 80.13 & \textbf{80.18} & 79.93 & 78.83 \\ \hline
+% 	\end{tabular}
+	
+% 	\label{tab:abs}
+% \end{table}
+
+% \begin{table}[h]
+% 	\caption{Locations of selected conference editions.}
+% 	\centering
+% 	\begin{tabular}{ll@{\hspace{8mm}}ll} 
+% 		\toprule
+% 		AISB-1980 & Amsterdam & ECAI-1990 & Stockholm \\
+% 		ECAI-2000 & Berlin & ECAI-2010 & Lisbon \\
+% 		ECAI-2020 & \multicolumn{3}{l}{Santiago de Compostela (online)} \\
+% 		\bottomrule
+% 	\end{tabular}
+% \end{table}
+
+\section{Conclusion}
+%In this paper, we pointed out the over-fitting issues of existing prompt tuning methods for few-shot generalization, which heavily relies on early stopping and data augmentation to promote zero- shot inference. We proposed a prompt tuning method ProGrad that regularize each tuning step not to conflict with the general knowledge of the hand-crafted prompt. Experiments on few-shot classification, base-to-new generalization and domain generalization over 11 datasets demonstrate the effectiveness and efficiency of our PLPP. In the future, we will explore a more powerful metric and intergrate it in the training process of prompts to reach the original intention: the prompts like a sentence by people and high performance.
+Prompt-based learning methods greatly reduce the number of parameters that need to be optimized when the VL model is fine-tuned on downstream tasks, and have achieved astonishing performance on various downstream tasks. However, existing prompt learning methods still ignore the problem that prompts are prone to overfitting, thereby damaging the inherent generalization ability of VL models. Our work proposes a plug-in prompt-regularization learning method called PLPP, which addresses the prompt overfitting problem for better generalization. We reveal the essence of perplexity in prompt learning for VL models is a form of self-distillation. To calculate the perplexity loss, we use embedding layer to obtain label and introduce a LM head that requires no training to output word distribution. Moreover, we introduce soft label and top-$k$ strategy to further prevent overfitting and reduce the computational cost. We also employ mutual self-distillation learning to accelerate model convergence. Extensive experiments on four classification tasks show the effectiveness of our PLPP. 
+
+
+
+% \begin{table*}[htbp]
+% 	\centering
+% 	\begin{tabular}{cc|cccccccc}
+% 		\toprule
+% 		Dataset & &  $\begin{tabular}{l} 
+% 			CLIP \\
+% 			{[22]}
+% 		\end{tabular}$ & CoOp & CoCoOp & ProDA & MaPLe & EPT &  $\Delta$  \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{c} 
+% 				Average on \\
+% 				11 datasets
+% 		\end{tabular}} & Base & 69.34 & \textbf{82.69} & 80.47 & 81.56 & 82.28 & 81.82 & \textcolor{magenta}{-0.9} \\
+% 		& Novel & 74.22 & 63.22 & 71.69 & 72.30 & \textbf{75.14} & 74.83 & \textcolor{cyan}{+11.7} \\
+% 		& $\mathrm{HM}$  & 71.70 & 71.66 & 75.83 & 76.65 & \textbf{78.55} & 78.17 & \textcolor{cyan}{+6.5} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				ImageNet
+% 		\end{tabular}} & Base & 72.43 & 76.47  & 75.98 & 75.40 & 76.66 & \textbf{76.97} & \textcolor{cyan}{+0.5} \\
+% 		%\cline{2-9}
+% 		& Novel &68.14& 67.88  & 70.43 & 70.23 & 70.54 & \textbf{70.57} & \textcolor{cyan}{+2.7} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 70.22&71 .92 & 73.10 & 72.72 & 73.47 & \textbf{73.63} & \textcolor{cyan}{+1.7} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				Caltech101
+% 		\end{tabular}} & Base & 96.84 & 98.00 & 97.96 & \textbf{98.27} & 97.74 & 97.80 & \textcolor{magenta}{-0.2} \\
+% 		%\cline{2-9}
+% 		& Novel &  94.00 & 89.81  & 93.81 & 93.23 & \textbf{94.36} & 93.40 & \textcolor{cyan}{+3.6} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 95.40 & 93.73  & 95.84 & 95.68 & \textbf{96.02} & 95.55 & \textcolor{cyan}{+1.8} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				OxfordPets
+% 		\end{tabular}} & Base & 91.17&93 .67 & 95.20 & \textbf{95.43} & 95.43 & 95.27 & \textcolor{cyan}{+1.6} \\
+% 		%\cline{2-9}
+% 		& Novel & 97.26 & 95.29  & 97.69 & \textbf{97.83} & 97.76 & 96.90 & \textcolor{cyan}{+1.6} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 94.12 & 94.47  & 96.43 & \textbf{96.62} & 96.58 & 96.08& \textcolor{cyan}{+1.6} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				StanfordCars
+% 		\end{tabular}} & Base & 63.37 & 78.12  & 70.49 & 74.70 & 72.94 & \textbf{78.80} & \textcolor{cyan}{+0.7} \\
+% 		%\cline{2-9}
+% 		& Novel & 74.89 & 60.40  & 73.59 & 71.20 & 74.00 & \textbf{75.83} & \textcolor{cyan}{+15.4} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 68.65 & 68.13  & 72.01 & 72.91 & 73.47 & \textbf{77.29} & \textcolor{cyan}{+9.2} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				Flowers102
+% 		\end{tabular}} & Base & 72.08 & \textbf{97.60}  & 94.87 & 97.70 & 95.92 & 97.57 & \textcolor{magenta}{-0.0} \\
+% 		%\cline{2-9}
+% 		& Novel & \textbf{77.80} & 59.67  & 71.75 & 68.68 & 72.46 & 75.53 & \textcolor{cyan}{+5.9} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 74.83 & 74.06  & 81.71 & 80.66 & 82.56 & \textbf{85.15} & \textcolor{cyan}{+11.1} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				Food101
+% 		\end{tabular}} & Base & 90.10 & 88.33  & 90.70 & 90.30 & \textbf{90.71} & 90.37 & \textcolor{cyan}{+2.0} \\
+% 		%\cline{2-9}
+% 		& Novel & 91.22 & 82.26  & 91.29 & 88.57 & \textbf{92.05} & 90.43 & \textcolor{cyan}{+8.2} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 90.66 & 85 .19 & 90.99 & 89.43 & \textbf{91.38} & 90.40 & \textcolor{cyan}{+5.2} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				FGVCAircraft
+% 		\end{tabular}} & Base & 27.19 &40 .44 & 33.41 & 36.90 & 37.44 & \textbf{40.97} & \textcolor{cyan}{+0.5} \\
+% 		%\cline{2-9}
+% 		& Novel & \textbf{36.29} & 22.30  & 23.71 & 34.13 & 35.61 & 34.03& \textcolor{cyan}{+11.7} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 31.09 & 28.75  & 27.74 & 35.46 & 36.50 & \textbf{37.18} & \textcolor{cyan}{+8.4} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				SUN397
+% 		\end{tabular}} & Base & 69.36 & 80.60  & 79.74 & 78.67 & 80.82 & \textbf{81.93} & \textcolor{cyan}{+1.3} \\
+% 		%\cline{2-9}
+% 		& Novel &75.35 & 65.89  & 76.86 & 76.93 & \textbf{78.70} & 77.80 & \textcolor{cyan}{+11.9} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 72.23 & 72.51  & 78.27 & 77.79 & 79.75 & \textbf{79.81} & \textcolor{cyan}{+7.3} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				DTD
+% 		\end{tabular}} & Base & 53.24 & 79.44 & 77.01 & \textbf{80.67} & 80.36 & 79.67 & \textcolor{cyan}{+0.2} \\
+% 		%\cline{2-9}
+% 		& Novel & 59.90 & 41.18  & 56.00 & 56.48 & 59.18 & \textbf{64.87}& \textcolor{cyan}{+23.7} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 56.37 & 54.24  & 64.85 & 66.44 & 68.16 & \textbf{71.51} & \textcolor{cyan}{+17.3} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				EuroSAT
+% 		\end{tabular}} & Base & 56.48 & 92.19  & 87.49 & 83.90 & \textbf{94.07} & 78.20 & \textcolor{magenta}{-14.0} \\
+% 		%\cline{2-9}
+% 		& Novel & 64.05 & 54.74  & 60.04 & 66.00 & \textbf{73.23} & 68.90 & \textcolor{cyan}{+14.2} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 60.03 & 68.69  & 71.21 & 73.88 & \textbf{82.35} & 73.26 & \textcolor{cyan}{+4.6} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				UCF101
+% 		\end{tabular}} & Base & 70.53 &84 .69 & 82.33 & \textbf{85.23} & 83.00 & 82.43 & \textcolor{magenta}{-2.7} \\
+% 		%\cline{2-9}
+% 		& Novel & 77.50 & 56.05  & 73.45 & 71.97 & \textbf{78.66} & 74.87 & \textcolor{cyan}{+14.8} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 73.85 & 67.46  & 77.64 & 78.04 & \textbf{80.77} & 78.47 & \textcolor{cyan}{+11.0} \\
+% 		\bottomrule
+% 	\end{tabular} 
+% 	\caption{Your caption here}
+% 	%	\label{tab:mytable}
+% \end{table*}
+
+
+
+
+% \begin{table*}[htbp]
+% 	\centering
+% 	\begin{tabular}{cc|cccccccc}
+% 		\toprule
+% 		Dataset & &  $\begin{tabular}{l} 
+% 			CLIP \\
+% 			% {[22]}
+% 		\end{tabular}$ & CoOp & CoCoOp & CoOp+PLPP & CoCoOp+PLPP & EPT &  $\Delta$  \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{c} 
+% 				Average on \\
+% 				11 datasets
+% 		\end{tabular}} & Base & 69.34 & \textbf{82.69} & 80.47 & 81.56 & 82.28 & 81.82 & \textcolor{magenta}{-0.9} \\
+% 		& Novel & 74.22 & 63.22 & 71.69 & 72.30 & \textbf{75.14} & 74.83 & \textcolor{cyan}{+11.7} \\
+% 		& $\mathrm{HM}$  & 71.70 & 71.66 & 75.83 & 76.65 & \textbf{78.55} & 78.17 & \textcolor{cyan}{+6.5} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				ImageNet
+% 		\end{tabular}} & Base & 72.43 & 76.47  & 75.98 & 75.40 & 76.66 & \textbf{76.97} & \textcolor{cyan}{+0.5} \\
+% 		%\cline{2-9}
+% 		& Novel &68.14& 67.88  & 70.43 & 70.23 & 70.54 & \textbf{70.57} & \textcolor{cyan}{+2.7} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 70.22&71 .92 & 73.10 & 72.72 & 73.47 & \textbf{73.63} & \textcolor{cyan}{+1.7} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				Caltech101
+% 		\end{tabular}} & Base & 96.84 & 98.00 & 97.96 & \textbf{98.27} & 97.74 & 97.80 & \textcolor{magenta}{-0.2} \\
+% 		%\cline{2-9}
+% 		& Novel &  94.00 & 89.81  & 93.81 & 93.23 & \textbf{94.36} & 93.40 & \textcolor{cyan}{+3.6} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 95.40 & 93.73  & 95.84 & 95.68 & \textbf{96.02} & 95.55 & \textcolor{cyan}{+1.8} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				OxfordPets
+% 		\end{tabular}} & Base & 91.17&93 .67 & 95.20 & \textbf{95.43} & 95.43 & 95.27 & \textcolor{cyan}{+1.6} \\
+% 		%\cline{2-9}
+% 		& Novel & 97.26 & 95.29  & 97.69 & \textbf{97.83} & 97.76 & 96.90 & \textcolor{cyan}{+1.6} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 94.12 & 94.47  & 96.43 & \textbf{96.62} & 96.58 & 96.08& \textcolor{cyan}{+1.6} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				StanfordCars
+% 		\end{tabular}} & Base & 63.37 & 78.12  & 70.49 & 74.70 & 72.94 & \textbf{78.80} & \textcolor{cyan}{+0.7} \\
+% 		%\cline{2-9}
+% 		& Novel & 74.89 & 60.40  & 73.59 & 71.20 & 74.00 & \textbf{75.83} & \textcolor{cyan}{+15.4} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 68.65 & 68.13  & 72.01 & 72.91 & 73.47 & \textbf{77.29} & \textcolor{cyan}{+9.2} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				Flowers102
+% 		\end{tabular}} & Base & 72.08 & \textbf{97.60}  & 94.87 & 97.70 & 95.92 & 97.57 & \textcolor{magenta}{-0.0} \\
+% 		%\cline{2-9}
+% 		& Novel & \textbf{77.80} & 59.67  & 71.75 & 68.68 & 72.46 & 75.53 & \textcolor{cyan}{+5.9} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 74.83 & 74.06  & 81.71 & 80.66 & 82.56 & \textbf{85.15} & \textcolor{cyan}{+11.1} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				Food101
+% 		\end{tabular}} & Base & 90.10 & 88.33  & 90.70 & 90.30 & \textbf{90.71} & 90.37 & \textcolor{cyan}{+2.0} \\
+% 		%\cline{2-9}
+% 		& Novel & 91.22 & 82.26  & 91.29 & 88.57 & \textbf{92.05} & 90.43 & \textcolor{cyan}{+8.2} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 90.66 & 85 .19 & 90.99 & 89.43 & \textbf{91.38} & 90.40 & \textcolor{cyan}{+5.2} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				FGVCAircraft
+% 		\end{tabular}} & Base & 27.19 &40 .44 & 33.41 & 36.90 & 37.44 & \textbf{40.97} & \textcolor{cyan}{+0.5} \\
+% 		%\cline{2-9}
+% 		& Novel & \textbf{36.29} & 22.30  & 23.71 & 34.13 & 35.61 & 34.03& \textcolor{cyan}{+11.7} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 31.09 & 28.75  & 27.74 & 35.46 & 36.50 & \textbf{37.18} & \textcolor{cyan}{+8.4} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				SUN397
+% 		\end{tabular}} & Base & 69.36 & 80.60  & 79.74 & 78.67 & 80.82 & \textbf{81.93} & \textcolor{cyan}{+1.3} \\
+% 		%\cline{2-9}
+% 		& Novel &75.35 & 65.89  & 76.86 & 76.93 & \textbf{78.70} & 77.80 & \textcolor{cyan}{+11.9} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 72.23 & 72.51  & 78.27 & 77.79 & 79.75 & \textbf{79.81} & \textcolor{cyan}{+7.3} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				DTD
+% 		\end{tabular}} & Base & 53.24 & 79.44 & 77.01 & \textbf{80.67} & 80.36 & 79.67 & \textcolor{cyan}{+0.2} \\
+% 		%\cline{2-9}
+% 		& Novel & 59.90 & 41.18  & 56.00 & 56.48 & 59.18 & \textbf{64.87}& \textcolor{cyan}{+23.7} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 56.37 & 54.24  & 64.85 & 66.44 & 68.16 & \textbf{71.51} & \textcolor{cyan}{+17.3} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				EuroSAT
+% 		\end{tabular}} & Base & 56.48 & 92.19  & 87.49 & 83.90 & \textbf{94.07} & 78.20 & \textcolor{magenta}{-14.0} \\
+% 		%\cline{2-9}
+% 		& Novel & 64.05 & 54.74  & 60.04 & 66.00 & \textbf{73.23} & 68.90 & \textcolor{cyan}{+14.2} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 60.03 & 68.69  & 71.21 & 73.88 & \textbf{82.35} & 73.26 & \textcolor{cyan}{+4.6} \\
+% 		\midrule
+% 		\multirow{3}{*}{\begin{tabular}{l} 
+% 				UCF101
+% 		\end{tabular}} & Base & 70.53 &84.69 & 82.33 & \textbf{85.23} & 83.00 & 82.43 & \textcolor{magenta}{-2.7} \\
+% 		%\cline{2-9}
+% 		& Novel & 77.50 & 56.05  & 73.45 & 71.97 & \textbf{78.66} & 74.87 & \textcolor{cyan}{+14.8} \\
+% 		%\cline{2-9}
+% 		& $\mathrm{HM}$  & 73.85 & 67.46  & 77.64 & 78.04 & \textbf{80.77} & 78.47 & \textcolor{cyan}{+11.0} \\
+% 		\bottomrule
+% 	\end{tabular} 
+% 	\caption{Your caption here}
+% 	%	\label{tab:mytable}
+% \end{table*}
+
+
+
+
+
+
+
+
+
+% Uncomment the following to link to your code, datasets, an extended version or similar.
+%
+% \begin{links}
+%     \link{Code}{https://aaai.org/example/code}
+%     \link{Datasets}{https://aaai.org/example/datasets}
+%     \link{Extended version}{https://aaai.org/example/extended-version}
+% \end{links}
+
+% \section{Preparing an Anonymous Submission}
+
+% This document details the formatting requirements for anonymous submissions. The requirements are the same as for camera ready papers but with a few notable differences:
+
+% \begin{itemize}
+%     \item Anonymous submissions must not include the author names and affiliations. Write ``Anonymous Submission'' as the ``sole author'' and leave the affiliations empty.
+%     \item The PDF document's metadata should be cleared with a metadata-cleaning tool before submitting it. This is to prevent leaked information from revealing your identity.
+%     \item References must be anonymized whenever the reader can infer that they are to the authors' previous work.
+%     \item AAAI's copyright notice should not be included as a footer in the first page.
+%     \item Only the PDF version is required at this stage. No source versions will be requested, nor any copyright transfer form.
+% \end{itemize}
+
+% You can remove the copyright notice and ensure that your names aren't shown by including \texttt{submission} option when loading the \texttt{aaai25} package:
+
+% \begin{quote}\begin{scriptsize}\begin{verbatim}
+% \documentclass[letterpaper]{article}
+% \usepackage[submission]{aaai25}
+% \end{verbatim}\end{scriptsize}\end{quote}
+
+% The remainder of this document are the original camera-
+% ready instructions. Any contradiction of the above points
+% ought to be ignored while preparing anonymous submis-
+% sions.
+
+% \section{Camera-Ready Guidelines}
+
+% Congratulations on having a paper selected for inclusion in an AAAI Press proceedings or technical report! This document details the requirements necessary to get your accepted paper published using PDF\LaTeX{}. If you are using Microsoft Word, instructions are provided in a different document. AAAI Press does not support any other formatting software.
+
+% The instructions herein are provided as a general guide for experienced \LaTeX{} users. If you do not know how to use \LaTeX{}, please obtain assistance locally. AAAI cannot provide you with support and the accompanying style files are \textbf{not} guaranteed to work. If the results you obtain are not in accordance with the specifications you received, you must correct your source file to achieve the correct result.
+
+% These instructions are generic. Consequently, they do not include specific dates, page charges, and so forth. Please consult your specific written conference instructions for details regarding your submission. Please review the entire document for specific instructions that might apply to your particular situation. All authors must comply with the following:
+
+% \begin{itemize}
+% \item You must use the 2025 AAAI Press \LaTeX{} style file and the aaai25.bst bibliography style files, which are located in the 2025 AAAI Author Kit (aaai25.sty, aaai25.bst).
+% \item You must complete, sign, and return by the deadline the AAAI copyright form (unless directed by AAAI Press to use the AAAI Distribution License instead).
+% \item You must read and format your paper source and PDF according to the formatting instructions for authors.
+% \item You must submit your electronic files and abstract using our electronic submission form \textbf{on time.}
+% \item You must pay any required page or formatting charges to AAAI Press so that they are received by the deadline.
+% \item You must check your paper before submitting it, ensuring that it compiles without error, and complies with the guidelines found in the AAAI Author Kit.
+% \end{itemize}
+
+% \section{Copyright}
+% All papers submitted for publication by AAAI Press must be accompanied by a valid signed copyright form. They must also contain the AAAI copyright notice at the bottom of the first page of the paper. There are no exceptions to these requirements. If you fail to provide us with a signed copyright form or disable the copyright notice, we will be unable to publish your paper. There are \textbf{no exceptions} to this policy. You will find a PDF version of the AAAI copyright form in the AAAI AuthorKit. Please see the specific instructions for your conference for submission details.
+
+% \section{Formatting Requirements in Brief}
+% We need source and PDF files that can be used in a variety of ways and can be output on a variety of devices. The design and appearance of the paper is strictly governed by the aaai style file (aaai25.sty).
+% \textbf{You must not make any changes to the aaai style file, nor use any commands, packages, style files, or macros within your own paper that alter that design, including, but not limited to spacing, floats, margins, fonts, font size, and appearance.} AAAI imposes requirements on your source and PDF files that must be followed. Most of these requirements are based on our efforts to standardize conference manuscript properties and layout. All papers submitted to AAAI for publication will be recompiled for standardization purposes. Consequently, every paper submission must comply with the following requirements:
+
+% \begin{itemize}
+% \item Your .tex file must compile in PDF\LaTeX{} --- (you may not include .ps or .eps figure files.)
+% \item All fonts must be embedded in the PDF file --- including your figures.
+% \item Modifications to the style file, whether directly or via commands in your document may not ever be made, most especially when made in an effort to avoid extra page charges or make your paper fit in a specific number of pages.
+% \item No type 3 fonts may be used (even in illustrations).
+% \item You may not alter the spacing above and below captions, figures, headings, and subheadings.
+% \item You may not alter the font sizes of text elements, footnotes, heading elements, captions, or title information (for references and mathematics, please see the limited exceptions provided herein).
+% \item You may not alter the line spacing of text.
+% \item Your title must follow Title Case capitalization rules (not sentence case).
+% \item \LaTeX{} documents must use the Times or Nimbus font package (you may not use Computer Modern for the text of your paper).
+% \item No \LaTeX{} 209 documents may be used or submitted.
+% \item Your source must not require use of fonts for non-Roman alphabets within the text itself. If your paper includes symbols in other languages (such as, but not limited to, Arabic, Chinese, Hebrew, Japanese, Thai, Russian and other Cyrillic languages), you must restrict their use to bit-mapped figures. Fonts that require non-English language support (CID and Identity-H) must be converted to outlines or 300 dpi bitmap or removed from the document (even if they are in a graphics file embedded in the document).
+% \item Two-column format in AAAI style is required for all papers.
+% \item The paper size for final submission must be US letter without exception.
+% \item The source file must exactly match the PDF.
+% \item The document margins may not be exceeded (no overfull boxes).
+% \item The number of pages and the file size must be as specified for your event.
+% \item No document may be password protected.
+% \item Neither the PDFs nor the source may contain any embedded links or bookmarks (no hyperref or navigator packages).
+% \item Your source and PDF must not have any page numbers, footers, or headers (no pagestyle commands).
+% \item Your PDF must be compatible with Acrobat 5 or higher.
+% \item Your \LaTeX{} source file (excluding references) must consist of a \textbf{single} file (use of the ``input" command is not allowed.
+% \item Your graphics must be sized appropriately outside of \LaTeX{} (do not use the ``clip" or ``trim'' command) .
+% \end{itemize}
+
+% If you do not follow these requirements, your paper will be returned to you to correct the deficiencies.
+
+% \section{What Files to Submit}
+% You must submit the following items to ensure that your paper is published:
+% \begin{itemize}
+% \item A fully-compliant PDF file.
+% \item Your \LaTeX{} source file submitted as a \textbf{single} .tex file (do not use the ``input" command to include sections of your paper --- every section must be in the single source file). (The only allowable exception is .bib file, which should be included separately).
+% \item The bibliography (.bib) file(s).
+% \item Your source must compile on our system, which includes only standard \LaTeX{} 2020 TeXLive support files.
+% \item Only the graphics files used in compiling paper.
+% \item The \LaTeX{}-generated files (e.g. .aux,  .bbl file, PDF, etc.).
+% \end{itemize}
+
+% Your \LaTeX{} source will be reviewed and recompiled on our system (if it does not compile, your paper will be returned to you. \textbf{Do not submit your source in multiple text files.} Your single \LaTeX{} source file must include all your text, your bibliography (formatted using aaai25.bst), and any custom macros.
+
+% Your files should work without any supporting files (other than the program itself) on any computer with a standard \LaTeX{} distribution.
+
+% \textbf{Do not send files that are not actually used in the paper.} Avoid including any files not needed for compiling your paper, including, for example, this instructions file, unused graphics files, style files, additional material sent for the purpose of the paper review, intermediate build files and so forth.
+
+% \textbf{Obsolete style files.} The commands for some common packages (such as some used for algorithms), may have changed. Please be certain that you are not compiling your paper using old or obsolete style files.
+
+% \textbf{Final Archive.} Place your source files in a single archive which should be compressed using .zip. The final file size may not exceed 10 MB.
+% Name your source file with the last (family) name of the first author, even if that is not you.
+
+
+% \section{Using \LaTeX{} to Format Your Paper}
+
+% The latest version of the AAAI style file is available on AAAI's website. Download this file and place it in the \TeX\ search path. Placing it in the same directory as the paper should also work. You must download the latest version of the complete AAAI Author Kit so that you will have the latest instruction set and style file.
+
+% \subsection{Document Preamble}
+
+% In the \LaTeX{} source for your paper, you \textbf{must} place the following lines as shown in the example in this subsection. This command set-up is for three authors. Add or subtract author and address lines as necessary, and uncomment the portions that apply to you. In most instances, this is all you need to do to format your paper in the Times font. The helvet package will cause Helvetica to be used for sans serif. These files are part of the PSNFSS2e package, which is freely available from many Internet sites (and is often part of a standard installation).
+
+% Leave the setcounter for section number depth commented out and set at 0 unless you want to add section numbers to your paper. If you do add section numbers, you must uncomment this line and change the number to 1 (for section numbers), or 2 (for section and subsection numbers). The style file will not work properly with numbering of subsubsections, so do not use a number higher than 2.
+
+% \subsubsection{The Following Must Appear in Your Preamble}
+% \begin{quote}
+% \begin{scriptsize}\begin{verbatim}
+% \documentclass[letterpaper]{article}
+% % DO NOT CHANGE THIS
+% \usepackage[submission]{aaai25} % DO NOT CHANGE THIS
+% \usepackage{times} % DO NOT CHANGE THIS
+% \usepackage{helvet} % DO NOT CHANGE THIS
+% \usepackage{courier} % DO NOT CHANGE THIS
+% \usepackage[hyphens]{url} % DO NOT CHANGE THIS
+% \usepackage{graphicx} % DO NOT CHANGE THIS
+% \urlstyle{rm} % DO NOT CHANGE THIS
+% \def\UrlFont{\rm} % DO NOT CHANGE THIS
+% \usepackage{graphicx}  % DO NOT CHANGE THIS
+% \usepackage{natbib}  % DO NOT CHANGE THIS
+% \usepackage{caption}  % DO NOT CHANGE THIS
+% \frenchspacing % DO NOT CHANGE THIS
+% \setlength{\pdfpagewidth}{8.5in} % DO NOT CHANGE THIS
+% \setlength{\pdfpageheight}{11in} % DO NOT CHANGE THIS
+% %
+% % Keep the \pdfinfo as shown here. There's no need
+% % for you to add the /Title and /Author tags.
+% \pdfinfo{
+% /TemplateVersion (2025.1)
+% }
+% \end{verbatim}\end{scriptsize}
+% \end{quote}
+
+% \subsection{Preparing Your Paper}
+
+% After the preamble above, you should prepare your paper as follows:
+% \begin{quote}
+% \begin{scriptsize}\begin{verbatim}
+% \begin{document}
+% \maketitle
+% \begin{abstract}
+% %...
+% \end{abstract}\end{verbatim}\end{scriptsize}
+% \end{quote}
+
+% \noindent If you want to add links to the paper's code, dataset(s), and extended version or similar this is the place to add them, within a \emph{links} environment:
+% \begin{quote}%
+% \begin{scriptsize}\begin{verbatim}
+% \begin{links}
+%   \link{Code}{https://aaai.org/example/guidelines}
+%   \link{Datasets}{https://aaai.org/example/datasets}
+%   \link{Extended version}{https://aaai.org/example}
+% \end{links}\end{verbatim}\end{scriptsize}
+% \end{quote}
+% \noindent Make sure that you do not de-anonymize yourself with these links.
+
+% \noindent You should then continue with the body of your paper. Your paper must conclude with the references, which should be inserted as follows:
+% \begin{quote}
+% \begin{scriptsize}\begin{verbatim}
+% % References and End of Paper
+% % These lines must be placed at the end of your paper
+% \bibliography{Bibliography-File}
+% \end{document}
+% \end{verbatim}\end{scriptsize}
+% \end{quote}
+
+% \begin{quote}
+% \begin{scriptsize}\begin{verbatim}
+% \begin{document}\\
+% \maketitle\\
+% ...\\
+% \bibliography{Bibliography-File}\\
+% \end{document}\\
+% \end{verbatim}\end{scriptsize}
+% \end{quote}
+
+% \subsection{Commands and Packages That May Not Be Used}
+% \begin{table*}[t]
+% \centering
+
+% \begin{tabular}{l|l|l|l}
+% \textbackslash abovecaption &
+% \textbackslash abovedisplay &
+% \textbackslash addevensidemargin &
+% \textbackslash addsidemargin \\
+% \textbackslash addtolength &
+% \textbackslash baselinestretch &
+% \textbackslash belowcaption &
+% \textbackslash belowdisplay \\
+% \textbackslash break &
+% \textbackslash clearpage &
+% \textbackslash clip &
+% \textbackslash columnsep \\
+% \textbackslash float &
+% \textbackslash input &
+% \textbackslash input &
+% \textbackslash linespread \\
+% \textbackslash newpage &
+% \textbackslash pagebreak &
+% \textbackslash renewcommand &
+% \textbackslash setlength \\
+% \textbackslash text height &
+% \textbackslash tiny &
+% \textbackslash top margin &
+% \textbackslash trim \\
+% \textbackslash vskip\{- &
+% \textbackslash vspace\{- \\
+% \end{tabular}
+% %}
+% \caption{Commands that must not be used}
+% \label{table1}
+% \end{table*}
+
+% \begin{table}[t]
+% \centering
+% %\resizebox{.95\columnwidth}{!}{
+% \begin{tabular}{l|l|l|l}
+%     authblk & babel & cjk & dvips \\
+%     epsf & epsfig & euler & float \\
+%     fullpage & geometry & graphics & hyperref \\
+%     layout & linespread & lmodern & maltepaper \\
+%     navigator & pdfcomment & pgfplots & psfig \\
+%     pstricks & t1enc & titlesec & tocbind \\
+%     ulem
+% \end{tabular}
+% \caption{LaTeX style packages that must not be used.}
+% \label{table2}
+% \end{table}
+
+% There are a number of packages, commands, scripts, and macros that are incompatable with aaai25.sty. The common ones are listed in tables \ref{table1} and \ref{table2}. Generally, if a command, package, script, or macro alters floats, margins, fonts, sizing, linespacing, or the presentation of the references and citations, it is unacceptable. Note that negative vskip and vspace may not be used except in certain rare occurances, and may never be used around tables, figures, captions, sections, subsections, subsubsections, or references.
+
+
+% \subsection{Page Breaks}
+% For your final camera ready copy, you must not use any page break commands. References must flow directly after the text without breaks. Note that some conferences require references to be on a separate page during the review process. AAAI Press, however, does not require this condition for the final paper.
+
+
+% \subsection{Paper Size, Margins, and Column Width}
+% Papers must be formatted to print in two-column format on 8.5 x 11 inch US letter-sized paper. The margins must be exactly as follows:
+% \begin{itemize}
+% \item Top margin: 1.25 inches (first page), .75 inches (others)
+% \item Left margin: .75 inches
+% \item Right margin: .75 inches
+% \item Bottom margin: 1.25 inches
+% \end{itemize}
+
+
+% The default paper size in most installations of \LaTeX{} is A4. However, because we require that your electronic paper be formatted in US letter size, the preamble we have provided includes commands that alter the default to US letter size. Please note that using any other package to alter page size (such as, but not limited to the Geometry package) will result in your final paper being returned to you for correction.
+
+
+% \subsubsection{Column Width and Margins.}
+% To ensure maximum readability, your paper must include two columns. Each column should be 3.3 inches wide (slightly more than 3.25 inches), with a .375 inch (.952 cm) gutter of white space between the two columns. The aaai25.sty file will automatically create these columns for you.
+
+% \subsection{Overlength Papers}
+% If your paper is too long and you resort to formatting tricks to make it fit, it is quite likely that it will be returned to you. The best way to retain readability if the paper is overlength is to cut text, figures, or tables. There are a few acceptable ways to reduce paper size that don't affect readability. First, turn on \textbackslash frenchspacing, which will reduce the space after periods. Next, move all your figures and tables to the top of the page. Consider removing less important portions of a figure. If you use \textbackslash centering instead of \textbackslash begin\{center\} in your figure environment, you can also buy some space. For mathematical environments, you may reduce fontsize {\bf but not below 6.5 point}.
+
+
+% Commands that alter page layout are forbidden. These include \textbackslash columnsep,  \textbackslash float, \textbackslash topmargin, \textbackslash topskip, \textbackslash textheight, \textbackslash textwidth, \textbackslash oddsidemargin, and \textbackslash evensizemargin (this list is not exhaustive). If you alter page layout, you will be required to pay the page fee. Other commands that are questionable and may cause your paper to be rejected include \textbackslash parindent, and \textbackslash parskip. Commands that alter the space between sections are forbidden. The title sec package is not allowed. Regardless of the above, if your paper is obviously ``squeezed" it is not going to to be accepted. Options for reducing the length of a paper include reducing the size of your graphics, cutting text, or paying the extra page charge (if it is offered).
+
+
+% \subsection{Type Font and Size}
+% Your paper must be formatted in Times Roman or Nimbus. We will not accept papers formatted using Computer Modern or Palatino or some other font as the text or heading typeface. Sans serif, when used, should be Courier. Use Symbol or Lucida or Computer Modern for \textit{mathematics only. }
+
+% Do not use type 3 fonts for any portion of your paper, including graphics. Type 3 bitmapped fonts are designed for fixed resolution printers. Most print at 300 dpi even if the printer resolution is 1200 dpi or higher. They also often cause high resolution imagesetter devices to crash. Consequently, AAAI will not accept electronic files containing obsolete type 3 fonts. Files containing those fonts (even in graphics) will be rejected. (Authors using blackboard symbols must avoid packages that use type 3 fonts.)
+
+% Fortunately, there are effective workarounds that will prevent your file from embedding type 3 bitmapped fonts. The easiest workaround is to use the required times, helvet, and courier packages with \LaTeX{}2e. (Note that papers formatted in this way will still use Computer Modern for the mathematics. To make the math look good, you'll either have to use Symbol or Lucida, or you will need to install type 1 Computer Modern fonts --- for more on these fonts, see the section ``Obtaining Type 1 Computer Modern.")
+
+% If you are unsure if your paper contains type 3 fonts, view the PDF in Acrobat Reader. The Properties/Fonts window will display the font name, font type, and encoding properties of all the fonts in the document. If you are unsure if your graphics contain type 3 fonts (and they are PostScript or encapsulated PostScript documents), create PDF versions of them, and consult the properties window in Acrobat Reader.
+
+% The default size for your type must be ten-point with twelve-point leading (line spacing). Start all pages (except the first) directly under the top margin. (See the next section for instructions on formatting the title page.) Indent ten points when beginning a new paragraph, unless the paragraph begins directly below a heading or subheading.
+
+
+% \subsubsection{Obtaining Type 1 Computer Modern for \LaTeX{}.}
+
+% If you use Computer Modern for the mathematics in your paper (you cannot use it for the text) you may need to download type 1 Computer fonts. They are available without charge from the American Mathematical Society:
+% http://www.ams.org/tex/type1-fonts.html.
+
+% \subsubsection{Nonroman Fonts.}
+% If your paper includes symbols in other languages (such as, but not limited to, Arabic, Chinese, Hebrew, Japanese, Thai, Russian and other Cyrillic languages), you must restrict their use to bit-mapped figures.
+
+% \subsection{Title and Authors}
+% Your title must appear centered over both text columns in sixteen-point bold type (twenty-four point leading). The title must be written in Title Case according to the Chicago Manual of Style rules. The rules are a bit involved, but in general verbs (including short verbs like be, is, using, and go), nouns, adverbs, adjectives, and pronouns should be capitalized, (including both words in hyphenated terms), while articles, conjunctions, and prepositions are lower case unless they directly follow a colon or long dash. You can use the online tool \url{https://titlecaseconverter.com/} to double-check the proper capitalization (select the "Chicago" style and mark the "Show explanations" checkbox).
+
+% Author's names should appear below the title of the paper, centered in twelve-point type (with fifteen point leading), along with affiliation(s) and complete address(es) (including electronic mail address if available) in nine-point roman type (the twelve point leading). You should begin the two-column format when you come to the abstract.
+
+% \subsubsection{Formatting Author Information.}
+% Author information has to be set according to the following specification depending if you have one or more than one affiliation. You may not use a table nor may you employ the \textbackslash authorblk.sty package. For one or several authors from the same institution, please separate them with commas and write all affiliation directly below (one affiliation per line) using the macros \textbackslash author and \textbackslash affiliations:
+
+% \begin{quote}\begin{scriptsize}\begin{verbatim}
+% \author{
+%     Author 1, ..., Author n\\
+% }
+% \affiliations {
+%     Address line\\
+%     ... \\
+%     Address line\\
+% }
+% \end{verbatim}\end{scriptsize}\end{quote}
+
+
+% \noindent For authors from different institutions, use \textbackslash textsuperscript \{\textbackslash rm x \} to match authors and affiliations. Notice that there should not be any spaces between the author name (or comma following it) and the superscript.
+
+% \begin{quote}\begin{scriptsize}\begin{verbatim}
+% \author{
+%     AuthorOne\equalcontrib\textsuperscript{\rm 1,\rm 2},
+%     AuthorTwo\equalcontrib\textsuperscript{\rm 2},
+%     AuthorThree\textsuperscript{\rm 3},\\
+%     AuthorFour\textsuperscript{\rm 4},
+%     AuthorFive \textsuperscript{\rm 5}}
+% }
+% \affiliations {
+%     \textsuperscript{\rm 1}AffiliationOne,\\
+%     \textsuperscript{\rm 2}AffiliationTwo,\\
+%     \textsuperscript{\rm 3}AffiliationThree,\\
+%     \textsuperscript{\rm 4}AffiliationFour,\\
+%     \textsuperscript{\rm 5}AffiliationFive\\
+%     \{email, email\}@affiliation.com,
+%     email@affiliation.com,
+%     email@affiliation.com,
+%     email@affiliation.com
+% }
+% \end{verbatim}\end{scriptsize}\end{quote}
+
+% You can indicate that some authors contributed equally using the \textbackslash equalcontrib command. This will add a marker after the author names and a footnote on the first page.
+
+% Note that you may want to  break the author list for better visualization. You can achieve this using a simple line break (\textbackslash  \textbackslash).
+
+% \subsection{\LaTeX{} Copyright Notice}
+% The copyright notice automatically appears if you use aaai25.sty. It has been hardcoded and may not be disabled.
+
+% \subsection{Credits}
+% Any credits to a sponsoring agency should appear in the acknowledgments section, unless the agency requires different placement. If it is necessary to include this information on the front page, use
+% \textbackslash thanks in either the \textbackslash author or \textbackslash title commands.
+% For example:
+% \begin{quote}
+% \begin{small}
+% \textbackslash title\{Very Important Results in AI\textbackslash thanks\{This work is
+%  supported by everybody.\}\}
+% \end{small}
+% \end{quote}
+% Multiple \textbackslash thanks commands can be given. Each will result in a separate footnote indication in the author or title with the corresponding text at the botton of the first column of the document. Note that the \textbackslash thanks command is fragile. You will need to use \textbackslash protect.
+
+% Please do not include \textbackslash pubnote commands in your document.
+
+% \subsection{Abstract}
+% Follow the example commands in this document for creation of your abstract. The command \textbackslash begin\{abstract\} will automatically indent the text block. Please do not indent it further. {Do not include references in your abstract!}
+
+% \subsection{Page Numbers}
+
+% Do not print any page numbers on your paper. The use of \textbackslash pagestyle is forbidden.
+
+% \subsection{Text}
+% The main body of the paper must be formatted in black, ten-point Times Roman with twelve-point leading (line spacing). You may not reduce font size or the linespacing. Commands that alter font size or line spacing (including, but not limited to baselinestretch, baselineshift, linespread, and others) are expressly forbidden. In addition, you may not use color in the text.
+
+% \subsection{Citations}
+% Citations within the text should include the author's last name and year, for example (Newell 1980). Append lower-case letters to the year in cases of ambiguity. Multiple authors should be treated as follows: (Feigenbaum and Engelmore 1988) or (Ford, Hayes, and Glymour 1992). In the case of four or more authors, list only the first author, followed by et al. (Ford et al. 1997).
+
+% \subsection{Extracts}
+% Long quotations and extracts should be indented ten points from the left and right margins.
+
+% \begin{quote}
+% This is an example of an extract or quotation. Note the indent on both sides. Quotation marks are not necessary if you offset the text in a block like this, and properly identify and cite the quotation in the text.
+
+% \end{quote}
+
+% \subsection{Footnotes}
+% Use footnotes judiciously, taking into account that they interrupt the reading of the text. When required, they should be consecutively numbered throughout with superscript Arabic numbers. Footnotes should appear at the bottom of the page, separated from the text by a blank line space and a thin, half-point rule.
+
+% \subsection{Headings and Sections}
+% When necessary, headings should be used to separate major sections of your paper. Remember, you are writing a short paper, not a lengthy book! An overabundance of headings will tend to make your paper look more like an outline than a paper. The aaai25.sty package will create headings for you. Do not alter their size nor their spacing above or below.
+
+% \subsubsection{Section Numbers.}
+% The use of section numbers in AAAI Press papers is optional. To use section numbers in \LaTeX{}, uncomment the setcounter line in your document preamble and change the 0 to a 1. Section numbers should not be used in short poster papers and/or extended abstracts.
+
+% \subsubsection{Section Headings.}
+% Sections should be arranged and headed as follows:
+% \begin{enumerate}
+% \item Main content sections
+% \item Appendices (optional)
+% \item Ethical Statement (optional, unnumbered)
+% \item Acknowledgements (optional, unnumbered)
+% \item References (unnumbered)
+% \end{enumerate}
+
+% \subsubsection{Appendices.}
+% Any appendices must appear after the main content. If your main sections are numbered, appendix sections must use letters instead of arabic numerals. In \LaTeX{} you can use the \texttt{\textbackslash appendix} command to achieve this effect and then use \texttt{\textbackslash section\{Heading\}} normally for your appendix sections.
+
+% \subsubsection{Ethical Statement.}
+% You can write a statement about the potential ethical impact of your work, including its broad societal implications, both positive and negative. If included, such statement must be written in an unnumbered section titled \emph{Ethical Statement}.
+
+% \subsubsection{Acknowledgments.}
+% The acknowledgments section, if included, appears right before the references and is headed ``Acknowledgments". It must not be numbered even if other sections are (use \texttt{\textbackslash section*\{Acknowledgements\}} in \LaTeX{}). This section includes acknowledgments of help from associates and colleagues, credits to sponsoring agencies, financial support, and permission to publish. Please acknowledge other contributors, grant support, and so forth, in this section. Do not put acknowledgments in a footnote on the first page. If your grant agency requires acknowledgment of the grant on page 1, limit the footnote to the required statement, and put the remaining acknowledgments at the back. Please try to limit acknowledgments to no more than three sentences.
+
+% \subsubsection{References.}
+% The references section should be labeled ``References" and must appear at the very end of the paper (don't end the paper with references, and then put a figure by itself on the last page). A sample list of references is given later on in these instructions. Please use a consistent format for references. Poorly prepared or sloppy references reflect badly on the quality of your paper and your research. Please prepare complete and accurate citations.
+
+% \subsection{Illustrations and  Figures}
+
+% \begin{figure}[t]
+% \centering
+% \includegraphics[width=0.9\columnwidth]{figure1} % Reduce the figure size so that it is slightly narrower than the column. Don't use precise values for figure width.This setup will avoid overfull boxes.
+% \caption{Using the trim and clip commands produces fragile layers that can result in disasters (like this one from an actual paper) when the color space is corrected or the PDF combined with others for the final proceedings. Crop your figures properly in a graphics program -- not in LaTeX.}
+% \label{fig1}
+% \end{figure}
+
+% \begin{figure*}[t]
+% \centering
+% \includegraphics[width=0.8\textwidth]{figure2} % Reduce the figure size so that it is slightly narrower than the column.
+% \caption{Adjusting the bounding box instead of actually removing the unwanted data resulted multiple layers in this paper. It also needlessly increased the PDF size. In this case, the size of the unwanted layer doubled the paper's size, and produced the following surprising results in final production. Crop your figures properly in a graphics program. Don't just alter the bounding box.}
+% \label{fig2}
+% \end{figure*}
+
+% % Using the \centering command instead of \begin{center} ... \end{center} will save space
+% % Positioning your figure at the top of the page will save space and make the paper more readable
+% % Using 0.95\columnwidth in conjunction with the
+
+
+% Your paper must compile in PDF\LaTeX{}. Consequently, all your figures must be .jpg, .png, or .pdf. You may not use the .gif (the resolution is too low), .ps, or .eps file format for your figures.
+
+% Figures, drawings, tables, and photographs should be placed throughout the paper on the page (or the subsequent page) where they are first discussed. Do not group them together at the end of the paper. If placed at the top of the paper, illustrations may run across both columns. Figures must not invade the top, bottom, or side margin areas. Figures must be inserted using the \textbackslash usepackage\{graphicx\}. Number figures sequentially, for example, figure 1, and so on. Do not use minipage to group figures.
+
+% If you normally create your figures using pgfplots, please create the figures first, and then import them as pdfs with proper bounding boxes, as the bounding and trim boxes created by pfgplots are fragile and not valid.
+
+% When you include your figures, you must crop them \textbf{outside} of \LaTeX{}. The command \textbackslash includegraphics*[clip=true, viewport 0 0 10 10]{...} might result in a PDF that looks great, but the image is \textbf{not really cropped.} The full image can reappear (and obscure whatever it is overlapping) when page numbers are applied or color space is standardized. Figures \ref{fig1}, and \ref{fig2} display some unwanted results that often occur.
+
+% If your paper includes illustrations that are not compatible with PDF\TeX{} (such as .eps or .ps documents), you will need to convert them. The epstopdf package will usually work for eps files. You will need to convert your ps files to PDF in either case.
+
+% \subsubsection {Figure Captions.}The illustration number and caption must appear \textit{under} the illustration. Labels and other text with the actual illustration must be at least nine-point type. However, the font and size of figure captions must be 10 point roman. Do not make them smaller, bold, or italic. (Individual words may be italicized if the context requires differentiation.)
+
+% \subsection{Tables}
+
+% \subsection{Tables}
+
+% Tables should be presented in 10 point roman type. If necessary, they may be altered to 9 point type. You must not use \texttt{\textbackslash resizebox} or other commands that resize the entire table to make it smaller, because you can't control the final font size this way.
+% If your table is too large you can use \texttt{\textbackslash setlength\{\textbackslash tabcolsep\}\{1mm\}} to compress the columns a bit or you can adapt the content (e.g.: reduce the decimal precision when presenting numbers, use shortened column titles, make some column duble-line to get it narrower).
+
+% Tables that do not fit in a single column must be placed across double columns. If your table won't fit within the margins even when spanning both columns and using the above techniques, you must split it in two separate tables.
+
+% \subsubsection {Table Captions.} The number and caption for your table must appear \textit{under} (not above) the table.  Additionally, the font and size of table captions must be 10 point roman and must be placed beneath the figure. Do not make them smaller, bold, or italic. (Individual words may be italicized if the context requires differentiation.)
+
+
+
+% \subsubsection{Low-Resolution Bitmaps.}
+% You may not use low-resolution (such as 72 dpi) screen-dumps and GIF files---these files contain so few pixels that they are always blurry, and illegible when printed. If they are color, they will become an indecipherable mess when converted to black and white. This is always the case with gif files, which should never be used. The resolution of screen dumps can be increased by reducing the print size of the original file while retaining the same number of pixels. You can also enlarge files by manipulating them in software such as PhotoShop. Your figures should be 300 dpi when incorporated into your document.
+
+% \subsubsection{\LaTeX{} Overflow.}
+% \LaTeX{} users please beware: \LaTeX{} will sometimes put portions of the figure or table or an equation in the margin. If this happens, you need to make the figure or table span both columns. If absolutely necessary, you may reduce the figure, or reformat the equation, or reconfigure the table.{ \bf Check your log file!} You must fix any overflow into the margin (that means no overfull boxes in \LaTeX{}). \textbf{Nothing is permitted to intrude into the margin or gutter.}
+
+
+% \subsubsection{Using Color.}
+% Use of color is restricted to figures only. It must be WACG 2.0 compliant. (That is, the contrast ratio must be greater than 4.5:1 no matter the font size.) It must be CMYK, NOT RGB. It may never be used for any portion of the text of your paper. The archival version of your paper will be printed in black and white and grayscale. The web version must be readable by persons with disabilities. Consequently, because conversion to grayscale can cause undesirable effects (red changes to black, yellow can disappear, and so forth), we strongly suggest you avoid placing color figures in your document. If you do include color figures, you must (1) use the CMYK (not RGB) colorspace and (2) be mindful of readers who may happen to have trouble distinguishing colors. Your paper must be decipherable without using color for distinction.
+
+% \subsubsection{Drawings.}
+% We suggest you use computer drawing software (such as Adobe Illustrator or, (if unavoidable), the drawing tools in Microsoft Word) to create your illustrations. Do not use Microsoft Publisher. These illustrations will look best if all line widths are uniform (half- to two-point in size), and you do not create labels over shaded areas. Shading should be 133 lines per inch if possible. Use Times Roman or Helvetica for all figure call-outs. \textbf{Do not use hairline width lines} --- be sure that the stroke width of all lines is at least .5 pt. Zero point lines will print on a laser printer, but will completely disappear on the high-resolution devices used by our printers.
+
+% \subsubsection{Photographs and Images.}
+% Photographs and other images should be in grayscale (color photographs will not reproduce well; for example, red tones will reproduce as black, yellow may turn to white, and so forth) and set to a minimum of 300 dpi. Do not prescreen images.
+
+% \subsubsection{Resizing Graphics.}
+% Resize your graphics \textbf{before} you include them with LaTeX. You may \textbf{not} use trim or clip options as part of your \textbackslash includegraphics command. Resize the media box of your PDF using a graphics program instead.
+
+% \subsubsection{Fonts in Your Illustrations.}
+% You must embed all fonts in your graphics before including them in your LaTeX document.
+
+% \subsubsection{Algorithms.}
+% Algorithms and/or programs are a special kind of figures. Like all illustrations, they should appear floated to the top (preferably) or bottom of the page. However, their caption should appear in the header, left-justified and enclosed between horizontal lines, as shown in Algorithm~\ref{alg:algorithm}. The algorithm body should be terminated with another horizontal line. It is up to the authors to decide whether to show line numbers or not, how to format comments, etc.
+
+% In \LaTeX{} algorithms may be typeset using the {\tt algorithm} and {\tt algorithmic} packages, but you can also use one of the many other packages for the task.
+
+% \begin{algorithm}[tb]
+% \caption{Example algorithm}
+% \label{alg:algorithm}
+% \textbf{Input}: Your algorithm's input\\
+% \textbf{Parameter}: Optional list of parameters\\
+% \textbf{Output}: Your algorithm's output
+% \begin{algorithmic}[1] %[1] enables line numbers
+% \STATE Let $t=0$.
+% \WHILE{condition}
+% \STATE Do some action.
+% \IF {conditional}
+% \STATE Perform task A.
+% \ELSE
+% \STATE Perform task B.
+% \ENDIF
+% \ENDWHILE
+% \STATE \textbf{return} solution
+% \end{algorithmic}
+% \end{algorithm}
+
+% \subsubsection{Listings.}
+% Listings are much like algorithms and programs. They should also appear floated to the top (preferably) or bottom of the page. Listing captions should appear in the header, left-justified and enclosed between horizontal lines as shown in Listing~\ref{lst:listing}. Terminate the body with another horizontal line and avoid any background color. Line numbers, if included, must appear within the text column.
+
+% \begin{listing}[tb]%
+% \caption{Example listing {\tt quicksort.hs}}%
+% \label{lst:listing}%
+% \begin{lstlisting}[language=Haskell]
+% quicksort :: Ord a => [a] -> [a]
+% quicksort []     = []
+% quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
+% 	where
+% 		lesser  = filter (< p) xs
+% 		greater = filter (>= p) xs
+% \end{lstlisting}
+% \end{listing}
+
+% \subsection{References}
+% The AAAI style includes a set of definitions for use in formatting references with BibTeX. These definitions make the bibliography style fairly close to the ones  specified in the Reference Examples appendix below. To use these definitions, you also need the BibTeX style file ``aaai25.bst," available in the AAAI Author Kit on the AAAI web site. Then, at the end of your paper but before \textbackslash end{document}, you need to put the following lines:
+
+% \begin{quote}
+% \begin{small}
+% \textbackslash bibliography\{bibfile1,bibfile2,...\}
+% \end{small}
+% \end{quote}
+
+% Please note that the aaai25.sty class already sets the bibliographystyle for you, so you do not have to place any \textbackslash bibliographystyle command in the document yourselves. The aaai25.sty file is incompatible with the hyperref and navigator packages. If you use either, your references will be garbled and your paper will be returned to you.
+
+% References may be the same size as surrounding text.
+% However, in this section (only), you may reduce the size to {\em \textbackslash small} (9pt) if your paper exceeds the allowable number of pages. Making it any smaller than 9 point with 10 point linespacing, however, is not allowed.
+
+% The list of files in the \textbackslash bibliography command should be the names of your BibTeX source files (that is, the .bib files referenced in your paper).
+
+% The following commands are available for your use in citing references:
+% \begin{quote}
+% {\em \textbackslash cite:} Cites the given reference(s) with a full citation. This appears as ``(Author Year)'' for one reference, or ``(Author Year; Author Year)'' for multiple references.\smallskip\\
+% {\em \textbackslash shortcite:} Cites the given reference(s) with just the year. This appears as ``(Year)'' for one reference, or ``(Year; Year)'' for multiple references.\smallskip\\
+% {\em \textbackslash citeauthor:} Cites the given reference(s) with just the author name(s) and no parentheses.\smallskip\\
+% {\em \textbackslash citeyear:} Cites the given reference(s) with just the date(s) and no parentheses.
+% \end{quote}
+% You may also use any of the \emph{natbib} citation commands.
+
+
+% \section{Proofreading Your PDF}
+% Please check all the pages of your PDF file. The most commonly forgotten element is the acknowledgements --- especially the correct grant number. Authors also commonly forget to add the metadata to the source, use the wrong reference style file, or don't follow the capitalization rules or comma placement for their author-title information properly. A final common problem is text (expecially equations) that runs into the margin. You will need to fix these common errors before submitting your file.
+
+% \section{Improperly Formatted Files }
+% In the past, AAAI has corrected improperly formatted files submitted by the authors. Unfortunately, this has become an increasingly burdensome expense that we can no longer absorb). Consequently, if your file is improperly formatted, it will be returned to you for correction.
+
+% \section{Naming Your Electronic File}
+% We require that you name your \LaTeX{} source file with the last name (family name) of the first author so that it can easily be differentiated from other submissions. Complete file-naming instructions will be provided to you in the submission instructions.
+
+% \section{Submitting Your Electronic Files to AAAI}
+% Instructions on paper submittal will be provided to you in your acceptance letter.
+
+% \section{Inquiries}
+% If you have any questions about the preparation or submission of your paper as instructed in this document, please contact AAAI Press at the address given below. If you have technical questions about implementation of the aaai style file, please contact an expert at your site. We do not provide technical support for \LaTeX{} or any other software package. To avoid problems, please keep your paper simple, and do not incorporate complicated macros and style files.
+
+% \begin{quote}
+% \noindent AAAI Press\\
+% 1101 Pennsylvania Ave, NW Suite 300\\
+% Washington, DC 20004 USA\\
+% \textit{Telephone:} 1-202-360-4062\\
+% \textit{E-mail:} See the submission instructions for your particular conference or event.
+% \end{quote}
+
+% \section{Additional Resources}
+% \LaTeX{} is a difficult program to master. If you've used that software, and this document didn't help or some items were not explained clearly, we recommend you read Michael Shell's excellent document (testflow doc.txt V1.0a 2002/08/13) about obtaining correct PS/PDF output on \LaTeX{} systems. (It was written for another purpose, but it has general application as well). It is available at www.ctan.org in the tex-archive.
+
+% \appendix
+% \section{Reference Examples}
+% \label{sec:reference_examples}
+
+% \nobibliography*
+% Formatted bibliographies should look like the following examples. You should use BibTeX to generate the references. Missing fields are unacceptable when compiling references, and usually indicate that you are using the wrong type of entry (BibTeX class).
+
+% \paragraph{Book with multiple authors~\nocite{em:86}} Use the \texttt{@book} class.\\[.2em]
+% \bibentry{em:86}.
+
+% \paragraph{Journal and magazine articles~\nocite{r:80, hcr:83}} Use the \texttt{@article} class.\\[.2em]
+% \bibentry{r:80}.\\[.2em]
+% \bibentry{hcr:83}.
+
+% \paragraph{Proceedings paper published by a society, press or publisher~\nocite{c:83, c:84}} Use the \texttt{@inproceedings} class. You may abbreviate the \emph{booktitle} field, but make sure that the conference edition is clear.\\[.2em]
+% \bibentry{c:84}.\\[.2em]
+% \bibentry{c:83}.
+
+% \paragraph{University technical report~\nocite{r:86}} Use the \texttt{@techreport} class.\\[.2em]
+% \bibentry{r:86}.
+
+% \paragraph{Dissertation or thesis~\nocite{c:79}} Use the \texttt{@phdthesis} class.\\[.2em]
+% \bibentry{c:79}.
+
+% \paragraph{Forthcoming publication~\nocite{c:21}} Use the \texttt{@misc} class with a \texttt{note="Forthcoming"} annotation.
+% \begin{quote}
+% \begin{footnotesize}
+% \begin{verbatim}
+% @misc(key,
+%   [...]
+%   note="Forthcoming",
+% )
+% \end{verbatim}
+% \end{footnotesize}
+% \end{quote}
+% \bibentry{c:21}.
+
+% \paragraph{ArXiv paper~\nocite{c:22}} Fetch the BibTeX entry from the "Export Bibtex Citation" link in the arXiv website. Notice it uses the \texttt{@misc} class instead of the \texttt{@article} one, and that it includes the \texttt{eprint} and \texttt{archivePrefix} keys.
+% \begin{quote}
+% \begin{footnotesize}
+% \begin{verbatim}
+% @misc(key,
+%   [...]
+%   eprint="xxxx.yyyy",
+%   archivePrefix="arXiv",
+% )
+% \end{verbatim}
+% \end{footnotesize}
+% \end{quote}
+% \bibentry{c:22}.
+
+% \paragraph{Website or online resource~\nocite{c:23}} Use the \texttt{@misc} class. Add the url in the \texttt{howpublished} field and the date of access in the \texttt{note} field:
+% \begin{quote}
+% \begin{footnotesize}
+% \begin{verbatim}
+% @misc(key,
+%   [...]
+%   howpublished="\url{http://...}",
+%   note="Accessed: YYYY-mm-dd",
+% )
+% \end{verbatim}
+% \end{footnotesize}
+% \end{quote}
+% \bibentry{c:23}.
+
+% \vspace{.2em}
+% For the most up to date version of the AAAI reference style, please consult the \textit{AI Magazine} Author Guidelines at \url{https://aaai.org/ojs/index.php/aimagazine/about/submissions#authorGuidelines}
+
+% \section{Acknowledgments}
+% AAAI is especially grateful to Peter Patel Schneider for his work in implementing the original aaai.sty file, liberally using the ideas of other style hackers, including Barbara Beeton. We also acknowledge with thanks the work of George Ferguson for his guide to using the style and BibTeX files --- which has been incorporated into this document --- and Hans Guesgen, who provided several timely modifications, as well as the many others who have, from time to time, sent in suggestions on improvements to the AAAI style. We are especially grateful to Francisco Cruz, Marc Pujol-Gonzalez, and Mico Loretan for the improvements to the Bib\TeX{} and \LaTeX{} files made in 2020.
+
+% The preparation of the \LaTeX{} and Bib\TeX{} files that implement these instructions was supported by Schlumberger Palo Alto Research, AT\&T Bell Laboratories, Morgan Kaufmann Publishers, The Live Oak Press, LLC, and AAAI Press. Bibliography style changes were added by Sunil Issar. \verb+\+pubnote was added by J. Scott Penberthy. George Ferguson added support for printing the AAAI copyright slug. Additional changes to aaai25.sty and aaai25.bst have been made by Francisco Cruz and Marc Pujol-Gonzalez.
+
+% \bigskip
+% \noindent Thank you for reading these instructions carefully. We look forward to receiving your electronic files!
+
+\bibliography{aaai25}
+
+\end{document}

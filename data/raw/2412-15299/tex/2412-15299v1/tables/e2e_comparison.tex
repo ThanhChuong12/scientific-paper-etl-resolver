@@ -1,0 +1,17 @@
+\begin{table*}[th!]
+\centering
+\begin{tabular}{c||c||cc|cc||cc|cc}
+\toprule
+\multirow{3}{*}{}       & \multirow{3}{*}{\begin{tabular}[c]{@{}c@{}}Universal \\ Converter  \end{tabular}} & \multicolumn{4}{c}{IPA}                                        & \multicolumn{4}{c}{Roman}                                      \\
+                        &                                      & \multicolumn{2}{c}{Upper Bound} & \multicolumn{2}{c}{Few Shot} & \multicolumn{2}{c}{Upper Bound} & \multicolumn{2}{c}{Few Shot} \\
+                        &                                      & CER $\downarrow$            & WER $\downarrow$            & CER $\downarrow$           & WER $\downarrow$          & CER $\downarrow$            & WER $\downarrow$            & CER $\downarrow$           & WER $\downarrow$          \\ \midrule
+\multirow{3}{*}{Seen}   & LLaMA-8B                             &               51.4 &               82.4 &              56.5 &             80.8 &               33.0 &               44.4 &              38.1 &             64.7 \\
+                        & LLaMA-70B                            &               40.0 &               64.6 &              33.8 &             67.8 &               15.6 &               34.6 &              23.1 &             56.2 \\
+                        & GPT-4o-mini                          &               27.3 &               49.2 &              33.0 &             70.6 &               10.0 &               28.6 &              19.9 &             49.4 \\ \midrule
+\multirow{3}{*}{Unseen} & LLaMA-8B                             &               52.0 &               93.0 &              43.4 &             93.3 &               32.7 &               60.2 &              41.6 &             94.4 \\
+                        & LLaMA-70B                            &               42.5 &               89.0 &              38.1 &             94.6 &               17.0 &               57.5 &              34.7 &             93.9 \\
+                        & GPT-4o-mini                          &               40.4 &               78.2 &              35.2 &             84.1 &               12.3 &               42.1 &              29.7 &            83.0 \\ \bottomrule
+\end{tabular}
+\caption{An end-to-end (E2E) comparison between IPA and Romanization. Since \textit{Phonemizer} (IPA transliterator) supports a smaller amount of language compared to \textit{Uroman} (Romanization transliterator), all of the metrics were calculated and averaged within the common languages which are both available in the IPA-based and the Romanization-based version of the universal transcription generator.}
+\label{appendix_e2e}
+\end{table*}

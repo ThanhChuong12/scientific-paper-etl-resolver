@@ -1,0 +1,183 @@
+\section{Resources and Methods} \label{sec:resources}
+
+In this section, we describe the resources and methodologies utilized, including data, NLP techniques, analysis setup, and the novel \textbf{composite metrics} introduced for comparing US states.
+
+\subsection{Data Preparation and Consolidation} \label{sec:data}
+
+%To analyze election-related FAQs, data was collected from the official election websites of all 50 U.S. states. Each state’s dataset was stored in a separate JSON file containing question-answer pairs and metadata, including the state name, contributor name, and timestamps indicating when the data was last updated. These individual JSON files were then merged into a single consolidated dataset for comprehensive analysis. 
+
+%During the consolidation process, metadata fields such as the state name and contributor were retained for each question-answer pair. This ensured traceability and enabled state-wise analysis of topics. Timestamps were preserved in their original format to maintain temporal information about the data.
+
+%To improve data quality, preprocessing steps were performed. Duplicate question-answer pairs were identified and removed using \texttt{SequenceMatcher} \cite{difflib}, with a similarity threshold of 85\% to detect semantic redundancies. Text cleaning was applied to standardize formatting, such as correcting whitespace, punctuation, and encoding issues. Terms with specific relevance to election FAQs, such as URLs and domain-specific phrases (e.g., ``voter-ID''), were preserved to ensure topic relevance.
+
+%The final consolidated dataset contained unique question-answer pairs with metadata fields, ready for subsequent topic modeling. Additionally, summary statistics, such as the total number of questions and answers, were calculated to provide an overview of the dataset.
+
+Election-related FAQs were compiled by extracting data from official election websites across all 50 U.S. states. State-specific data, stored as JSON files containing Q\&A pairs with metadata (state name, contributor, and timestamps), was consolidated into a unified dataset for analysis. Metadata was preserved for traceability and state-level topic analysis, while timestamps retained temporal context.  
+
+Data preprocessing involved deduplication using \texttt{SequenceMatcher} \cite{difflib} (85\% similarity threshold) to eliminate semantic overlap, along with text cleaning to normalize formatting (e.g., whitespace, punctuation). Election-specific terms (e.g., URLs, ``voter-ID'') were preserved for domain relevance. The final dataset contained unique Q\&A pairs with metadata, optimized for topic modeling. Summary statistics, including total Q\&A counts, provided an analytical overview.
+
+% Statistic summary
+%To ensure a thorough understanding of the U.S. 2024 election dataset, we conducted a detailed analysis of question-answer pairs sourced from official state-provided election information and a reputable non-profit organization. For all 50 states, we compiled extensive statistical data reflecting various attributes of these question-answer pairs. Prior to analysis, we extracted the data from JSON file format and employed a rigorous data-cleaning process to enhance accuracy, removing non-alphanumeric characters, such as escape sequences and hyperlinks, which were primarily introduced through manual data collection methods. The resulting statistics, presented in \cref{tab:stat_table}, include the number of question-answer pairs from each source, the average lengths (measured in alphanumeric characters) of questions and answers, as well as the longest and shortest lengths of both questions and answers. These insights not only helped us understand the structure and characteristics of the dataset but also guided our decisions regarding data preprocessing for downstream analytical processes.
+
+To analyze the U.S. 2024 election dataset, we processed question-answer pairs from official state election sources and a reputable non-profit. For all 50 states, we computed source-wise counts and statistical attributes, including the average, maximum, and minimum lengths (in alphanumeric characters) of questions and answers. Data, originally in JSON format, was cleaned to remove non-alphanumeric elements (e.g., escape sequences, hyperlinks) introduced during manual collection. These statistics, summarized in \cref{tab:stat_table}, guided dataset structuring and preprocessing for downstream analysis.
+
+\subsection{Methods} \label{sec:method}
+
+We use the following four standard NLP techniques to analyze the FAQs holistically. We conduct experiments for \textbf{Question ($Q$)}, \textbf{Answer ($A$)} and \textbf{Question + Answer ($Q$ + $A$)}. However, we mainly focus on $Q$ + $A$ while we also include additional results for only $Q$ and $A$ in the Appendix.
+
+\subsubsection{Readability}
+
+The U.S. 2024 election information provided by both the official state resources and the non-profit website is designed to help the public understand eligibility criteria, registration procedures, and the voting process in each state. Ensuring that this information is accessible to individuals of varying literacy levels is essential for assessing the quality of election resources. To evaluate this characteristic, we used the Python Textstat library \cite{Textstat} to perform a readability analysis on the dataset, including the questions, the answers, and complete pairs of questions and answers. The analysis used five standard readability metrics: Flesch-Kincaid Grade (FKG) \cite{FKG}, with scores ranging from 0-12 corresponding to US school grade levels; Gunning Fog Index (GFI) \cite{GFI}; SMOG Index (SI) \cite{SMOG}; Automated Readability Index (ARI) \cite{ARI}; and Coleman-Liau Index (CLI) \cite{CLI}. The latter four metrics range from 1–20+, with higher scores indicating more complex material, and scores above 13 on CLI suggesting content suitable for college-level readers and professionals. 
+
+
+\subsubsection{Summarization}
+
+%The quality of the U.S. 2024 election data provided by both the state and the non-profit organization is closely tied to how well the answers align with their corresponding questions. For states with lengthy responses, determining this alignment can be challenging. To evaluate the relevance of answers in our dataset, we conducted a summarization task focusing on answers between 350 and 800 characters (approximately 70 to 160 words) across all 50 states. This task involved generating summaries using both extractive methods, via Python's Sumy library \cite{sumy}, and abstractive methods, using the Hugging Face DistilBART model \cite{DistilBART}. 
+
+The quality of the U.S. election data from states and a non-profit organization relies on the alignment of answers to corresponding questions. Evaluating this alignment is challenging for lengthy state responses. To assess answer relevance, we summarized responses (350–800 characters) from all 50 states using extractive techniques via Python's Sumy library \cite{sumy} and abstractive methods with Hugging Face's DistilBART model \cite{DistilBART}. We evaluated summary quality using multiple metrics: ROUGE variants (ROUGE-1, ROUGE-2, ROUGE-L, ROUGE-W, ROUGE-S, ROUGE-SU) for unigram/bigram overlap, longest common subsequence, weighted n-gram overlap, skip-bigram overlap, and overall relevance. BLEU score measured n-gram overlap with reference questions, while cosine similarity assessed textual similarity to the original questions.
+
+%To evaluate the quality of the generated summaries relative to the original questions, we employed several metrics. These included Recall-Oriented Understudy for Gisting Evaluation (ROUGE) variants \cite{lin-2004-rouge}: ROUGE-1 and ROUGE-2  for unigram and bigram overlap, ROUGE-L for analyzing the longest common subsequence and sentence-level relevance, ROUGE-W for weighted n-gram overlap, ROUGE-S or skip-bigram overlap, and ROUGE-SU for assessing overall relevance. Additionally, the Bilingual Evaluation Understudy (BLEU) \cite{papineni2002bleu} metric was used to measure relevance by comparing n-grams in the generated summaries to those in the reference questions. Cosine similarity was applied to evaluate the textual similarity between the summarized answers and the original questions. Finally, the summarization ratio for each text was dynamically calculated based on the token count of the original answers, ensuring a consistent summarization ratio regardless of variations in answer length.
+
+
+\subsubsection{Topic Analysis}
+
+To perform the topic analysis, we utilized \textbf{Latent Dirichlet Allocation (LDA)}, a widely-used probabilistic model for identifying latent topics in text data. LDA is particularly effective for datasets like FAQs, where documents (in this case, question-answer pairs) can represent a mixture of multiple topics. %The model assumes that each document is composed of multiple topics in varying proportions, and each topic is defined by a distribution of words. \textbf{Topic Modeling} Topic modeling was performed to identify distinct themes within the election-related FAQs. Latent Dirichlet Allocation (LDA), a widely-used probabilistic model, was chosen for this analysis due to its ability to uncover latent topics in large text datasets. 
+
+To prepare the dataset for LDA, a document-term matrix (DTM) was constructed using TF-IDF (Term Frequency-Inverse Document Frequency) vectorization. This step involved transforming the text data into a numerical representation suitable for machine learning. Key preprocessing steps included:
+
+\begin{itemize}[nolistsep]
+    \item \textbf{Maximum Features:} The DTM was limited to the top 1000 most relevant terms to reduce noise while retaining informative features.
+    \item \textbf{Stopword Removal:} Common English stopwords (e.g., ``the'', ``and'') were removed to focus on meaningful content.
+    \item \textbf{n-gram Range:} Both unigrams and bigrams (e.g., ``voter registration'') were included to capture key phrases.
+\end{itemize}
+
+To determine the optimal number of topics, multiple topic counts ranging from 2 to 15 were evaluated using the following metrics:
+
+\begin{itemize}[nolistsep]
+    \item \textbf{Perplexity:} Measures the model's ability to generalize to unseen data, with lower values indicating better fit.
+    \item \textbf{Silhouette Score:} Assesses the quality of document clustering within topics, with higher scores reflecting better-defined topics.
+    \item \textbf{Topic Coherence:} Evaluates the semantic similarity of the top words in each topic, with higher scores indicating more interpretable topics.
+\end{itemize}
+Based on these metrics, the optimal number of topics was determined to be 8, balancing model complexity and interpretability.
+
+The LDA model was then applied to the dataset with the following parameters:
+
+\begin{itemize}[nolistsep]
+    \item \textbf{Number of Topics:} 8
+    \item \textbf{Maximum Iterations:} 20, ensuring convergence of the model.
+    \item \textbf{Random State:} 42, for reproducibility of results.
+\end{itemize}
+
+The output of the LDA model included:
+\begin{itemize}[nolistsep]
+    \item \textbf{Topic-Word Distributions:} Highlighting the most representative words for each topic.
+    \item \textbf{Document-Topic Distributions:} Indicating the proportion of each topic within each document.
+\end{itemize}
+
+These outputs provided interpretable and concise insights into the dominant themes within the dataset, forming the basis for further analysis and scoring.
+
+\textbf{Topic Scoring}
+
+To evaluate the quality and importance of the identified topics, a comprehensive scoring system was implemented. This system assigned equal weight (25\%) to four key components, ensuring a balanced assessment of each topic:
+
+\begin{itemize}[nolistsep]
+\item \textbf{Prevalence (25\%):} Measures the average proportion of a topic across all documents. Topics with higher prevalence are considered more central to the dataset, reflecting their widespread relevance.
+
+\item \textbf{Coherence (25\%):} Evaluates the semantic consistency of the top words within each topic. Coherence was computed by analyzing the co-occurrence probabilities of the top 10 words within the same documents, ensuring the interpretability of the topic.
+
+\item \textbf{Distinctiveness (25\%):} Measures how unique a topic is compared to others. This was calculated using Jensen-Shannon divergence, which quantifies the dissimilarity between topic distributions, emphasizing the uniqueness of high-scoring topics.
+
+\item \textbf{Coverage (25\%):} Assesses the proportion of documents where a topic is significantly represented. A document was considered to ``cover'' a topic if its probability for that topic exceeded a threshold of 0.1. Topics with higher coverage scores were represented in a broader range of documents.
+
+\end{itemize}
+
+The final topic score for each topic was calculated as given in \cref{eq:final_topic_score}:
+
+\begin{equation}
+\scalebox{0.75}{$
+\begin{aligned}
+\text{Final Topic Score} = & \ 0.25 \times \text{Prevalence} 
++ \ 0.25 \times \text{Coherence} \\ 
++ & \ 0.25 \times \text{Distinctiveness} 
++ \ 0.25 \times \text{Coverage} 
+\end{aligned}
+$}
+\label{eq:final_topic_score}
+\end{equation}
+
+
+Based on their final scores, topics were categorized into three priority levels:
+\begin{itemize}[nolistsep]
+    \item \textbf{High Priority:} Final score $>$ 0.7.
+    \item \textbf{Moderate Priority:} Final score between 0.3 and 0.7.
+    \item \textbf{Low Priority:} Final score $<$ 0.3.
+\end{itemize}
+
+This scoring system ensured that each topic was evaluated comprehensively, balancing its frequency, interpretability, uniqueness, and coverage within the dataset.
+
+\subsubsection{Sentiment Analysis}
+
+This study performed sentiment analysis on election-related data from various U.S. states, aiming to classify the sentiment of question-answer pairs as positive, negative, or neutral. The analysis used \textbf{VADER (Valence Aware Dictionary and sEntiment Reasoner)} \cite{vaderSentiment} to evaluate sentiment in short text segments, such as those in our dataset. VADER is effective for analyzing social media-like content and returns four sentiment scores: positive, neutral, negative, and a composite compound score, which ranges from -1 (extremely negative) to +1 (extremely positive), indicating the sentiment's direction and intensity. Each question-answer pair was assigned a sentiment based on its compound score:
+\begin{itemize}[nolistsep]
+        \item \textbf{Positive:} Compound score > 0.01
+        \item \textbf{Negative:} Compound score < -0.01
+        \item \textbf{Neutral:} Compound score between -0.01 and 0.01
+    \end{itemize}
+
+
+\begin{comment}
+    
+At the state level, sentiment scores for all question-answer pairs were aggregated to determine the overall sentiment distribution, calculating the percentage of positive, negative, and neutral responses per state.
+
+In this study, sentiment analysis was conducted on the election-related data collected from various U.S. states. The objective was to assess the sentiment—whether positive, negative, or neutral—associated with the question-answer pairs present in the dataset. This analysis enabled us to understand the general tone of election-related information across different states.
+
+To perform the sentiment analysis, we utilized \textbf{VADER (Valence Aware Dictionary and sEntiment Reasoner)} \cite{vaderSentiment}, a widely-used tool for analyzing sentiment in short text segments, such as the question-answer pairs found in our dataset. VADER is particularly effective for texts commonly found in social media or online platforms, as it is adept at processing and interpreting the sentiment of such content. For each text, VADER returns four sentiment scores: positive, neutral, negative, and a composite compound score. The compound score provides an overall sentiment measure, ranging from -1 (extremely negative) to +1 (extremely positive), capturing the intensity and direction of sentiment expressed in the text.
+
+\paragraph{Sentiment Scoring:} The VADER Sentiment Analyzer was applied to each question-answer pair. The tool provides four distinct sentiment scores: positive, negative, neutral and compound. Based on the compound score, each question-answer pair was classified as:
+    \begin{itemize}[nolistsep]
+        \item \textbf{Positive:}If the compound score was greater than 0.01.
+        \item \textbf{Negative:}If the compound score was less than -0.01.
+        \item \textbf{Neutral:} If the compound score fell between -0.01 and 0.01.
+    \end{itemize}
+
+\paragraph{State-Level Aggregation:}For each state, the sentiment scores of all question-answer pairs were aggregated to compute the overall sentiment distribution. Specifically, we calculated the percentage of positive, negative, and neutral responses for each state, providing an overall view of sentiment across the dataset.
+\end{comment}
+
+
+
+\subsection{Analyses setup} \label{sec:setup}
+
+%\subsubsection{FAQ Information Quality Score}
+To get a holistic sense of all the metrics, we propose a novel score combing them. We propose a novel metric for FAQ Information Quality Score called \textbf{FIQS} (pronounced as \emph{``fix''}).
+
+\paragraph{FIQS\textsubscript{voter}} incorporates sentiment analysis, readability assessment, and topic coverage evaluation. The underlying premise is that the voter prioritizes content comprehension while remaining indifferent to the mechanisms of its production (see \cref{eq:fiqs_voter}).
+
+\vspace{-5mm}
+\begin{equation}
+\scalebox{0.8}{$
+\begin{aligned}
+\text{FIQS\textsubscript{voter}} = & \ 0.25 \times \text{Readability Score} \\
++ & \ 0.25 \times \text{Summarization Score} \\ 
++ & \ 0.25 \times \text{Sentiment Score} 
++ \ 0.25 \times \text{Topic Score} 
+\end{aligned}
+$}
+\label{eq:fiqs_voter}
+\end{equation}
+
+
+\paragraph{FIQS\textsubscript{developer}} is evaluated based on sentiment, readability, topic coverage, and prompt relevance. The underlying premise is that the developer prioritizes not only comprehension but also the efficiency of content generation. Leveraging the pre-training capabilities of large language models (LLMs), we integrate them into the process to enhance efficiency (see \cref{eq:fiqs_dev}).
+
+\vspace{-5mm}
+\begin{equation}
+\scalebox{0.8}{$
+\begin{aligned}
+\text{FIQS\textsubscript{developer}} = & \ 0.2 \times \text{Readability Score} \\
++ & \ 0.2 \times \text{Summarization Score} \\ 
++ & \ 0.2 \times \text{Sentiment Score} 
++ \ 0.2 \times \text{Topic Score} \\
++ & \ 0.2 \times \text{Prompt Relevance} 
+\end{aligned}
+$}
+\label{eq:fiqs_dev}
+\end{equation}

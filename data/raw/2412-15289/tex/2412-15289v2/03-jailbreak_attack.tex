@@ -1,0 +1,53 @@
+\input{graphs/gh_method}
+% \secvspace
+\section{Simple Assistive Task Linkage}
+We introduce a jailbreak paradigm of simple assistive task linkage (SATA). As shown in Figure~\ref{fig:method} and~\ref{fig:method2}, we first mask harmful keywords in a malicious query using a given granularity to mitigate its toxicity, resulting in a camouflaged query with one or multiple \texttt{[MASK]} special tokens. Then, we utilize the assistive task to encode the semantics of the masked keywords, and pair the camouflaged query (referred to as masked instruction) with the assistive task to collectively perform the jailbreak attack. To demonstrate the effectiveness of SATA, we instantiate two simple assistive tasks to perform the jailbreak attack (described in Section~\ref{subsec:AssistiveTask}).
+
+\subsecvspace
+\subsection{Mask Harmful Keywords}
+% SATA
+The first step of SATA masks toxic words or phrases in a malicious query, preventing the harmful intent from being explicitly exposed and preparing \texttt{[MASK]} token(s) for subsequent assistive tasks (described below). 
+Specifically, we employ GPT-4o~\cite{openaiGPT4TechnicalReport2023} to mask harmful keywords, as it can identify them based on its usage policy. 
+
+We employ four categories of masking granularity: single word (sw), single phrase (sp), multiple words (mw), and multiple phrases (mp), which offer flexibility in masking harmful contents in malicious queries. The prompt used for masking harmful contents can be found in Appendix~\ref{app:maskingprompt}. 
+
+The reason for designing multiple levels of masking granularity is that many malicious queries are naturally complex, containing multiple harmful keywords, such as "Develop a plan to \ul{sabotage} a transportation system and \ul{cause harm} to passengers." The single-word masking strategy would be rigid for camouflaging such harmfulness to bypass safety checks (see the impact of our masking granularity in Appendix~\ref{paragraph:granularity}). Furthermore, multiple tries of each non-stop word~\cite{jiangArtPromptASCIIArtbased2024a} increases the jailbreak cost (see the cost comparisons in Section~\ref{paragraph:cost}). % when dealing with such complex instructions
+
+\subsecvspace
+\subsection{Link with Simple Assistive Tasks}
+\label{subsec:AssistiveTask}
+An LLM-friendly assistive task can serve two purposes: first, it can distract the victim LLM, diverting its attention to the assistive task and causing it to overlook the safety check of the entire query's intent; second, the assistive task encodes the semantics of the masked keywords and transfers this information to the victim LLM, thereby filling in the missing semantic in the masked instruction. We analyze the importance of simple assistive tasks in Section~\ref{paragraph:ab-necessity}.
+
+We propose two assistive tasks, each of which can be linked with the masked instruction to perform the jailbreak attack. Notably, the simple assistive task, as its name suggests, is constructed to be friendly for the victim LLMs to perform, ensuring that it successfully links with the masked instruction and jointly conveys the complete semantic of the original malicious query to the victim LLMs. (see the impact of the complexity of the assistive task in Section~\ref{paragraph:ab-position}). 
+
+\input{graphs/gh_method2}
+\paravspace
+\paragraph{Masked Language Model as Implicit Assistive Task.}
+\label{paragraph:MLM}
+We leverage the Masked Language Model (MLM)~\cite{devlinBERTPretrainingDeep2018} as our implicit assistive task, as LLMs are adept at inferring the \texttt{[MASK]} token in a given context.
+
+As shown in Figure~\ref{fig:method}, we first prompt GPT-4o to synthesize a wiki entry for the masked harmful keywords (words or phrases) identified in the masking step. 
+Then, we split the synthesized wiki entry into two parts by paragraphs. The first part will be placed before the masked instruction while the remaining part will be placed after the instruction. They jointly convey semantics for \texttt{[MASK]} token(s). We term them as `prefix wiki text' and `suffix wiki text', respectively. 
+Finally, we insert the masked instruction between prefix and suffix parts and prompt the victim LLM to infer  \texttt{[MASK]} tokens from the surrounding wiki context and fill in the missing part indicated by the instruction (\ie text-infilling), achieving jailbreak. % in the instruction.
+
+Note that we prompt GPT-3.5-turbo, in an in-context learning~\cite{brownLanguageModelsAre2020} manner, to slightly paraphrase the masked instruction to better fit the text-infilling format, such as transform "How to make a [MASK]" into "The process of making a [MASK] can be concluded as follows:". % GPT-3.5-turbo
+
+We refer to the jailbreak using MLM as assistive task as the 
+SATA-MLM attack and provide the prompt in Appendix~\ref{app:jailbreakprompt} Figure~\ref{fig:appendix-jailbreak-WET-attack}. 
+
+\paravspace
+\paragraph{Element Lookup by Position as Explicit Assistive Task.}
+\label{paragraph:ELP}
+We construct Element Lookup by Position (ELP) task as our explicit assistive task, where the victim LLM is asked to identify % the \texttt{pos}-th element in a given \texttt{List}. 
+one or multiple elements in a given \texttt{List} by given positions.
+As illustrated in Figure~\ref{fig:method2}, we begin by collecting a set of commendatory words (\eg generosity, integrity, happiness) generated by GPT-3.5-turbo beforehand. Next, we randomly select ten words from this set to construct a commendatory words \texttt{List} (\eg Python \texttt{List}), and randomly insert the masked keywords into the \texttt{List}, and we denote their respective positions as \texttt{pos\_i}.
+% at their respective positions \texttt{pos\_i}. 
+Finally, we prompt the victim LLMs to answer the ELP task with the given positions and map these elements to \texttt{[MASK]}s in the masked instruction.
+% a masked instruction.
+We refer to the jailbreak % using this simple assistive task as the 
+% Element Lookup by Position Attack (ELP)
+as SATA-ELP and show the prompt in Appendix~\ref{app:jailbreakprompt} Figure~\ref{fig:appendix-jailbreak-ELP-mw}.
+
+
+In summary, the SATA jailbreak paradigm constructs attacks through assistive tasks that LLMs can easily perform 
+to efficiently encode and convey the semantics of masked harmful keywords to victim models.

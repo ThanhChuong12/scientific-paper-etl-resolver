@@ -1,0 +1,23 @@
+\secvspace
+\section{Conclusion} 
+We present a LLM jailbreak paradigm called simple assistive task linkage. We employ Mask Language Model and Element Lookup by Position as assistive tasks in the paradigm, and introduce SATA-MLM and SATA-ELP jailbreak attack, respectively. 
+We show that SATA achieves superior performance compared to strong baselines across latest closed-source, open-sourced and reasoning models (\eg GPT-4o, Deepseek-R1) on AdvBench and/or JBB-Behaviors datasets, demonstrating the effectiveness of the paradigm. % address limitation 2 % , with assistive tasks,
+Furthermore, SATA is cost-efficient for its average input token usage when performing jailbreak. % address limitation 1
+% robust to defense
+% can jailbreak reasoning LLMs to a certain degree
+We hope our study can contribute to building safer LLMs in collaboration with the entire community.
+
+
+
+\section{Limitations}
+First, in our exploration of assistive tasks, we have found that the Masked Language Model (MLM) variant is particularly effective for executing jailbreak attacks. However, there may exist more effective assistive tasks for this purpose, which we leave for future investigation.
+
+Moreover, we hypothesize that SATA can be adapted for multi-modal LLM jailbreaks. However, due to budget constraints and the substantial computational cost, we have not empirically tested its effectiveness in multi-modal scenarios.
+
+Finally, this study remains largely empirical and lacks interpretability. It would be interesting to analyze how the internal representations~\cite{arditi2024refusal} of LLM shift with SATA and we leave it for future work.
+
+
+\section{Ethical Consideration}
+This work presents a paradigm for automatically generating jailbreak prompts to elicit harmful content from closed-source and open-source LLMs. The aim of our work is to strengthen LLM safety as well as highlight the importance of continuously improving the safety alignment of LLMs. However, the techniques presented in this work can be exploited by any dedicated team that attempts to utilize LLMs for harmful purposes. 
+
+Despite the risks involved, we believe it is important to fully disclose our study to foster discussions on the vulnerabilities of LLMs revealed through our jailbreaks and to encourage collaboration across the AI community to develop more countermeasures and safety protocols that can prevent the exploitation of LLMs for malicious activities. 

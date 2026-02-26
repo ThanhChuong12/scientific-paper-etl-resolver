@@ -1,0 +1,60 @@
+\input{tables/baseline_comparison}
+\input{figures/histogram_latex}
+\section{Results}
+Table~\ref{brief_comp_tab} shows that \shortname~effectively achieves multilingual ASR with a universal model.
+This approach even operates in a zero-shot environment without requiring language-specific modules while utilizing only a minimal amount of training data.
+In the subsequent results, we aim to validate the performance of each component within the pipeline.
+
+\subsection{Universal Transcription Generator}
+\subsubsection{Comparison to Baseline Model.}
+We conducted a performance comparison between our universal transcription generator and the existing baseline, wav2vec2 phoneme~\cite{xu2021simpleeffectivezeroshotcrosslingual}. Our universal transcription generator focuses on generating character-level tokens and is measured using Character Error Rate (CER), while the baseline wav2vec2 phoneme is measured using Phoneme Error Rate (PER). However, since both metrics are fundamentally used for estimating phonetic symbols, this comparison can be considered meaningful.
+Following the Table~\ref{orthography_comp_tab}, the results show that the proposed method demonstrated significantly better performance across a broader range of languages compared to existing approaches even not utilizing language-specific modules (e.g. n-gram LM).
+Furthermore, our pipeline demonstrated relatively strong transcription capabilities for unseen languages that were not explicitly included in the training data.
+In conclusion, transcribing diverse languages based on their pronunciation can produce a universal transcription which is highly effective.
+
+\subsubsection{Orthography Unification Methods.} 
+Among the two methods for standardizing orthographic features, Romanization proved to be more effective than IPA. 
+Its ability to represent pronunciation across languages while reducing complexity makes it a superior choice for meaningful results.
+Romanization balances phonetic accuracy with simplicity, providing better alignment with LLMs and ensuring efficient processing across multilingual ASR tasks.
+ However, since these results are only constrained to the first phase of the pipeline, we have constructed the full end-to-end performance comparison between IPA-based and Romanization-based \shortname, and the results are shown in the appendix.
+
+\subsection{Universal Converter Verification}
+Despite the effectiveness of orthography unification, the success of the entire pipeline hinges on the proper functioning of the universal converter. Therefore, the most critical aspect to validate before experimentation was whether a frozen LLM could effectively serve as a universal converter.
+To validate this objective, we passed ground truth Romanized transcriptions into the frozen universal converter and assessed its performance. This approach not only tests the converter's capability to accurately produce language-specific transcriptions but also serves to evaluate the upper bound performance of the universal converter within the proposed ASR pipeline.
+In Table~\ref{upper_bound_tab}, results demonstrated that universal transcription based on pronunciation characteristics can yield significant performance improvements compared to previous works when the universal transcription generator operates ideally.
+However, the upper bound performance for unseen languages showed a slight decrease compared to seen languages. 
+This decrease is likely because the unseen languages we tested are typically extremely low-resource languages within the training data of the LLM.
+
+\input{tables/prompt_comparison}
+\input{tables/unseen_comparison}
+\subsection{Overall Pipeline}
+\subsubsection{Seen Languages.}
+We leveraged two baseline models for comparison: Whisper and MMS.
+In Table~\ref{baseline_comparison_tab}, results demonstrate that the proposed method achieved a relative reduction of 60\% in CER and 30\% in WER compared to Whisper.
+Moreover,~\shortname~matches the performance of MMS despite the absence of language-specific adapters, heads, and n-gram LMs.
+Notably, the performance improvements were most pronounced for low-resource languages. 
+While Whisper exhibited increased error rates for these languages due to limited training data, our method showed substantial performance enhancements with minimal data resources. 
+Despite the slight performance degradation in high-resource languages, the improvement observed in low-resource languages is remarkably meaningful.
+The full comparison results are presented in Fig~\ref{fig:histogram}.
+It is noteworthy that these results were achieved with considerably smaller training data compared to Whisper and MMS.
+
+\subsubsection{Unseen Languages.}
+Our main focus was developing a generalized pipeline that demonstrates strong performance with unseen languages.
+To validate this objective, we utilized two zero-shot ASR models as baselines: ASR-2K and Zero-Shot MMS (MMS-ZS).
+In Table~\ref{unseen_comp_tab}, our method demonstrated a reduction in CER by half while using significantly less training data compared to ASR-2K.
+Furthermore, it is noteworthy that our proposed pipeline performs remarkably well even without language-specific modules, demonstrating comparable performance to MMS-ZS which leverages language-specific lexicon and n-gram LM.
+
+\subsection{Ablation Study}
+\subsubsection{Prompting Strategy.}
+In Table~\ref{tab_ablation}, few-shot prompting showed the highest performance across all models and prompting strategies.
+Interestingly, even with zero-shot prompting, the proposed pipeline consistently outperforms Whisper on average in CER and WER, where Whisper records 23.9\% and 42.9\% respectively, as shown in Table~\ref{baseline_comparison_tab}.
+On the other hand, the use of sequential reasoning failed to achieve the anticipated improvements. 
+Specifically, we observed considerable error propagation when utilizing zero-shot CoT prompts and prompt chaining techniques.
+Minor inaccuracies in the Romanization phase were amplified as they were processed by the LLM, leading to transcriptions that deviated in meaning from the intended output.
+
+\subsubsection{Model Size and Training Data.}
+From the perspective of model size, using a relatively smaller LLM like LLaMA-8B frequently resulted in issues such as word repetition, which complicated the transcription sorting process. 
+Additionally, this model faced challenges with language misprediction, often generating transcriptions in languages other than the intended target language.
+This issue was particularly noticeable with low-resource languages such as Arabic. 
+With the LLaMA-70B model, while word repetition was less pronounced compared to the LLaMA-8B model, the issue of language misprediction persisted, albeit at a reduced frequency. 
+Among the LLMs tested, GPT-4o-mini demonstrated the best performance overall. It outperformed the other models across all prompting strategies, achieving an impressive average CER of 15\% across 102 languages.

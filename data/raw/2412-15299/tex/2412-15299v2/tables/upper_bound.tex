@@ -1,0 +1,18 @@
+\begin{table}[!t]
+\centering
+\small
+\begin{tabular}{c|ccc}
+\toprule
+                        & Universal Converter       & CER $\downarrow$  & WER $\downarrow$  \\ \midrule\midrule
+\multirow{3}{*}{Seen}   & LLaMA-8B    & 26.6 & 46.7 \\
+                        & LLaMA-70B   & 15.5 & 35.3 \\
+                        & \textbf{GPT-4o-mini} & \textbf{7.5}  & \textbf{18.1} \\ \midrule
+\multirow{3}{*}{Unseen} & LLaMA-8B    & 33.0 & 50.2 \\
+                        & LLaMA-70B   & 27.2 & 58.9 \\
+                        & \textbf{GPT-4o-mini} & \textbf{15.8} & \textbf{38.3} \\ \bottomrule
+\end{tabular}%
+\caption{
+Upper bound performance of the universal converter. 
+This upper bound is assessed by feeding ground truth Romanized transcriptions into the universal converter with zero-shot prompting.}
+\label{upper_bound_tab}
+\end{table}

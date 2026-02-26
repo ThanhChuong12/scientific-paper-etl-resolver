@@ -1,0 +1,2065 @@
+\newpage
+\appendix
+\section{Appendix} \label{sec:appendix}
+
+This section provides supplementary material in the form of additional examples, implementation details, etc. to bolster the reader's understanding of the concepts presented in this work.
+
+\begin{figure*}[ht]
+\begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{img/fiqs_voter_2sd.pdf}
+    \label{fig:enter-label}
+\end{subfigure}
+\begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{img/fiqs_developer_2sd.pdf}
+    \label{fig:enter-label}
+\end{subfigure}
+
+\caption{US states leading and lagging in voter FAQ content quality, as assessed using cut-off of two standard deviation  from mean on the metric (i.e., $\geq$  ($\mu$ $\pm 2\sigma$); $\leq$ ($\mu$ $\pm 2\sigma$)).  %We call them leaders and laggards, respectively. %2 std. dev - leaders and laggards
+}
+\label{fig:at-facts}
+\end{figure*}
+
+
+\section{Dataset} \label{app:data} 
+
+Statistical analysis can reveal patterns, trends, and relationships within the data, providing insights into its underlying structure and significance with respect to our dataset. The results of our statistical analysis can be found in the (\cref{tab:stat_table}).
+
+\section{Readability} \label{app:read}
+Conducting readability assessments is important to ensure that the content within our dataset is clear, accessible, and effectively understood by the target audience. The readability scores for the question, answer, and the combined question and answer are provided in \cref{tab:q_readability_table}, \cref{tab:a_readability_table}, and \cref{tab:qa_readability_table}, respectively.
+
+\section{Summarization} \label{app:summ}
+
+The summarization ratio was dynamically calculated based on the token count of the original answers to maintain consistency between varying answer lengths. The code below illustrates how this value is computed:
+
+%  Summarization Ratio Code
+\begin{verbatim}
+    if answer_token_count < 200:
+        reduction_ratio = 0.5
+    elif answer_token_count < 300:
+        reduction_ratio = 0.4
+    else:
+        reduction_ratio = 0.3
+\end{verbatim}
+
+The values 0.5, 0.4, and 0.3 correspond to reduction ratios of 50\%, 40\%, and 30\%, respectively. Specifically, if the answer is relatively short, with fewer than 200 tokens, the reduction ratio is set to 0.5, reflecting a moderate reduction. For answers of greater length, but fewer than 300 tokens, the reduction ratio is slightly reduced to 0.4. Finally, for answers comprising 300 tokens or more, the reduction ratio is further decreased to 0.3, signifying a smaller reduction for longer responses.
+
+The summarization analysis for the question is provided for both the \textit{Abstractive} (\cref{tab:a_q_sum_analysis}) and \textit{Extractive} (\cref{tab:e_q_sum_analysis}) methods, while the analysis for the answer is presented for the \textit{Abstractive} (\cref{tab:a_a_sum_analysis}) and \textit{Extractive} (\cref{tab:e_a_sum_analysis}) approaches. Furthermore, the summarization analysis for the combined question and answer is displayed for both the \textit{Abstractive} (\cref{tab:a_qa_sum_analysis}) and \textit{Extractive} (\cref{tab:e_qa_sum_analysis}) techniques. Semantic Overlap is defined as a weighted average of cosine similarity and ROUGE-1 scores. While Abstractive summarization yields better results, it has the limitation of lacking provenance.
+
+\section{Topic Analysis} \label{app:topic}
+Topic analysis is crucial as it facilitates the identification and understanding of key themes and subject matter within our dataset, thereby enhancing content organization, relevance, and the ability to draw meaningful insights. The results of our topic analysis for the question, answer, and combined question and answer are provided in \cref{tab:question_topic_analysis}, \cref{tab:answer_topic_analysis}, and \cref{tab:qa_topic_analysis}, respectively.
+
+\section{Sentiment Analysis} \label{app:sent}
+
+\paragraph{Visualization:} To provide a clear understanding of the sentiment distribution across U.S. states, we visualized the data using a stacked bar chart sorted alphabetically by state names (Fig.2). Each bar represents the percentage distribution of positive, neutral, and negative sentiments for the election-related FAQs in that state. The comprehensive results for sentiment analysis are provided for questions (\cref{tab:q_sentiment_analysis}), answers (\cref{tab:a_sentiment_analysis}), and Question + Answer pairs (\cref{tab:qa_sentiment_analysis}).
+
+\section{Prompt Analysis} \label{app:prompt}
+
+\paragraph{LLama3.1} Large language model (LLMs) are a special class of pre-trained language model (PLMs). LLMs exhibit special capabilities due to their enormous size and pre-training on large amounts of text data, allowing them to achieve excellent performance in many natural language processing tasks without any task-specific training. Fine-tuning these LLMs involves adapting the pre-trained model to specific tasks. Specifically, the LLM is partially retrained using domain specific data. Llama 3.1 is an auto-regressive language model that uses an optimized transformer architecture. The model was pretrained on ~15 trillion tokens of data from publicly available sources.
+
+\paragraph{Model Fine-tuning} The SFTTrainer makes it easy to supervise fine-tune  LLMs. The SFTTrainer is a subclass of the Trainer from the transformers library. It provides features such as Dataset formatting, including conversational and instruction format and PEFT (parameter-efficient fine-tuning) support including Q-LoRA. We use QLoRA to reduce the memory footprint of  the large language models during finetuning, without sacrificing performance by using 4-bit quantization. 
+
+\textbf{Sentiment Analysis}
+
+The sentiment of the predicted answers are compared to the sentiment of the original answer. Similar to the previous approach, VADER is used to label the sentiment of the original answer and the predicted answer.
+From the Table it can be seen that the output of the model is mostly aligned with the actual answers in terms of sentiment. %The heatmap in Figure \ref{fig:confusion-matrix} shows the classification of true labels of the actual question and answers and predicted label of the answer generate by the LLM. It can be seen from heatmap that sentiment of the answers generated by the LLM follows the sentiment of the orginal question-answer.
+
+The results are systematically organized according to \textbf{Answer} and \textbf{Question + Answer}. In this structure, the readability outcomes are detailed in \cref{tab:llm_readability_analysis_a} and \cref{tab:llm_readability_analysis_qa}. Similarly, the results of both \textit{Abstractive} and \textit{Extractive} summarization are presented in \cref{tab:llm_a_summary_analysis_a} and \cref{tab:llm_e_summary_analysis_a} for the answer, and in \cref{tab:llm_a_summary_analysis_qa} and \cref{tab:llm_e_summary_analysis_qa} for the combined question and answer. Furthermore, the findings from the topic analysis are provided in \cref{tab:llm_topic_analysis_a} and \cref{tab:llm_topic_analysis_qa}, while the sentiment analysis results are discussed in \cref{tab:llm_sentiment_analysis_a} and \cref{tab:llm_sentiment_analysis_qa}.
+
+\begin{figure*}[t]
+\centering
+\begin{tcolorbox}[colframe=brown, colback=yellow!10, coltitle=black, top=-2.5mm, bottom=-2.5mm, left=-0.5mm, right=-0.5mm]
+\begin{lstlisting}[breaklines=true, basicstyle=\ttfamily\tiny]
+{
+  "messages": 
+  [
+    {"role": "system", "content": "You are an agent specialized in answering all questions related to the 2024 elections for various states in the United States. Users will ask you questions in English, and you will generate accurate and concise answers based on the specific state mentioned. State: Minnesota. Source: https://sos.state.mn.us/elections-voting/register-to-vote/common-registration-questions/#typo. Data Collection Timestamp: 2024-11-23 19:00:00"},
+    {"role": "user", "content": "How do I fix a typo in my registration?"},
+    {"role": "assistant", "content": "Contact your county election office."}
+  ]
+}
+\end{lstlisting}
+\end{tcolorbox}
+\caption{Question Template Example}
+\label{fig:chat template}
+\end{figure*}
+
+
+\clearpage
+% Statistics table
+\begin{table*}
+    \centering
+    \scalebox{0.6}{%
+    \begin{tabular}{l | c | c | c | c | c | c | c | c }
+    \hline
+    \hline
+    States & Official QA Pairs & Non-Profit QA Pairs & Question Average & Question Longest & Question Shortest & Answer Average & Answer Longest & Answer Shortest \\
+    \hline
+    Alabama & 20 & 22 & 49.881 & 95 & 14 & 400.881 & 3579 & 25\\
+    Alaska & 32 & 23 & 45.982 & 307 & 17 & 441.564 & 2771 & 30\\
+    Arizona & 13 & 22 & 60.429 & 95 & 20 & 533.857 & 1702 & 30\\
+    Arkansas & 4 & 18 & 36.364 & 57 & 20 & 358.727 & 960 & 28\\
+    California & 57 & 23 & 60.025 & 178 & 10 & 508.899 & 3650 & 3\\
+    Colorado & 22 & 23 & 41.044 & 105 & 17 & 579.178 & 2556 & 35\\
+    Connecticut & 37 & 22 & 38.390 & 115 & 11 & 472.220 & 2023 & 44\\
+    Delaware & 82 & 22 & 63.644 & 268 & 16 & 376.356 & 3470 & 2\\
+    Florida & 110 & 22 & 54.705 & 196 & 14 & 390.008 & 3416 & 13\\
+    Georgia & 50 & 29 & 43.051 & 135 & 12 & 247.101 & 2168 & 37\\
+    Hawaii & 52 & 23 & 31.453 & 61 & 10 & 408.600 & 1942 & 28\\
+    Idaho & 37 & 15 & 35.000 & 65 & 17 & 279.269 & 1227 & 22\\
+    Illinois & 0 & 103 & 148.039 & 613 & 4 & 13.155 & 19 & 12\\
+    Indiana & 58 & 22 & 40.288 & 86 & 10 & 413.712 & 2677 & 20\\
+    Iowa & 36 & 22 & 47.448 & 96 & 18 & 395.052 & 2558 & 22\\
+    Kansas & 24 & 21 & 50.044 & 194 & 26 & 441.644 & 2088 & 30\\
+    Kentucky & 34 & 23 & 48.579 & 86 & 19 & 457.684 & 3723 & 42\\
+    Louisiana & 93 & 21 & 35.404 & 72 & 12 & 789.842 & 5757 & 40\\
+    Maine & 33 & 23 & 41.161 & 131 & 16 & 368.696 & 2374 & 62\\
+    Maryland & 23 & 22 & 34.956 & 66 & 10 & 425.733 & 1547 & 35\\
+    Massachusetts & 68 & 22 & 29.300 & 56 & 11 & 456.411 & 2521 & 4\\
+    Michigan & 135 & 22 & 50.255 & 131 & 20 & 529.994 & 9549 & 44\\
+    Minnesota & 23 & 22 & 34.956 & 66 & 10 & 425.733 & 1547 & 35\\
+    Mississippi & 5 & 22 & 59.667 & 86 & 12 & 435.963 & 2966 & 23\\
+    Missouri & 24 & 19 & 45.744 & 154 & 12 & 486.930 & 2145 & 0\\
+    Montana & 13 & 37 & 39.260 & 90 & 20 & 271.520 & 1029 & 35\\
+    Nebraska & 10 & 17 & 36.222 & 55 & 12 & 481.148 & 1629 & 68\\
+    Nevada & 79 & 39 & 45.593 & 120 & 13 & 304.720 & 2092 & 3\\
+    New Hampshire & 34 & 21 & 42.909 & 106 & 17 & 451.945 & 2021 & 2 \\
+    New Jersey & 33 & 22 & 57.109 & 171 & 20 & 379.200 & 2337 & 22\\
+    New Mexico & 66 & 23 & 56.250 & 126 & 18 & 354.648 & 3107 & 22\\
+    New York & 20 & 36 & 43.804 & 110 & 25 & 415.482 & 1885 & 33\\
+    North Carolina & 88 & 22 & 53.782 & 139 & 17 & 463.464 & 3841 & 3\\
+    North Dakota & 28 & 22 & 30.980 & 61 & 10 & 534.080 & 3760 & 37\\
+    Ohio & 30 & 22 & 49.942 & 86 & 17 & 430.692 & 3759 & 26\\
+    Oklahoma & 89 & 22 & 62.252 & 144 & 12 & 322.045 & 2612 & 23\\
+    Oregon & 19 & 22 & 41.537 & 83 & 15 & 439.585 & 1801 & 25\\
+    Pennsylvania & 58 & 23 & 51.716 & 142 & 10 & 299.716 & 2315 & 8\\
+    Rhode Island & 17 & 22 & 34.308 & 89 & 17 & 492.513 & 2309 & 44\\
+    South Carolina & 23 & 11 & 55.824 & 115 & 18 & 395.235 & 1460 & 21\\
+    South Dakota & 8 & 18 & 44.269 & 98 & 17 & 412.731 & 1484 & 25\\
+    Tennessee & 50 & 18 & 43.029 & 115 & 12 & 309.132 & 1581 & 37\\
+    Texas & 69 & 40 & 62.844 & 213 & 16 & 604.101 & 5777 & 28\\
+    Utah & 13 & 17 & 42.633 & 78 & 10 & 319.867 & 1132 & 25\\
+    Vermont & 13 & 21 & 37.059 & 92 & 16 & 354.059 & 1860 & 35\\
+    Virginia & 19 & 49 & 38.162 & 78 & 20 & 381.676 & 1715 & 22\\
+    Washington & 51 & 22 & 33.329 & 79 & 13 & 421.507 & 1694 & 44\\
+    West Virginia & 52 & 22 & 51.284 & 98 & 19 & 318.041 & 2767 & 35\\
+    Wisconsin & 4 & 29 & 39.970 & 93 & 20 & 496.424 & 3021 & 24\\
+    Wyoming & 49 & 18 & 44.403 & 1222 & 12 & 336.448 & 1628 & 41\\
+    \hline
+    \hline
+\end{tabular}%
+}
+    \caption{This table presents a detailed analysis of question-answer (QA) pairs for each U.S. state. It includes the number of QA pairs sourced from the official state voting websites (Official QA Pairs) and from non-profit voting websites (Non-Profit QA Pairs). Additionally, it provides the average question length in alphanumeric characters (Question Average), the length of the longest question (Question Longest), and the length of the shortest question (Question Shortest). Similarly, for answers, it lists the average length (Answer Average), the length of the longest answer (Answer Longest), and the length of the shortest answer (Answer Shortest).}
+    \label{tab:stat_table}
+\end{table*}
+
+
+
+% Readability: Question Table
+\begin{table*}
+    \centering
+    \scalebox{0.8}{%
+    \begin{tabular}{l | c | c | c | c | c }
+        \hline
+        \hline
+        States & FKG & GFI & SI & ARI & CLI\\
+        \hline
+        Alabama & 5.748 & 8.414 & 0.338 & 5.502 & 7.393\\
+        Alaska & 6.473 & 9.359 & 0.427 & 5.889 & 7.512\\
+        Arizona & 7.483 & 10.238 & 0.000 & 7.229 & 8.677\\
+        Arkansas & 5.450 & 8.174 & 0.000 & 4.964 & 7.084\\
+        California & 8.104 & 11.087 & 0.000 & 8.194 & 9.833\\
+        Colorado & 5.122 & 7.363 & 0.000 & 4.820 & 6.438\\
+        Connecticut & 4.905 & 8.075 & 0.000 & 3.481 & 4.851\\
+        Delaware & 6.552 & 9.079 & 0.275 & 6.403 & 7.032\\
+        Florida & 7.414 & 10.459 & 0.073 & 6.408 & 7.845\\
+        Georgia & 5.418 & 8.029 & 0.000 & 4.247 & 5.324\\
+        Hawaii & 5.308 & 7.411 & 0.000 & 4.608 & 6.250\\
+        Idaho & 5.129 & 7.644 & 0.000 & 3.765 & 5.277\\
+        Illinois & 9.744 & 11.47 & 2.148 & 11.733 & 11.551\\
+        Indiana & 5.182 & 7.592 & 0.000 & 4.322 & 5.299\\
+        Iowa & 6.862 & 9.777 & 0.000 & 6.409 & 8.183\\
+        Kansas & 5.916 & 7.555 & 0.233 & 5.427 & 7.034\\
+        Kentucky & 6.540 & 9.213 & 0.000 & 5.858 & 7.461\\
+        Louisiana & 8.283 & 11.113 & 0.000 & 8.438 & 10.406\\
+        Maine & 5.768 & 8.913 & 0.000 & 5.496 & 7.094\\
+        Maryland & 3.802 & 5.474 & 0.000 & 3.511 & 4.964\\
+        Massachusetts & 5.338 & 8.121 & 0.000 & 4.508 & 6.049\\
+        Michigan & 6.423 & 8.538 & 0.000 & 5.983 & 7.515\\
+        Minnesota & 3.802 & 5.474 & 0.000 & 3.511 & 4.964\\
+        Mississippi & 7.615 & 10.446 & 0.000 & 7.700 & 9.052\\
+        Missouri & 4.960 & 7.813 & 0.000 & 4.067 & 4.885\\
+        Montana & 5.986 & 8.866 & 0.000 & 5.326 & 7.315\\
+        Nebraska & 4.741 & 7.224 & 0.000 & 4.848 & 6.764\\
+        Nevada & 5.576 & 7.793 & 0.000 & 5.160 & 6.406\\
+        New Hampshire & 6.189 & 9.227 & 0.000 & 5.376 & 6.685\\
+        New Jersey & 6.822 & 8.797 & 0.000 & 6.627 & 7.642\\
+        New Mexico & 6.895 & 9.863 & 0.000 & 6.157 & 7.344\\
+        New York & 5.820 & 7.807 & 0.000 & 5.773 & 7.534\\
+        North Carolina & 6.869 & 9.183 & 0.000 & 6.267 & 7.365\\
+        North Dakota & 4.680 & 7.240 & 0.000 & 3.242 & 4.685\\
+        Ohio & 4.942 & 7.786 & 0.000 & 4.196 & 5.374\\
+        Oklahoma & 6.894 & 9.219 & 0.070 & 6.305 & 7.346\\
+        Oregon & 5.927 & 8.197 & 0.000 & 6.622 & 8.643\\
+        Pennsylvania & 5.733 & 8.645 & 0.000 & 5.183 & 5.872\\
+        Rhode Island & 5.462 & 7.810 & 0.000 & 5.569 & 7.465\\
+        South Carolina & 5.638 & 8.535 & 0.000 & 5.750 & 7.203\\
+        South Dakota & 6.585 & 8.692 & 0.000 & 6.773 & 8.926\\
+        Tennessee & 5.537 & 7.930 & 0.000 & 4.881 & 6.158\\
+        Texas & 6.447 & 8.769 & 0.439 & 5.877 & 6.284\\
+        Utah & 5.903 & 8.903 & 0.000 & 5.720 & 7.288\\
+        Vermont & 4.859 & 7.546 & 0.000 & 4.247 & 5.792\\
+        Virginia & 5.334 & 8.136 & 0.000 & 4.590 & 6.377\\
+        Washington & 5.619 & 8.142 & 0.000 & 5.038 & 6.449\\
+        West Virginia & 7.146 & 9.921 & 0.000 & 6.285 & 8.053\\
+        Wisconsin & 5.530 & 8.279 & 0.000 & 4.727 & 6.606\\
+        Wyoming & 5.206 & 8.497 & 0.000 & 4.339 & 5.738\\
+        \hline
+        \hline
+    \end{tabular}%
+    }
+    \caption{The readability analysis scores for the questions from each state.}
+    \label{tab:q_readability_table}
+\end{table*}
+
+% Readability: Answer Table
+\begin{table*}
+    \centering
+    \scalebox{0.8}{%
+    \begin{tabular}{l | c | c | c | c | c }
+        \hline
+        \hline
+        States & FKG & GFI & SI & ARI & CLI\\
+        \hline
+        Alabama & 9.936 & 11.281 & 7.405 & 11.536 & 10.741\\
+        Alaska & 10.455 & 11.690 & 6.951 & 12.065 & 11.106\\
+        Arizona & 9.983 & 11.026 & 8.329 & 11.671 & 10.981\\
+        Arkansas & 12.773 & 14.875 & 6.005 & 14.568 & 10.065\\
+        California & 12.281 & 13.158 & 8.515 & 14.247 & 12.010\\
+        Colorado & 10.569 & 11.411 & 8.162 & 12.678 & 11.819\\
+        Connecticut & 10.842 & 12.504 & 8.441 & 12.520 & 10.681\\
+        Delaware & 10.800 & 12.087 & 6.653 & 12.459 & 9.584\\
+        Florida & 12.135 & 13.208 & 6.439 & 14.133 & 12.210\\
+        Georgia & 9.409 & 10.872 & 4.897 & 10.318 & 9.776\\
+        Hawaii & 11.125 & 11.955 & 7.048 & 12.759 & 12.170\\
+        Idaho & 10.129 & 11.676 & 5.063 & 11.129 & 10.707\\
+        Illinois & 3.032 & 0.932 & 0.000 & 12.919 & 11.489\\
+        Indiana & 10.266 & 11.190 & 6.763 & 11.735 & 10.881\\
+        Iowa & 10.195 & 11.650 & 6.874 & 11.547 & 11.026\\
+        Kansas & 10.444 & 11.515 & 6.251 & 12.156 & 11.382\\
+        Kentucky & 12.154 & 13.008 & 5.893 & 14.225 & 11.424\\
+        Louisiana & 16.481 & 17.904 & 9.447 & 19.461 & 11.483\\
+        Maine & 10.916 & 12.616 & 7.971 & 12.586 & 11.203\\
+        Maryland & 9.358 & 10.385 & 7.444 & 10.902 & 10.733\\
+        Massachusetts & 9.431 & 10.335 & 8.794 & 10.814 & 10.108\\
+        Michigan & 11.796 & 12.403 & 9.476 & 13.906 & 13.227\\
+        Minnesota & 9.358 & 10.385 & 7.444 & 10.902 & 10.733\\
+        Mississippi & 9.678 & 11.089 & 7.619 & 11.663 & 10.867\\
+        Missouri & 9.914 & 11.662 & 8.037 & 11.681 & 10.172\\
+        Montana & 11.582 & 12.615 & 5.250 & 13.570 & 13.504\\
+        Nebraska & 11.119 & 12.359 & 7.981 & 13.056 & 10.497\\
+        Nevada & 10.130 & 11.895 & 5.809 & 11.858 & 10.073\\
+        New Hampshire & 10.964 & 12.604 & 8.473 & 12.569 & 9.546\\
+        New Jersey & 10.422 & 11.403 & 6.064 & 11.956 & 10.133\\
+        New Mexico & 11.635 & 12.898 & 6.940 & 13.256 & 11.333\\
+        New York & 11.714 & 12.853 & 6.977 & 13.902 & 11.613\\
+        North Carolina & 10.556 & 11.425 & 7.918 & 12.039 & 10.937\\
+        North Dakota & 9.476 & 10.662 & 9.190 & 11.004 & 10.829\\
+        Ohio & 11.033 & 12.310 & 6.200 & 13.583 & 10.691\\
+        Oklahoma & 10.557 & 11.998 & 6.481 & 11.943 & 11.315\\
+        Oregon & 9.500 & 10.476 & 7.946 & 11.166 & 11.638\\
+        Pennsylvania & 8.695 & 10.256 & 4.614 & 10.349 & 10.244\\
+        Rhode Island & 11.554 & 12.986 & 8.795 & 13.362 & 11.323\\
+        South Carolina & 11.559 & 11.189 & 7.918 & 15.003 & 14.464\\
+        South Dakota & 10.715 & 11.852 & 6.977 & 12.219 & 10.151\\
+        Tennessee & 11.460 & 12.674 & 5.193 & 13.406 & 11.010\\
+        Texas & 13.522 & 14.624 & 8.918 & 15.627 & 11.114\\
+        Utah & 9.877 & 11.651 & 7.633 & 10.907 & 9.292\\
+        Vermont & 9.618 & 11.479 & 5.029 & 11.332 & 9.802\\
+        Virginia & 10.329 & 11.463 & 9.138 & 11.868 & 11.245\\
+        Washington & 9.723 & 10.837 & 9.068 & 10.947 & 10.965\\
+        West Virginia & 10.823 & 12.254 & 5.922 & 12.230 & 11.183\\
+        Wisconsin & 11.627 & 13.602 & 8.433 & 12.988 & 9.999\\
+        Wyoming & 11.203 & 12.683 & 8.127 & 12.946 & 11.018\\
+        \hline
+        \hline
+    \end{tabular}%
+    }
+    \caption{The readability analysis score for the answers from each state.}
+    \label{tab:a_readability_table}
+\end{table*}
+
+% Readability: QA Table
+\begin{table*}
+    \centering
+    \begin{tabular}{l | c | c | c | c | c }
+				\hline
+				\hline
+				States & FKG & GFI & SI & ARI & CLI\\
+				\hline
+				Alabama & 8.819 & 9.707 & 9.264 & 9.767 & 9.927\\
+				Alaska & 9.424 & 10.345 & 9.260 & 10.453 & 10.568\\
+				Arizona & 9.569 & 10.203 & 9.966 & 10.809 & 10.633\\
+				Arkansas & 10.127 & 11.910 & 9.105 & 11.227 & 9.559\\
+				California & 11.256 & 11.699 & 11.303 & 12.725 & 11.978\\
+				Colorado & 9.487 & 9.964 & 9.749 & 11.096 & 10.972\\
+				Connecticut & 9.349 & 10.600 & 10.837 & 10.297 & 9.866\\
+				Delaware & 9.483 & 10.674 & 8.903 & 10.688 & 9.954\\
+				Florida & 10.706 & 11.494 & 9.901 & 11.733 & 11.266\\
+				Georgia & 8.162 & 9.449 & 8.080 & 8.552 & 8.885\\
+				Hawaii & 9.645 & 10.234 & 9.071 & 10.683 & 11.269\\
+				Idaho & 8.492 & 9.401 & 8.088 & 8.723 & 9.444\\
+				Illinois & 9.717 & 10.964 & 2.875 & 12.744 & 13.251\\
+				Indiana & 9.155 & 10.048 & 8.963 & 10.190 & 9.972\\
+				Iowa & 9.279 & 10.184 & 9.514 & 10.169 & 10.292\\
+				Kansas & 9.176 & 9.809 & 9.864 & 10.331 & 10.408\\
+				Kentucky & 10.744 & 11.454 & 8.791 & 12.186 & 10.395\\
+				Louisiana & 13.746 & 14.710 & 11.872 & 15.895 & 11.402\\
+				Maine & 9.427 & 10.862 & 9.707 & 10.561 & 10.460\\
+				Maryland & 8.273 & 8.900 & 9.036 & 9.313 & 9.910\\
+				Massachusetts & 8.633 & 9.426 & 9.871 & 9.656 & 10.117\\
+				Michigan & 10.452 & 10.926 & 10.532 & 12.038 & 12.184\\
+				Minnesota & 8.273 & 8.900 & 9.036 & 9.313 & 9.910\\
+				Mississippi & 9.181 & 10.273 & 8.641 & 10.644 & 10.453\\
+				Missouri & 9.014 & 10.394 & 9.793 & 9.842 & 9.407\\
+				Montana & 9.774 & 10.341 & 7.770 & 11.026 & 11.881\\
+				Nebraska & 9.441 & 10.562 & 9.937 & 10.956 & 10.086\\
+				Nevada & 8.908 & 10.261 & 8.447 & 10.027 & 9.586\\
+				New Hampshire & 9.971 & 11.163 & 10.322 & 11.087 & 9.900\\
+				New Jersey & 9.402 & 10.032 & 8.395 & 10.435 & 9.667\\
+				New Mexico & 10.167 & 11.169 & 9.891 & 11.051 & 10.447\\
+				New York & 10.191 & 10.834 & 9.468 & 11.741 & 10.968\\
+				North Carolina & 9.738 & 10.272 & 10.030 & 10.738 & 10.598\\
+				North Dakota & 8.626 & 9.547 & 10.188 & 9.576 & 10.019\\
+				Ohio & 8.879 & 10.229 & 9.183 & 10.252 & 9.121\\
+				Oklahoma & 9.330 & 10.240 & 9.196 & 10.158 & 10.388\\
+				Oregon & 8.651 & 9.309 & 9.480 & 10.139 & 11.218\\
+				Pennsylvania & 7.836 & 9.267 & 7.651 & 8.833 & 9.140\\
+				Rhode Island & 10.026 & 11.199 & 10.228 & 11.526 & 10.806\\
+				South Carolina & 9.912 & 9.853 & 9.694 & 12.174 & 12.291\\
+				South Dakota & 9.612 & 10.239 & 9.715 & 10.588 & 10.120\\
+				Tennessee & 9.587 & 10.643 & 8.663 & 10.721 & 10.133\\
+				Texas & 11.643 & 12.499 & 10.701 & 13.084 & 10.359\\
+				Utah & 8.687 & 10.361 & 8.917 & 9.347 & 8.978\\
+				Vermont & 8.009 & 9.652 & 8.191 & 9.259 & 9.014\\
+				Virginia & 9.206 & 10.153 & 9.626 & 10.318 & 10.502\\
+				Washington & 8.942 & 9.641 & 9.897 & 9.726 & 10.465\\
+				West Virginia & 9.412 & 10.318 & 8.164 & 10.153 & 10.398\\
+				Wisconsin & 9.924 & 11.392 & 9.697 & 10.706 & 9.482\\
+				Wyoming & 9.555 & 10.828 & 10.218 & 10.606 & 10.150\\
+				\hline
+				\hline
+			\end{tabular}
+    \caption{The readability analysis score for each state's question and answer pairs.}
+    \label{tab:qa_readability_table}
+\end{table*}
+
+% Summarization Analysis - Abstractive - Question
+\begin{table*}\centering
+\caption{Abstractive Question Summarization Analysis }\label{tab:a_q_sum_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrr}\toprule
+State &Cosine Similarity &ROUGE-1 &ROUGE-2 &ROUGE-L &ROUGE-W &ROUGE-S &ROUGE-SU &BLEU Score \\\midrule
+AK &0.13 &0.14 &0.03 &0.10 &0.06 &0.01 &0.02 &0.01 \\
+AL &0.22 &0.22 &0.09 &0.17 &0.12 &0.02 &0.05 &0.02 \\
+AR &0.20 &0.18 &0.06 &0.15 &0.12 &0.02 &0.04 &0.01 \\
+AZ &0.18 &0.21 &0.06 &0.16 &0.12 &0.02 &0.05 &0.01 \\
+CA &0.19 &0.19 &0.07 &0.14 &0.11 &0.03 &0.05 &0.02 \\
+CO &0.17 &0.16 &0.05 &0.12 &0.08 &0.01 &0.03 &0.01 \\
+CT &0.13 &0.14 &0.04 &0.11 &0.08 &0.01 &0.03 &0.01 \\
+DL &0.23 &0.22 &0.07 &0.16 &0.13 &0.03 &0.06 &0.02 \\
+FL &0.16 &0.17 &0.05 &0.14 &0.10 &0.02 &0.04 &0.01 \\
+GA &0.17 &0.18 &0.05 &0.14 &0.10 &0.02 &0.04 &0.01 \\
+HI &0.12 &0.12 &0.03 &0.10 &0.05 &0.00 &0.02 &0.01 \\
+IA &0.18 &0.17 &0.06 &0.14 &0.12 &0.02 &0.04 &0.02 \\
+ID &0.16 &0.15 &0.04 &0.12 &0.10 &0.01 &0.03 &0.01 \\
+IL &0.16 &0.18 &0.04 &0.14 &0.10 &0.01 &0.04 &0.01 \\
+IN &0.20 &0.18 &0.08 &0.15 &0.11 &0.02 &0.04 &0.02 \\
+KS &0.19 &0.19 &0.08 &0.15 &0.11 &0.03 &0.05 &0.02 \\
+KY &0.18 &0.18 &0.05 &0.12 &0.11 &0.02 &0.04 &0.01 \\
+LA &0.16 &0.15 &0.04 &0.12 &0.08 &0.01 &0.03 &0.01 \\
+MA &0.13 &0.11 &0.03 &0.10 &0.05 &0.01 &0.02 &0.00 \\
+MD &0.13 &0.13 &0.03 &0.10 &0.07 &0.01 &0.03 &0.01 \\
+ME &0.21 &0.19 &0.06 &0.15 &0.11 &0.02 &0.04 &0.01 \\
+MI &0.19 &0.20 &0.07 &0.15 &0.13 &0.03 &0.06 &0.02 \\
+MN &0.16 &0.14 &0.04 &0.12 &0.08 &0.01 &0.03 &0.01 \\
+MO &0.15 &0.14 &0.04 &0.12 &0.09 &0.01 &0.03 &0.01 \\
+MS &0.17 &0.19 &0.05 &0.14 &0.12 &0.02 &0.05 &0.01 \\
+MT &0.14 &0.15 &0.04 &0.12 &0.07 &0.00 &0.02 &0.01 \\
+NC &0.18 &0.20 &0.06 &0.16 &0.12 &0.03 &0.05 &0.02 \\
+ND &0.15 &0.15 &0.05 &0.12 &0.08 &0.01 &0.03 &0.01 \\
+NE &0.13 &0.13 &0.05 &0.11 &0.07 &0.01 &0.02 &0.01 \\
+NH &0.18 &0.18 &0.07 &0.14 &0.09 &0.02 &0.04 &0.02 \\
+NJ &0.19 &0.20 &0.06 &0.15 &0.11 &0.02 &0.04 &0.01 \\
+NM &0.17 &0.19 &0.06 &0.14 &0.10 &0.02 &0.05 &0.01 \\
+NV &0.16 &0.19 &0.07 &0.14 &0.09 &0.02 &0.04 &0.01 \\
+NY &0.21 &0.19 &0.06 &0.15 &0.10 &0.02 &0.04 &0.01 \\
+OH &0.18 &0.18 &0.04 &0.13 &0.10 &0.02 &0.04 &0.01 \\
+OK &0.18 &0.21 &0.06 &0.16 &0.12 &0.03 &0.05 &0.02 \\
+OR &0.14 &0.14 &0.05 &0.12 &0.07 &0.01 &0.02 &0.01 \\
+PA &0.19 &0.21 &0.06 &0.16 &0.11 &0.02 &0.05 &0.02 \\
+RI &0.12 &0.11 &0.02 &0.09 &0.07 &0.01 &0.02 &0.01 \\
+SC &0.17 &0.18 &0.05 &0.14 &0.11 &0.01 &0.04 &0.01 \\
+SD &0.21 &0.18 &0.07 &0.15 &0.13 &0.02 &0.05 &0.01 \\
+TN &0.18 &0.19 &0.07 &0.15 &0.11 &0.02 &0.04 &0.01 \\
+TX &0.18 &0.20 &0.08 &0.15 &0.10 &0.03 &0.05 &0.03 \\
+UT &0.19 &0.18 &0.04 &0.14 &0.12 &0.01 &0.04 &0.01 \\
+VA &0.16 &0.17 &0.07 &0.14 &0.06 &0.01 &0.02 &0.01 \\
+VT &0.15 &0.15 &0.02 &0.11 &0.08 &0.01 &0.03 &0.01 \\
+WA &0.13 &0.12 &0.04 &0.10 &0.07 &0.01 &0.02 &0.01 \\
+WI &0.17 &0.15 &0.06 &0.13 &0.09 &0.02 &0.03 &0.01 \\
+WV &0.17 &0.20 &0.07 &0.16 &0.13 &0.03 &0.05 &0.02 \\
+WY &0.15 &0.18 &0.06 &0.14 &0.11 &0.02 &0.04 &0.02 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Summarization Analysis - Extractive - Questions
+\begin{table*}\centering
+\caption{Extractive Question Summary Analysis}\label{tab:e_q_sum_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrr}\toprule
+State &Cosine Similarity &ROUGE-1 &ROUGE-2 &ROUGE-L &ROUGE-W &ROUGE-S &ROUGE-SU &BLEU Score \\\midrule
+AK &0.031 &0.057 &0.005 &0.053 &0.021 &0.001 &0.005 &0.002 \\
+AL &0.042 &0.037 &0.011 &0.031 &0.030 &0.005 &0.011 &0.004 \\
+AR &0.032 &0.042 &0.000 &0.031 &0.030 &0.000 &0.007 &0.003 \\
+AZ &0.060 &0.077 &0.023 &0.057 &0.040 &0.003 &0.014 &0.005 \\
+CA &0.043 &0.064 &0.018 &0.050 &0.038 &0.007 &0.015 &0.005 \\
+CO &0.063 &0.069 &0.019 &0.053 &0.035 &0.003 &0.011 &0.003 \\
+CT &0.028 &0.044 &0.006 &0.035 &0.021 &0.000 &0.006 &0.002 \\
+DL &0.054 &0.065 &0.011 &0.049 &0.036 &0.005 &0.013 &0.005 \\
+FL &0.062 &0.099 &0.024 &0.080 &0.052 &0.006 &0.018 &0.006 \\
+GA &0.010 &0.013 &0.001 &0.011 &0.009 &0.000 &0.002 &0.001 \\
+HI &0.032 &0.050 &0.017 &0.045 &0.029 &0.007 &0.012 &0.007 \\
+IA &0.044 &0.054 &0.015 &0.047 &0.041 &0.003 &0.013 &0.005 \\
+ID &0.040 &0.051 &0.010 &0.037 &0.027 &0.001 &0.009 &0.003 \\
+IL &0.037 &0.052 &0.009 &0.042 &0.034 &0.005 &0.013 &0.004 \\
+IN &0.042 &0.050 &0.013 &0.043 &0.023 &0.002 &0.007 &0.003 \\
+KS &0.055 &0.078 &0.024 &0.057 &0.046 &0.007 &0.019 &0.005 \\
+KY &0.063 &0.085 &0.025 &0.063 &0.054 &0.010 &0.020 &0.008 \\
+LA &0.052 &0.054 &0.015 &0.044 &0.026 &0.003 &0.009 &0.003 \\
+MA &0.023 &0.041 &0.007 &0.037 &0.021 &0.000 &0.005 &0.003 \\
+MD &0.044 &0.060 &0.019 &0.046 &0.024 &0.000 &0.007 &0.003 \\
+ME &0.017 &0.020 &0.007 &0.020 &0.012 &0.001 &0.003 &0.001 \\
+MI &0.059 &0.066 &0.023 &0.054 &0.042 &0.006 &0.016 &0.005 \\
+MN &0.027 &0.036 &0.014 &0.034 &0.023 &0.009 &0.012 &0.009 \\
+MO &0.017 &0.046 &0.000 &0.032 &0.020 &0.000 &0.005 &0.002 \\
+MS &0.029 &0.037 &0.002 &0.021 &0.019 &0.000 &0.006 &0.003 \\
+MT &0.051 &0.048 &0.006 &0.033 &0.030 &0.003 &0.011 &0.002 \\
+NC &0.045 &0.053 &0.013 &0.043 &0.033 &0.006 &0.013 &0.004 \\
+ND &0.044 &0.048 &0.015 &0.039 &0.026 &0.004 &0.009 &0.005 \\
+NE &0.034 &0.043 &0.015 &0.042 &0.030 &0.002 &0.008 &0.003 \\
+NH &0.060 &0.089 &0.032 &0.061 &0.033 &0.008 &0.017 &0.007 \\
+NJ &0.049 &0.080 &0.013 &0.055 &0.036 &0.003 &0.012 &0.005 \\
+NM &0.020 &0.025 &0.006 &0.020 &0.017 &0.003 &0.007 &0.003 \\
+NV &0.031 &0.041 &0.014 &0.028 &0.015 &0.001 &0.005 &0.002 \\
+NY &0.033 &0.035 &0.002 &0.027 &0.019 &0.001 &0.005 &0.001 \\
+OH &0.034 &0.037 &0.012 &0.028 &0.028 &0.005 &0.011 &0.004 \\
+OK &0.016 &0.032 &0.004 &0.026 &0.018 &0.002 &0.006 &0.003 \\
+OR &0.026 &0.040 &0.009 &0.030 &0.018 &0.001 &0.005 &0.002 \\
+PA &0.049 &0.071 &0.014 &0.059 &0.046 &0.005 &0.016 &0.005 \\
+RI &0.026 &0.045 &0.004 &0.041 &0.019 &0.000 &0.004 &0.002 \\
+SC &0.030 &0.044 &0.006 &0.034 &0.027 &0.001 &0.008 &0.004 \\
+SD &0.030 &0.043 &0.018 &0.039 &0.031 &0.005 &0.012 &0.006 \\
+TN &0.017 &0.019 &0.004 &0.015 &0.011 &0.001 &0.003 &0.001 \\
+TX &0.039 &0.047 &0.012 &0.038 &0.017 &0.003 &0.007 &0.002 \\
+UT &0.016 &0.038 &0.007 &0.038 &0.019 &0.000 &0.004 &0.002 \\
+VA &0.027 &0.028 &0.008 &0.025 &0.005 &0.000 &0.001 &0.001 \\
+VT &0.043 &0.068 &0.015 &0.054 &0.036 &0.002 &0.011 &0.005 \\
+WA &0.021 &0.041 &0.004 &0.038 &0.019 &0.001 &0.005 &0.002 \\
+WI &0.036 &0.052 &0.017 &0.040 &0.030 &0.001 &0.007 &0.003 \\
+WV &0.016 &0.028 &0.002 &0.024 &0.020 &0.000 &0.005 &0.002 \\
+WY &0.016 &0.032 &0.010 &0.022 &0.016 &0.001 &0.006 &0.003 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Summarization Analysis - Abstractive - Answers
+\begin{table*}\centering
+\caption{Abstractive Answer Summary Analysis}\label{tab:a_a_sum_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrr}\toprule
+State &Cosine Similarity &ROUGE-1 &ROUGE-2 &ROUGE-L &ROUGE-W &ROUGE-S &ROUGE-SU &BLEU Score \\\midrule
+AK &0.712 &0.520 &0.493 &0.488 &0.425 &0.435 &0.459 &0.180 \\
+AL &0.717 &0.515 &0.486 &0.481 &0.413 &0.422 &0.446 &0.173 \\
+AR &0.743 &0.582 &0.557 &0.547 &0.477 &0.466 &0.492 &0.223 \\
+AZ &0.718 &0.504 &0.484 &0.476 &0.422 &0.453 &0.475 &0.178 \\
+CA &0.733 &0.550 &0.526 &0.528 &0.458 &0.464 &0.488 &0.203 \\
+CO &0.719 &0.502 &0.477 &0.476 &0.409 &0.414 &0.438 &0.159 \\
+CT &0.732 &0.561 &0.539 &0.541 &0.481 &0.486 &0.505 &0.222 \\
+DL &0.743 &0.558 &0.532 &0.530 &0.469 &0.478 &0.501 &0.217 \\
+FL &0.752 &0.537 &0.512 &0.512 &0.454 &0.490 &0.512 &0.199 \\
+GA &0.741 &0.579 &0.553 &0.566 &0.494 &0.473 &0.497 &0.233 \\
+HI &0.716 &0.547 &0.518 &0.532 &0.465 &0.449 &0.473 &0.207 \\
+IA &0.737 &0.527 &0.503 &0.512 &0.442 &0.432 &0.456 &0.180 \\
+ID &0.698 &0.507 &0.487 &0.495 &0.427 &0.418 &0.440 &0.155 \\
+IL &0.713 &0.540 &0.509 &0.514 &0.444 &0.440 &0.466 &0.189 \\
+IN &0.711 &0.523 &0.500 &0.515 &0.442 &0.431 &0.453 &0.183 \\
+KS &0.743 &0.501 &0.474 &0.491 &0.412 &0.420 &0.445 &0.164 \\
+KY &0.714 &0.505 &0.484 &0.490 &0.424 &0.425 &0.448 &0.158 \\
+LA &0.739 &0.500 &0.478 &0.486 &0.428 &0.440 &0.462 &0.170 \\
+MA &0.748 &0.556 &0.529 &0.538 &0.466 &0.458 &0.484 &0.205 \\
+MD &0.741 &0.515 &0.496 &0.508 &0.438 &0.433 &0.456 &0.163 \\
+ME &0.771 &0.573 &0.552 &0.554 &0.487 &0.491 &0.513 &0.230 \\
+MI &0.724 &0.529 &0.499 &0.505 &0.441 &0.441 &0.466 &0.184 \\
+MN &0.733 &0.552 &0.527 &0.521 &0.450 &0.449 &0.474 &0.205 \\
+MO &0.757 &0.515 &0.499 &0.513 &0.453 &0.449 &0.468 &0.171 \\
+MS &0.720 &0.539 &0.512 &0.523 &0.459 &0.448 &0.471 &0.207 \\
+MT &0.725 &0.527 &0.499 &0.514 &0.441 &0.421 &0.445 &0.174 \\
+NC &0.712 &0.517 &0.494 &0.493 &0.434 &0.434 &0.458 &0.188 \\
+ND &0.747 &0.522 &0.499 &0.502 &0.438 &0.440 &0.463 &0.175 \\
+NE &0.717 &0.511 &0.492 &0.491 &0.429 &0.432 &0.456 &0.164 \\
+NH &0.744 &0.556 &0.533 &0.533 &0.470 &0.476 &0.500 &0.219 \\
+NJ &0.708 &0.521 &0.500 &0.511 &0.451 &0.457 &0.480 &0.175 \\
+NM &0.722 &0.569 &0.544 &0.555 &0.495 &0.485 &0.509 &0.238 \\
+NV &0.731 &0.571 &0.546 &0.562 &0.492 &0.476 &0.500 &0.232 \\
+NY &0.716 &0.545 &0.512 &0.506 &0.432 &0.432 &0.455 &0.188 \\
+OH &0.742 &0.537 &0.508 &0.505 &0.440 &0.456 &0.481 &0.190 \\
+OK &0.745 &0.579 &0.550 &0.556 &0.489 &0.484 &0.509 &0.229 \\
+OR &0.704 &0.535 &0.510 &0.507 &0.437 &0.432 &0.456 &0.193 \\
+PA &0.728 &0.514 &0.489 &0.476 &0.413 &0.427 &0.450 &0.171 \\
+RI &0.721 &0.498 &0.475 &0.468 &0.407 &0.419 &0.442 &0.159 \\
+SC &0.746 &0.588 &0.564 &0.556 &0.515 &0.514 &0.539 &0.289 \\
+SD &0.711 &0.529 &0.492 &0.492 &0.430 &0.443 &0.469 &0.175 \\
+TN &0.722 &0.548 &0.526 &0.546 &0.479 &0.459 &0.482 &0.207 \\
+TX &0.728 &0.532 &0.498 &0.505 &0.443 &0.458 &0.479 &0.185 \\
+UT &0.763 &0.571 &0.543 &0.528 &0.460 &0.463 &0.488 &0.224 \\
+VA &0.746 &0.587 &0.563 &0.563 &0.500 &0.492 &0.515 &0.246 \\
+VT &0.742 &0.520 &0.498 &0.517 &0.452 &0.438 &0.461 &0.173 \\
+WA &0.731 &0.547 &0.524 &0.522 &0.455 &0.453 &0.477 &0.200 \\
+WI &0.681 &0.507 &0.484 &0.459 &0.394 &0.419 &0.441 &0.169 \\
+WV &0.738 &0.560 &0.539 &0.532 &0.468 &0.475 &0.497 &0.218 \\
+WY &0.726 &0.582 &0.556 &0.554 &0.485 &0.477 &0.504 &0.235 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Summarization Analysis - Extractive - Answers
+\begin{table*}\centering
+\caption{Extractive Answer Summary Analysis}\label{tab:e_a_sum_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrr}\toprule
+State &Cosine Similarity &ROUGE-1 &ROUGE-2 &ROUGE-L &ROUGE-W &ROUGE-S &ROUGE-SU &BLEU Score \\\midrule
+AK &0.167 &0.068 &0.065 &0.068 &0.058 &0.065 &0.072 &0.000 \\
+AL &0.185 &0.093 &0.092 &0.093 &0.083 &0.096 &0.100 &0.007 \\
+AR &0.125 &0.058 &0.056 &0.058 &0.052 &0.059 &0.063 &0.007 \\
+AZ &0.258 &0.135 &0.132 &0.135 &0.118 &0.137 &0.145 &0.012 \\
+CA &0.177 &0.081 &0.079 &0.081 &0.073 &0.083 &0.088 &0.007 \\
+CO &0.273 &0.126 &0.123 &0.126 &0.112 &0.127 &0.134 &0.015 \\
+CT &0.140 &0.067 &0.065 &0.067 &0.060 &0.065 &0.069 &0.017 \\
+DL &0.173 &0.074 &0.072 &0.074 &0.063 &0.075 &0.080 &0.003 \\
+FL &0.277 &0.124 &0.121 &0.124 &0.113 &0.147 &0.154 &0.024 \\
+GA &0.112 &0.077 &0.077 &0.077 &0.074 &0.079 &0.080 &0.045 \\
+HI &0.175 &0.089 &0.087 &0.089 &0.079 &0.086 &0.091 &0.025 \\
+IA &0.200 &0.092 &0.090 &0.092 &0.084 &0.092 &0.097 &0.022 \\
+ID &0.205 &0.116 &0.113 &0.116 &0.104 &0.112 &0.119 &0.021 \\
+IL &0.192 &0.103 &0.101 &0.103 &0.094 &0.105 &0.109 &0.036 \\
+IN &0.208 &0.103 &0.102 &0.103 &0.095 &0.105 &0.110 &0.040 \\
+KS &0.200 &0.093 &0.090 &0.093 &0.081 &0.113 &0.121 &0.003 \\
+KY &0.246 &0.114 &0.112 &0.114 &0.104 &0.115 &0.121 &0.025 \\
+LA &0.306 &0.190 &0.188 &0.190 &0.179 &0.197 &0.202 &0.090 \\
+MA &0.131 &0.056 &0.054 &0.056 &0.049 &0.055 &0.060 &0.001 \\
+MD &0.240 &0.134 &0.131 &0.134 &0.120 &0.134 &0.141 &0.019 \\
+ME &0.091 &0.036 &0.034 &0.036 &0.031 &0.035 &0.038 &0.001 \\
+MI &0.244 &0.159 &0.157 &0.159 &0.145 &0.159 &0.166 &0.047 \\
+MN &0.137 &0.062 &0.060 &0.062 &0.055 &0.060 &0.065 &0.003 \\
+MO &0.217 &0.106 &0.103 &0.106 &0.094 &0.106 &0.113 &0.004 \\
+MS &0.145 &0.064 &0.062 &0.064 &0.058 &0.066 &0.070 &0.009 \\
+MT &0.241 &0.179 &0.177 &0.179 &0.168 &0.176 &0.181 &0.095 \\
+NC &0.189 &0.108 &0.106 &0.108 &0.100 &0.108 &0.112 &0.042 \\
+ND &0.199 &0.091 &0.088 &0.091 &0.080 &0.094 &0.100 &0.002 \\
+NE &0.220 &0.113 &0.111 &0.113 &0.104 &0.113 &0.118 &0.033 \\
+NH &0.197 &0.114 &0.111 &0.114 &0.102 &0.110 &0.116 &0.033 \\
+NJ &0.218 &0.110 &0.106 &0.110 &0.097 &0.111 &0.118 &0.007 \\
+NM &0.092 &0.050 &0.049 &0.050 &0.045 &0.050 &0.053 &0.012 \\
+NV &0.110 &0.054 &0.052 &0.054 &0.047 &0.053 &0.056 &0.004 \\
+NY &0.197 &0.141 &0.140 &0.141 &0.130 &0.140 &0.145 &0.052 \\
+OH &0.188 &0.123 &0.122 &0.123 &0.115 &0.121 &0.125 &0.067 \\
+OK &0.086 &0.038 &0.037 &0.038 &0.033 &0.037 &0.040 &0.000 \\
+OR &0.162 &0.081 &0.080 &0.081 &0.073 &0.082 &0.087 &0.008 \\
+PA &0.200 &0.091 &0.088 &0.091 &0.078 &0.086 &0.093 &0.003 \\
+RI &0.124 &0.063 &0.060 &0.063 &0.056 &0.063 &0.069 &0.000 \\
+SC &0.205 &0.109 &0.106 &0.109 &0.101 &0.118 &0.125 &0.017 \\
+SD &0.123 &0.034 &0.033 &0.034 &0.029 &0.035 &0.038 &0.000 \\
+TN &0.110 &0.065 &0.064 &0.065 &0.059 &0.066 &0.069 &0.023 \\
+TX &0.237 &0.142 &0.139 &0.142 &0.130 &0.144 &0.150 &0.051 \\
+UT &0.123 &0.040 &0.038 &0.040 &0.036 &0.041 &0.045 &0.000 \\
+VA &0.118 &0.076 &0.075 &0.076 &0.071 &0.076 &0.079 &0.030 \\
+VT &0.150 &0.049 &0.047 &0.049 &0.044 &0.047 &0.052 &0.000 \\
+WA &0.144 &0.055 &0.053 &0.055 &0.048 &0.053 &0.057 &0.002 \\
+WI &0.240 &0.120 &0.117 &0.120 &0.109 &0.123 &0.129 &0.021 \\
+WV &0.103 &0.042 &0.040 &0.042 &0.036 &0.041 &0.045 &0.000 \\
+WY &0.088 &0.036 &0.034 &0.036 &0.032 &0.035 &0.038 &0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Summarization Analysis - Abstractive - QA Pairs
+\begin{table*}[!htp]\centering
+\caption{Question + Answer Abstractive Summary Analysis}\label{tab:a_qa_sum_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrr}\toprule
+State &Cosine Similarity &ROUGE-1 &ROUGE-2 &ROUGE-L &ROUGE-W &ROUGE-S &ROUGE-SU &BLEU Score \\\midrule
+AK &0.727 &0.537 &0.512 &0.505 &0.438 &0.446 &0.470 &0.192 \\
+AL &0.743 &0.536 &0.508 &0.521 &0.457 &0.455 &0.477 &0.189 \\
+AR &0.782 &0.575 &0.549 &0.530 &0.460 &0.474 &0.499 &0.227 \\
+AZ &0.707 &0.503 &0.482 &0.480 &0.424 &0.445 &0.467 &0.171 \\
+CA &0.741 &0.533 &0.506 &0.519 &0.444 &0.433 &0.459 &0.181 \\
+CO &0.724 &0.492 &0.467 &0.478 &0.413 &0.415 &0.436 &0.154 \\
+CT &0.721 &0.544 &0.518 &0.526 &0.464 &0.461 &0.481 &0.202 \\
+DL &0.750 &0.543 &0.519 &0.528 &0.465 &0.466 &0.489 &0.198 \\
+FL &0.755 &0.548 &0.524 &0.538 &0.484 &0.504 &0.525 &0.215 \\
+GA &0.731 &0.586 &0.561 &0.557 &0.492 &0.488 &0.509 &0.243 \\
+HI &0.727 &0.539 &0.514 &0.523 &0.459 &0.448 &0.470 &0.204 \\
+IA &0.724 &0.525 &0.505 &0.514 &0.446 &0.444 &0.467 &0.181 \\
+ID &0.676 &0.512 &0.492 &0.489 &0.422 &0.428 &0.450 &0.165 \\
+IL &0.711 &0.550 &0.523 &0.520 &0.452 &0.453 &0.478 &0.204 \\
+IN &0.702 &0.519 &0.496 &0.511 &0.445 &0.434 &0.456 &0.178 \\
+KS &0.762 &0.536 &0.512 &0.527 &0.457 &0.461 &0.484 &0.201 \\
+KY &0.731 &0.501 &0.474 &0.486 &0.423 &0.420 &0.444 &0.154 \\
+LA &0.746 &0.507 &0.483 &0.495 &0.437 &0.446 &0.467 &0.176 \\
+MA &0.739 &0.552 &0.526 &0.529 &0.459 &0.453 &0.479 &0.204 \\
+MD &0.750 &0.523 &0.500 &0.516 &0.447 &0.437 &0.461 &0.174 \\
+ME &0.765 &0.573 &0.550 &0.563 &0.496 &0.496 &0.516 &0.228 \\
+MI &0.733 &0.530 &0.497 &0.510 &0.446 &0.438 &0.463 &0.185 \\
+MN &0.731 &0.545 &0.514 &0.521 &0.447 &0.435 &0.461 &0.190 \\
+MO &0.750 &0.511 &0.490 &0.492 &0.432 &0.439 &0.459 &0.171 \\
+MS &0.741 &0.524 &0.503 &0.509 &0.443 &0.441 &0.464 &0.186 \\
+MT &0.740 &0.543 &0.517 &0.535 &0.462 &0.436 &0.459 &0.189 \\
+NC &0.733 &0.529 &0.506 &0.512 &0.452 &0.446 &0.469 &0.196 \\
+ND &0.747 &0.538 &0.515 &0.512 &0.448 &0.457 &0.479 &0.195 \\
+NE &0.730 &0.531 &0.506 &0.517 &0.453 &0.443 &0.467 &0.189 \\
+NH &0.740 &0.552 &0.532 &0.533 &0.472 &0.470 &0.494 &0.212 \\
+NJ &0.742 &0.528 &0.507 &0.517 &0.456 &0.461 &0.483 &0.184 \\
+NM &0.725 &0.562 &0.540 &0.545 &0.486 &0.485 &0.507 &0.223 \\
+NV &0.734 &0.584 &0.560 &0.572 &0.508 &0.500 &0.521 &0.247 \\
+NY &0.729 &0.546 &0.520 &0.531 &0.458 &0.449 &0.471 &0.195 \\
+OH &0.748 &0.533 &0.505 &0.501 &0.436 &0.467 &0.489 &0.193 \\
+OK &0.747 &0.563 &0.539 &0.531 &0.470 &0.480 &0.502 &0.217 \\
+OR &0.703 &0.525 &0.501 &0.500 &0.433 &0.428 &0.451 &0.182 \\
+PA &0.738 &0.537 &0.514 &0.513 &0.448 &0.453 &0.476 &0.192 \\
+RI &0.714 &0.499 &0.471 &0.489 &0.419 &0.400 &0.424 &0.155 \\
+SC &0.740 &0.583 &0.558 &0.555 &0.521 &0.530 &0.552 &0.293 \\
+SD &0.700 &0.505 &0.476 &0.478 &0.417 &0.422 &0.447 &0.157 \\
+TN &0.739 &0.561 &0.530 &0.535 &0.465 &0.459 &0.483 &0.211 \\
+TX &0.744 &0.543 &0.507 &0.513 &0.452 &0.467 &0.489 &0.200 \\
+UT &0.732 &0.540 &0.512 &0.531 &0.461 &0.449 &0.473 &0.188 \\
+VA &0.746 &0.573 &0.549 &0.549 &0.482 &0.473 &0.495 &0.230 \\
+VT &0.740 &0.529 &0.510 &0.527 &0.459 &0.446 &0.469 &0.183 \\
+WA &0.737 &0.548 &0.529 &0.523 &0.458 &0.461 &0.484 &0.206 \\
+WI &0.719 &0.536 &0.506 &0.500 &0.430 &0.429 &0.454 &0.200 \\
+WV &0.763 &0.576 &0.553 &0.568 &0.498 &0.484 &0.506 &0.235 \\
+WY &0.739 &0.572 &0.547 &0.553 &0.484 &0.470 &0.495 &0.225 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Summarization Analysis - Extractive - QA Pairs
+\begin{table*}[!htp]\centering
+\caption{Question + Answer Extractive Summary Analysis}\label{tab:e_qa_sum_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrr}\toprule
+State &Cosine Similarity &ROUGE-1 &ROUGE-2 &ROUGE-L &ROUGE-W &ROUGE-S &ROUGE-SU &BLEU Score \\\midrule
+AK &0.151 &0.060 &0.057 &0.060 &0.051 &0.057 &0.062 &0.000 \\
+AL &0.151 &0.077 &0.076 &0.077 &0.069 &0.079 &0.083 &0.005 \\
+AR &0.201 &0.127 &0.125 &0.127 &0.120 &0.128 &0.132 &0.071 \\
+AZ &0.219 &0.101 &0.099 &0.101 &0.090 &0.103 &0.110 &0.007 \\
+CA &0.203 &0.101 &0.098 &0.101 &0.091 &0.102 &0.109 &0.012 \\
+CO &0.292 &0.144 &0.141 &0.144 &0.130 &0.147 &0.154 &0.030 \\
+CT &0.123 &0.056 &0.055 &0.056 &0.050 &0.055 &0.058 &0.012 \\
+DL &0.160 &0.068 &0.065 &0.068 &0.058 &0.067 &0.072 &0.003 \\
+FL &0.183 &0.073 &0.070 &0.073 &0.065 &0.085 &0.090 &0.007 \\
+GA &0.104 &0.068 &0.068 &0.068 &0.065 &0.069 &0.071 &0.034 \\
+HI &0.188 &0.093 &0.091 &0.093 &0.082 &0.089 &0.094 &0.022 \\
+IA &0.196 &0.087 &0.085 &0.087 &0.078 &0.087 &0.093 &0.012 \\
+ID &0.162 &0.090 &0.088 &0.090 &0.080 &0.087 &0.092 &0.015 \\
+IL &0.111 &0.053 &0.051 &0.053 &0.047 &0.053 &0.057 &0.003 \\
+IN &0.157 &0.081 &0.079 &0.081 &0.074 &0.082 &0.085 &0.031 \\
+KS &0.120 &0.051 &0.049 &0.051 &0.044 &0.060 &0.065 &0.000 \\
+KY &0.220 &0.106 &0.104 &0.106 &0.096 &0.106 &0.112 &0.020 \\
+LA &0.342 &0.215 &0.212 &0.215 &0.202 &0.220 &0.227 &0.102 \\
+MA &0.114 &0.047 &0.045 &0.047 &0.041 &0.046 &0.050 &0.001 \\
+MD &0.220 &0.120 &0.117 &0.120 &0.107 &0.119 &0.126 &0.016 \\
+ME &0.098 &0.040 &0.038 &0.040 &0.035 &0.038 &0.041 &0.001 \\
+MI &0.235 &0.139 &0.136 &0.139 &0.126 &0.138 &0.145 &0.035 \\
+MN &0.132 &0.059 &0.057 &0.059 &0.052 &0.057 &0.062 &0.002 \\
+MO &0.244 &0.117 &0.113 &0.117 &0.103 &0.114 &0.123 &0.003 \\
+MS &0.135 &0.058 &0.056 &0.058 &0.052 &0.059 &0.063 &0.007 \\
+MT &0.227 &0.163 &0.161 &0.163 &0.153 &0.161 &0.165 &0.083 \\
+NC &0.184 &0.109 &0.107 &0.109 &0.099 &0.106 &0.111 &0.042 \\
+ND &0.179 &0.080 &0.077 &0.080 &0.071 &0.082 &0.087 &0.002 \\
+NE &0.229 &0.132 &0.129 &0.132 &0.120 &0.130 &0.137 &0.029 \\
+NH &0.203 &0.116 &0.113 &0.116 &0.103 &0.112 &0.118 &0.029 \\
+NJ &0.194 &0.098 &0.096 &0.098 &0.087 &0.100 &0.106 &0.005 \\
+NM &0.139 &0.084 &0.082 &0.084 &0.077 &0.083 &0.087 &0.018 \\
+NV &0.097 &0.048 &0.047 &0.048 &0.042 &0.047 &0.050 &0.003 \\
+NY &0.211 &0.142 &0.140 &0.142 &0.130 &0.141 &0.146 &0.045 \\
+OH &0.187 &0.113 &0.111 &0.113 &0.104 &0.111 &0.115 &0.053 \\
+OK &0.081 &0.037 &0.035 &0.037 &0.032 &0.035 &0.038 &0.003 \\
+OR &0.202 &0.099 &0.097 &0.099 &0.088 &0.097 &0.104 &0.007 \\
+PA &0.159 &0.073 &0.070 &0.073 &0.062 &0.068 &0.074 &0.001 \\
+RI &0.134 &0.065 &0.062 &0.065 &0.057 &0.064 &0.070 &0.000 \\
+SC &0.211 &0.107 &0.103 &0.107 &0.100 &0.114 &0.121 &0.013 \\
+SD &0.157 &0.055 &0.053 &0.055 &0.041 &0.047 &0.052 &0.000 \\
+TN &0.137 &0.080 &0.078 &0.080 &0.071 &0.079 &0.083 &0.016 \\
+TX &0.209 &0.129 &0.126 &0.129 &0.118 &0.129 &0.134 &0.047 \\
+UT &0.122 &0.039 &0.037 &0.039 &0.035 &0.039 &0.043 &0.000 \\
+VA &0.113 &0.070 &0.069 &0.070 &0.065 &0.070 &0.073 &0.026 \\
+VT &0.131 &0.041 &0.039 &0.041 &0.036 &0.039 &0.044 &0.000 \\
+WA &0.146 &0.059 &0.056 &0.059 &0.052 &0.057 &0.061 &0.002 \\
+WI &0.190 &0.092 &0.090 &0.092 &0.084 &0.095 &0.099 &0.015 \\
+WV &0.076 &0.030 &0.029 &0.030 &0.026 &0.030 &0.032 &0.000 \\
+WY &0.068 &0.027 &0.026 &0.027 &0.024 &0.026 &0.028 &0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Topic Analysis WTC - Questions
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{img/q_wordcloud.pdf}
+    \caption{Question Topic Analysis Word Tag Cloud}
+    \label{fig:enter-label}
+\end{figure*}
+
+% Topic Analysis WTC - Answers
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{img/a_wordcloud.pdf}
+    \caption{Answer Topic Analysis Word Tag Cloud}
+    \label{fig:enter-label}
+\end{figure*}
+
+% Topic Analysis WTC - QA Pair
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{img/qa_wordcloud.pdf}
+    \caption{Question + Answer Topic Analysis Word Tag Cloud}
+    \label{fig:enter-label}
+\end{figure*}
+
+% % Topic Analysis Summary
+
+% \begin{table*}
+% \centering
+% \resizebox{\textwidth}{!}{%
+% \begin{tabular}{l|c|c|c|c|c|l}
+% \hline
+% \textbf{Topic} & \textbf{Final Score} & \textbf{Prevalence} & \textbf{Coherence} & \textbf{Distinctiveness} & \textbf{Coverage} & \textbf{Top Terms} \\ \hline
+% Political Parties \& Primary Elections          & 0.461 & 0.288 & 0.443 & 0.804 & 0.308 & party, primary, political, election, primary election \\ \hline
+% Voter Registration                 & 0.764 & 0.826 & 0.915 & 0.521 & 0.793 & registration, voter, voter registration, address, register \\ \hline
+% Absentee Voting    & 0.411 & 0.499 & 0.529 & 0.088 & 0.527 & ballot, absentee, absentee ballot, mail, return \\ \hline
+% Voting Equipment Security               & 0.163 & 0.000 & 0.000 & 0.653 & 0.000 & machines, write, secure, paper, card \\ \hline
+% Voter Identification Requirements        & 0.239 & 0.066 & 0.058 & 0.694 & 0.137 & photo, id, photo id, business, report \\ \hline
+% Military \& Overseas Voting                   & 0.392 & 0.157 & 0.190 & 1.000 & 0.223 & overseas, military, vote, register, register vote \\ \hline
+% Campaign Filing \& Candidates         & 0.259 & 0.065 & 0.086 & 0.771 & 0.114 & campaign, candidates, filing, committee, 106 \\ \hline
+% Election Day \& Polling Information           & 0.750 & 1.000 & 1.000 & 0.000 & 1.000 & election, ballot, day, voting, polling \\ \hline
+% \end{tabular}
+% }
+% \caption{Topic Analysis Summary with Final Scores, Prevalence, Coherence, Distinctiveness, and Coverage. The top terms for each topic are listed to provide insights into the content of each topic.}
+% \label{tab:topic_analysis_summary}
+% \end{table*}
+
+% Topic Analysis - Questions 
+\begin{table*}\centering
+\caption{Question Topic Analysis}\label{tab:question_topic_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+\textbf{STATE} &\textbf{Topic 1} &\textbf{Topic 2} &\textbf{Topic 3} &\textbf{Topic 4} &\textbf{Topic 5} &\textbf{Topic 6} &\textbf{Topic 7} &\textbf{Topic 8} &\textbf{MEDIAN} \\\midrule
+AK &0.14 &0.11 &0.11 &0.16 &0.10 &0.14 &0.12 &0.12 &0.12 \\
+AL &0.23 &0.11 &0.10 &0.07 &0.13 &0.12 &0.12 &0.12 &0.12 \\
+AR &0.16 &0.04 &0.27 &0.11 &0.09 &0.13 &0.14 &0.04 &0.12 \\
+AZ &0.16 &0.09 &0.10 &0.14 &0.17 &0.08 &0.12 &0.15 &0.13 \\
+CA &0.25 &0.12 &0.12 &0.07 &0.06 &0.07 &0.12 &0.19 &0.12 \\
+CO &0.10 &0.10 &0.09 &0.11 &0.13 &0.08 &0.14 &0.25 &0.11 \\
+CT &0.10 &0.24 &0.10 &0.08 &0.17 &0.09 &0.12 &0.12 &0.11 \\
+DL &0.22 &0.15 &0.09 &0.07 &0.12 &0.10 &0.17 &0.08 &0.11 \\
+FL &0.19 &0.10 &0.08 &0.10 &0.08 &0.11 &0.24 &0.10 &0.10 \\
+GA &0.13 &0.08 &0.13 &0.11 &0.14 &0.10 &0.16 &0.13 &0.13 \\
+HI &0.14 &0.15 &0.13 &0.09 &0.11 &0.12 &0.15 &0.11 &0.12 \\
+IA &0.18 &0.11 &0.07 &0.10 &0.13 &0.17 &0.15 &0.10 &0.12 \\
+ID &0.12 &0.10 &0.10 &0.11 &0.07 &0.21 &0.14 &0.14 &0.11 \\
+IL &0.07 &0.11 &0.09 &0.12 &0.06 &0.06 &0.25 &0.24 &0.10 \\
+IN &0.11 &0.17 &0.11 &0.15 &0.13 &0.11 &0.15 &0.08 &0.12 \\
+KS &0.05 &0.17 &0.06 &0.12 &0.16 &0.18 &0.20 &0.05 &0.14 \\
+KY &0.25 &0.15 &0.15 &0.05 &0.15 &0.10 &0.07 &0.08 &0.12 \\
+LA &0.16 &0.20 &0.09 &0.11 &0.10 &0.13 &0.09 &0.11 &0.11 \\
+MA &0.15 &0.16 &0.11 &0.12 &0.10 &0.08 &0.18 &0.09 &0.11 \\
+MD &0.05 &0.30 &0.08 &0.05 &0.17 &0.13 &0.14 &0.08 &0.11 \\
+ME &0.10 &0.10 &0.19 &0.11 &0.09 &0.09 &0.09 &0.22 &0.10 \\
+MI &0.14 &0.18 &0.07 &0.12 &0.08 &0.15 &0.13 &0.13 &0.13 \\
+MN &0.15 &0.16 &0.11 &0.14 &0.11 &0.11 &0.13 &0.08 &0.12 \\
+MO &0.12 &0.18 &0.05 &0.17 &0.15 &0.15 &0.08 &0.11 &0.13 \\
+MS &0.05 &0.11 &0.05 &0.62 &0.05 &0.05 &0.05 &0.05 &0.05 \\
+MT &0.18 &0.10 &0.26 &0.04 &0.06 &0.10 &0.06 &0.20 &0.10 \\
+NC &0.10 &0.14 &0.08 &0.14 &0.12 &0.17 &0.15 &0.10 &0.13 \\
+ND &0.13 &0.19 &0.11 &0.22 &0.10 &0.08 &0.12 &0.05 &0.11 \\
+NE &0.11 &0.13 &0.04 &0.21 &0.12 &0.11 &0.16 &0.13 &0.12 \\
+NH &0.11 &0.29 &0.11 &0.05 &0.10 &0.05 &0.10 &0.18 &0.11 \\
+NJ &0.10 &0.10 &0.07 &0.07 &0.17 &0.16 &0.25 &0.07 &0.10 \\
+NM &0.17 &0.14 &0.11 &0.12 &0.08 &0.10 &0.14 &0.15 &0.13 \\
+NV &0.17 &0.11 &0.11 &0.07 &0.12 &0.11 &0.23 &0.09 &0.11 \\
+NY &0.13 &0.12 &0.05 &0.06 &0.16 &0.11 &0.19 &0.17 &0.13 \\
+OH &0.10 &0.23 &0.09 &0.19 &0.10 &0.06 &0.08 &0.15 &0.10 \\
+OK &0.17 &0.19 &0.17 &0.07 &0.06 &0.11 &0.12 &0.10 &0.12 \\
+OR &0.06 &0.21 &0.10 &0.08 &0.15 &0.11 &0.16 &0.14 &0.12 \\
+PA &0.16 &0.12 &0.07 &0.08 &0.11 &0.08 &0.30 &0.07 &0.10 \\
+RI &0.19 &0.22 &0.05 &0.07 &0.16 &0.16 &0.09 &0.06 &0.12 \\
+SC &0.17 &0.11 &0.08 &0.16 &0.18 &0.11 &0.05 &0.14 &0.13 \\
+SD &0.04 &0.26 &0.08 &0.03 &0.24 &0.06 &0.26 &0.03 &0.07 \\
+TN &0.11 &0.14 &0.13 &0.17 &0.14 &0.09 &0.14 &0.08 &0.13 \\
+TX &0.13 &0.10 &0.09 &0.18 &0.12 &0.05 &0.07 &0.26 &0.11 \\
+UT &0.25 &0.27 &0.08 &0.12 &0.05 &0.10 &0.06 &0.07 &0.09 \\
+VA &0.13 &0.15 &0.16 &0.16 &0.12 &0.15 &0.04 &0.09 &0.14 \\
+VT &0.14 &0.15 &0.13 &0.10 &0.15 &0.11 &0.09 &0.12 &0.13 \\
+WA &0.15 &0.11 &0.12 &0.08 &0.13 &0.15 &0.11 &0.16 &0.12 \\
+WI &0.04 &0.09 &0.04 &0.34 &0.11 &0.18 &0.10 &0.10 &0.10 \\
+WV &0.28 &0.11 &0.21 &0.07 &0.07 &0.06 &0.06 &0.15 &0.09 \\
+WY &0.10 &0.16 &0.14 &0.10 &0.13 &0.12 &0.13 &0.10 &0.13 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Topic Analysis Summary - Questions
+
+\begin{table*}
+\centering
+\caption{Question Topic Analysis Summary}
+\label{tab:q_topic_analysis_sum}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}\toprule
+\textbf{Topic} &\textbf{Final Score} &\textbf{Prevalence} &\textbf{Coherence} &\textbf{Distinctiveness} &\textbf{Coverage} &\textbf{Top Terms} \\\midrule
+Topic 1: Political Parties and Primary Elections &1.00 &1.00 &1.00 &1.00 &1.00 & registration, voter registration, voter, party, polling \\
+Topic 2: Voter Registration &0.54 &0.87 &0.49 &0.14 &0.65 &vote, registered, register, registered vote, military \\
+Topic 3: Absentee Voting &0.10 &0.00 &0.00 &0.39 &0.00 & register, register vote, vote, provisional, online \\
+Topic 4: Voting Equipment Security &0.12 &0.98 &0.03 &0.26 &0.10 &vote, person, need, id, vote person \\
+Topic 5: Voter Identification Requirements &0.25 &0.11 &0.06 &0.71 &0.11 &day, election day, ballots, election, polls \\
+Topic 6: Military and Overseas Voting &0.11 &0.15 &0.14 &0.00 &0.14 &voting, early voting, ballot, absentee, early \\
+Topic 7: Campaign Filing and Candidates &0.75 &0.92 &0.96 &0.20 &0.93 &ballot, mail, absentee, absentee ballot, mail ballot \\
+Topic 8: Election Day and Polling Information &0.43 &0.40 &0.14 &0.71 &0.46 &election, primary, elections, primary election, general \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+% Topic Analysis - Answers
+\begin{table*}\centering
+\caption{Answer Topic Analysis}\label{tab:answer_topic_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+\textbf{STATE} &\textbf{Topic 1} &\textbf{Topic 2} &\textbf{Topic 3} &\textbf{Topic 4} &\textbf{Topic 5} &\textbf{Topic 6} &\textbf{Topic 7} &\textbf{Topic 8} &\textbf{MEDIAN} \\\midrule
+AK &0.24 &0.07 &0.36 &0.03 &0.04 &0.07 &0.08 &0.13 &0.07 \\
+AL &0.18 &0.15 &0.33 &0.03 &0.03 &0.09 &0.08 &0.10 &0.10 \\
+AR &0.33 &0.03 &0.33 &0.03 &0.03 &0.06 &0.04 &0.17 &0.05 \\
+AZ &0.30 &0.06 &0.32 &0.02 &0.03 &0.09 &0.10 &0.09 &0.09 \\
+CA &0.35 &0.16 &0.20 &0.03 &0.03 &0.06 &0.06 &0.12 &0.09 \\
+CO &0.33 &0.14 &0.28 &0.02 &0.03 &0.03 &0.10 &0.06 &0.08 \\
+CT &0.17 &0.06 &0.35 &0.02 &0.04 &0.05 &0.20 &0.09 &0.08 \\
+DL &0.27 &0.11 &0.24 &0.04 &0.09 &0.04 &0.06 &0.14 &0.10 \\
+FL &0.12 &0.17 &0.23 &0.03 &0.04 &0.23 &0.05 &0.14 &0.13 \\
+GA &0.19 &0.07 &0.36 &0.03 &0.04 &0.05 &0.11 &0.15 &0.09 \\
+HI &0.46 &0.07 &0.23 &0.04 &0.04 &0.03 &0.06 &0.07 &0.06 \\
+IA &0.30 &0.09 &0.39 &0.03 &0.03 &0.05 &0.06 &0.05 &0.05 \\
+ID &0.24 &0.07 &0.33 &0.03 &0.04 &0.03 &0.10 &0.16 &0.08 \\
+IL &0.19 &0.07 &0.11 &0.03 &0.04 &0.24 &0.07 &0.25 &0.09 \\
+IN &0.19 &0.05 &0.44 &0.02 &0.05 &0.03 &0.10 &0.11 &0.08 \\
+KS &0.29 &0.02 &0.35 &0.02 &0.03 &0.03 &0.17 &0.08 &0.06 \\
+KY &0.38 &0.08 &0.24 &0.03 &0.10 &0.04 &0.05 &0.08 &0.08 \\
+LA &0.19 &0.05 &0.35 &0.09 &0.05 &0.07 &0.09 &0.11 &0.09 \\
+MA &0.38 &0.15 &0.29 &0.02 &0.04 &0.03 &0.06 &0.04 &0.05 \\
+MD &0.05 &0.03 &0.71 &0.03 &0.03 &0.03 &0.03 &0.10 &0.03 \\
+ME &0.14 &0.07 &0.30 &0.03 &0.05 &0.07 &0.03 &0.31 &0.07 \\
+MI &0.25 &0.08 &0.39 &0.03 &0.04 &0.06 &0.08 &0.08 &0.08 \\
+MN &0.33 &0.06 &0.32 &0.04 &0.05 &0.03 &0.06 &0.11 &0.06 \\
+MO &0.28 &0.09 &0.29 &0.04 &0.05 &0.08 &0.08 &0.09 &0.08 \\
+MS &0.37 &0.03 &0.27 &0.03 &0.03 &0.08 &0.03 &0.16 &0.05 \\
+MT &0.44 &0.10 &0.17 &0.03 &0.05 &0.03 &0.03 &0.15 &0.08 \\
+NC &0.27 &0.05 &0.36 &0.03 &0.07 &0.05 &0.11 &0.06 &0.07 \\
+ND &0.07 &0.03 &0.47 &0.03 &0.03 &0.03 &0.29 &0.04 &0.04 \\
+NE &0.15 &0.12 &0.48 &0.03 &0.02 &0.02 &0.05 &0.13 &0.08 \\
+NH &0.19 &0.07 &0.45 &0.03 &0.07 &0.06 &0.08 &0.05 &0.07 \\
+NJ &0.21 &0.07 &0.50 &0.03 &0.03 &0.05 &0.06 &0.05 &0.06 \\
+NM &0.26 &0.10 &0.36 &0.03 &0.04 &0.05 &0.08 &0.09 &0.08 \\
+NV &0.26 &0.10 &0.21 &0.04 &0.05 &0.05 &0.10 &0.19 &0.10 \\
+NY &0.38 &0.03 &0.28 &0.02 &0.06 &0.03 &0.02 &0.17 &0.05 \\
+OH &0.15 &0.06 &0.36 &0.03 &0.03 &0.03 &0.30 &0.05 &0.05 \\
+OK &0.44 &0.08 &0.20 &0.03 &0.04 &0.05 &0.06 &0.10 &0.07 \\
+OR &0.46 &0.17 &0.16 &0.02 &0.02 &0.02 &0.03 &0.11 &0.07 \\
+PA &0.16 &0.03 &0.56 &0.03 &0.06 &0.03 &0.08 &0.05 &0.06 \\
+RI &0.22 &0.15 &0.32 &0.02 &0.03 &0.08 &0.03 &0.15 &0.11 \\
+SC &0.17 &0.08 &0.34 &0.03 &0.03 &0.13 &0.10 &0.13 &0.11 \\
+SD &0.10 &0.03 &0.63 &0.04 &0.02 &0.05 &0.08 &0.06 &0.05 \\
+TN &0.22 &0.03 &0.31 &0.03 &0.05 &0.04 &0.19 &0.13 &0.09 \\
+TX &0.18 &0.18 &0.25 &0.02 &0.04 &0.03 &0.16 &0.14 &0.15 \\
+UT &0.36 &0.10 &0.22 &0.03 &0.03 &0.03 &0.18 &0.05 &0.08 \\
+VA &0.22 &0.06 &0.37 &0.02 &0.02 &0.02 &0.16 &0.11 &0.09 \\
+VT &0.17 &0.04 &0.49 &0.03 &0.08 &0.08 &0.08 &0.04 &0.08 \\
+WA &0.25 &0.25 &0.25 &0.03 &0.03 &0.03 &0.06 &0.10 &0.08 \\
+WI &0.09 &0.02 &0.47 &0.02 &0.03 &0.03 &0.31 &0.03 &0.03 \\
+WV &0.18 &0.20 &0.30 &0.03 &0.05 &0.03 &0.09 &0.12 &0.10 \\
+WY &0.32 &0.10 &0.19 &0.03 &0.07 &0.06 &0.10 &0.12 &0.10 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Topic Analysis Summary - Answers
+
+\begin{table*}\centering
+\caption{Answer Topic Analysis Summary}\label{tab: a_topic_analysis_sum}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}\toprule
+\textbf{Topic} &\textbf{Final Score} &\textbf{Prevalence} &\textbf{Coherence} &\textbf{Distinctiveness} &\textbf{Coverage} &\textbf{Top Terms} \\\midrule
+Topic 1: Political Parties and Primary Elections &0.65 &0.77 &0.78 &0.18 &0.85 & registration, voter, voter registration, address, county \\
+Topic 2: Voter Registration &0.46 &0.22 &0.36 &1.00 &0.28 &party, primary, candidates, political, candidate \\
+Topic 3: Absentee Voting &0.75 &1.00 &1.00 &0.00 &1.00 &ballot, absentee, voting, election, vote \\
+Topic 4: Voting Equipment Security &0.01 &0.00 &0.00 &0.21 &0.00 & Louisiana, majority, la 18, view, la \\
+Topic 5: Voter Identification Requirements &0.09 &0.05 &0.06 &0.16 &0.07 &military, overseas, united states, united, military overseas \\
+Topic 6: Military and Overseas Voting &0.18 &0.12 &0.10 &0.35 &0.14 &campaign, overseas, filing, contributions \\
+Topic 7: Campaign Filing and Candidates &0.40 &0.20 &0.27 &0.84 &0.30 &id, identification, photo, license, photo id \\
+Topic 8: Election Day and Polling Information &0.26 &0.29 &0.19 &0.15 &0.40 &state, secretary state, election, elections, secretary \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+% Topic Analysis - QA Pair
+\begin{table*}\centering
+\caption{Question + Answer Topic Analysis}\label{tab:qa_topic_analysis}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+\textbf{STATE} &\textbf{Topic 1} &\textbf{Topic 2} &\textbf{Topic 3} &\textbf{Topic 4} &\textbf{Topic 5} &\textbf{Topic 6} &\textbf{Topic 7} &\textbf{Topic 8} &\textbf{MEDIAN} \\\midrule
+AK &0.08 &0.20 &0.20 &0.04 &0.06 &0.09 &0.06 &0.26 &0.09 \\
+AL &0.19 &0.16 &0.12 &0.04 &0.04 &0.07 &0.10 &0.28 &0.11 \\
+AR &0.02 &0.29 &0.06 &0.06 &0.03 &0.15 &0.05 &0.33 &0.06 \\
+AZ &0.11 &0.19 &0.10 &0.04 &0.05 &0.07 &0.07 &0.37 &0.09 \\
+CA &0.16 &0.34 &0.08 &0.02 &0.09 &0.04 &0.04 &0.22 &0.09 \\
+CO &0.16 &0.17 &0.07 &0.05 &0.10 &0.02 &0.03 &0.41 &0.08 \\
+CT &0.06 &0.23 &0.09 &0.03 &0.08 &0.15 &0.03 &0.33 &0.09 \\
+DL &0.10 &0.25 &0.15 &0.18 &0.04 &0.06 &0.04 &0.17 &0.12 \\
+FL &0.20 &0.09 &0.07 &0.03 &0.12 &0.08 &0.21 &0.20 &0.10 \\
+GA &0.14 &0.17 &0.22 &0.03 &0.08 &0.13 &0.04 &0.19 &0.13 \\
+HI &0.10 &0.31 &0.18 &0.03 &0.02 &0.09 &0.05 &0.22 &0.09 \\
+IA &0.11 &0.25 &0.32 &0.02 &0.02 &0.09 &0.05 &0.14 &0.10 \\
+ID &0.10 &0.18 &0.11 &0.03 &0.06 &0.07 &0.07 &0.40 &0.08 \\
+IL &0.10 &0.19 &0.08 &0.12 &0.15 &0.05 &0.22 &0.09 &0.11 \\
+IN &0.06 &0.20 &0.18 &0.02 &0.03 &0.10 &0.03 &0.38 &0.08 \\
+KS &0.06 &0.30 &0.11 &0.02 &0.06 &0.10 &0.04 &0.30 &0.08 \\
+KY &0.09 &0.34 &0.09 &0.03 &0.04 &0.14 &0.04 &0.23 &0.09 \\
+LA &0.05 &0.24 &0.11 &0.08 &0.07 &0.11 &0.02 &0.32 &0.09 \\
+MA &0.14 &0.31 &0.15 &0.06 &0.03 &0.06 &0.03 &0.23 &0.10 \\
+MD &0.03 &0.04 &0.61 &0.07 &0.03 &0.03 &0.03 &0.17 &0.03 \\
+ME &0.05 &0.08 &0.06 &0.03 &0.28 &0.06 &0.09 &0.34 &0.07 \\
+MI &0.08 &0.19 &0.13 &0.04 &0.04 &0.09 &0.07 &0.36 &0.08 \\
+MN &0.07 &0.32 &0.20 &0.03 &0.03 &0.10 &0.04 &0.22 &0.08 \\
+MO &0.07 &0.22 &0.23 &0.02 &0.05 &0.10 &0.04 &0.27 &0.09 \\
+MS &0.03 &0.03 &0.03 &0.03 &0.03 &0.14 &0.03 &0.69 &0.03 \\
+MT &0.12 &0.30 &0.10 &0.03 &0.03 &0.07 &0.08 &0.26 &0.09 \\
+NC &0.05 &0.24 &0.24 &0.04 &0.04 &0.17 &0.03 &0.18 &0.11 \\
+ND &0.04 &0.23 &0.24 &0.02 &0.03 &0.20 &0.02 &0.22 &0.12 \\
+NE &0.16 &0.19 &0.16 &0.02 &0.05 &0.02 &0.03 &0.36 &0.11 \\
+NH &0.09 &0.16 &0.13 &0.02 &0.05 &0.24 &0.03 &0.28 &0.11 \\
+NJ &0.09 &0.11 &0.20 &0.09 &0.04 &0.03 &0.02 &0.41 &0.09 \\
+NM &0.07 &0.33 &0.18 &0.04 &0.03 &0.07 &0.07 &0.20 &0.07 \\
+NV &0.15 &0.16 &0.13 &0.05 &0.07 &0.05 &0.03 &0.36 &0.10 \\
+NY &0.03 &0.24 &0.33 &0.12 &0.02 &0.02 &0.05 &0.19 &0.08 \\
+OH &0.07 &0.35 &0.18 &0.02 &0.03 &0.03 &0.04 &0.28 &0.06 \\
+OK &0.08 &0.39 &0.20 &0.03 &0.05 &0.07 &0.05 &0.13 &0.08 \\
+OR &0.15 &0.17 &0.15 &0.10 &0.02 &0.06 &0.08 &0.26 &0.13 \\
+PA &0.05 &0.16 &0.22 &0.04 &0.05 &0.04 &0.04 &0.39 &0.05 \\
+RI &0.15 &0.22 &0.28 &0.14 &0.03 &0.08 &0.03 &0.07 &0.11 \\
+SC &0.11 &0.17 &0.09 &0.03 &0.05 &0.06 &0.11 &0.37 &0.10 \\
+SD &0.02 &0.05 &0.40 &0.08 &0.02 &0.11 &0.02 &0.30 &0.06 \\
+TN &0.08 &0.19 &0.21 &0.03 &0.14 &0.05 &0.05 &0.25 &0.11 \\
+TX &0.20 &0.23 &0.04 &0.04 &0.09 &0.05 &0.02 &0.32 &0.07 \\
+UT &0.17 &0.43 &0.10 &0.03 &0.06 &0.07 &0.03 &0.12 &0.08 \\
+VA &0.10 &0.28 &0.17 &0.03 &0.04 &0.05 &0.03 &0.30 &0.08 \\
+VT &0.07 &0.17 &0.26 &0.04 &0.08 &0.04 &0.03 &0.31 &0.07 \\
+WA &0.29 &0.17 &0.17 &0.06 &0.05 &0.05 &0.09 &0.12 &0.10 \\
+WI &0.02 &0.28 &0.25 &0.02 &0.12 &0.03 &0.02 &0.25 &0.08 \\
+WV &0.22 &0.18 &0.06 &0.04 &0.04 &0.15 &0.05 &0.25 &0.11 \\
+WY &0.13 &0.27 &0.06 &0.03 &0.07 &0.12 &0.11 &0.21 &0.12 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% Topic Analysis Summary - QA Pair
+\begin{table*}\centering
+\caption{Question + Answer Topic Analysis Summary}\label{tab:qa_topic_analysis_sum }
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}\toprule
+\textbf{Topic} &\textbf{Final Score} &\textbf{Prevalence} &\textbf{Coherence} &\textbf{Distinctiveness} &\textbf{Coverage} &\textbf{Top Terms} \\\midrule
+Topic 1: Political Parties and Primary Elections &0.46 &0.28 &0.44 &0.80 &308 &party, primary, political, election, primary election \\
+Topic 2: Voter Registration &0.76 &0.82 &0.91 &0.52 &0.79 & registration, voter, voter registration, address, register \\
+Topic 3: Absentee Voting &0.41 &0.49 &0.53 &0.08 &0.52 &ballot, absentee, absentee ballot, mail, return \\
+Topic 4: Voting Equipment Security &0.16 &0.00 &0.00 &0.65 &0.00 &machines, write, secure, paper, card \\
+Topic 5: Voter Identification Requirements &0.24 &0.06 &0.06 &0.69 &0.13 &photo, id, photo id, business, report \\
+Topic 6: Military and Overseas Voting &0.39 &0.16 &0.19 &1.00 &0.22 &overseas, military, vote, register, register vote \\
+Topic 7: Campaign Filing and Candidates &0.26 &0.06 &0.08 &0.77 &0.11 &campaign, candidates, filing, committee \\
+Topic 8: Election Day and Polling Information &0.75 &1.00 &1.00 &0.00 &1.00 &election, ballot, day, voting, polling \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+
+% Sentiment Analysis - Question
+ 
+\begin{table*}\centering
+\caption{Question Sentiment Analysis}\label{tab:q_sentiment_analysis}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrrrr}\toprule
+State &Average Compound Score &Positive Count &Negative Count &Neutral Count &Question Positive \% &Question Negative \% &Question Neutral \% &Positive Compound Score &Negative Compound Score &Neutral Compound Score \\\midrule
+AK &-0.09 &1.00 &23.00 &31.00 &1.82 &41.82 &56.36 &0.79 &-5.82 &0.00 \\
+AL &0.02 &6.00 &3.00 &33.00 &14.29 &7.14 &78.57 &1.63 &-0.89 &0.00 \\
+AR &-0.05 &0.00 &4.00 &18.00 &0.00 &18.18 &81.82 &0.00 &-1.09 &0.00 \\
+AZ &-0.01 &4.00 &4.00 &27.00 &11.43 &11.43 &77.14 &1.17 &-1.46 &0.00 \\
+CA &0.01 &10.00 &6.00 &64.00 &12.50 &7.50 &80.00 &2.96 &-1.77 &0.00 \\
+CO &0.01 &4.00 &2.00 &39.00 &8.89 &4.44 &86.67 &1.18 &-0.69 &0.00 \\
+CT &-0.03 &3.00 &9.00 &47.00 &5.08 &15.25 &79.66 &0.95 &-2.86 &0.00 \\
+DL &0.05 &19.00 &11.00 &74.00 &18.27 &10.58 &71.15 &7.58 &-2.81 &0.00 \\
+FL &0.06 &39.00 &16.00 &77.00 &29.55 &12.12 &58.33 &14.03 &-5.87 &0.00 \\
+GA &-0.09 &4.00 &27.00 &48.00 &5.06 &34.18 &60.76 &1.10 &-8.26 &0.00 \\
+HI &-0.03 &1.00 &7.00 &67.00 &1.33 &9.33 &89.33 &0.34 &-2.23 &0.00 \\
+IA &-0.05 &5.00 &17.00 &36.00 &8.62 &29.31 &62.07 &1.76 &-4.89 &0.00 \\
+ID &-0.03 &3.00 &8.00 &41.00 &5.77 &15.38 &78.85 &0.75 &-2.18 &0.00 \\
+IL &0.02 &13.00 &6.00 &71.00 &14.44 &6.67 &78.89 &3.76 &-2.22 &0.00 \\
+IN &0.00 &11.00 &11.00 &58.00 &13.75 &13.75 &72.50 &3.03 &-3.03 &0.00 \\
+KS &0.01 &6.00 &4.00 &35.00 &13.33 &8.89 &77.78 &1.93 &-1.48 &0.00 \\
+KY &0.02 &7.00 &4.00 &46.00 &12.28 &7.02 &80.70 &2.25 &-1.07 &0.00 \\
+LA &-0.12 &3.00 &35.00 &76.00 &2.63 &30.70 &66.67 &1.03 &-14.38 &0.00 \\
+MA &0.01 &7.00 &6.00 &77.00 &7.78 &6.67 &85.56 &2.79 &-1.94 &0.00 \\
+MD &0.00 &2.00 &2.00 &41.00 &4.44 &4.44 &91.11 &0.61 &-0.69 &0.00 \\
+ME &-0.03 &3.00 &10.00 &43.00 &5.36 &17.86 &76.79 &1.10 &-2.82 &0.00 \\
+MI &-0.03 &20.00 &35.00 &102.00 &12.74 &22.29 &64.97 &5.45 &-10.46 &0.00 \\
+MN &-0.02 &5.00 &12.00 &62.00 &6.33 &15.19 &78.48 &1.74 &-3.31 &0.00 \\
+MO &-0.03 &3.00 &8.00 &32.00 &6.98 &18.60 &74.42 &1.08 &-2.41 &0.00 \\
+MS &-0.01 &3.00 &4.00 &20.00 &11.11 &14.81 &74.07 &0.77 &-1.09 &0.00 \\
+MT &-0.05 &3.00 &11.00 &36.00 &6.00 &22.00 &72.00 &0.59 &-2.98 &0.00 \\
+NC &-0.03 &14.00 &29.00 &67.00 &12.73 &26.36 &60.91 &4.20 &-7.98 &0.00 \\
+ND &-0.04 &0.00 &7.00 &43.00 &0.00 &14.00 &86.00 &0.00 &-1.91 &0.00 \\
+NE &0.00 &1.00 &1.00 &25.00 &3.70 &3.70 &92.59 &0.27 &-0.27 &0.00 \\
+NH &0.02 &6.00 &5.00 &44.00 &10.91 &9.09 &80.00 &2.41 &-1.37 &0.00 \\
+NJ &-0.04 &6.00 &11.00 &38.00 &10.91 &20.00 &69.09 &1.70 &-4.05 &0.00 \\
+NM &-0.01 &15.00 &19.00 &55.00 &16.85 &21.35 &61.80 &5.02 &-6.22 &0.00 \\
+NV &-0.01 &12.00 &18.00 &88.00 &10.17 &15.25 &74.58 &4.70 &-6.46 &0.00 \\
+NY &0.06 &11.00 &3.00 &42.00 &19.64 &5.36 &75.00 &4.01 &-0.82 &0.00 \\
+OH &0.03 &10.00 &6.00 &36.00 &19.23 &11.54 &69.23 &3.27 &-1.93 &0.00 \\
+OK &-0.01 &14.00 &21.00 &76.00 &12.61 &18.92 &68.47 &4.74 &-6.20 &0.00 \\
+OR &-0.01 &3.00 &4.00 &34.00 &7.32 &9.76 &82.93 &1.02 &-1.32 &0.00 \\
+PA &-0.07 &6.00 &23.00 &52.00 &7.41 &28.40 &64.20 &2.19 &-7.83 &0.00 \\
+RI &0.00 &4.00 &4.00 &31.00 &10.26 &10.26 &79.49 &1.48 &-1.31 &0.00 \\
+SC &0.01 &5.00 &6.00 &23.00 &14.71 &17.65 &67.65 &2.04 &-1.66 &0.00 \\
+SD &-0.05 &2.00 &7.00 &17.00 &7.69 &26.92 &65.38 &0.50 &-1.91 &0.00 \\
+TN &-0.01 &9.00 &15.00 &44.00 &13.24 &22.06 &64.71 &3.98 &-4.69 &0.00 \\
+TX &0.08 &24.00 &8.00 &61.00 &25.81 &8.60 &65.59 &9.59 &-2.52 &0.00 \\
+UT &0.02 &3.00 &3.00 &24.00 &10.00 &10.00 &80.00 &1.33 &-0.82 &0.00 \\
+VA &-0.06 &4.00 &17.00 &47.00 &5.88 &25.00 &69.12 &1.33 &-5.21 &0.00 \\
+VT &0.02 &3.00 &3.00 &28.00 &8.82 &8.82 &82.35 &1.71 &-0.89 &0.00 \\
+WA &0.04 &13.00 &5.00 &55.00 &17.81 &6.85 &75.34 &3.96 &-1.18 &0.00 \\
+WI &-0.06 &4.00 &12.00 &17.00 &12.12 &36.36 &51.52 &1.50 &-3.38 &0.00 \\
+WV &0.02 &19.00 &16.00 &39.00 &25.68 &21.62 &52.70 &6.94 &-5.10 &0.00 \\
+WY &-0.02 &6.00 &10.00 &51.00 &8.96 &14.93 &76.12 &1.45 &-2.86 &0.00 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+% Sentiment Analysis - Answers
+\begin{table*}\centering
+\caption{Answer Sentiment Analysis}\label{tab:a_sentiment_analysis}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrrrr}\toprule
+State &Average Compund Score &Positive Count &Negative Count &Neutral Count &Answer Positive \% &Answer Negative \% &Answer Neutral \% &Positive Compound Score &Negative Compound Score &Neutral Compound Score \\\midrule
+AK &0.00 &22.00 &24.00 &9.00 &40.00 &43.64 &16.36 &10.34 &-10.58 &0.00 \\
+AL &0.21 &25.00 &6.00 &11.00 &59.52 &14.29 &26.19 &12.17 &-3.39 &0.00 \\
+AR &0.03 &8.00 &7.00 &7.00 &36.36 &31.82 &31.82 &4.45 &-3.78 &0.00 \\
+AZ &0.34 &22.00 &6.00 &7.00 &62.86 &17.14 &20.00 &13.38 &-1.64 &0.00 \\
+CA &0.27 &53.00 &14.00 &13.00 &66.25 &17.50 &16.25 &28.44 &-6.61 &0.00 \\
+CO &0.15 &22.00 &13.00 &10.00 &48.89 &28.89 &22.22 &12.74 &-5.78 &0.00 \\
+CT &0.07 &25.00 &21.00 &13.00 &42.37 &35.59 &22.03 &13.31 &-9.32 &0.00 \\
+DL &0.21 &58.00 &24.00 &22.00 &55.77 &23.08 &21.15 &32.49 &-10.81 &0.00 \\
+FL &0.23 &82.00 &29.00 &21.00 &62.12 &21.97 &15.91 &43.65 &-13.34 &0.00 \\
+GA &0.06 &34.00 &25.00 &20.00 &43.04 &31.65 &25.32 &15.49 &-10.86 &0.00 \\
+HI &0.11 &35.00 &16.00 &24.00 &46.67 &21.33 &32.00 &15.94 &-8.01 &0.00 \\
+IA &0.06 &23.00 &23.00 &12.00 &39.66 &39.66 &20.69 &14.04 &-10.53 &0.00 \\
+ID &0.11 &18.00 &15.00 &19.00 &34.62 &28.85 &36.54 &10.16 &-4.70 &0.00 \\
+IL &0.25 &58.00 &13.00 &19.00 &64.44 &14.44 &21.11 &28.00 &-5.95 &0.00 \\
+IN &0.18 &38.00 &17.00 &25.00 &47.50 &21.25 &31.25 &21.23 &-6.65 &0.00 \\
+KS &0.13 &23.00 &9.00 &13.00 &51.11 &20.00 &28.89 &10.45 &-4.50 &0.00 \\
+KY &0.12 &24.00 &15.00 &18.00 &42.11 &26.32 &31.58 &13.27 &-6.60 &0.00 \\
+LA &0.06 &57.00 &37.00 &20.00 &50.00 &32.46 &17.54 &31.00 &-23.83 &0.00 \\
+MA &0.15 &41.00 &22.00 &27.00 &45.56 &24.44 &30.00 &24.56 &-11.41 &0.00 \\
+MD &0.11 &20.00 &13.00 &12.00 &44.44 &28.89 &26.67 &10.66 &-5.57 &0.00 \\
+ME &0.05 &27.00 &19.00 &10.00 &48.21 &33.93 &17.86 &11.46 &-8.69 &0.00 \\
+MI &0.03 &78.00 &54.00 &25.00 &49.68 &34.39 &15.92 &37.10 &-32.02 &-0.01 \\
+MN &0.02 &33.00 &32.00 &14.00 &41.77 &40.51 &17.72 &17.20 &-15.52 &0.00 \\
+MO &0.13 &26.00 &9.00 &8.00 &60.47 &20.93 &18.60 &10.02 &-4.47 &0.00 \\
+MS &0.12 &12.00 &6.00 &9.00 &44.44 &22.22 &33.33 &5.70 &-2.49 &0.00 \\
+MT &-0.01 &15.00 &15.00 &20.00 &30.00 &30.00 &40.00 &6.31 &-6.60 &0.00 \\
+NC &0.08 &52.00 &45.00 &13.00 &47.27 &40.91 &11.82 &25.86 &-17.09 &0.00 \\
+ND &0.15 &29.00 &13.00 &8.00 &58.00 &26.00 &16.00 &15.59 &-8.09 &0.00 \\
+NE &0.39 &20.00 &1.00 &6.00 &74.07 &3.70 &22.22 &10.54 &-0.08 &0.00 \\
+NH &0.12 &25.00 &20.00 &10.00 &45.45 &36.36 &18.18 &14.73 &-7.97 &0.00 \\
+NJ &0.21 &33.00 &11.00 &11.00 &60.00 &20.00 &20.00 &16.06 &-4.35 &0.00 \\
+NM &0.11 &43.00 &24.00 &22.00 &48.31 &26.97 &24.72 &21.00 &-11.35 &0.00 \\
+NV &0.10 &54.00 &35.00 &29.00 &45.76 &29.66 &24.58 &27.52 &-15.13 &0.00 \\
+NY &0.17 &27.00 &14.00 &15.00 &48.21 &25.00 &26.79 &16.30 &-6.68 &0.00 \\
+OH &0.15 &24.00 &13.00 &15.00 &46.15 &25.00 &28.85 &14.53 &-6.75 &0.00 \\
+OK &0.16 &66.00 &29.00 &16.00 &59.46 &26.13 &14.41 &30.42 &-12.58 &0.00 \\
+OR &0.25 &24.00 &9.00 &8.00 &58.54 &21.95 &19.51 &13.40 &-3.10 &0.00 \\
+PA &0.10 &36.00 &18.00 &27.00 &44.44 &22.22 &33.33 &16.21 &-7.76 &0.00 \\
+RI &0.20 &22.00 &10.00 &7.00 &56.41 &25.64 &17.95 &12.42 &-4.59 &0.00 \\
+SC &0.09 &13.00 &9.00 &12.00 &38.24 &26.47 &35.29 &6.81 &-3.87 &0.00 \\
+SD &-0.05 &13.00 &10.00 &3.00 &50.00 &38.46 &11.54 &4.68 &-5.98 &0.00 \\
+TN &0.04 &34.00 &26.00 &8.00 &50.00 &38.24 &11.76 &16.89 &-14.37 &0.00 \\
+TX &0.32 &68.00 &13.00 &12.00 &73.12 &13.98 &12.90 &35.96 &-6.10 &0.00 \\
+UT &0.23 &20.00 &7.00 &3.00 &66.67 &23.33 &10.00 &10.40 &-3.56 &0.00 \\
+VA &0.10 &34.00 &20.00 &14.00 &50.00 &29.41 &20.59 &15.94 &-9.27 &0.00 \\
+VT &0.12 &18.00 &9.00 &7.00 &52.94 &26.47 &20.59 &8.20 &-4.04 &0.00 \\
+WA &0.18 &38.00 &18.00 &17.00 &52.05 &24.66 &23.29 &21.68 &-8.58 &0.00 \\
+WI &-0.03 &10.00 &18.00 &5.00 &30.30 &54.55 &15.15 &5.82 &-6.85 &0.00 \\
+WV &0.18 &36.00 &15.00 &23.00 &48.65 &20.27 &31.08 &20.14 &-6.53 &0.00 \\
+WY &0.08 &31.00 &22.00 &14.00 &46.27 &32.84 &20.90 &14.51 &-9.14 &0.00 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+% Sentiment Analysis -  QA Pairs
+\begin{table*}\centering
+\caption{Question + Answer Sentiment Analysis}\label{tab:qa_sentiment_analysis}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrrrr}\toprule
+State &Average Sentiment Score &Positive Count &Negative Count &Neutral Count &Positive \% &Negative \% &Neutral \% &Positive Compound Score &Negative Compound Score &Neutral Compound Score \\\midrule
+AK &-0.07 &21.00 &29.00 &5.00 &38.18 &52.73 &9.09 &9.82 &-13.61 &0.00 \\
+AL &0.22 &27.00 &7.00 &8.00 &64.29 &16.67 &19.05 &13.18 &-3.80 &0.00 \\
+AR &0.01 &8.00 &7.00 &7.00 &36.36 &31.82 &31.82 &4.45 &-4.19 &0.00 \\
+AZ &0.33 &24.00 &6.00 &5.00 &68.57 &17.14 &14.29 &13.86 &-2.40 &0.00 \\
+CA &0.27 &51.00 &16.00 &13.00 &63.75 &20.00 &16.25 &28.91 &-7.10 &0.00 \\
+CO &0.16 &22.00 &13.00 &10.00 &48.89 &28.89 &22.22 &13.24 &-5.88 &0.00 \\
+CT &0.05 &23.00 &24.00 &12.00 &38.98 &40.68 &20.34 &13.72 &-10.79 &0.00 \\
+DL &0.22 &60.00 &26.00 &18.00 &57.69 &25.00 &17.31 &35.17 &-11.98 &0.00 \\
+FL &0.22 &81.00 &35.00 &16.00 &61.36 &26.52 &12.12 &46.80 &-17.33 &0.00 \\
+GA &-0.02 &31.00 &30.00 &18.00 &39.24 &37.97 &22.78 &15.03 &-16.39 &0.00 \\
+HI &0.09 &34.00 &18.00 &23.00 &45.33 &24.00 &30.67 &15.80 &-9.38 &0.00 \\
+IA &0.01 &22.00 &24.00 &12.00 &37.93 &41.38 &20.69 &13.77 &-13.40 &0.00 \\
+ID &0.07 &19.00 &16.00 &17.00 &36.54 &30.77 &32.69 &10.40 &-6.62 &0.00 \\
+IL &0.26 &61.00 &14.00 &15.00 &67.78 &15.56 &16.67 &30.19 &-6.86 &0.00 \\
+IN &0.18 &40.00 &19.00 &21.00 &50.00 &23.75 &26.25 &22.26 &-8.17 &0.00 \\
+KS &0.14 &23.00 &9.00 &13.00 &51.11 &20.00 &28.89 &10.69 &-4.52 &0.00 \\
+KY &0.13 &27.00 &15.00 &15.00 &47.37 &26.32 &26.32 &14.44 &-7.13 &0.00 \\
+LA &-0.01 &51.00 &46.00 &17.00 &44.74 &40.35 &14.91 &29.16 &-30.10 &0.00 \\
+MA &0.16 &42.00 &21.00 &27.00 &46.67 &23.33 &30.00 &25.86 &-11.54 &0.00 \\
+MD &0.11 &20.00 &13.00 &12.00 &44.44 &28.89 &26.67 &11.18 &-6.07 &0.00 \\
+ME &0.03 &27.00 &20.00 &9.00 &48.21 &35.71 &16.07 &11.33 &-9.73 &0.00 \\
+MI &0.03 &78.00 &56.00 &23.00 &49.68 &35.67 &14.65 &38.58 &-33.88 &-0.01 \\
+MN &0.03 &35.00 &31.00 &13.00 &44.30 &39.24 &16.46 &17.93 &-15.67 &0.00 \\
+MO &0.10 &24.00 &11.00 &8.00 &55.81 &25.58 &18.60 &9.98 &-5.71 &0.00 \\
+MS &0.12 &13.00 &7.00 &7.00 &48.15 &25.93 &25.93 &6.17 &-2.95 &0.00 \\
+MT &-0.04 &15.00 &18.00 &17.00 &30.00 &36.00 &34.00 &7.41 &-9.61 &0.00 \\
+NC &0.05 &52.00 &50.00 &8.00 &47.27 &45.45 &7.27 &24.62 &-19.64 &0.00 \\
+ND &0.14 &29.00 &13.00 &8.00 &58.00 &26.00 &16.00 &15.75 &-8.75 &0.00 \\
+NE &0.38 &20.00 &2.00 &5.00 &74.07 &7.41 &18.52 &10.63 &-0.35 &0.00 \\
+NH &0.14 &27.00 &18.00 &10.00 &49.09 &32.73 &18.18 &15.82 &-8.22 &0.01 \\
+NJ &0.18 &33.00 &15.00 &7.00 &60.00 &27.27 &12.73 &16.45 &-6.79 &0.00 \\
+NM &0.10 &46.00 &26.00 &17.00 &51.69 &29.21 &19.10 &22.50 &-13.90 &0.00 \\
+NV &0.11 &56.00 &35.00 &27.00 &47.46 &29.66 &22.88 &29.50 &-16.68 &0.01 \\
+NY &0.18 &27.00 &14.00 &15.00 &48.21 &25.00 &26.79 &17.17 &-7.05 &0.00 \\
+OH &0.18 &29.00 &14.00 &9.00 &55.77 &26.92 &17.31 &16.38 &-7.08 &0.00 \\
+OK &0.16 &65.00 &32.00 &14.00 &58.56 &28.83 &12.61 &32.26 &-14.70 &0.00 \\
+OR &0.25 &24.00 &10.00 &7.00 &58.54 &24.39 &17.07 &13.81 &-3.74 &0.00 \\
+PA &0.05 &36.00 &28.00 &17.00 &44.44 &34.57 &20.99 &16.45 &-12.24 &0.00 \\
+RI &0.20 &23.00 &9.00 &7.00 &58.97 &23.08 &17.95 &12.96 &-5.20 &0.00 \\
+SC &0.09 &13.00 &9.00 &12.00 &38.24 &26.47 &35.29 &7.31 &-4.20 &0.00 \\
+SD &-0.05 &14.00 &10.00 &2.00 &53.85 &38.46 &7.69 &5.40 &-6.79 &0.00 \\
+TN &0.06 &36.00 &25.00 &7.00 &52.94 &36.76 &10.29 &18.82 &-14.98 &0.00 \\
+TX &0.37 &67.00 &14.00 &12.00 &72.04 &15.05 &12.90 &40.25 &-5.65 &0.00 \\
+UT &0.23 &20.00 &7.00 &3.00 &66.67 &23.33 &10.00 &10.81 &-3.97 &0.00 \\
+VA &0.06 &32.00 &24.00 &12.00 &47.06 &35.29 &17.65 &16.20 &-12.37 &0.00 \\
+VT &0.15 &19.00 &8.00 &7.00 &55.88 &23.53 &20.59 &9.43 &-4.23 &0.00 \\
+WA &0.18 &39.00 &18.00 &16.00 &53.42 &24.66 &21.92 &22.37 &-8.88 &0.00 \\
+WI &-0.10 &10.00 &18.00 &5.00 &30.30 &54.55 &15.15 &6.23 &-9.45 &0.00 \\
+WV &0.17 &35.00 &22.00 &17.00 &47.30 &29.73 &22.97 &22.64 &-10.00 &0.00 \\
+WY &0.07 &31.00 &24.00 &12.00 &46.27 &35.82 &17.91 &14.70 &-10.27 &0.00 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+
+\begin{figure*}
+     \centering
+     \includegraphics[width=\textwidth]{img/sentiment_distribution.pdf}
+     \caption{Distribution of sentiments.}
+     \label{fig:senti-distrib}
+ \end{figure*}
+
+ \begin{figure*}
+     \centering
+     \includegraphics[width=\textwidth]{img/leaders_laggers.pdf}
+     \caption{Range of sentiments.}
+     \label{fig:senti-range}
+ \end{figure*}
+
+
+
+% %Readabilty
+% \begin{table*}
+%     \centering
+%     \begin{tabular}{l | c | c | c | c | c }
+%         \hline
+%         \hline
+%         States & FKG & GFI & SI & ARI & CLI\\
+%         \hline
+%       Alabama & 8.47 & 8.92 & 10.70 & 9.75 & 10.22 \\
+% Alaska & 8.90 & 9.52 & 11.17 & 10.03 & 10.17 \\
+% Arizona & 8.95 & 9.83 & 11.42 & 10.63 & 11.01 \\
+% Arkansas & 10.62 & 11.96 & 10.35 & 12.16 & 9.62 \\
+% California & 10.38 & 10.44 & 11.73 & 12.78 & 12.55 \\
+% Colorado & 8.87 & 9.22 & 10.68 & 12.90 & 11.83 \\
+% Connecticut & 9.13 & 9.77 & 11.33 & 10.48 & 10.18 \\
+% Delaware & 8.85 & 9.60 & 10.47 & 10.64 & 10.57 \\
+% Florida & 10.49 & 10.84 & 11.76 & 12.33 & 12.20 \\
+% Georgia & 7.71 & 8.76 & 9.53 & 8.60 & 9.17 \\
+% Hawaii & 9.18 & 9.44 & 10.88 & 10.73 & 11.58 \\
+% Idaho & 8.23 & 8.79 & 9.51 & 9.47 & 10.45 \\
+% Illinois & 10.83 & 11.56 & 11.65 & 13.10 & 12.42 \\
+% Indiana & 8.68 & 9.32 & 10.56 & 10.04 & 10.92 \\
+% Iowa & 9.93 & 10.64 & 10.80 & 11.68 & 10.81 \\
+% Kansas & 9.28 & 9.68 & 10.64 & 11.53 & 10.68 \\
+% Kentucky & 9.56 & 10.24 & 10.53 & 11.36 & 10.64 \\
+% Louisiana & 11.39 & 11.60 & 12.09 & 13.54 & 11.90 \\
+% Maine & 8.57 & 9.52 & 11.01 & 9.72 & 10.21 \\
+% Maryland & 7.97 & 8.76 & 9.99 & 9.62 & 9.96 \\
+% Massachusetts & 8.01 & 8.40 & 10.09 & 9.28 & 10.08 \\
+% Michigan & 10.37 & 10.03 & 11.60 & 13.06 & 13.50 \\
+% Minnesota & 7.85 & 8.62 & 9.95 & 9.26 & 9.67 \\
+% Mississippi & 7.89 & 8.92 & 9.52 & 9.52 & 9.82 \\
+% Missouri & 8.90 & 9.91 & 10.71 & 10.22 & 9.89 \\
+% Montana & 9.52 & 10.17 & 10.60 & 11.91 & 11.77 \\
+% Nebraska & 9.43 & 9.85 & 10.71 & 11.97 & 11.66 \\
+% Nevada & 8.75 & 9.69 & 10.22 & 10.59 & 10.37 \\
+% New Hampshire & 8.58 & 9.47 & 10.70 & 9.54 & 9.53 \\
+% New Jersey & 9.11 & 9.95 & 10.29 & 10.99 & 9.67 \\
+% New Mexico & 9.63 & 10.15 & 11.15 & 11.18 & 11.00 \\
+% New York & 9.41 & 9.60 & 9.78 & 11.42 & 12.07 \\
+% North Carolina & 9.05 & 9.23 & 10.63 & 11.00 & 10.87 \\
+% North Dakota & 8.94 & 9.28 & 10.89 & 10.25 & 10.46 \\
+% Ohio & 8.04 & 8.90 & 10.33 & 9.85 & 10.42 \\
+% Oklahoma & 9.08 & 9.66 & 10.72 & 10.70 & 10.98 \\
+% Oregon & 8.02 & 8.87 & 9.75 & 9.82 & 10.68 \\
+% Pennsylvania & 7.42 & 8.70 & 9.35 & 8.90 & 9.59 \\
+% Rhode Island & 8.79 & 9.85 & 10.41 & 10.84 & 10.47 \\
+% South Carolina & 10.53 & 9.57 & 10.64 & 14.44 & 14.69 \\
+% South Dakota & 8.91 & 9.44 & 11.00 & 10.33 & 10.60 \\
+% Tennessee & 8.69 & 9.67 & 10.61 & 10.14 & 10.13 \\
+% Texas & 10.35 & 10.68 & 11.93 & 12.40 & 11.32 \\
+% Utah & 8.35 & 9.68 & 11.00 & 9.65 & 9.90 \\
+% Vermont & 7.02 & 8.37 & 9.07 & 8.84 & 8.89 \\
+% Virginia & 9.39 & 10.09 & 10.82 & 11.08 & 10.80 \\
+% Washington & 8.53 & 8.99 & 10.70 & 9.91 & 10.56 \\
+% West Virginia & 8.80 & 9.68 & 11.05 & 10.40 & 10.95 \\
+% Wisconsin & 8.72 & 9.64 & 11.02 & 9.86 & 9.59 \\
+% Wyoming & 8.20 & 9.78 & 10.64 & 10.29 & 10.37 \\
+%         \hline
+%         \hline
+%     \end{tabular}
+%     \caption{The readability analysis score for each state’s question and generated answer pairs.}
+%     \label{tab:readability_generated_answers}
+% \end{table*}
+
+% LLM Readability Analysis - Answer
+\begin{table*}\centering
+\caption{LLM Answer Readability Analysis}\label{tab:llm_readability_analysis_a}
+\scriptsize
+\begin{tabular}{lrrrrrrr}\toprule
+State &FKG &GFI &SI &ARI &CLI &AVERAGE \\\midrule
+AK &10.36 &11.17 &7.40 &12.10 &10.85 &10.37 \\
+AL &9.93 &10.73 &8.06 &12.08 &11.51 &10.46 \\
+AR &12.37 &14.40 &7.40 &14.52 &10.04 &11.74 \\
+AZ &9.51 &10.42 &9.35 &11.49 &11.41 &10.44 \\
+CA &11.49 &11.94 &9.17 &14.32 &12.53 &11.89 \\
+CO &9.68 &10.03 &7.51 &12.90 &12.64 &10.55 \\
+CT &10.29 &11.39 &9.03 &12.29 &10.94 &10.79 \\
+DE &9.81 &10.75 &7.48 &12.21 &10.01 &10.05 \\
+FL &11.89 &12.47 &8.04 &14.50 &12.92 &11.96 \\
+GA &8.89 &10.20 &6.12 &10.18 &9.89 &9.05 \\
+HI &10.70 &11.09 &7.83 &12.64 &12.43 &10.94 \\
+IA &10.33 &11.47 &7.02 &12.44 &11.66 &10.58 \\
+ID &9.33 &10.36 &5.92 &10.96 &10.78 &9.47 \\
+IL &11.85 &12.85 &6.84 &15.05 &12.82 &11.88 \\
+IN &9.69 &10.49 &8.01 &11.84 &11.18 &10.24 \\
+KS &9.50 &10.25 &8.06 &11.86 &11.36 &10.21 \\
+KY &11.02 &11.80 &7.79 &13.32 &11.78 &11.14 \\
+LA &12.18 &12.70 &10.27 &14.74 &12.35 &12.45 \\
+MA &8.36 &8.80 &8.71 &10.00 &10.01 &9.18 \\
+MD &9.14 &9.88 &7.92 &11.06 &10.88 &9.78 \\
+ME &9.84 &11.21 &9.06 &11.47 &10.85 &10.48 \\
+MI &11.62 &11.47 &9.61 &14.80 &14.48 &12.39 \\
+MN &8.68 &9.63 &8.07 &10.30 &10.68 &9.47 \\
+MO &10.13 &11.38 &8.17 &12.14 &10.20 &10.40 \\
+MS &8.74 &10.05 &7.01 &11.05 &10.96 &9.56 \\
+MT &10.61 &11.58 &5.13 &13.55 &13.49 &10.87 \\
+NC &9.83 &10.23 &8.79 &12.26 &11.29 &10.48 \\
+ND &9.59 &10.14 &9.25 &11.37 &11.13 &10.30 \\
+NE &10.79 &11.42 &9.44 &14.04 &12.24 &11.59 \\
+NH &9.06 &10.25 &9.28 &10.27 &9.19 &9.61 \\
+NJ &9.56 &10.63 &6.22 &11.54 &10.66 &9.72 \\
+NM &10.84 &11.75 &7.83 &13.06 &11.82 &11.06 \\
+NV &9.69 &11.04 &6.49 &12.11 &10.64 &9.99 \\
+NY &10.31 &11.08 &8.57 &12.91 &11.86 &10.95 \\
+OH &8.96 &10.20 &7.61 &11.40 &10.87 &9.81 \\
+OK &9.94 &11.13 &7.14 &12.10 &11.70 &10.40 \\
+OR &9.12 &9.62 &8.71 &11.39 &11.90 &10.15 \\
+PA &8.29 &9.59 &4.87 &10.06 &10.14 &8.59 \\
+RI &10.03 &11.45 &8.75 &12.47 &11.12 &10.76 \\
+SC &11.60 &10.49 &8.92 &16.75 &16.50 &12.85 \\
+SD &9.62 &10.64 &9.20 &11.56 &10.81 &10.37 \\
+TN &10.01 &11.22 &6.34 &12.07 &10.57 &10.04 \\
+TX &11.55 &12.09 &10.20 &13.94 &12.07 &11.97 \\
+UT &8.78 &10.27 &7.92 &10.39 &9.96 &9.46 \\
+VA &10.23 &11.11 &8.96 &12.44 &10.92 &10.73 \\
+VT &8.41 &9.87 &5.97 &10.62 &9.68 &8.91 \\
+WA &9.25 &10.04 &8.77 &10.97 &11.01 &10.01 \\
+WI &10.28 &11.83 &8.21 &11.89 &10.03 &10.45 \\
+WV &10.26 &11.67 &5.94 &12.76 &11.98 &10.52 \\
+WY &9.72 &11.23 &8.76 &12.24 &11.15 &10.62 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Readability Analysis - QA pairs
+\begin{table*}\centering
+\caption{LLM Question + Answer readability Analysis}\label{tab:llm_readability_analysis_qa}
+\scriptsize
+\begin{tabular}{lrrrrrrr}\toprule
+STATE &FKG &GFI &SI &ARI &CLI &Average \\\midrule
+AK &9.30 &9.83 &9.39 &10.43 &10.42 &9.88 \\
+AL &8.98 &9.40 &9.38 &10.34 &10.61 &9.74 \\
+AR &9.85 &11.34 &8.45 &11.14 &9.57 &10.07 \\
+AZ &9.13 &9.75 &9.85 &10.75 &11.08 &10.11 \\
+CA &10.72 &10.78 &10.45 &13.00 &12.46 &11.48 \\
+CO &8.90 &9.03 &9.79 &11.46 &11.72 &10.18 \\
+CT &9.06 &9.94 &10.23 &10.47 &10.08 &9.95 \\
+DE &8.95 &9.87 &8.98 &10.83 &10.33 &9.79 \\
+FL &10.65 &11.09 &10.37 &12.36 &11.98 &11.29 \\
+GA &7.84 &8.96 &8.83 &8.61 &9.00 &8.65 \\
+HI &9.53 &9.71 &9.80 &10.92 &11.62 &10.32 \\
+IA &9.36 &9.99 &9.16 &10.85 &10.94 &10.06 \\
+ID &8.01 &8.82 &8.30 &9.01 &9.74 &8.78 \\
+IL &11.07 &11.90 &9.69 &13.35 &12.43 &11.69 \\
+IN &8.66 &9.37 &9.15 &10.23 &10.31 &9.54 \\
+KS &8.72 &9.05 &9.34 &10.50 &10.57 &9.64 \\
+KY &9.92 &10.62 &9.55 &11.66 &10.79 &10.50 \\
+LA &11.14 &11.33 &11.02 &13.33 &12.19 &11.80 \\
+MA &7.92 &8.22 &9.39 &9.19 &10.00 &8.94 \\
+MD &8.10 &8.75 &9.10 &9.73 &10.16 &9.17 \\
+ME &8.90 &9.93 &9.88 &10.06 &10.25 &9.80 \\
+MI &10.48 &10.30 &10.63 &13.09 &13.32 &11.56 \\
+MN &7.84 &8.66 &8.58 &9.01 &9.81 &8.78 \\
+MO &9.24 &10.26 &9.62 &10.64 &9.95 &9.94 \\
+MS &8.44 &9.44 &8.17 &10.20 &10.56 &9.36 \\
+MT &9.17 &9.69 &7.39 &11.21 &12.04 &9.90 \\
+NC &9.25 &9.43 &9.81 &11.22 &11.01 &10.15 \\
+ND &8.69 &9.16 &10.31 &10.02 &10.39 &9.72 \\
+NE &9.60 &10.03 &10.09 &12.17 &11.57 &10.69 \\
+NH &8.75 &9.64 &10.26 &9.71 &9.68 &9.61 \\
+NJ &8.66 &9.45 &8.97 &10.18 &10.07 &9.47 \\
+NM &9.92 &10.53 &10.29 &11.33 &10.90 &10.59 \\
+NV &8.69 &9.73 &8.42 &10.46 &10.14 &9.49 \\
+NY &9.42 &9.86 &9.22 &11.54 &11.29 &10.27 \\
+OH &8.03 &9.14 &9.76 &9.57 &9.62 &9.23 \\
+OK &9.13 &9.73 &9.49 &10.52 &10.79 &9.93 \\
+OR &8.55 &8.80 &10.03 &10.52 &11.49 &9.88 \\
+PA &7.47 &8.77 &7.87 &8.67 &9.11 &8.38 \\
+RI &9.08 &10.14 &9.74 &11.08 &10.63 &10.14 \\
+SC &10.26 &9.44 &9.63 &13.94 &14.20 &11.49 \\
+SD &9.12 &9.69 &10.10 &10.65 &10.67 &10.04 \\
+TN &8.83 &9.86 &9.08 &10.31 &10.03 &9.62 \\
+TX &10.55 &10.93 &11.12 &12.39 &11.25 &11.25 \\
+UT &8.11 &9.54 &8.48 &9.36 &9.59 &9.01 \\
+VA &9.35 &10.08 &9.91 &10.97 &10.68 &10.20 \\
+VT &7.52 &8.69 &8.09 &9.13 &9.01 &8.49 \\
+WA &8.61 &9.05 &9.56 &9.96 &10.62 &9.56 \\
+WI &8.82 &10.11 &9.04 &10.02 &9.46 &9.49 \\
+WV &9.19 &9.97 &9.01 &10.71 &11.08 &9.99 \\
+WY &8.61 &9.95 &9.95 &10.53 &10.37 &9.88 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\textwidth]{img/state_topic_distribution_scores.pdf} % Use \textwidth for full page width
+    \caption{This heatmap visualizes the distribution of eight election-related topics across U.S. states. Darker colors indicate stronger topic representation, while lighter colors highlight weaker coverage. The gradient underscores variations in FAQ coverage across states, with rows representing states (postal abbreviations) and columns the identified topics.}
+    \label{fig:topic_distribution_heatmap}
+\end{figure*}
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{img/state_topic_distribution.pdf}
+    \caption{This heatmap visualizes the distribution of eight election-related topics across U.S. states. Darker colors indicate stronger topic representation, while lighter colors highlight weaker coverage. The gradient underscores variations in FAQ coverage across states, with rows representing states (postal abbreviations) and columns the identified topics on the generated answers}
+    \label{fig:state_topic_dist}
+\end{figure*}
+
+
+
+% LLM Summarization Analysis - Abstractive - Questions
+\begin{table*}\centering
+\caption{LLM Abstractive Question Summary Analysis}\label{tab:llm_a_summary_analysis_q}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+State &Cosine\_Similarity &ROUGE\_1 &ROUGE\_2 &ROUGE\_L &ROUGE\_W &ROUGE\_S &ROUGE\_SU &BLEU\_Score &Semantic Overlap \\\midrule
+AK &0.55 &0.45 &0.35 &0.39 &0.34 &0.29 &0.32 &0.16 &0.50 \\
+AL &0.67 &0.54 &0.44 &0.48 &0.41 &0.36 &0.39 &0.22 &0.61 \\
+AR &0.61 &0.51 &0.41 &0.45 &0.37 &0.31 &0.35 &0.18 &0.56 \\
+AZ &0.59 &0.47 &0.38 &0.41 &0.35 &0.31 &0.34 &0.16 &0.53 \\
+CA &0.60 &0.50 &0.39 &0.42 &0.35 &0.31 &0.34 &0.17 &0.55 \\
+CO &0.60 &0.46 &0.35 &0.38 &0.32 &0.28 &0.31 &0.15 &0.53 \\
+CT &0.56 &0.48 &0.37 &0.41 &0.36 &0.30 &0.33 &0.19 &0.52 \\
+DE &0.63 &0.51 &0.40 &0.44 &0.37 &0.33 &0.36 &0.20 &0.57 \\
+FL &0.65 &0.53 &0.44 &0.48 &0.42 &0.39 &0.42 &0.24 &0.59 \\
+GA &0.65 &0.57 &0.47 &0.52 &0.46 &0.39 &0.42 &0.27 &0.61 \\
+HI &0.64 &0.52 &0.43 &0.47 &0.41 &0.36 &0.38 &0.23 &0.58 \\
+IA &0.66 &0.51 &0.43 &0.45 &0.38 &0.35 &0.37 &0.20 &0.58 \\
+ID &0.58 &0.49 &0.38 &0.42 &0.36 &0.30 &0.33 &0.19 &0.53 \\
+IL &0.65 &0.54 &0.46 &0.48 &0.42 &0.38 &0.41 &0.24 &0.60 \\
+IN &0.58 &0.50 &0.40 &0.45 &0.38 &0.33 &0.36 &0.19 &0.54 \\
+KS &0.66 &0.56 &0.47 &0.51 &0.44 &0.40 &0.42 &0.27 &0.61 \\
+KY &0.61 &0.48 &0.39 &0.42 &0.37 &0.31 &0.34 &0.18 &0.54 \\
+LA &0.64 &0.47 &0.38 &0.42 &0.36 &0.34 &0.36 &0.17 &0.55 \\
+MA &0.58 &0.47 &0.35 &0.39 &0.33 &0.27 &0.31 &0.16 &0.52 \\
+MD &0.57 &0.44 &0.32 &0.38 &0.32 &0.26 &0.28 &0.14 &0.51 \\
+ME &0.67 &0.56 &0.46 &0.50 &0.44 &0.39 &0.42 &0.26 &0.62 \\
+MI &0.59 &0.49 &0.38 &0.43 &0.37 &0.32 &0.35 &0.19 &0.54 \\
+MN &0.54 &0.44 &0.31 &0.36 &0.30 &0.24 &0.28 &0.14 &0.49 \\
+MO &0.64 &0.47 &0.37 &0.42 &0.36 &0.30 &0.33 &0.15 &0.56 \\
+MS &0.63 &0.52 &0.42 &0.45 &0.38 &0.34 &0.37 &0.20 &0.57 \\
+MT &0.62 &0.51 &0.42 &0.46 &0.39 &0.33 &0.36 &0.20 &0.57 \\
+NC &0.61 &0.50 &0.39 &0.44 &0.38 &0.32 &0.35 &0.20 &0.55 \\
+ND &0.63 &0.51 &0.40 &0.44 &0.39 &0.34 &0.37 &0.20 &0.57 \\
+NE &0.60 &0.49 &0.40 &0.44 &0.37 &0.32 &0.35 &0.18 &0.54 \\
+NH &0.60 &0.49 &0.39 &0.44 &0.38 &0.33 &0.36 &0.19 &0.55 \\
+NJ &0.67 &0.55 &0.47 &0.50 &0.43 &0.39 &0.42 &0.24 &0.61 \\
+NM &0.64 &0.56 &0.47 &0.51 &0.45 &0.40 &0.42 &0.27 &0.60 \\
+NV &0.62 &0.53 &0.43 &0.47 &0.40 &0.35 &0.38 &0.23 &0.57 \\
+NY &0.63 &0.53 &0.43 &0.47 &0.41 &0.36 &0.39 &0.23 &0.58 \\
+OH &0.58 &0.47 &0.36 &0.41 &0.35 &0.30 &0.33 &0.17 &0.53 \\
+OK &0.58 &0.50 &0.38 &0.43 &0.36 &0.30 &0.34 &0.18 &0.54 \\
+OR &0.61 &0.51 &0.40 &0.43 &0.37 &0.32 &0.35 &0.20 &0.56 \\
+PA &0.65 &0.51 &0.40 &0.44 &0.37 &0.31 &0.34 &0.19 &0.58 \\
+RI &0.59 &0.47 &0.35 &0.39 &0.33 &0.28 &0.31 &0.15 &0.53 \\
+SC &0.55 &0.48 &0.36 &0.41 &0.37 &0.31 &0.34 &0.21 &0.51 \\
+SD &0.55 &0.45 &0.32 &0.38 &0.33 &0.27 &0.30 &0.15 &0.50 \\
+TN &0.60 &0.53 &0.43 &0.47 &0.41 &0.36 &0.39 &0.24 &0.57 \\
+TX &0.64 &0.52 &0.40 &0.46 &0.40 &0.34 &0.37 &0.20 &0.58 \\
+UT &0.65 &0.54 &0.45 &0.48 &0.41 &0.37 &0.40 &0.22 &0.59 \\
+VA &0.61 &0.53 &0.42 &0.46 &0.40 &0.34 &0.37 &0.24 &0.57 \\
+VT &0.65 &0.52 &0.44 &0.47 &0.40 &0.35 &0.38 &0.21 &0.59 \\
+WA &0.61 &0.50 &0.39 &0.43 &0.36 &0.32 &0.35 &0.19 &0.55 \\
+WI &0.60 &0.51 &0.40 &0.45 &0.39 &0.34 &0.37 &0.21 &0.55 \\
+WV &0.59 &0.48 &0.38 &0.43 &0.36 &0.30 &0.33 &0.18 &0.53 \\
+WY &0.58 &0.53 &0.42 &0.46 &0.40 &0.34 &0.37 &0.23 &0.56 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Summarization Analysis - Extractive - Questions
+\begin{table*}\centering
+\caption{LLM Extractive Question Summary Analysis}\label{tab:llm_e_summary_analysis_q}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+State &Cosine\_Similarity &ROUGE\_1 &ROUGE\_2 &ROUGE\_L &ROUGE\_W &ROUGE\_S &ROUGE\_SU &BLEU\_Score &Semantic Overlap \\\midrule
+AK &0.03 &0.05 &0.01 &0.05 &0.02 &0.00 &0.01 &0.00 &0.04 \\
+AL &0.07 &0.07 &0.02 &0.06 &0.05 &0.01 &0.02 &0.01 &0.07 \\
+AR &0.04 &0.05 &0.01 &0.04 &0.01 &0.00 &0.00 &0.00 &0.04 \\
+AZ &0.06 &0.09 &0.03 &0.08 &0.06 &0.01 &0.02 &0.01 &0.07 \\
+CA &0.08 &0.11 &0.03 &0.09 &0.06 &0.01 &0.03 &0.01 &0.10 \\
+CO &0.07 &0.09 &0.04 &0.07 &0.06 &0.02 &0.03 &0.02 &0.08 \\
+CT &0.04 &0.05 &0.01 &0.05 &0.03 &0.00 &0.01 &0.00 &0.04 \\
+DE &0.06 &0.08 &0.03 &0.06 &0.04 &0.01 &0.02 &0.01 &0.07 \\
+FL &0.04 &0.07 &0.02 &0.06 &0.04 &0.01 &0.02 &0.01 &0.06 \\
+GA &0.04 &0.06 &0.01 &0.04 &0.04 &0.00 &0.01 &0.00 &0.05 \\
+HI &0.04 &0.06 &0.02 &0.05 &0.03 &0.00 &0.01 &0.00 &0.05 \\
+IA &0.07 &0.08 &0.03 &0.07 &0.05 &0.01 &0.02 &0.01 &0.07 \\
+ID &0.06 &0.08 &0.02 &0.07 &0.05 &0.01 &0.02 &0.01 &0.07 \\
+IL &0.06 &0.06 &0.01 &0.05 &0.03 &0.00 &0.01 &0.00 &0.06 \\
+IN &0.03 &0.04 &0.01 &0.04 &0.02 &0.00 &0.01 &0.00 &0.04 \\
+KS &0.03 &0.04 &0.01 &0.03 &0.02 &0.00 &0.01 &0.00 &0.04 \\
+KY &0.08 &0.12 &0.03 &0.09 &0.07 &0.01 &0.03 &0.01 &0.10 \\
+LA &0.07 &0.08 &0.02 &0.07 &0.04 &0.00 &0.01 &0.01 &0.07 \\
+MA &0.04 &0.06 &0.01 &0.05 &0.03 &0.00 &0.01 &0.00 &0.05 \\
+MD &0.04 &0.05 &0.01 &0.04 &0.04 &0.01 &0.02 &0.01 &0.04 \\
+ME &0.03 &0.04 &0.01 &0.03 &0.02 &0.00 &0.01 &0.00 &0.04 \\
+MI &0.08 &0.10 &0.03 &0.08 &0.06 &0.01 &0.02 &0.01 &0.09 \\
+MN &0.05 &0.07 &0.03 &0.06 &0.04 &0.01 &0.02 &0.01 &0.06 \\
+MO &0.05 &0.06 &0.01 &0.05 &0.05 &0.01 &0.02 &0.01 &0.05 \\
+MS &0.04 &0.05 &0.01 &0.04 &0.04 &0.00 &0.01 &0.00 &0.05 \\
+MT &0.04 &0.07 &0.02 &0.06 &0.02 &0.00 &0.01 &0.00 &0.06 \\
+NC &0.08 &0.10 &0.02 &0.08 &0.05 &0.01 &0.02 &0.01 &0.09 \\
+ND &0.05 &0.08 &0.02 &0.07 &0.04 &0.00 &0.01 &0.01 &0.07 \\
+NE &0.06 &0.08 &0.03 &0.08 &0.04 &0.00 &0.01 &0.01 &0.07 \\
+NH &0.05 &0.07 &0.02 &0.06 &0.03 &0.01 &0.01 &0.01 &0.06 \\
+NJ &0.06 &0.08 &0.01 &0.05 &0.04 &0.00 &0.01 &0.01 &0.07 \\
+NM &0.06 &0.07 &0.03 &0.07 &0.05 &0.01 &0.02 &0.01 &0.07 \\
+NV &0.04 &0.06 &0.02 &0.05 &0.03 &0.01 &0.01 &0.00 &0.05 \\
+NY &0.04 &0.06 &0.01 &0.05 &0.03 &0.00 &0.01 &0.00 &0.05 \\
+OH &0.05 &0.07 &0.01 &0.05 &0.05 &0.00 &0.01 &0.01 &0.06 \\
+OK &0.05 &0.07 &0.02 &0.06 &0.05 &0.01 &0.02 &0.01 &0.06 \\
+OR &0.05 &0.06 &0.01 &0.05 &0.04 &0.00 &0.01 &0.00 &0.05 \\
+PA &0.05 &0.08 &0.01 &0.06 &0.05 &0.00 &0.02 &0.01 &0.06 \\
+RI &0.05 &0.07 &0.01 &0.05 &0.03 &0.00 &0.01 &0.00 &0.06 \\
+SC &0.05 &0.09 &0.01 &0.07 &0.04 &0.00 &0.02 &0.01 &0.07 \\
+SD &0.09 &0.14 &0.06 &0.13 &0.10 &0.01 &0.04 &0.02 &0.11 \\
+TN &0.03 &0.04 &0.01 &0.03 &0.02 &0.00 &0.01 &0.00 &0.03 \\
+TX &0.06 &0.07 &0.02 &0.06 &0.05 &0.01 &0.02 &0.01 &0.07 \\
+UT &0.04 &0.08 &0.01 &0.06 &0.03 &0.00 &0.01 &0.00 &0.06 \\
+VA &0.04 &0.05 &0.01 &0.05 &0.02 &0.00 &0.01 &0.00 &0.05 \\
+VT &0.05 &0.08 &0.03 &0.06 &0.03 &0.00 &0.02 &0.01 &0.06 \\
+WA &0.04 &0.06 &0.01 &0.05 &0.03 &0.00 &0.01 &0.00 &0.05 \\
+WI &0.04 &0.05 &0.02 &0.04 &0.03 &0.01 &0.01 &0.00 &0.04 \\
+WV &0.03 &0.05 &0.01 &0.04 &0.02 &0.00 &0.01 &0.00 &0.04 \\
+WY &0.02 &0.03 &0.00 &0.03 &0.02 &0.00 &0.01 &0.00 &0.02 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Summarization Analysis - Abstractive - Answer
+\begin{table*}\centering
+\caption{LLM Abstractive Answer Summary Analysis}\label{tab:llm_a_summary_analysis_a}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+State &Cosine\_Similarity &ROUGE\_1 &ROUGE\_2 &ROUGE\_L &ROUGE\_W &ROUGE\_S &ROUGE\_SU &BLEU\_Score &Semantic Overlap \\\midrule
+AK &0.55 &0.45 &0.35 &0.39 &0.34 &0.29 &0.32 &0.16 &0.50 \\
+AL &0.67 &0.54 &0.44 &0.48 &0.41 &0.36 &0.39 &0.22 &0.61 \\
+AR &0.61 &0.51 &0.41 &0.45 &0.37 &0.31 &0.35 &0.18 &0.56 \\
+AZ &0.59 &0.47 &0.38 &0.41 &0.35 &0.31 &0.34 &0.16 &0.53 \\
+CA &0.60 &0.50 &0.39 &0.42 &0.35 &0.31 &0.34 &0.17 &0.55 \\
+CO &0.60 &0.46 &0.35 &0.38 &0.32 &0.28 &0.31 &0.15 &0.53 \\
+CT &0.56 &0.48 &0.37 &0.41 &0.36 &0.30 &0.33 &0.19 &0.52 \\
+DE &0.63 &0.51 &0.40 &0.44 &0.37 &0.33 &0.36 &0.20 &0.57 \\
+FL &0.65 &0.53 &0.44 &0.48 &0.42 &0.39 &0.42 &0.24 &0.59 \\
+GA &0.65 &0.57 &0.47 &0.52 &0.46 &0.39 &0.42 &0.27 &0.61 \\
+HI &0.64 &0.52 &0.43 &0.47 &0.41 &0.36 &0.38 &0.23 &0.58 \\
+IA &0.66 &0.51 &0.43 &0.45 &0.38 &0.35 &0.37 &0.20 &0.58 \\
+ID &0.58 &0.49 &0.38 &0.42 &0.36 &0.30 &0.33 &0.19 &0.53 \\
+IL &0.65 &0.54 &0.46 &0.48 &0.42 &0.38 &0.41 &0.24 &0.60 \\
+IN &0.58 &0.50 &0.40 &0.45 &0.38 &0.33 &0.36 &0.19 &0.54 \\
+KS &0.66 &0.56 &0.47 &0.51 &0.44 &0.40 &0.42 &0.27 &0.61 \\
+KY &0.61 &0.48 &0.39 &0.42 &0.37 &0.31 &0.34 &0.18 &0.54 \\
+LA &0.64 &0.47 &0.38 &0.42 &0.36 &0.34 &0.36 &0.17 &0.55 \\
+MA &0.58 &0.47 &0.35 &0.39 &0.33 &0.27 &0.31 &0.16 &0.52 \\
+MD &0.57 &0.44 &0.32 &0.38 &0.32 &0.26 &0.28 &0.14 &0.51 \\
+ME &0.67 &0.56 &0.46 &0.50 &0.44 &0.39 &0.42 &0.26 &0.62 \\
+MI &0.59 &0.49 &0.38 &0.43 &0.37 &0.32 &0.35 &0.19 &0.54 \\
+MN &0.54 &0.44 &0.31 &0.36 &0.30 &0.24 &0.28 &0.14 &0.49 \\
+MO &0.64 &0.47 &0.37 &0.42 &0.36 &0.30 &0.33 &0.15 &0.56 \\
+MS &0.63 &0.52 &0.42 &0.45 &0.38 &0.34 &0.37 &0.20 &0.57 \\
+MT &0.62 &0.51 &0.42 &0.46 &0.39 &0.33 &0.36 &0.20 &0.57 \\
+NC &0.61 &0.50 &0.39 &0.44 &0.38 &0.32 &0.35 &0.20 &0.55 \\
+ND &0.63 &0.51 &0.40 &0.44 &0.39 &0.34 &0.37 &0.20 &0.57 \\
+NE &0.60 &0.49 &0.40 &0.44 &0.37 &0.32 &0.35 &0.18 &0.54 \\
+NH &0.60 &0.49 &0.39 &0.44 &0.38 &0.33 &0.36 &0.19 &0.55 \\
+NJ &0.67 &0.55 &0.47 &0.50 &0.43 &0.39 &0.42 &0.24 &0.61 \\
+NM &0.64 &0.56 &0.47 &0.51 &0.45 &0.40 &0.42 &0.27 &0.60 \\
+NV &0.62 &0.53 &0.43 &0.47 &0.40 &0.35 &0.38 &0.23 &0.57 \\
+NY &0.63 &0.53 &0.43 &0.47 &0.41 &0.36 &0.39 &0.23 &0.58 \\
+OH &0.58 &0.47 &0.36 &0.41 &0.35 &0.30 &0.33 &0.17 &0.53 \\
+OK &0.58 &0.50 &0.38 &0.43 &0.36 &0.30 &0.34 &0.18 &0.54 \\
+OR &0.61 &0.51 &0.40 &0.43 &0.37 &0.32 &0.35 &0.20 &0.56 \\
+PA &0.65 &0.51 &0.40 &0.44 &0.37 &0.31 &0.34 &0.19 &0.58 \\
+RI &0.59 &0.47 &0.35 &0.39 &0.33 &0.28 &0.31 &0.15 &0.53 \\
+SC &0.55 &0.48 &0.36 &0.41 &0.37 &0.31 &0.34 &0.21 &0.51 \\
+SD &0.55 &0.45 &0.32 &0.38 &0.33 &0.27 &0.30 &0.15 &0.50 \\
+TN &0.60 &0.53 &0.43 &0.47 &0.41 &0.36 &0.39 &0.24 &0.57 \\
+TX &0.64 &0.52 &0.40 &0.46 &0.40 &0.34 &0.37 &0.20 &0.58 \\
+UT &0.65 &0.54 &0.45 &0.48 &0.41 &0.37 &0.40 &0.22 &0.59 \\
+VA &0.61 &0.53 &0.42 &0.46 &0.40 &0.34 &0.37 &0.24 &0.57 \\
+VT &0.65 &0.52 &0.44 &0.47 &0.40 &0.35 &0.38 &0.21 &0.59 \\
+WA &0.61 &0.50 &0.39 &0.43 &0.36 &0.32 &0.35 &0.19 &0.55 \\
+WI &0.60 &0.51 &0.40 &0.45 &0.39 &0.34 &0.37 &0.21 &0.55 \\
+WV &0.59 &0.48 &0.38 &0.43 &0.36 &0.30 &0.33 &0.18 &0.53 \\
+WY &0.58 &0.53 &0.42 &0.46 &0.40 &0.34 &0.37 &0.23 &0.56 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Summarization Analysis - Extractive - Answer
+\begin{table*}\centering
+\caption{LLM Extractive Answer Summary Analysis}\label{tab:llm_e_summary_analysis_a}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+State &Cosine\_Similarity &ROUGE\_1 &ROUGE\_2 &ROUGE\_L &ROUGE\_W &ROUGE\_S &ROUGE\_SU &BLEU\_Score &Semantic Overlap \\\midrule
+AK &0.16 &0.08 &0.06 &0.07 &0.06 &0.06 &0.06 &0.00 &0.12 \\
+AL &0.22 &0.14 &0.11 &0.12 &0.11 &0.11 &0.11 &0.03 &0.18 \\
+AR &0.13 &0.09 &0.06 &0.08 &0.07 &0.07 &0.07 &0.04 &0.11 \\
+AZ &0.15 &0.07 &0.06 &0.07 &0.05 &0.05 &0.06 &0.00 &0.11 \\
+CA &0.28 &0.17 &0.13 &0.15 &0.13 &0.12 &0.13 &0.02 &0.22 \\
+CO &0.26 &0.15 &0.11 &0.13 &0.11 &0.10 &0.11 &0.02 &0.20 \\
+CT &0.09 &0.04 &0.02 &0.03 &0.03 &0.02 &0.02 &0.00 &0.07 \\
+DE &0.18 &0.11 &0.08 &0.10 &0.08 &0.07 &0.08 &0.02 &0.14 \\
+FL &0.16 &0.09 &0.06 &0.08 &0.06 &0.06 &0.07 &0.01 &0.12 \\
+GA &0.09 &0.05 &0.03 &0.04 &0.03 &0.02 &0.03 &0.00 &0.07 \\
+HI &0.16 &0.08 &0.05 &0.07 &0.06 &0.04 &0.05 &0.00 &0.12 \\
+IA &0.19 &0.09 &0.06 &0.08 &0.06 &0.06 &0.07 &0.01 &0.14 \\
+ID &0.11 &0.06 &0.02 &0.04 &0.03 &0.02 &0.02 &0.00 &0.08 \\
+IL &0.20 &0.13 &0.10 &0.11 &0.10 &0.09 &0.10 &0.04 &0.17 \\
+IN &0.14 &0.09 &0.07 &0.08 &0.06 &0.06 &0.07 &0.01 &0.11 \\
+KS &0.13 &0.07 &0.05 &0.06 &0.05 &0.05 &0.06 &0.01 &0.10 \\
+KY &0.21 &0.10 &0.06 &0.08 &0.07 &0.06 &0.07 &0.00 &0.15 \\
+LA &0.31 &0.19 &0.15 &0.17 &0.16 &0.15 &0.16 &0.07 &0.25 \\
+MA &0.17 &0.08 &0.06 &0.07 &0.06 &0.05 &0.06 &0.00 &0.12 \\
+MD &0.16 &0.08 &0.04 &0.06 &0.05 &0.04 &0.05 &0.00 &0.12 \\
+ME &0.09 &0.06 &0.03 &0.05 &0.04 &0.03 &0.04 &0.00 &0.07 \\
+MI &0.22 &0.15 &0.10 &0.13 &0.11 &0.10 &0.11 &0.04 &0.18 \\
+MN &0.15 &0.08 &0.04 &0.06 &0.05 &0.04 &0.05 &0.00 &0.11 \\
+MO &0.20 &0.11 &0.08 &0.10 &0.08 &0.07 &0.09 &0.00 &0.16 \\
+MS &0.21 &0.11 &0.10 &0.11 &0.09 &0.10 &0.11 &0.01 &0.16 \\
+MT &0.13 &0.06 &0.04 &0.05 &0.04 &0.04 &0.04 &0.00 &0.09 \\
+NC &0.21 &0.13 &0.09 &0.11 &0.09 &0.08 &0.09 &0.02 &0.17 \\
+ND &0.20 &0.10 &0.07 &0.09 &0.07 &0.06 &0.07 &0.00 &0.15 \\
+NE &0.26 &0.17 &0.13 &0.15 &0.13 &0.12 &0.14 &0.03 &0.21 \\
+NH &0.16 &0.09 &0.06 &0.08 &0.07 &0.06 &0.06 &0.02 &0.12 \\
+NJ &0.20 &0.11 &0.07 &0.09 &0.07 &0.06 &0.07 &0.02 &0.15 \\
+NM &0.20 &0.14 &0.12 &0.13 &0.11 &0.11 &0.12 &0.05 &0.17 \\
+NV &0.15 &0.10 &0.07 &0.08 &0.07 &0.07 &0.07 &0.02 &0.12 \\
+NY &0.13 &0.08 &0.05 &0.06 &0.05 &0.04 &0.05 &0.01 &0.10 \\
+OH &0.17 &0.10 &0.06 &0.08 &0.07 &0.05 &0.06 &0.02 &0.14 \\
+OK &0.12 &0.08 &0.05 &0.07 &0.06 &0.04 &0.05 &0.01 &0.10 \\
+OR &0.15 &0.09 &0.05 &0.07 &0.06 &0.04 &0.05 &0.01 &0.12 \\
+PA &0.16 &0.08 &0.05 &0.07 &0.06 &0.04 &0.05 &0.01 &0.12 \\
+RI &0.21 &0.13 &0.09 &0.11 &0.09 &0.09 &0.10 &0.01 &0.17 \\
+SC &0.18 &0.10 &0.06 &0.09 &0.08 &0.06 &0.07 &0.01 &0.14 \\
+SD &0.17 &0.09 &0.04 &0.07 &0.06 &0.03 &0.05 &0.00 &0.13 \\
+TN &0.10 &0.07 &0.05 &0.06 &0.05 &0.05 &0.05 &0.02 &0.08 \\
+TX &0.22 &0.12 &0.09 &0.10 &0.09 &0.09 &0.09 &0.02 &0.17 \\
+UT &0.14 &0.10 &0.07 &0.09 &0.07 &0.07 &0.08 &0.00 &0.12 \\
+VA &0.15 &0.10 &0.07 &0.08 &0.07 &0.06 &0.07 &0.02 &0.13 \\
+VT &0.12 &0.06 &0.04 &0.05 &0.04 &0.03 &0.04 &0.00 &0.09 \\
+WA &0.13 &0.07 &0.04 &0.06 &0.05 &0.04 &0.05 &0.00 &0.10 \\
+WI &0.14 &0.07 &0.05 &0.06 &0.05 &0.05 &0.06 &0.01 &0.10 \\
+WV &0.10 &0.04 &0.03 &0.04 &0.03 &0.03 &0.03 &0.00 &0.07 \\
+WY &0.07 &0.05 &0.02 &0.04 &0.03 &0.02 &0.03 &0.00 &0.06 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Summarization Analysis - Abastractive - QA Pairs
+\begin{table*}\centering
+\caption{LLM Abstractive Question + Answer Summary Analysis}\label{tab:llm_a_summary_analysis_qa}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+State &Cosine\_Similarity &ROUGE\_1 &ROUGE\_2 &ROUGE\_L &ROUGE\_W &ROUGE\_S &ROUGE\_SU &BLEU\_Score &Semantic Overlap \\\midrule
+AK &0.75 &0.67 &0.60 &0.60 &0.53 &0.51 &0.54 &0.38 &0.71 \\
+AL &0.84 &0.72 &0.69 &0.70 &0.61 &0.57 &0.60 &0.43 &0.78 \\
+AR &0.77 &0.66 &0.61 &0.60 &0.52 &0.50 &0.52 &0.36 &0.71 \\
+AZ &0.72 &0.62 &0.55 &0.55 &0.48 &0.47 &0.50 &0.31 &0.67 \\
+CA &0.78 &0.66 &0.61 &0.63 &0.55 &0.52 &0.55 &0.34 &0.72 \\
+CO &0.76 &0.63 &0.56 &0.57 &0.50 &0.47 &0.49 &0.33 &0.70 \\
+CT &0.74 &0.65 &0.59 &0.59 &0.52 &0.50 &0.53 &0.37 &0.70 \\
+DE &0.80 &0.70 &0.64 &0.65 &0.58 &0.56 &0.58 &0.42 &0.75 \\
+FL &0.79 &0.69 &0.64 &0.66 &0.58 &0.56 &0.58 &0.43 &0.74 \\
+GA &0.79 &0.74 &0.70 &0.70 &0.62 &0.58 &0.60 &0.49 &0.77 \\
+HI &0.80 &0.73 &0.67 &0.68 &0.60 &0.56 &0.59 &0.47 &0.76 \\
+IA &0.78 &0.67 &0.62 &0.62 &0.54 &0.51 &0.53 &0.37 &0.72 \\
+ID &0.77 &0.72 &0.66 &0.65 &0.57 &0.54 &0.56 &0.45 &0.75 \\
+IL &0.76 &0.69 &0.63 &0.64 &0.56 &0.53 &0.55 &0.41 &0.72 \\
+IN &0.76 &0.68 &0.62 &0.62 &0.55 &0.52 &0.55 &0.40 &0.72 \\
+KS &0.78 &0.69 &0.63 &0.63 &0.55 &0.53 &0.56 &0.40 &0.74 \\
+KY &0.76 &0.65 &0.59 &0.61 &0.53 &0.50 &0.53 &0.36 &0.71 \\
+LA &0.79 &0.64 &0.59 &0.58 &0.52 &0.51 &0.53 &0.34 &0.71 \\
+MA &0.75 &0.65 &0.58 &0.57 &0.50 &0.47 &0.50 &0.35 &0.70 \\
+MD &0.79 &0.67 &0.62 &0.62 &0.54 &0.50 &0.52 &0.38 &0.73 \\
+ME &0.77 &0.68 &0.62 &0.61 &0.53 &0.51 &0.53 &0.40 &0.72 \\
+MI &0.73 &0.62 &0.55 &0.56 &0.49 &0.46 &0.49 &0.32 &0.67 \\
+MN &0.77 &0.66 &0.59 &0.61 &0.53 &0.48 &0.51 &0.36 &0.71 \\
+MO &0.74 &0.63 &0.57 &0.56 &0.49 &0.48 &0.51 &0.33 &0.68 \\
+MS &0.79 &0.68 &0.63 &0.64 &0.56 &0.53 &0.55 &0.39 &0.74 \\
+MT &0.78 &0.71 &0.66 &0.68 &0.59 &0.53 &0.55 &0.44 &0.75 \\
+NC &0.76 &0.64 &0.58 &0.58 &0.51 &0.48 &0.51 &0.34 &0.70 \\
+ND &0.79 &0.68 &0.62 &0.62 &0.54 &0.51 &0.54 &0.37 &0.73 \\
+NE &0.78 &0.68 &0.63 &0.63 &0.55 &0.50 &0.53 &0.37 &0.73 \\
+NH &0.76 &0.64 &0.57 &0.56 &0.49 &0.48 &0.51 &0.34 &0.70 \\
+NJ &0.79 &0.68 &0.62 &0.63 &0.56 &0.54 &0.57 &0.40 &0.73 \\
+NM &0.77 &0.70 &0.65 &0.66 &0.59 &0.55 &0.57 &0.44 &0.73 \\
+NV &0.77 &0.71 &0.66 &0.66 &0.58 &0.56 &0.58 &0.45 &0.74 \\
+NY &0.78 &0.68 &0.62 &0.62 &0.54 &0.52 &0.54 &0.39 &0.73 \\
+OH &0.71 &0.64 &0.56 &0.55 &0.48 &0.45 &0.48 &0.35 &0.67 \\
+OK &0.77 &0.68 &0.63 &0.63 &0.56 &0.53 &0.56 &0.39 &0.72 \\
+OR &0.77 &0.65 &0.61 &0.62 &0.53 &0.49 &0.52 &0.35 &0.71 \\
+PA &0.78 &0.69 &0.64 &0.65 &0.56 &0.52 &0.55 &0.40 &0.74 \\
+RI &0.75 &0.66 &0.60 &0.59 &0.52 &0.51 &0.54 &0.37 &0.71 \\
+SC &0.76 &0.68 &0.62 &0.62 &0.56 &0.54 &0.56 &0.41 &0.72 \\
+SD &0.75 &0.63 &0.55 &0.55 &0.48 &0.46 &0.49 &0.34 &0.69 \\
+TN &0.78 &0.70 &0.65 &0.65 &0.58 &0.56 &0.58 &0.43 &0.74 \\
+TX &0.78 &0.65 &0.59 &0.60 &0.53 &0.52 &0.54 &0.36 &0.72 \\
+UT &0.76 &0.69 &0.62 &0.64 &0.55 &0.51 &0.53 &0.39 &0.72 \\
+VA &0.77 &0.68 &0.63 &0.64 &0.56 &0.53 &0.56 &0.39 &0.73 \\
+VT &0.73 &0.66 &0.58 &0.59 &0.52 &0.49 &0.51 &0.39 &0.69 \\
+WA &0.77 &0.67 &0.61 &0.61 &0.54 &0.51 &0.54 &0.38 &0.72 \\
+WI &0.77 &0.70 &0.64 &0.64 &0.56 &0.53 &0.55 &0.41 &0.74 \\
+WV &0.82 &0.73 &0.69 &0.69 &0.61 &0.59 &0.61 &0.47 &0.78 \\
+WY &0.79 &0.72 &0.67 &0.66 &0.59 &0.57 &0.59 &0.45 &0.75 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Summarization Analysis - Extractive - QA Pairs
+\begin{table*}\centering
+\caption{LLM Extractive Question + Answer Summary Analysis}\label{tab:llm_e_summary_analysis_qa}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrr}\toprule
+State &Cosine\_Similarity &ROUGE\_1 &ROUGE\_2 &ROUGE\_L &ROUGE\_W &ROUGE\_S &ROUGE\_SU &BLEU\_Score &Semantic Overlap \\\midrule
+AK &0.31 &0.22 &0.19 &0.19 &0.16 &0.18 &0.20 &0.07 &0.27 \\
+AL &0.31 &0.22 &0.20 &0.21 &0.19 &0.20 &0.21 &0.08 &0.26 \\
+AR &0.36 &0.30 &0.26 &0.26 &0.24 &0.26 &0.27 &0.18 &0.33 \\
+AZ &0.37 &0.25 &0.21 &0.22 &0.19 &0.19 &0.21 &0.05 &0.31 \\
+CA &0.45 &0.31 &0.28 &0.28 &0.25 &0.28 &0.30 &0.09 &0.38 \\
+CO &0.42 &0.30 &0.26 &0.25 &0.23 &0.25 &0.27 &0.10 &0.36 \\
+CT &0.38 &0.28 &0.24 &0.24 &0.22 &0.23 &0.24 &0.10 &0.33 \\
+DE &0.34 &0.22 &0.20 &0.20 &0.18 &0.19 &0.20 &0.06 &0.28 \\
+FL &0.31 &0.23 &0.21 &0.20 &0.18 &0.21 &0.22 &0.09 &0.27 \\
+GA &0.21 &0.17 &0.15 &0.14 &0.13 &0.14 &0.15 &0.07 &0.19 \\
+HI &0.27 &0.19 &0.16 &0.16 &0.14 &0.15 &0.16 &0.05 &0.23 \\
+IA &0.34 &0.23 &0.19 &0.21 &0.18 &0.18 &0.20 &0.06 &0.28 \\
+ID &0.13 &0.09 &0.07 &0.08 &0.07 &0.06 &0.07 &0.01 &0.11 \\
+IL &0.31 &0.24 &0.21 &0.21 &0.19 &0.20 &0.21 &0.10 &0.27 \\
+IN &0.30 &0.22 &0.19 &0.20 &0.19 &0.19 &0.20 &0.07 &0.26 \\
+KS &0.35 &0.25 &0.23 &0.23 &0.21 &0.24 &0.25 &0.10 &0.30 \\
+KY &0.31 &0.22 &0.18 &0.19 &0.17 &0.18 &0.19 &0.08 &0.26 \\
+LA &0.47 &0.33 &0.29 &0.29 &0.27 &0.29 &0.31 &0.14 &0.40 \\
+MA &0.38 &0.25 &0.21 &0.21 &0.18 &0.19 &0.21 &0.06 &0.31 \\
+MD &0.29 &0.19 &0.15 &0.16 &0.14 &0.14 &0.16 &0.03 &0.24 \\
+ME &0.30 &0.22 &0.20 &0.21 &0.18 &0.19 &0.20 &0.08 &0.26 \\
+MI &0.45 &0.35 &0.31 &0.28 &0.26 &0.30 &0.31 &0.16 &0.40 \\
+MN &0.32 &0.21 &0.17 &0.19 &0.17 &0.17 &0.18 &0.04 &0.26 \\
+MO &0.29 &0.19 &0.15 &0.17 &0.15 &0.14 &0.16 &0.04 &0.24 \\
+MS &0.39 &0.29 &0.25 &0.25 &0.23 &0.24 &0.26 &0.12 &0.34 \\
+MT &0.29 &0.22 &0.20 &0.19 &0.18 &0.20 &0.21 &0.11 &0.25 \\
+NC &0.43 &0.32 &0.29 &0.29 &0.27 &0.28 &0.29 &0.15 &0.37 \\
+ND &0.36 &0.23 &0.20 &0.20 &0.18 &0.19 &0.20 &0.05 &0.29 \\
+NE &0.37 &0.25 &0.23 &0.23 &0.21 &0.23 &0.25 &0.10 &0.31 \\
+NH &0.47 &0.36 &0.32 &0.32 &0.29 &0.31 &0.33 &0.16 &0.41 \\
+NJ &0.41 &0.30 &0.26 &0.24 &0.23 &0.26 &0.27 &0.10 &0.35 \\
+NM &0.33 &0.25 &0.22 &0.23 &0.20 &0.22 &0.23 &0.09 &0.29 \\
+NV &0.28 &0.22 &0.20 &0.20 &0.18 &0.19 &0.20 &0.08 &0.25 \\
+NY &0.37 &0.28 &0.24 &0.24 &0.22 &0.24 &0.25 &0.11 &0.33 \\
+OH &0.29 &0.20 &0.17 &0.18 &0.16 &0.17 &0.18 &0.06 &0.25 \\
+OK &0.28 &0.20 &0.18 &0.17 &0.15 &0.17 &0.18 &0.05 &0.24 \\
+OR &0.37 &0.27 &0.24 &0.25 &0.22 &0.24 &0.25 &0.07 &0.32 \\
+PA &0.26 &0.18 &0.15 &0.16 &0.14 &0.14 &0.15 &0.03 &0.22 \\
+RI &0.38 &0.28 &0.24 &0.24 &0.22 &0.23 &0.25 &0.12 &0.33 \\
+SC &0.33 &0.24 &0.21 &0.22 &0.21 &0.21 &0.22 &0.08 &0.28 \\
+SD &0.25 &0.15 &0.12 &0.14 &0.13 &0.12 &0.13 &0.04 &0.20 \\
+TN &0.23 &0.18 &0.16 &0.15 &0.13 &0.14 &0.15 &0.07 &0.20 \\
+TX &0.44 &0.32 &0.28 &0.28 &0.26 &0.29 &0.30 &0.13 &0.38 \\
+UT &0.21 &0.15 &0.12 &0.12 &0.11 &0.11 &0.12 &0.03 &0.18 \\
+VA &0.46 &0.36 &0.33 &0.31 &0.29 &0.33 &0.34 &0.17 &0.41 \\
+VT &0.21 &0.14 &0.10 &0.11 &0.10 &0.09 &0.10 &0.02 &0.17 \\
+WA &0.35 &0.24 &0.20 &0.21 &0.18 &0.19 &0.20 &0.04 &0.29 \\
+WI &0.41 &0.29 &0.27 &0.27 &0.25 &0.27 &0.28 &0.10 &0.35 \\
+WV &0.24 &0.18 &0.16 &0.15 &0.14 &0.15 &0.16 &0.04 &0.21 \\
+WY &0.34 &0.26 &0.22 &0.24 &0.21 &0.21 &0.23 &0.10 &0.30 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Topic Analysis - Answers
+\begin{table*}\centering
+\caption{LLM Answer Topic Analysis}\label{tab:llm_topic_analysis_a}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrrr}\toprule
+\textbf{STATE} &\textbf{Topic 1} &\textbf{Topic 2} &\textbf{Topic 3} &\textbf{Topic 4} &\textbf{Topic 5} &\textbf{Topic 6} &\textbf{Topic 7} &\textbf{Topic 8} &\textbf{Median} &\textbf{Average} \\\midrule
+AK &0.08 &0.24 &0.10 &0.05 &0.07 &0.08 &0.28 &0.09 &0.09 &0.13 \\
+AL &0.09 &0.17 &0.22 &0.07 &0.08 &0.09 &0.13 &0.14 &0.11 &0.13 \\
+AR &0.06 &0.29 &0.11 &0.06 &0.11 &0.14 &0.14 &0.10 &0.11 &0.13 \\
+AZ &0.05 &0.29 &0.12 &0.07 &0.09 &0.09 &0.23 &0.06 &0.09 &0.13 \\
+CA &0.05 &0.31 &0.16 &0.06 &0.11 &0.09 &0.13 &0.09 &0.10 &0.13 \\
+CO &0.06 &0.19 &0.17 &0.06 &0.11 &0.08 &0.25 &0.09 &0.10 &0.13 \\
+CT &0.12 &0.30 &0.10 &0.05 &0.09 &0.11 &0.13 &0.09 &0.11 &0.13 \\
+DE &0.11 &0.17 &0.11 &0.07 &0.10 &0.13 &0.13 &0.18 &0.12 &0.13 \\
+FL &0.07 &0.16 &0.17 &0.04 &0.08 &0.23 &0.18 &0.07 &0.12 &0.13 \\
+GA &0.06 &0.24 &0.08 &0.04 &0.05 &0.12 &0.23 &0.19 &0.10 &0.13 \\
+HI &0.07 &0.28 &0.11 &0.05 &0.09 &0.09 &0.23 &0.07 &0.09 &0.13 \\
+IA &0.07 &0.23 &0.14 &0.05 &0.12 &0.07 &0.22 &0.09 &0.11 &0.13 \\
+ID &0.07 &0.24 &0.09 &0.07 &0.06 &0.06 &0.22 &0.20 &0.08 &0.13 \\
+IL &0.10 &0.19 &0.08 &0.06 &0.10 &0.25 &0.10 &0.11 &0.10 &0.13 \\
+IN &0.07 &0.21 &0.10 &0.05 &0.10 &0.08 &0.33 &0.06 &0.09 &0.13 \\
+KS &0.07 &0.32 &0.08 &0.04 &0.09 &0.11 &0.22 &0.08 &0.08 &0.13 \\
+KY &0.10 &0.27 &0.15 &0.05 &0.11 &0.11 &0.14 &0.07 &0.11 &0.13 \\
+LA &0.04 &0.29 &0.07 &0.04 &0.11 &0.12 &0.17 &0.17 &0.11 &0.13 \\
+MA &0.09 &0.28 &0.10 &0.05 &0.07 &0.06 &0.25 &0.09 &0.09 &0.13 \\
+MD &0.06 &0.13 &0.11 &0.07 &0.08 &0.09 &0.15 &0.30 &0.10 &0.13 \\
+ME &0.10 &0.18 &0.06 &0.08 &0.08 &0.10 &0.20 &0.19 &0.10 &0.13 \\
+MI &0.29 &0.15 &0.10 &0.04 &0.06 &0.06 &0.19 &0.10 &0.10 &0.13 \\
+MN &0.08 &0.29 &0.10 &0.06 &0.07 &0.10 &0.24 &0.06 &0.09 &0.13 \\
+MO &0.05 &0.27 &0.12 &0.10 &0.07 &0.09 &0.23 &0.07 &0.10 &0.13 \\
+MS &0.05 &0.24 &0.08 &0.09 &0.15 &0.12 &0.20 &0.07 &0.10 &0.13 \\
+MT &0.12 &0.18 &0.11 &0.08 &0.09 &0.10 &0.25 &0.06 &0.11 &0.13 \\
+NC &0.07 &0.27 &0.08 &0.04 &0.14 &0.07 &0.23 &0.08 &0.08 &0.13 \\
+ND &0.03 &0.22 &0.08 &0.06 &0.07 &0.11 &0.34 &0.10 &0.09 &0.13 \\
+NE &0.09 &0.19 &0.11 &0.09 &0.09 &0.12 &0.20 &0.11 &0.11 &0.13 \\
+NH &0.18 &0.21 &0.09 &0.05 &0.08 &0.07 &0.21 &0.11 &0.10 &0.13 \\
+NJ &0.06 &0.22 &0.12 &0.05 &0.07 &0.06 &0.31 &0.11 &0.09 &0.13 \\
+NM &0.09 &0.25 &0.11 &0.05 &0.10 &0.10 &0.20 &0.11 &0.10 &0.13 \\
+NV &0.08 &0.20 &0.13 &0.06 &0.09 &0.08 &0.21 &0.12 &0.11 &0.13 \\
+NY &0.06 &0.16 &0.09 &0.06 &0.11 &0.06 &0.25 &0.22 &0.10 &0.13 \\
+OH &0.06 &0.29 &0.10 &0.05 &0.09 &0.09 &0.19 &0.12 &0.10 &0.13 \\
+OK &0.04 &0.39 &0.16 &0.07 &0.08 &0.06 &0.14 &0.07 &0.07 &0.13 \\
+OR &0.05 &0.21 &0.13 &0.07 &0.09 &0.10 &0.28 &0.07 &0.10 &0.13 \\
+PA &0.04 &0.31 &0.07 &0.05 &0.08 &0.07 &0.28 &0.10 &0.07 &0.13 \\
+RI &0.08 &0.18 &0.15 &0.07 &0.08 &0.12 &0.16 &0.15 &0.14 &0.13 \\
+SC &0.06 &0.24 &0.12 &0.05 &0.12 &0.15 &0.14 &0.13 &0.13 &0.13 \\
+SD &0.09 &0.14 &0.12 &0.07 &0.06 &0.11 &0.26 &0.15 &0.12 &0.13 \\
+TN &0.05 &0.26 &0.08 &0.05 &0.05 &0.09 &0.24 &0.17 &0.08 &0.13 \\
+TX &0.12 &0.28 &0.15 &0.03 &0.06 &0.05 &0.18 &0.13 &0.12 &0.13 \\
+UT &0.15 &0.26 &0.09 &0.06 &0.07 &0.09 &0.21 &0.08 &0.09 &0.13 \\
+VA &0.05 &0.33 &0.12 &0.04 &0.08 &0.09 &0.19 &0.12 &0.10 &0.13 \\
+VT &0.06 &0.25 &0.07 &0.08 &0.11 &0.11 &0.15 &0.17 &0.11 &0.13 \\
+WA &0.04 &0.25 &0.17 &0.06 &0.08 &0.10 &0.17 &0.12 &0.11 &0.13 \\
+WI &0.07 &0.22 &0.07 &0.06 &0.10 &0.06 &0.33 &0.09 &0.08 &0.13 \\
+WV &0.05 &0.25 &0.18 &0.04 &0.10 &0.11 &0.15 &0.12 &0.11 &0.13 \\
+WY &0.06 &0.23 &0.17 &0.07 &0.10 &0.10 &0.21 &0.06 &0.10 &0.13 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Topic Analysis Summary - Answer
+\begin{table*}\centering
+\caption{LLM Answer Topic Analysis Summary}\label{tab:llm_topic_analysis_sum_a}
+\scriptsize
+\begin{tabular}{lrrrrrrr}\toprule
+\textbf{Topic} &\textbf{Final Score} &\textbf{Prevalence} &\textbf{Coherence} &\textbf{Distinctiveness} &\textbf{Coverage} &\textbf{Top Terms} \\\midrule
+Topic 1 &0.20 &0.16 &0.08 &0.36 &0.22 & registration, michigan, vote, time, register \\
+Topic 2 &0.75 &1.00 &0.96 &0.05 &1.00 &voter, registration, id, voter registration, vote \\
+Topic 3 &0.49 &0.33 &0.42 &0.87 &0.36 &primary, party, states, questions, 2024 \\
+Topic 4 &0.25 &0.00 &0.00 &1.00 &0.00 &results, election, available, secretary, measures \\
+Topic 5 &0.34 &0.18 &0.16 &0.74 &0.27 &00, overseas, 00 00, military, open \\
+Topic 6 &0.23 &0.24 &0.02 &0.37 &0.30 &vote411, www vote411, www, vote411 org, elections \\
+Topic 7 &0.66 &0.80 &1.00 &0.00 &0.85 &ballot, absentee, election, county, mail \\
+Topic 8 &0.24 &0.31 &0.12 &0.16 &0.37 &poll, ballot, voting, worker, election \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Topic Analysis - QA Pairs
+\begin{table*}\centering
+\caption{LLM Question + Answer Topic Analysis}\label{tab:llm_topic_analysis_qa}
+\scriptsize
+\begin{tabular}{lrrrrrrrrrrr}\toprule
+\textbf{STATE} &\textbf{Topic 1} &\textbf{Topic 2} &\textbf{Topic 3} &\textbf{Topic 4} &\textbf{Topic 5} &\textbf{Topic 6} &\textbf{Topic 7} &\textbf{Topic 8} &\textbf{Median} &\textbf{Average} \\\midrule
+AK &0.44 &0.05 &0.16 &0.12 &0.04 &0.10 &0.05 &0.04 &0.08 &0.13 \\
+AL &0.20 &0.09 &0.30 &0.11 &0.04 &0.12 &0.08 &0.05 &0.10 &0.13 \\
+AR &0.33 &0.08 &0.14 &0.08 &0.07 &0.17 &0.07 &0.06 &0.08 &0.13 \\
+AZ &0.42 &0.08 &0.15 &0.12 &0.04 &0.09 &0.06 &0.04 &0.09 &0.13 \\
+CA &0.38 &0.07 &0.27 &0.07 &0.04 &0.07 &0.07 &0.03 &0.07 &0.13 \\
+CO &0.43 &0.04 &0.22 &0.08 &0.04 &0.07 &0.08 &0.04 &0.07 &0.13 \\
+CT &0.37 &0.07 &0.14 &0.18 &0.04 &0.12 &0.05 &0.02 &0.10 &0.13 \\
+DE &0.26 &0.08 &0.23 &0.10 &0.04 &0.19 &0.06 &0.04 &0.09 &0.13 \\
+FL &0.24 &0.07 &0.45 &0.05 &0.05 &0.07 &0.04 &0.04 &0.06 &0.13 \\
+GA &0.35 &0.10 &0.19 &0.09 &0.04 &0.16 &0.03 &0.04 &0.10 &0.13 \\
+HI &0.44 &0.08 &0.14 &0.10 &0.04 &0.10 &0.06 &0.03 &0.09 &0.13 \\
+IA &0.39 &0.09 &0.18 &0.08 &0.06 &0.13 &0.05 &0.03 &0.08 &0.13 \\
+ID &0.31 &0.10 &0.21 &0.14 &0.03 &0.10 &0.06 &0.04 &0.10 &0.13 \\
+IL &0.27 &0.06 &0.38 &0.09 &0.04 &0.07 &0.05 &0.05 &0.06 &0.13 \\
+IN &0.50 &0.06 &0.11 &0.11 &0.04 &0.08 &0.06 &0.03 &0.07 &0.13 \\
+KS &0.39 &0.11 &0.10 &0.13 &0.04 &0.13 &0.06 &0.04 &0.10 &0.13 \\
+KY &0.33 &0.13 &0.19 &0.10 &0.08 &0.09 &0.06 &0.04 &0.09 &0.13 \\
+LA &0.39 &0.05 &0.19 &0.09 &0.05 &0.15 &0.04 &0.05 &0.07 &0.13 \\
+MA &0.48 &0.12 &0.13 &0.07 &0.04 &0.08 &0.06 &0.03 &0.07 &0.13 \\
+MD &0.29 &0.06 &0.14 &0.09 &0.04 &0.27 &0.07 &0.04 &0.08 &0.13 \\
+ME &0.36 &0.06 &0.24 &0.08 &0.04 &0.10 &0.09 &0.04 &0.08 &0.13 \\
+MI &0.49 &0.05 &0.21 &0.08 &0.03 &0.08 &0.04 &0.03 &0.06 &0.13 \\
+MN &0.48 &0.06 &0.11 &0.09 &0.04 &0.14 &0.05 &0.03 &0.07 &0.13 \\
+MO &0.40 &0.10 &0.15 &0.11 &0.03 &0.12 &0.06 &0.04 &0.10 &0.13 \\
+MS &0.31 &0.08 &0.16 &0.16 &0.05 &0.11 &0.08 &0.05 &0.09 &0.13 \\
+MT &0.37 &0.12 &0.15 &0.08 &0.06 &0.11 &0.08 &0.04 &0.09 &0.13 \\
+NC &0.51 &0.06 &0.10 &0.08 &0.06 &0.12 &0.03 &0.03 &0.07 &0.13 \\
+ND &0.49 &0.06 &0.10 &0.12 &0.04 &0.09 &0.05 &0.03 &0.08 &0.13 \\
+NE &0.34 &0.05 &0.24 &0.10 &0.02 &0.12 &0.07 &0.07 &0.08 &0.13 \\
+NH &0.37 &0.08 &0.14 &0.12 &0.09 &0.11 &0.05 &0.04 &0.10 &0.13 \\
+NJ &0.47 &0.09 &0.17 &0.09 &0.04 &0.06 &0.05 &0.04 &0.07 &0.13 \\
+NM &0.38 &0.08 &0.19 &0.10 &0.05 &0.11 &0.04 &0.05 &0.09 &0.13 \\
+NV &0.36 &0.07 &0.23 &0.10 &0.05 &0.10 &0.06 &0.03 &0.08 &0.13 \\
+NY &0.46 &0.07 &0.18 &0.07 &0.05 &0.10 &0.05 &0.03 &0.07 &0.13 \\
+OH &0.30 &0.08 &0.13 &0.19 &0.04 &0.16 &0.06 &0.04 &0.11 &0.13 \\
+OK &0.46 &0.08 &0.22 &0.08 &0.03 &0.05 &0.04 &0.03 &0.07 &0.13 \\
+OR &0.46 &0.05 &0.14 &0.09 &0.04 &0.09 &0.09 &0.04 &0.09 &0.13 \\
+PA &0.43 &0.10 &0.12 &0.10 &0.04 &0.12 &0.06 &0.03 &0.10 &0.13 \\
+RI &0.28 &0.07 &0.23 &0.11 &0.04 &0.16 &0.06 &0.04 &0.09 &0.13 \\
+SC &0.28 &0.07 &0.25 &0.12 &0.04 &0.11 &0.09 &0.03 &0.10 &0.13 \\
+SD &0.39 &0.05 &0.17 &0.11 &0.02 &0.17 &0.05 &0.04 &0.08 &0.13 \\
+TN &0.39 &0.04 &0.20 &0.15 &0.03 &0.09 &0.05 &0.05 &0.07 &0.13 \\
+TX &0.34 &0.05 &0.30 &0.12 &0.03 &0.07 &0.04 &0.04 &0.06 &0.13 \\
+UT &0.35 &0.15 &0.15 &0.09 &0.02 &0.13 &0.05 &0.05 &0.11 &0.13 \\
+VA &0.38 &0.07 &0.16 &0.12 &0.04 &0.14 &0.05 &0.03 &0.09 &0.13 \\
+VT &0.28 &0.07 &0.14 &0.17 &0.05 &0.15 &0.08 &0.07 &0.11 &0.13 \\
+WA &0.43 &0.04 &0.21 &0.10 &0.04 &0.11 &0.04 &0.02 &0.07 &0.13 \\
+WI &0.43 &0.04 &0.12 &0.15 &0.05 &0.10 &0.06 &0.05 &0.08 &0.13 \\
+WV &0.30 &0.08 &0.24 &0.10 &0.04 &0.15 &0.06 &0.03 &0.09 &0.13 \\
+WY &0.35 &0.04 &0.26 &0.10 &0.04 &0.11 &0.06 &0.04 &0.08 &0.13 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Topic Analysis Summary -- QA Pairs
+
+% LLM Topic Analysis WTC - Answer
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{img/llm_a_wordcloud.pdf}
+    \caption{LLM Answer Topic Analysis Word Tag Cloud}
+    \label{fig:enter-label}
+\end{figure*}
+
+% LLM Topic Analysis WTC - QA Pairs
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{img/llm_qa_wordcloud.pdf}
+    \caption{LLM Question + Answer Topic Analysis Word Tag Cloud}
+    \label{fig:enter-label}
+\end{figure*}
+
+\begin{table*}\centering
+\caption{LLM Question + Answer Topic Analysis Summary}\label{tab:llm_topic_analysis_sum_qa}
+\scriptsize
+\begin{tabular}{lrrrrrrr}\toprule
+\textbf{Topic} &\textbf{Final Score} &\textbf{Prevalence} &\textbf{Coherence} &\textbf{Distinctiveness} &\textbf{Coverage} &\textbf{Top Terms} \\\midrule
+Topic 1 &0.75 &1.00 &1.00 &0.00 &1.00 &ballot, election, absentee, county, voter \\
+Topic 2 &0.13 &0.10 &0.16 &0.13 &0.15 &  registration, voter registration, voter, regis... \\
+Topic 3 &0.39 &0.47 &0.34 &0.21 &0.52 &party, primary, election, state, elections \\
+Topic 4 &0.33 &0.18 &0.20 &0.67 &0.25 &id, identification, license, photo, card \\
+Topic 5 &0.27 &0.02 &0.04 &1.00 &0.03 &overseas, military, military overseas, uniform... \\
+Topic 6 &0.19 &0.21 &0.11 &0.19 &0.25 &voting, vote, ballot, felony, screen \\
+Topic 7 &0.21 &0.05 &0.03 &0.70 &0.06 &results, election, vote411, official \\
+Topic 8 &0.25 &0.00 &0.00 &1.00 &0.00 &time vote, employees, hours, time, employers \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Sentiment Analysis - Answer
+\begin{table*}\centering
+\caption{LLM Answer Sentiment Analysis}\label{tab:llm_sentiment_analysis_a}
+\scriptsize
+\begin{tabular}{lrrrrrrrrr}\toprule
+State &Total Compound &Positive &Negative &Neutral &Positive \% &Negative \% &Neutral \% &Average Sentiment Score \\\midrule
+AK &3.63 &23.00 &16.00 &16.00 &41.82 &29.09 &29.09 &0.07 \\
+AL &10.84 &25.00 &6.00 &11.00 &59.52 &14.29 &26.19 &0.26 \\
+AR &2.31 &12.00 &5.00 &5.00 &54.55 &22.73 &22.73 &0.11 \\
+AZ &13.28 &24.00 &5.00 &6.00 &68.57 &14.29 &17.14 &0.38 \\
+CA &27.22 &57.00 &10.00 &13.00 &71.25 &12.50 &16.25 &0.34 \\
+CO &13.71 &30.00 &7.00 &8.00 &66.67 &15.56 &17.78 &0.31 \\
+CT &7.45 &30.00 &16.00 &13.00 &50.85 &27.12 &22.03 &0.13 \\
+DE &28.80 &59.00 &18.00 &27.00 &56.73 &17.31 &25.96 &0.28 \\
+FL &41.74 &84.00 &24.00 &24.00 &63.64 &18.18 &18.18 &0.32 \\
+GA &4.33 &30.00 &30.00 &19.00 &37.97 &37.97 &24.05 &0.06 \\
+HI &14.25 &37.00 &14.00 &24.00 &49.33 &18.67 &32.00 &0.19 \\
+IA &8.09 &30.00 &17.00 &11.00 &51.72 &29.31 &18.97 &0.14 \\
+ID &4.05 &21.00 &14.00 &17.00 &40.38 &26.92 &32.69 &0.08 \\
+IL &24.48 &60.00 &11.00 &19.00 &66.67 &12.22 &21.11 &0.27 \\
+IN &12.76 &42.00 &13.00 &25.00 &52.50 &16.25 &31.25 &0.16 \\
+KS &8.36 &27.00 &8.00 &10.00 &60.00 &17.78 &22.22 &0.19 \\
+KY &4.61 &24.00 &16.00 &17.00 &42.11 &28.07 &29.82 &0.08 \\
+LA &10.91 &56.00 &39.00 &19.00 &49.12 &34.21 &16.67 &0.10 \\
+MA &15.34 &46.00 &19.00 &25.00 &51.11 &21.11 &27.78 &0.17 \\
+MD &12.37 &25.00 &9.00 &11.00 &55.56 &20.00 &24.44 &0.28 \\
+ME &5.83 &30.00 &18.00 &8.00 &53.57 &32.14 &14.29 &0.10 \\
+MI &20.26 &87.00 &46.00 &24.00 &55.41 &29.30 &15.29 &0.13 \\
+MN &4.80 &34.00 &28.00 &17.00 &43.04 &35.44 &21.52 &0.06 \\
+MO &6.75 &29.00 &9.00 &5.00 &67.44 &20.93 &11.63 &0.16 \\
+MS &6.42 &17.00 &4.00 &6.00 &62.96 &14.81 &22.22 &0.24 \\
+MT &1.02 &18.00 &15.00 &17.00 &36.00 &30.00 &34.00 &0.02 \\
+NC &13.30 &57.00 &39.00 &13.00 &52.29 &35.78 &11.93 &0.12 \\
+ND &9.29 &30.00 &13.00 &7.00 &60.00 &26.00 &14.00 &0.19 \\
+NE &6.85 &18.00 &3.00 &6.00 &66.67 &11.11 &22.22 &0.25 \\
+NH &4.89 &27.00 &18.00 &10.00 &49.09 &32.73 &18.18 &0.09 \\
+NJ &12.93 &33.00 &10.00 &12.00 &60.00 &18.18 &21.82 &0.24 \\
+NM &12.50 &46.00 &22.00 &21.00 &51.69 &24.72 &23.60 &0.14 \\
+NV &21.51 &60.00 &29.00 &29.00 &50.85 &24.58 &24.58 &0.18 \\
+NY &12.22 &29.00 &14.00 &13.00 &51.79 &25.00 &23.21 &0.22 \\
+OH &7.05 &23.00 &13.00 &16.00 &44.23 &25.00 &30.77 &0.14 \\
+OK &22.32 &64.00 &28.00 &19.00 &57.66 &25.23 &17.12 &0.20 \\
+OR &7.12 &21.00 &10.00 &10.00 &51.22 &24.39 &24.39 &0.17 \\
+PA &11.42 &40.00 &17.00 &24.00 &49.38 &20.99 &29.63 &0.14 \\
+RI &11.02 &26.00 &7.00 &6.00 &66.67 &17.95 &15.38 &0.28 \\
+SC &3.17 &15.00 &10.00 &9.00 &44.12 &29.41 &26.47 &0.09 \\
+SD &4.21 &17.00 &7.00 &2.00 &65.38 &26.92 &7.69 &0.16 \\
+TN &11.11 &37.00 &19.00 &12.00 &54.41 &27.94 &17.65 &0.16 \\
+TX &34.05 &66.00 &11.00 &16.00 &70.97 &11.83 &17.20 &0.37 \\
+UT &6.64 &19.00 &8.00 &3.00 &63.33 &26.67 &10.00 &0.22 \\
+VA &8.95 &36.00 &20.00 &12.00 &52.94 &29.41 &17.65 &0.13 \\
+VT &5.01 &20.00 &7.00 &7.00 &58.82 &20.59 &20.59 &0.15 \\
+WA &15.93 &43.00 &18.00 &12.00 &58.90 &24.66 &16.44 &0.22 \\
+WI &1.60 &13.00 &16.00 &4.00 &39.39 &48.48 &12.12 &0.05 \\
+WV &12.78 &39.00 &17.00 &18.00 &52.70 &22.97 &24.32 &0.17 \\
+WY &14.89 &41.00 &14.00 &12.00 &61.19 &20.90 &17.91 &0.22 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% LLM Sentiment Analysis - QA Pairs
+\begin{table*}\centering
+\caption{LLM Question + Answer Sentiment Analysis}\label{tab:llm_sentiment_analysis_qa}
+\scriptsize
+\begin{tabular}{lrrrrrrrrr}\toprule
+STATE &Total Compound &Positive &Negative &Neutral &Positive \% &Negative \% &Neutral \% &Average Sentiment Score \\\midrule
+AK &0.53 &22.00 &25.00 &8.00 &40.00 &45.45 &14.54 &0.01 \\
+AL &11.14 &27.00 &7.00 &8.00 &64.29 &16.67 &19.05 &0.27 \\
+AR &1.71 &10.00 &7.00 &5.00 &45.45 &31.82 &22.73 &0.08 \\
+AZ &13.47 &26.00 &5.00 &4.00 &74.29 &14.29 &11.43 &0.39 \\
+CA &26.86 &55.00 &12.00 &13.00 &68.75 &15.00 &16.25 &0.34 \\
+CO &14.06 &30.00 &7.00 &8.00 &66.67 &15.56 &17.78 &0.31 \\
+CT &6.14 &28.00 &18.00 &13.00 &47.46 &30.51 &22.03 &0.10 \\
+DE &31.01 &61.00 &20.00 &23.00 &58.65 &19.23 &22.11 &0.30 \\
+FL &41.48 &90.00 &26.00 &16.00 &68.18 &19.70 &12.12 &0.31 \\
+GA &-0.68 &31.00 &31.00 &17.00 &39.24 &39.24 &21.52 &-0.01 \\
+HI &13.36 &37.00 &15.00 &23.00 &49.33 &20.00 &30.67 &0.18 \\
+IA &5.68 &29.00 &18.00 &11.00 &50.00 &31.03 &18.97 &0.10 \\
+ID &2.51 &22.00 &14.00 &16.00 &42.31 &26.92 &30.77 &0.05 \\
+IL &25.28 &64.00 &11.00 &15.00 &71.11 &12.22 &16.67 &0.28 \\
+IN &12.17 &42.00 &17.00 &21.00 &52.50 &21.25 &26.25 &0.15 \\
+KS &8.68 &27.00 &9.00 &9.00 &60.00 &20.00 &20.00 &0.19 \\
+KY &5.24 &26.00 &16.00 &15.00 &45.61 &28.07 &26.32 &0.09 \\
+LA &2.74 &48.00 &49.00 &17.00 &42.10 &42.98 &14.91 &0.02 \\
+MA &15.63 &46.00 &19.00 &25.00 &51.11 &21.11 &27.78 &0.17 \\
+MD &12.07 &25.00 &10.00 &10.00 &55.56 &22.22 &22.22 &0.27 \\
+ME &4.45 &28.00 &20.00 &8.00 &50.00 &35.71 &14.29 &0.08 \\
+MI &18.94 &90.00 &46.00 &21.00 &57.33 &29.30 &13.38 &0.12 \\
+MN &3.59 &34.00 &29.00 &16.00 &43.04 &36.71 &20.25 &0.05 \\
+MO &5.56 &25.00 &13.00 &5.00 &58.14 &30.23 &11.63 &0.13 \\
+MS &6.21 &17.00 &6.00 &4.00 &62.96 &22.22 &14.81 &0.23 \\
+MT &-1.76 &17.00 &18.00 &15.00 &34.00 &36.00 &30.00 &-0.03 \\
+NC &10.81 &57.00 &42.00 &10.00 &52.29 &38.53 &9.17 &0.10 \\
+ND &8.56 &30.00 &13.00 &7.00 &60.00 &26.00 &14.00 &0.17 \\
+NE &7.20 &19.00 &3.00 &5.00 &70.37 &11.11 &18.52 &0.27 \\
+NH &5.62 &29.00 &18.00 &8.00 &52.73 &32.73 &14.54 &0.10 \\
+NJ &11.15 &35.00 &12.00 &8.00 &63.64 &21.82 &14.54 &0.20 \\
+NM &11.74 &49.00 &24.00 &16.00 &55.06 &26.97 &17.98 &0.13 \\
+NV &19.94 &61.00 &31.00 &26.00 &51.70 &26.27 &22.03 &0.17 \\
+NY &13.70 &31.00 &12.00 &13.00 &55.36 &21.43 &23.21 &0.25 \\
+OH &8.06 &26.00 &14.00 &12.00 &50.00 &26.92 &23.08 &0.16 \\
+OK &21.86 &66.00 &30.00 &15.00 &59.46 &27.03 &13.51 &0.20 \\
+OR &6.91 &21.00 &11.00 &9.00 &51.22 &26.83 &21.95 &0.17 \\
+PA &7.60 &41.00 &25.00 &15.00 &50.62 &30.86 &18.52 &0.09 \\
+RI &10.43 &25.00 &8.00 &6.00 &64.10 &20.51 &15.38 &0.27 \\
+SC &3.65 &16.00 &10.00 &8.00 &47.06 &29.41 &23.53 &0.11 \\
+SD &3.76 &17.00 &7.00 &2.00 &65.39 &26.92 &7.69 &0.15 \\
+TN &11.26 &39.00 &21.00 &8.00 &57.35 &30.88 &11.77 &0.17 \\
+TX &38.36 &68.00 &11.00 &14.00 &73.12 &11.83 &15.05 &0.41 \\
+UT &6.82 &19.00 &8.00 &3.00 &63.33 &26.67 &10.00 &0.23 \\
+VA &5.54 &35.00 &23.00 &10.00 &51.47 &33.82 &14.71 &0.08 \\
+VT &5.71 &20.00 &7.00 &7.00 &58.82 &20.59 &20.59 &0.17 \\
+WA &16.36 &43.00 &18.00 &12.00 &58.90 &24.66 &16.44 &0.22 \\
+WI &-0.25 &14.00 &15.00 &4.00 &42.42 &45.45 &12.12 &-0.01 \\
+WV &12.58 &39.00 &21.00 &14.00 &52.70 &28.38 &18.92 &0.17 \\
+WY &13.94 &40.00 &16.00 &11.00 &59.70 &23.88 &16.42 &0.21 \\
+\bottomrule
+\end{tabular}
+\end{table*}

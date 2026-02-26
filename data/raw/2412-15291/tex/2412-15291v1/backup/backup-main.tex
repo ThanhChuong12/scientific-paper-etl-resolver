@@ -1,0 +1,230 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2024
+
+
+% ready for submission
+\usepackage{neurips_2024}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2024}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+    % \usepackage[final]{neurips_2024}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2024}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+
+% \title{Can Large Language Models Make Accurate Election Prediction?}
+
+\title{Who Will Win 2024 US Election? A Prediction Result Based on Large Language Models}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  David S.~Hippocampus\thanks{Use footnote for providing further information
+    about author (webpage, alternative address)---\emph{not} for acknowledging
+    funding agencies.} \\
+  Department of Computer Science\\
+  Cranberry-Lemon University\\
+  Pittsburgh, PA 15213 \\
+  \texttt{hippo@cs.cranberry-lemon.edu} \\
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+\begin{document}
+
+
+\maketitle
+
+
+\begin{abstract}
+  The abstract paragraph should be indented \nicefrac{1}{2}~inch (3~picas) on
+  both the left- and right-hand margins. Use 10~point type, with a vertical
+  spacing (leading) of 11~points.  The word \textbf{Abstract} must be centered,
+  bold, and in point size 12. Two line spaces precede the abstract. The abstract
+  must be limited to one paragraph.
+\end{abstract}
+
+
+\textbf{Disclaimer}: not sponsored research.
+
+\section{Introduction}
+
+Large Language Models (LLMs) have demonstrated significant success across various fields as the frontier of artificial intelligence (AI), including natural language processing, content generation, and sentiment analysis \cite{brown2020language}.
+Their ability to process and interpret vast amounts of text data has led to breakthroughs in several domains \cite{bommasani2021opportunities}. For example, LLMs have been successfully applied in areas such as medical diagnostics through language-based knowledge extraction \cite{zhang2022large}, legal text analysis \cite{chalkidis2022lexglue}, and even creative tasks like storytelling and music composition \cite{yang2022survey}. 
+% These examples highlight the wide-ranging capabilities of LLMs in handling complex, text-based information.
+In recent years, there has been a growing trend toward applying LLMs to political science, particularly in tasks involving the analysis of policy documents, campaign speeches, and public sentiment \cite{xu2022deep, haq2023large}. Since much of the data in political science is text-based, LLMs seem well-suited to help extract meaningful insights and predictions. 
+
+\textbf{Motivation}.
+Despite their success in many fields, the capacity of LLMs to handle more complex political science tasks, such as election prediction, remains uncertain \cite{lerer2022political}.
+Indeed, the potential for LLMs to accurately predict election results is an intriguing prospect, given their ability to process vast amounts of historical information and their success in other predictive tasks. However, election forecasting presents unique challenges that test the limits of LLM capabilities.
+First, due to the cost of acquiring voter-level information, experiments and model verification become a critical problem in conducting the research.
+Second, unlike many other prediction tasks, election forecasting requires understanding and modeling the behavior of individual voters, which is inherently complex and unclear whether text-based information is sufficient \cite{graefe2014accuracy}. 
+Third, election prediction often requires complex reasoning beyond simple inference, involving the integration of multiple factors such as economic conditions, political events, and demographic shifts \cite{holbrook2016forecasting}. 
+The ability of LLMs to perform this level of sophisticated reasoning required for accurate election prediction remains unclear \cite{wei2022chain}.
+
+\textbf{Our Solution}
+To address these challenges, we propose a novel approach that leverages the strengths of LLMs while mitigating their limitations in the context of election prediction. First, to overcome the scarcity of comprehensive voter-level data, we employ synthetic generation \cite{li2020sync} to create vote-level synthetic data as well as leveraging existing public datasets \cite{}.
+Second, we introduce a tailored multi-step reasoning process designed specifically for political election analysis, improving the model's ability to integrate complex factors and make nuanced predictions \cite{wei2022chain}. Lastly, our approach incorporates time-varying factors by aggregating information from presidential campaign data, allowing the model to adapt to evolving political landscapes \cite{holbrook2016forecasting}.
+
+% 1. basic what is LLM/foundation moels. LLM wide usage in different industries.
+
+% llmllmllm
+
+% 2. Recent attention in political analysis, cite some papers
+
+% 3. \textbf{Motivation}. But more importantly, can LLMs accurately predict election results. 
+
+% - Why: rationael: historical information in the past. other fields doing well.
+% - Challenges in the election:
+%     - data on people 
+%     - complex reasoning beyond simple inference -- quality unclear
+    
+
+% 4. Our solution.
+%     - data: solution -- synthetic data
+%     - approach:
+%         - multi-step reasoning
+%         - time-dependent information
+        
+% 5. Our results.
+%     - Verification:
+%         a. benchmark ok
+%         b. 2020 ok
+%     - Prediction: 
+%         2024
+
+% Contribution:
+%     a. first 2024 prediction by LLMs
+%     b. design multi-step political election reasoning protocol
+%     b1. observations around features.
+%     c. identify some new direction, insights, raise the attention for risk
+
+    
+
+
+
+
+
+\section{Prediction on 2024 US Election}
+
+Setup.
+-all 'swing' states
+-sampling method
+
+Results.
+
+\section{Discussion and Future Directions}
+
+observations
+
+limitations
+
+potential of LLMs:
+- adversarial: agenda design
+
+
+\begin{ack}
+Use unnumbered first level headings for the acknowledgments. All acknowledgments
+go at the end of the paper before the list of references. Moreover, you are required to declare
+funding (financial activities supporting the submitted work) and competing interests (related financial activities outside the submitted work).
+More information about this disclosure can be found at: \url{https://neurips.cc/Conferences/2024/PaperInformation/FundingDisclosure}.
+
+
+Do {\bf not} include this section in the anonymized submission, only in the final paper. You can use the \texttt{ack} environment provided in the style file to automatically hide this section in the anonymized submission.
+\end{ack}
+
+\section*{References}
+
+
+References follow the acknowledgments in the camera-ready paper. Use unnumbered first-level heading for
+the references. Any choice of citation style is acceptable as long as you are
+consistent. It is permissible to reduce the font size to \verb+small+ (9 point)
+when listing the references.
+Note that the Reference section does not count towards the page limit.
+\medskip
+
+
+{
+\small
+
+
+[1] Alexander, J.A.\ \& Mozer, M.C.\ (1995) Template-based algorithms for
+connectionist rule extraction. In G.\ Tesauro, D.S.\ Touretzky and T.K.\ Leen
+(eds.), {\it Advances in Neural Information Processing Systems 7},
+pp.\ 609--616. Cambridge, MA: MIT Press.
+
+
+[2] Bower, J.M.\ \& Beeman, D.\ (1995) {\it The Book of GENESIS: Exploring
+  Realistic Neural Models with the GEneral NEural SImulation System.}  New York:
+TELOS/Springer--Verlag.
+
+
+[3] Hasselmo, M.E., Schnell, E.\ \& Barkai, E.\ (1995) Dynamics of learning and
+recall at excitatory recurrent synapses and cholinergic modulation in rat
+hippocampal region CA3. {\it Journal of Neuroscience} {\bf 15}(7):5249-5262.
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+
+\section{Appendix / supplemental material}
+
+
+Optionally include supplemental material (complete proofs, additional experiments and plots) in appendix.
+All such materials \textbf{SHOULD be included in the main submission.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliography{references}
+\end{document}

@@ -1,0 +1,11 @@
+
+\section{Related Work}
+Existing UI code generation methods operate on three unrealistic assumptions: (1) websites have a single or limited number of pages, (2) webpages lack external links, and (3) webpages do not interact with backends. Our study in Appendix~\ref{sec:motivating-study} highlights the misalignment of these assumptions with real-world web UI needs. Table~\ref{tab:comparison} provides a comparison of our benchmark with existing works, contextualizing our contribution.  A detailed discussion of related works is in Appendix~\ref{appendix:related-work}.
+
+
+\section{Task Formulation} 
+
+\paragraph{Resource List} The \textit{resource list} serves as a structured representation of a webpage's navigational and visual elements, such as hyperlinks, images, and backend routing. Each entry in the resource list includes attributes like position, type, and URL, for instance, \texttt{\{position: $bonding\_box$, type: image, link:/dog.png\}}. This structure is crucial for enabling MRWeb generation to replicate navigational features and image sources accurately. Without the resource list, MLLMs would generate static replicas lacking interactivity and navigation. In our experimental setup, resource lists are extracted automatically using Python Selenium\footnote{\url{https://selenium-python.readthedocs.io/}}. For real-world applications, we developed an intuitive user interface that allows users to highlight actionable elements by drawing bounding boxes and inputting the corresponding resource information, as illustrated in Appendix~\ref{appendix:demo}.
+
+\paragraph{Task Definition} Let the ground-truth webpage's HTML+CSS code be $C_0$, screenshot be $I_0$, and resource list be $R_0$, the \textit{MRWeb generation} task uses an MLLM $M$ to produce HTML+CSS code $C_g = M(I_0, R_0)$ that approximates $C_0$. The quality of $C_g$ is assessed by comparing the generated resource list $R_g$ with $R_0$ and the screenshot $I_g$ rendered from $C_g$ with $I_0$, ensuring both functional and visual alignment.
+

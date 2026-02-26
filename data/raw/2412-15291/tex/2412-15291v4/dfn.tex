@@ -1,0 +1,60 @@
+% Define the new environment for prompts
+% \newtcolorbox{promptbox}{
+%     colback=gray!10,  % Background color
+%     colframe=black,   % Frame color
+%     boxrule=0.5pt,    % Thickness of the frame
+%     arc=4pt,          % Rounded corners
+%     left=6pt,         % Left padding
+%     right=6pt,        % Right padding
+%     top=4pt,          % Top padding
+%     bottom=4pt        % Bottom padding
+% }
+
+% \newtcolorbox{promptbox}{
+%     colback=whitegreen, %blue!5     % Light-blue background color
+%     colframe=black,      % Black frame color
+%     boxrule=0.75pt,       % Border thickness
+%     arc=3pt,             % Rounded corners
+%     left=6pt,            % Left padding for readability
+%     right=6pt,           % Right padding for readability
+%     top=5pt,             % Top padding
+%     bottom=5pt,          % Bottom padding
+%     boxsep=2pt,          % Separation between content and border
+%     fontupper=\sffamily\small  % Sans-serif font, smaller size for clarity
+% }
+
+\newtcolorbox{promptbox}{
+    colback=whitegreen,
+    colframe=black,
+    boxrule=0.5pt,
+    arc=2pt,
+    left=3pt,
+    right=3pt,
+    top=2pt,
+    bottom=2pt,
+    boxsep=1pt,
+    fontupper=\sffamily\scriptsize
+}
+
+\usepackage{tikz} % Include this in the preamble
+
+\newcommand{\tikzsquare}[2][red,fill=red]{%
+  \tikz[baseline=0.1ex]\draw[#1] (0,0) rectangle (#2,#2);%
+}
+
+% Adjust spacing for lists
+\setlength{\itemsep}{0pt}  % Space between items in lists
+\setlength{\parsep}{0pt}   % Space between paragraphs within items
+\setlength{\partopsep}{0pt}% Extra space before first item in a list
+
+\newcommand{\yz}[1] {\textcolor{blue}{[yz: #1]}}
+\newcommand{\xh}[1] {\textcolor{orange}{[xh: #1]}}
+
+\definecolor{lightblue}{rgb}{0.68, 0.85, 0.9}
+\definecolor{lightred}{rgb}{1.0, 0.8, 0.8}
+\definecolor{lightgreen}{RGB}{144, 238, 144}
+\definecolor{darkgreen}{RGB}{0, 100, 0}
+\definecolor{whitegreen}{RGB}{248, 250, 245}
+
+
+\newcommand{\np}[1]{\noindent\textbf{#1}. }

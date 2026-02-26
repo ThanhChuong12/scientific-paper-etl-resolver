@@ -1,0 +1,88 @@
+ % !TEX root = ../main.tex
+ 
+ 
+% \subsection{Group Robust Methods with Adaptive Robust Scaling}
+ \subsection{Group Robust Methods with Instance-wise Robust Scaling}
+ \label{sec:method}
+%This subsection provides two extended models based on the robust scaling strategy, each of which can be utilized with or without explicit knowledge of group information, respectively.
+%If we partition the dataset based on feature semantics and reserve different scaling factors for each partition, then it can give more flexible trade-offs. 
+For each test example, if we can apply instance-wise scaling factors based on its feature semantics, then it will improve the trade-off furthermore.  
+This subsection provides two practical methods to implement it based on the robust scaling strategy, each of which can be utilized with or without  the supervision of group information during training, respectively.
+ 
+ \iffalse
+ \subsubsection{Attribute-Specific Robust Scaling (ARS)}
+ \label{sec:ars}
+% If we partition the dataset based on feature semantics and reserve different scaling factors for each partition, then it can give more flexible trade-offs. 
+%From this intuition, we partition the examples based on the values of spurious attributes, and we call each partition as attribute-group.
+%From this intuition, 
+We first partition the examples based on the values of spurious attributes.
+Like as the original robust scaling procedure, we obtain the optimal scaling factors for each partition in the validation split and apply them to the test split.
+However, this partition-wise scaling is basically unavailable because we do not know the spurious attribute values of the examples in the test split, so we need to estimate those values.
+%However, because we do not know the spurious attribute values of the examples in the test split, we need to estimate their values for partition-wise scaling. 
+%To this end, we follow a simple algorithm described in Alg.~\ref{alg:ars}.
+To this end, we follow a simple algorithm described below:
+
+%\begin{enumerate}[label=\arabic*)]
+%%  \item Using the ground-truth values of spurious attribute, find the optimal scaling factors for each bias-group in the validation split.
+%  \item Partition the validation examples by the values of the spurious attribute.
+%  \item Find the optimal scaling factors for each partition in the validation split.
+%  \item Train an independent estimator model to classify spurious attribute.
+%  \item Estimate the spurious attribute values of the examples in the test split using the model trained from 3).
+%  \item Partition the test samples according to their estimated spurious attribute values, and apply the optimal scaling factors obtained in 2).
+%\end{enumerate}
+\textbf{1)} Partition the validation examples by the values of the spurious attribute.\\
+\textbf{2)} Find the optimal scaling factors for each partition in the validation split. \\
+\textbf{3)} Train an independent estimator model to classify spurious attribute. \\
+\textbf{4)} Estimate the spurious attribute values of the examples in the test split using the estimator, and partition the test samples according to their estimated spurious attribute values. \\
+\textbf{5)} Apply the optimal scaling factors obtained in 2) to the samples of each partition in the test split.
+
+To find a set of scale factors corresponding to each partition, we adopt a na\"ive greedy algorithm that performed in one partition at a time.
+This attribute-specific robust scaling further increases the robust accuracy compared to the original robust scaling, and also improves the robust coverage.
+One limitation is that it requires the supervision of spurious attribute information to train the estimator model in 3). 
+However, we notice that only a very few examples with the supervision is enough to train the spurious-attribute estimator, because it is much easier to learn as the word ``spurious correlation" suggests.
+ 
+ \fi
+%\begin{algorithm}[t]
+%\small
+%\SetAlgoLined
+%\textbf{1)} Partition the validation examples by the values of the spurious attribute.\\
+%\textbf{2)} Find the optimal scaling factors for each partition in the validation split. \\
+%\textbf{3)} Train an independent estimator model to classify spurious attribute. \\
+%\textbf{4)} Estimate the spurious attribute values of the examples in the test split using the estimator, and partition the test samples according to their estimated spurious attribute values. \\
+%\textbf{5)} Apply the optimal scaling factors obtained in 2) to each partition in the test split.
+%\caption{Attribute-specific Robust Scaling (ARS)}
+%\label{alg:ars}
+%\end{algorithm}
+%
+  % 
+% \subsection{Cluster Robust Scaling (CRS)}
+ \subsubsection{Cluster-Specific Robust Scaling (CRS)}
+ \label{sec:crs}
+%As we mentioned in the previous subsection, although the bias-group robust scaling works well, the requirement of explicit bias supervision limits the practicality of the method.
+As we mentioned in the previous subsection, the requirement of explicit group supervision can limit the practicality of the method to some extent.
+To overcome this limitation, we take advantage of feature clustering for partitioning in an unsupervised way.
+Previous approaches~\citep{seo2021unsupervised, sohoni2020no} have showed the capability to identify hidden spurious attributes via clustering on the feature space.
+%The overall algorithm is described in Alg.~\ref{alg:crs}.
+The overall algorithm is described as follows.
+
+  \textbf{1)} Clustering the examples on the feature space in the validation split and store the centroids of the clusters. \\
+  \textbf{2)} Find the optimal scaling factors for each cluster in the validation split. \\
+  \textbf{3)} Assign the examples in the test split to the clusters by selecting their nearest centroids obtained from 1). \\
+  \textbf{4)} Apply the optimal scaling factors obtained in 2) to the samples of each cluster in the test split.
+
+%\begin{enumerate}[label=\arabic*)]
+%  \item Clustering the examples on the feature space in the validation split and store the centroids.
+%  \item Find the optimal scaling factors for each cluster in the validation split.
+%  \item Assign the examples in the test split to the clusters by selecting their nearest centroids from 1).
+%  \item Apply the optimal scaling factors obtained in 2).
+%\end{enumerate}
+%\\
+%\\
+%1) Clustering the examples on the feature space in the validation split and store the centroids.\\
+%2) Find the optimal scaling factors for each cluster in the validation split.\\
+%3) Assign the examples in the test split to the clusters by using the centroids from 1).\\
+%4) Apply the optimal scaling factors from 2).\\
+%
+In 1), we use the na\"ive \textit{k}-means algorithm for clustering.
+The number of clusters $K$ is a hyperparameter to be chosen, but it can be easily tuned by selecting the best number that gives the highest robust coverage in the validation split. 
+We found that a sufficient number of $K > 10$ gives stable and superior results, compared to the original robust scaling.

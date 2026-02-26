@@ -1,0 +1,64 @@
+\subsection{Experimental Setup}
+\label{subsec:ExpSet}
+\paragraph{Victim Models.}
+We select representative and new state-of-the-art safety-aligned LLMs as victim models. We evaluate SATA on four closed-source LLMs, including GPT-3.5, GPT-4o-mini (2024-07-18), GPT-4o (2024-08-06), and Claude-v2, and two open-source LLMs, including LLama3-8B and Llama3-70B, as well as two reasoning LLMs, including Deepseek-R1~\cite{deepseekai2025deepseekr1incentivizingreasoningcapability} and OpenAI o3-mini.
+
+\paravspace
+\paragraph{Baselines.}
+% We compare SATA with six strong baselines and include the direct instruction query as the basic baseline. We retain the original default setups for all baselines (see Appendix~\ref{app:baseline}). % , details are included in Appendix
+
+% \textit{Direct Instruction (DI)} prompts the victim LLMs with the vanilla harmful instruction. % and obtains the response.
+We compare SATA with six strong baselines, and we retain the original default setups for all baselines (see Appendix~\ref{app:baseline}). 
+
+\textit{Greedy Coodinate Gradient (GCG)}~\cite{zouUniversalTransferableAdversarial2023a} searches adversarial suffixes by combining greedy and gradient-based techniques and jailbreaks LLMs by appending an adversarial suffix to the harmful query. GCG is applicable to white-box LLMs and is transferable to closed-source LLMs.
+% GCG is applicable to white-box LLMs, but the computed suffix is also transferable to closed-source LLMs.
+
+\textit{AutoDAN}~\cite{liuAutoDANGeneratingStealthy2023a} adopts genetic algorithm to iteratively evolve and select jailbreak prompt candidates, requiring white-box access to victim LLMs.%, which is used in the genetic algorithm. % leverages
+% (\textit{population} in genetic algorithm). To perform the process of searching the optimal jailbreak prompt, AutoDAN necessitates white-box access to victim models. 
+
+\textit{Prompt Automatic Iterative Refinement} (PAIR)~\cite{chaoJailbreakingBlackBox2024a} leverages an attacker LLM to iteratively generate and refine a batch of jailbreak prompts for victim LLMs. It achieves a competitive jailbreak success rate and exhibits remarkable transferability across LLMs.
+
+\textit{AdvPrompter}~\cite{paulus2024advprompter} fine-tunes an attack LLM (AdvPrompter) to generate adversarial suffixes condition on harmful instruction.
+
+\textit{DrAttack}~\cite{liDrAttackPromptDecomposition2024} circumvents LLM safeguards by fragmenting a harmful instruction into split sub-prompts and subsequently reconstructing it via in-context learning.
+
+\textit{ArtPrompt}~\cite{jiangArtPromptASCIIArtbased2024a} is an effective and black-box jailbreak attack. 
+It showcases that semantics-only interpretation of corpora during safety alignment can induce incapability for LLMs to recognize ASCII art (visual symbolic representation), and it exploits this incapability to perform jailbreak via firstly transforming harmful word in query into ASCII art and then revealing the word from the ASCII art representation by following instructions in jailbreak prompts. % create
+
+\paravspace
+\paragraph{Datasets.} 
+We evaluate SATA against baselines on two datasets: Advbench~\cite{zouUniversalTransferableAdversarial2023a} and JBB-Behaviors (JailbreakBench Behaviors, JBB)~\cite{chaoJailbreakBenchOpenRobustness2024}. Specifically, following previous works~\cite{weiJailbreakGuardAligned2024, liDeepInceptionHypnotizeLarge2024a, changPlayGuessingGame2024a, chaoJailbreakingBlackBox2024a, jiangArtPromptASCIIArtbased2024a}, we conduct experiments on the non-duplicate subset dataset of AdvBench for performance comparison, which consists of 50 representative harmful entries. The JBB dataset comprises ten categories of harmful behaviors (see Appendix~\ref{app:jbb-dataset} for details), each containing ten harmful instructions. %  with a specific behavior
+
+\paravspace
+\paragraph{Metrics.}
+Consistent with previous works~\cite{liuAutoDANGeneratingStealthy2023a,chaoJailbreakingBlackBox2024a,jiangArtPromptASCIIArtbased2024a, dingWolfSheepsClothing2024a} we adopt GPT-judged harmful score (HS) and attack success rate (ASR) as our evaluation metrics. Specifically, we employ GPT-4o as the scorer to rate the victim model's response(s) to an adversarial prompt in terms of harmfulness and relevance, with the harmful score ranging from 1 to 5, where a score of 1 indicates the victim model refuse to respond, or the response is no harm or has no relevance while a score of 5 signifies a highly harmful or relevant response. In our experiments, a response with \texttt{HS=5} is considered as successful jailbreak attack. The GPT judge prompt in our work is same as previous works (see Appendix~\ref{app:judgeprompt-defenseprompt}). % [冗余] demonstrating a significant impact from the adversarial prompt
+
+We exclude keyword-based judgment~\cite{zouUniversalTransferableAdversarial2023a} in our experiments since we observe that: (1) LLMs may actually respond to jailbreak prompts, but with added disclaimers, such as warnings about the request being illegal or unethical; and (2) LLMs sometimes generate off-topic response to jailbreak prompts. These factors render keyword-based judgment imprecise. Similar findings also have been reported in 
+AutoDAN and PAIR. 
+% AutoDAN~\cite{liuAutoDANGeneratingStealthy2023a} and PAIR~\cite{chaoJailbreakingBlackBox2024a}.
+
+\input{tables/tab-main-table}             % 调整主表位置！！！
+\paravspace
+\paragraph{Defenses.} We adopt four types of defense techniques against SATA: filter-based, modification-based, prompt-based, and optimization-based approaches. Specifically, the defenses include sliding-window perplexity-based detection (windowed PPL-filter), paraphrasing adversarial prompts (paraphrase) ~\cite{jainBaselineDefensesAdversarial2023}, self-reminder~\cite{xieDefendingChatGPTJailbreak2023}, and robust prompt optimization (RPO)~\cite{zhouRobustPromptOptimization2024}. Detailed defense settings are provided in Appendix~\ref{app:defense}.
+
+\paravspace
+\paragraph{SATA Configurations.}
+% 介绍多个masking granularity; 介绍Top-1 and Ensemble Strategy是怎么回事 [update]: masking granularity在方法里介绍。
+In our experiments, we evaluate two configurations of SATA. The first, labeled \texttt{top1}, represents the highest jailbreak performance achieved using a single masking granularity. The second configuration, \texttt{ensemble}, represents the combined jailbreak performance obtained across all masking granularities. In the ensemble case, we report the highest harmful score among the four types of masking granularity.
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \paragraph{Defenses.} We adopt filter-based, modification-based and reminder-based three defense techniques against BAZINGA and baselines, respectively. Specifically, the defenses are improved perplexity-based detection (PPL-filter), paraphrase adversarial prompt (Paraphrase)~\cite{jainBaselineDefensesAdversarial2023} and AdaShield-Variant\footnote{AdaShield is a multimodal LLM jailbreak defense method, which we adapt to defend against text-based LLM jailbreaks.}~\cite{wangAdaShieldSafeguardingMultimodal2025}. We present the detailed defense settings in detail in Appendix~\ref{app:defense}.
+% \paragraph{Defenses.} We adopt filter-based and modification-based defense against SATA. % and baselines, respectively. 
+% Specifically, the defenses includes windowed perplexity-based detection (sliding-window PPL-filter) and paraphrasing adversarial prompt (Paraphrase)~\cite{jainBaselineDefensesAdversarial2023}. As a prompt-based defense, we also adopt the static version of AdaShield~\cite{wangAdaShieldSafeguardingMultimodal2025}. We present the detailed defense settings in Appendix~\ref{app:defense}.

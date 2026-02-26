@@ -1,0 +1,44 @@
+ % !TEX root = ../main.tex
+
+
+
+\section{Related Works}
+\label{sec:related}
+
+Mitigating spurious correlation has emerged as an important problem in many areas in machine learning.
+Many algorithms are based on the practical assumption that training examples are provided in groups, and that a test distribution is represented as a mixture of these groups.
+Existing approaches can be categorized into the following three main groups.
+
+
+
+\vspace{-2mm}
+\paragraph{Sample reweighting}
+The most popular approaches involve assigning different training weights to each sample to promote  minority groups, with the weights determined by either group frequency or loss.
+%~\cite{huang2016learning, GroupDRO, seo2021unsupervised} or loss~\cite{LfF, GroupDRO, sohoni2020no, seo2021unsupervised, levy2020large, JTT}.
+Group DRO~\cite{GroupDRO} minimizes the worst-group loss by reweighting samples based on the average loss per group.
+Although Group DRO achieves robust results against group distribution shifts, it requires training examples with group supervision.
+%, which limits its practicality when such group information is unavailable.
+%To handle this issue, several unsupervised approaches~\cite{sohoni2020no, seo2021unsupervised, levy2020large, LfF, JTT} have been proposed which do not require group annotations.
+To handle this limitation, several unsupervised approaches have been proposed.
+George~\cite{sohoni2020no} and BPA~\cite{seo2021unsupervised} extend Group DRO to an unsupervised setting by initially training an ERM model and subsequently inferring pseudo-groups through feature clustering.
+CVaR DRO~\cite{levy2020large} minimizes the worst loss over all $\alpha$-sized subpopulations, effectively providing an upper bound on the worst-group loss for unknown groups.
+LfF~\cite{LfF} simultaneously trains two models, one is with generalized cross-entropy and the other is with the standard cross-entropy loss, and reweights the examples based on their relative difficulty score.
+JTT~\cite{JTT} conducts a two-stage procedure, which upweights the examples that are misclassified by the first-stage model.
+Idrissi~\etal~\cite{idrissi2022simple} analyze simple data subsampling and reweighting baselines based on group or class frequency to handle dataset imbalance issues.
+LWBC~\cite{kim2022learning} employs an auxiliary module to identify bias-conflicted data and assigns large weights to them.
+
+
+\vspace{-2mm}
+\paragraph{Representation learning}
+Some approaches aim to learn debiased representations to mitigate spurious correlations directly.
+ReBias~\cite{ReBias} employs the Hilbert-Schmidt independence criterion~\cite{gretton2005measuring} to ensure feature representations remain independent of predefined biased representations.
+Cobias~\cite{seo2022information} measures bias through conditional mutual information between feature representations and group labels and incorporates this metric as a debiasing regularizer.
+IRM~\cite{IRM} learns invariant representations across diverse environments, where the environment variable is treated as equivalent to the group.
+While IRM requires supervision for the environment variable, unsupervised alternatives such as EIIL~\cite{creager2021environment} and PGI~\cite{ahmed2020systematic} infer environments by assigning each training example to groups that violate the IRM objective.
+
+
+\vspace{-2mm}
+\paragraph{Post-processing}
+While most existing approaches focus on in-processing techniques, such as feature representation learning or sample reweighting during training to improve group robustness, our framework stands apart by addressing group robust optimization through a simple post-processing method based on class-specific score scaling, which requires no additional training.
+Although post-processing techniques like temperature scaling~\cite{guo2017calibration} or Platt scaling~\cite{john2000platt} are popular in confidence calibration, they are unsuitable for our task since they scale prediction scores uniformly across classes and do not alter label predictions.
+Recently, post-hoc methods have been proposed to retrain the model?s last layer using a group-balanced dataset~\cite{kirichenko2022last} or adjust the final logits~\cite{liu2022avoiding}, but these approaches still involve additional training, differentiating them from our framework.

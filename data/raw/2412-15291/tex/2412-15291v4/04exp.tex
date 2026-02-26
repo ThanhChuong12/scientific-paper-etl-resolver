@@ -1,0 +1,133 @@
+\section{Beyond Accuracy: Limitations in
+Large-Scale Political Simulations (RQ3)}
+\label{Beyond}
+    \vspace{-0.02in}
+
+In \S\ref{subsec:v3}, we introduced a multi-step reasoning pipeline to enhance LLMs' ability to simulate human voting behavior. However, human decision-making is complex and uncertain \cite{treier2009nature}, and LLMs may struggle to fully capture its nuances. In the following section, we examine the challenges and constraints LLMs face in simulating real-world decision processes, offering insights to guide future research on LLM-based human behavior modeling.
+
+We focus on three key issues: (\textbf{1}) the systematic political bias in LLMs originating from pretraining data (\S \ref{subsec:study1}); (\textbf{2}) the reinforcement of demographic stereotypes (\S \ref{subsec:study2}), and (\textbf{3}) the model's tendency to overestimate the influence of certain predictors on decision-making outcomes (\S \ref{subsec:study3}).
+
+% In \S \ref{sec:pipeline}, we proposed a voting prediction pipeline (\S \ref{subsec:v3}) that demonstrated high accuracy using the ratio metric Eq. (\ref{eq:prob}). This section delves deeper by introducing additional evaluation metrics and analyzing the broader implications of the results.
+
+% Using these metrics, we revisit the 2020 and 2024 state-level predictions to evaluate pipelines' overall accuracy and examine systematical biases toward political parties (\S \ref{subsec:study1}). Finally, we analyze how LLM simulations align with real-world demographic trends and discuss strategies for mitigating bias and enhancing the robustness of future LLM-based election forecasting methods (\S \ref{subsec:study2}).
+
+
+% \np{Additional Evaluation Metrics}
+% We consider additional three evaluation metrics to assess our predictions against actual election results: \textbf{Weighted Absolute Error (WAE)} (Eq. (\ref{WAE})), \textbf{Weighted Mean Squared Error (WMSE)} (Eq. (\ref{WMSE})), and \textbf{Bias Metric (BM)} (Eq. (\ref{BM})). These metrics provide a comprehensive evaluation of model performance. WAE and WMSE measure the degree of alignment between predicted proportions and actual outcomes, with WMSE placing greater emphasis on larger errors due to its squared formulation. BM quantifies systematic biases, indicating whether the predictions consistently favor one party over the other. Together, these metrics offer a nuanced understanding of both the magnitude of prediction errors and the potential biases within the pipelines. See Appx. \ref{appx.metrics} for details.
+
+\vspace{-2mm}\subsection{Systematic Political Bias in LLMs}\vspace{-1mm}
+\label{subsec:study1}
+
+Previous research has shown that LLMs exhibit varying ideological leanings due to biases in their pretraining data \cite{feng2023pretraining}. To evaluate whether these tendencies affect LLM-based human behavior simulations, we introduce a new metric: \textbf{Bias Metric (BM)} (Eq. \ref{BM}). BM quantifies systematic bias by measuring whether simulated personas consistently favor one party over the other. Specifically, a BM $>$ 0 indicates a Republican-leaning bias, while a BM $<$ 0 suggests a Democratic-leaning bias.
+
+As shown in Table~\ref{tab:evaluation_results_2020} and~\ref{tab:evaluation_results_2024}, LLMs using single-prompt persona-based approaches (V1 and V2) exhibit a strong Democratic bias. Ours (V3) reduces this bias but does not fully eliminate it---lowering BM from $-$21.35\% to $-$2.95\% in GPT-4o and from $-$19.97\% to $-$5.44\% in LLaMA 3.1-70B.
+
+Furthermore, systematic affiliations vary across models. When tested on unseen data using pipeline V3, DeepSeek-V3 displayed the strongest Democratic bias ($-$14.57\%), while GPT-4o showed the smallest ($-$2.95\%).
+
+% To align our evaluation of the 2020 and 2024 pipelines with other studies, we selected 11 swing and tipping-point states as the scope for analysis.
+% \begin{table}[!ht]
+% \centering
+% \scalebox{0.7}{
+% \begin{tabular}{|c|c|c|c|}
+% \hline
+% \textbf{Metric}              & \textbf{Vanilla (\%)} & \textbf{V2 (\%)} & \textbf{V3 (\%)} \\ \hline
+% Weighted Absolute Error      & 22.78                & 14.97             & \textbf{5.24}    \\ \hline
+% Weighted Mean Squared Error  & 5.46                 & 2.34              & \textbf{0.37}    \\ \hline
+% Bias Metric (BM)             & -22.78               & -14.97            & \textbf{0.34}    \\ \hline
+% \end{tabular}
+% }
+% % \caption{Evaluation results across three pipelines for the selected states 2020}
+% \caption{
+% Evaluation metrics for the 2020 election simulation across three pipelines (Vanilla, V2, and V3). 
+% % Lower Weighted Absolute Error (WAE) and Weighted Mean Squared Error (WMSE) indicate more accurate predictions. The Bias Metric (BM) measures directional bias (positive: Republican bias; negative: Democratic bias). 
+% V3 achieves the lowest errors and minimal bias, showing substantial improvement over the simpler approaches.
+% }
+% \vspace{-0.1in}
+% \label{tab:evaluation_results_2020}
+% \end{table}
+
+% \begin{table}[h!]
+% \centering
+% \scalebox{0.63}{
+% \begin{tabular}{|c|c|c|c|c|}
+% \hline
+% \textbf{Metric}              & \textbf{Vanilla (\%)} & \textbf{V2 (\%)} & \textbf{V3 (\%)} & \textbf{C (\%)} \\ \hline
+% Weighted Absolute Error      & 21.35                & 25.96             & \textbf{3.49}     & 4.70             \\ \hline
+% Weighted Mean Squared Error  & 4.83                 & 6.89              & \textbf{0.22}     & 0.30             \\ \hline
+% Bias Metric (BM)             & -21.35               & -25.96            & -2.95             & 1.26             \\ \hline
+% \end{tabular}}
+% % \caption{Evaluation results for the 2024 election across three stages and one comparison group (TSP need cite here) for the selected states}
+% \caption{
+% Evaluation metrics for the 2024 election simulation comparing three pipeline versions (Vanilla, V2, V3) and one external comparison model (C, from \cite{zhang2024electionsimmassivepopulationelection}). 
+% As with 2020, V3 achieves the most accurate results (lowest WAE and WMSE). Although BM remains slightly negative for V3, it is greatly reduced compared to the Vanilla and V2 pipelines, indicating a less biased prediction. 
+% The comparison model (C) performs competitively, but does not surpass V3.
+% }
+% \vspace{-0.1in}
+% \label{tab:evaluation_results_2024}
+% \end{table}
+
+% \np{Results Analysis of 2020}
+% We begin our extended analysis by examining the model performances on the 2020 election. Table~\ref{tab:evaluation_results_2020} presents the results for three pipelines: Vanilla (V1), V2, and V3. 
+% Here, WAE and WMSE serve as measures of how closely predicted vote proportions match the actual results, while the BM indicates the presence and direction of any systematic lean.
+% For the 2020 simulation, the Vanilla pipeline shows substantial bias towards Democratic Party, as evidenced by its large negative BM value and correspondingly high error rates. 
+% Incorporating time-dependent information in V2 reduces both WAE and WMSE compared to Vanilla, but still a notable Democratic skew persists, indicated by a still-negative BM. 
+% In contrast, V3 significantly lowers both absolute and squared errors and nearly eliminates bias, achieving a BM close to zero. This improvement confirms that the multi-step reasoning approach employed by V3—incorporating ideological placement and time-sensitive data—effectively counters the model’s initial skew and enhances overall accuracy.
+
+% \np{Results Analysis of 2024}
+% We next turn to the 2024 predictions. Table~\ref{tab:evaluation_results_2024} compares the same three pipelines with an additional external comparison model (C) from \cite{zhang2024electionsimmassivepopulationelection}. The pattern observed in 2020 holds true in 2024: Vanilla and V2 again exhibit marked bias toward the Democratic Party, reflected in large negative BM values. 
+% Although V3 still shows a slight Democratic lean (BM = -2.95), it is significantly less than in the simpler pipelines. V3 also attains the lowest WAE and WMSE, outperforming both the earlier pipelines and the comparison model C. 
+% Not only does this suggest that the design principles in V3 generalize well across different election years, but it also demonstrates that structured reasoning, richer contextual inputs, 
+% and ideological self-placement can improve forecasting accuracy and reduce skew even when compared to other leading approaches.
+
+\noindent
+\textbf{\textit{Future Direction 1: Addressing Embedded Political Skewness in Pretrain Corpora}.}  
+The persistent Democratic skew in simpler pipelines and the residual bias in V3 suggest deeper imbalances in the pretraining corpus. These biases may stem from uneven representation of political perspectives or disproportionate exposure to certain ideologies in the training data \cite{jenny2024exploringjunglebiaspolitical}.
+Mitigating this issue requires a comprehensive approach, including analyzing corpus composition, adopting balanced data selection strategies, and implementing model-level interventions such as adversarial debiasing or targeted prompt engineering. Addressing these root causes will help future simulation studies produce more balanced and reliable results, strengthening LLMs as tools for political analysis and decision-making \cite{li2024politicalllmlargelanguagemodels}.
+%cite the political-llm survey haha~
+
+\vspace{-2mm}\subsection{Reinforcement of Demographic
+Stereotypes}\vspace{-1mm}
+\label{subsec:study2}
+
+Beyond systematic bias, it is crucial to examine whether LLM simulations capture real-world demographic voting patterns. We focus on four key demographic dimensions---gender, ethnicity, age, and education---highlighted in Pew Research Center's 2020 study, \textit{Behind Biden's 2020 Victory} \cite{pew2021biden}, which identified systemic voting preferences across different groups (e.g., men leaning more Republican than women, and white voters showing stronger Republican support than other ethnic groups).
+
+To evaluate whether these demographic trends emerge in LLM simulations, we compared GPT-4o's 2020 predictions with Pew's 2020 findings. As shown in Figure~\ref{fig:demographic_gaps}, our multi-step pipeline more accurately replicates real-world demographic patterns than direct prompting. However, the LLM also amplifies these patterns, exaggerating intra-group voting tendencies. For example, among male voters, the actual Republican preference gap is 2\%, but the LLM-simulated male personas exhibit a 47.6\% Republican bias. Similar overamplification appears across race, age, and education categories (see Appx. \ref{E}).
+
+These findings reveal that LLMs impose systematic stereotypes, amplifying intra-group similarities and oversimplifying the complexity of real human decision-making.
+
+\begin{figure}[!t]
+    \centering
+        \centering
+        \includegraphics[width=\linewidth]{figs/race_gender_margin_plot-cropped.pdf}
+        \caption{Comparison of LLM-simulated voting patterns by gender and race against real human data from the Pew Report.}
+        \label{fig:race_gender_gap}
+    \vspace{-0.3in}
+   \label{fig:demographic_gaps}
+\end{figure}
+
+\noindent
+\textbf{\textit{Future Direction 2: Mitigating Demographic Stereotypical Biases}.}  
+While the LLM's ability to capture directional trends from real-world data is promising, its overemphasis on demographic distinctions raises concerns \cite{chang2024llmsgeneratestructurallyrealistic}. 
+Such exaggerations risk reinforcing stereotypes and misrepresenting demographic groups, potentially distorting analytical insights.
+Future research should focus on calibrating LLM outputs, refining prompt designs, and integrating counterbalancing information to ensure simulations are both directionally accurate and proportionally realistic \cite{park2024generativeagentsimulations1000}. Maintaining fairness in LLM-based simulations---rather than amplifying biases---is essential for developing ethical and reliable computational social science tools.
+
+\vspace{-2mm}\subsection{Overestimated Influence of Political Ideology on Voting Preference}\vspace{-9mm}
+\label{subsec:study3}
+
+To assess the validity of our multi-step reasoning framework in aligning with real human voting behavior, we examine the extent to which political ideology predicts voting preference. Specifically, we run a logistic regression using LLM-inferred ideology (on a 1 to 7 scale, where 1 = extremely liberal and 7 = extremely conservative) as the predictor and voting preference (0 = Democrat, 1 = Republican) as the outcome. We compare the regression coefficients and pseudo R-squared values with those from a logistic regression on real human data from ANES.
+
+Our results (Figure \ref{fig:logistic}) confirm that ideology strongly correlates with voting preference, with liberals favoring Democrats and conservatives leaning Republican. However, this relationship may be exaggerated in LLM simulations, as evidenced by the higher regression coefficients (\(\beta\)) and \(R^2\) values in GPT-4o simulations compared to real human data. Specifically, the regression coefficients and goodness-of-fit metrics for GPT-4o simulations (2024: \(\beta = 4.95, R^2 = 0.75\); 2020: \(\beta = 7.76, R^2 = 0.91\)) exceed those observed in actual human responses from ANES (\(\beta = 1.53, R^2 = 0.44\)). Additionally, for the 2024 election simulations using LLaMA, Qwen, and DeepSeek, we observe R-squared values approaching 1, indicating complete separation---a condition where the predictor perfectly predicts the outcome, causing the model to fail to converge. Due to this instability, we exclude these models from visualization.
+
+\noindent
+\textbf{\textit{Future Direction 3: Human-in-the-Loop Reinforcement Learning.}}
+This finding aligns with the concept of ``hyper-accuracy distortion'' \cite{aher2023using}, where LLMs improve reasoning by closely following ideological patterns but risk exaggerating predictive certainty. Since human decision-making is inherently complex and dynamic \cite{treier2009nature}, developing an effective human-in-the-loop RL framework \cite{zhang-lu-2024-adarefiner} is crucial. Such a framework would iteratively refine LLM behavior through human feedback, enabling more nuanced and realistic simulations of human decision-making. Advancing this approach presents a promising avenue for future research, bridging the gap between LLM reasoning patterns and real-world human behaviors.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figs/logistic.png} 
+    \vspace{-8mm}\caption{Logistic regression analysis of political ideology and voting preference, comparing LLM simulations with real human data (ANES).} \vspace{-5mm}
+    \label{fig:logistic} 
+\end{figure}
+
+
+

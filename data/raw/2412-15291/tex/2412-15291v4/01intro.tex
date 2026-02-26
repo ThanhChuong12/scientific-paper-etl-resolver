@@ -1,0 +1,95 @@
+\section{Introduction}
+
+% Research gap: lack of research in using LLMs to simulate human decision-making behavior in political domains
+Large Language Models (LLMs) have demonstrated strong capabilities in processing and generating text, drawing on vast amounts of knowledge to assist with tasks in fields like scientific discovery \cite{liu2024drugagent}, law \cite{chalkidis2022lexglue}, and creative work \cite{shih2022theme}.
+Beyond text generation, they show emerging reasoning abilities that allow them to approximate human-like thought processes \cite{zhou2020evaluating, alkhamissi2022review} and model human behavior \cite{bommasani2021opportunities}.
+However, LLMs still struggle to capture the deeper psychological and social mechanisms that drive human decision-making, making their simulations less reliable in real-world contexts \cite{zhou2024real}. To address this, researchers have started incorporating insights from social science into LLM-based models. Recent studies have explored how LLMs can simulate economic decision-making \cite{ross2024llm}, public opinion dynamics \cite{chuang2024simulating}, and social-psychological mechanisms like collaboration and conformity \cite{zhang-etal-2024-exploring}.
+
+% Their strength lies in not only understanding and generating text but also leveraging vast common knowledge \cite{roberts2020much}, simulating diverse personas \cite{hu-collier-2024-quantifying}, and modeling human behavior in complex social contexts \cite{bommasani2021opportunities}. LLMs excel in human-like reasoning \cite{zhou2020evaluating, alkhamissi2022review} and have been applied to simulate decision-making in various settings \cite{zhou2023large, ziems2024can}.
+
+% Notably, recent work has extended LLMs to political science, analyzing policy documents, campaign speeches, and public sentiment \cite{xu2022deep, haq2023large, li2024political}. Beyond language processing, their ability to integrate knowledge and apply human-like reasoning positions them as powerful tools for simulating the intricate dynamics of political decision-making \cite{Argyle_Busby_Fulda_Gubler_Rytting_Wingate_2023, Bisbee_Clinton_Dorff_Kenkel_Larson_2024}.
+
+
+% The advantages and challenges in using LLMs to simulate voting behavior
+Despite these advances, the application of LLMs to political decision-making remains underexplored. Voting behavior is one of the most fundamental decision-making processes in political science. 
+LLMs are well-suited for this task because they have shown strong zero- and few-shot capabilities in simulating human dynamics, like political homophily in social networks \cite{chang2024llmsgeneratestructurallyrealistic}. Just as they have been used to estimate politicians' ideological positions \cite{wu2023large}, they could also approximate the average voter's behavior, providing a scalable way to analyze political preferences at a broader level. Election simulations naturally emerge as a structured application of this approach. Unlike abstract ideological simulations, election outcomes offer a clear ground truth---real-world state- and county-level election data---making election simulation an ideal testbed for evaluating LLMs' reasoning and predictive abilities in political science. If successful, this approach could extend to downstream applications, such as forecasting public reactions to policy changes, where traditional large-scale surveys and experiments are often costly and time-consuming.
+
+Yet, accurately simulating voting behavior presents a number of challenges. 
+\textit{First}, LLMs inherit political biases from the data they are trained on, which can skew their predictions in politically sensitive tasks \cite{feng2023pretraining}. \textit{Second}, voting decision-making is shaped by various factors, including demographics, location, ideology, and party affiliation \cite{levendusky2009partisan, abramowitz2008polarization}, but the high cost of acquiring voter-level data complicates both experimentation and model validation. 
+\textit{Third}, a large-scale election simulation should account not only for individual voter behavior but also for the shifting political context, but it remains unclear whether text-based data alone is sufficient to capture these information \cite{graefe2014accuracy}.
+\textit{Fourth}, accurate simulations may require multi-step reasoning \cite{holbrook2016forecasting}, yet how to effectively integrate political science insights into LLMs' reasoning processes---and whether LLMs can handle this level of complexity---remains an open question \cite{wei2022chain}.
+
+% \begin{figure*}[!ht]
+%     \centering
+%     \includegraphics[width=\textwidth]{figs/Intro_hook2.pdf}  
+%     \vspace{-0.3in}
+%     \caption{Demonstration of three prompt designs in \S \ref{subsec:overview}. V1 is the direct prompt on voter demographic information, while V2 introduces time-dependent information to capture candidates' agenda and V3 also uses multi-step reasoning.
+%     In this example for 2020 Ohio result prediction, only V3 can accurately predict the results, demonstrating the importance of leveraging both time-dependent information and multi-step reasoning for election result prediction.}
+%     \vspace{-0.2in}
+%     \label{fig:comparision}
+% \end{figure*}
+
+
+% \noindent \textbf{Background}.
+% Despite LLMs' achievements in more straightforward political science tasks, their capacity to handle more challenging efforts, such as election prediction, is not well understood \cite{lerer2022political}.
+% % On the one hand, 
+% % LLMs can access large volumes of historical information and have performed well in some predictive tasks, raising the possibility that they could forecast election outcomes.
+% % % On the other hand, 
+% % However, election forecasting poses distinct challenges. 
+% LLMs' access to extensive historical data suggests potential for forecasting, but election prediction introduces unique challenges. 
+% \textit{First}, 
+% the high cost of acquiring voter-level data complicates both experimentation and model validation. 
+% \textit{Second}, election forecasting involves modeling not only voter behavior, but also the shifting political context, making it unclear whether text-based data alone can capture the full complexity \cite{graefe2014accuracy}.
+% \textit{Third}, accurate predictions require reasoning about multiple factors\cite{holbrook2016forecasting}. Whether LLMs can perform this more advanced reasoning remains unknown.
+% \cite{wei2022chain}.
+
+\vspace{0.1in}
+\np{This Work}
+We present \textit{a large-scale simulation study} exploring how LLMs can model human decision-making in political science, focusing on voter behavior in U.S. elections. We develop a \textit{theory-driven, multi-step reasoning framework} that incorporates demographic, ideological, and temporal factors to model political decision-making at scale. We evaluate our framework on different LLMs, compare their robustness and predictive performance, and investigate biases and limitations that emerge in large-scale political simulations. Our study addresses three key research questions:
+
+\textbf{RQ1:} \textit{How can LLMs be used to simulate human decision-making in political science?}
+
+\textbf{RQ2:} \textit{How do different LLMs perform, and how robust are their election simulations?}
+
+\textbf{RQ3:} \textit{What limitations arise when using LLMs to model political decision-making?}
+
+
+% We present \textbf{a large-scale simulation study} to address two key questions in election prediction with LLMs:
+% (\textit{\textbf{i}}) how can LLMs be leveraged to achieve \textit{accurate} election predictions, and (\textbf{\textit{ii}}) beyond accuracy, what \textit{additional considerations} are crucial for understanding LLM capabilities in political forecasting tasks?
+
+\vspace{0.1in}
+\noindent
+% \textbf{Contribution 1: Multi-Step Reasoning Framework for Accurate Election Prediction (\S \ref{sec:pipeline})}.
+\textbf{Contribution 1: A Theory-Driven Multi-Step Reasoning Pipeline for Accurate Election Simulation (\S \ref{sec:pipeline})}.
+
+We propose a theory-driven, multi-step reasoning pipeline to simulate voter decision-making, incorporating demographic, temporal, and ideological factors. To address the lack of detailed voter-level data, we use the \textit{Sync} synthetic data generation framework \cite{li2020sync}, which probabilistically reconstructs individual demographic and behavioral profiles from aggregated public datasets. We then align the personas with real-world voter data from American National Election Studies (ANES) \footnote{\url{https://electionstudies.org/}}. Our approach also adapts to evolving political conditions by integrating temporal factors, such as candidates' policy agendas and backgrounds \cite{holbrook2016forecasting}.
+
+Furthermore, building on political science studies on ideological sorting—the process by which voters increasingly align their political ideology with their party affiliation over time \cite{levendusky2009partisan}, we introduce ideology inference as an intermediate reasoning step. Using Chain-of-Thought prompting \cite{wei2022chain}, our model first predicts ideology based on demographics and behavioral data, which then influences party affiliation and voting preferences. 
+
+As shown in Fig~\ref{fig:example}, we refine our pipeline iteratively, incorporating demographics, political context, and ideological inference at each step. The final model significantly improves in simulation accuracy and alignment with real-world election.
+
+% To handle the scarcity of detailed voter-level data, we employ the \textit{Sync} synthetic data generation framework \cite{li2020sync}, which probabilistically reconstructs individual demographic and behavioral profiles from aggregated public datasets. We pair this synthetic data with real-world datasets, notably the American National Election Studies (ANES) Time Series \cite{ANES2020}, ensuring that our model aligns with actual voting behaviors.
+
+% Our approach also adapts to evolving political conditions by incorporating time-dependent factors. We aggregate information from presidential campaign data, including candidates' policy agendas and backgrounds, to align the model with changing political environments \cite{holbrook2016forecasting}.
+
+% Finally, we introduce a multi-step reasoning framework guided by Chain of Thought prompting \cite{wei2022chain}. 
+% By breaking down the prediction process into intermediate steps, the model can systematically integrate demographic details, ideological alignment, and temporal information. This approach strengthens the model's accuracy and mitigates biases and overfitting issues observed in simpler models.
+
+
+% Three biases observed from our simulation
+% 1. Systematics biases of LLMs due to pretrain data
+% 2. Exacerbated steorotypes related to gender, race, etc.
+% 3. Over-exaggeration of ideology's influence on voting preferences (logistic regression coefficient and R-squared larger than real-world data)
+\vspace{0.1in}
+\np{Contribution 2: Challenges and Limitations in Large-Scale Political Simulations (\S \ref{Beyond})}  
+Our analysis reveals three important challenges in LLM-based political simulations. 
+First, LLMs inherit systematic biases from their pretraining data, leading to a persistent left-leaning skew in simpler pipelines, with multi-step reasoning reducing but not eliminating this bias. Second, LLMs exaggerate demographic voting patterns, amplifying stereotypes related to gender, race, and education. Third, LLMs overestimate the influence of ideology on voting behavior, producing higher-than-real-world correlations between ideology and voting preference, a phenomenon referred to in previous work as ``hyper-accuracy distortion'' \cite{aher2023using}. By these findings, we propose future research directions focused on debiasing training data, refining demographic calibration, and introducing human-in-the-loop techniques to improve the accuracy and reliability of LLM-based political simulations.
+
+% Our experiments reveal several key insights that extend beyond predictive accuracy. 
+% First, while our multi-step reasoning pipeline reduces bias and improves alignment with real-world outcomes, residual skewness persists, highlighting the influence of pretrained corpora on political predictions. 
+% Second, although LLMs effectively capture known demographic voting patterns, they tend to exaggerate these differences, raising concerns about the reinforcement of stereotypes. 
+% Finally, our results suggest that incorporating richer contextual information and refining prompt strategies can further enhance predictive reliability.
+% To address these challenges, we propose future directions focused on reducing political skewness in pretraining and mitigating stereotype biases in election prediction.
+
+% \vspace{-0.1in}
+

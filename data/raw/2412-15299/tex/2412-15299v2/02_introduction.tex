@@ -1,0 +1,38 @@
+\section{Introduction}
+
+Developing a model for multilingual automatic speech recognition (ASR) is appealing due to its applicability to universal languages, including low-resource or unseen languages.
+However, this task presents significant challenges as it requires extensive datasets and involves the complexity of capturing shared characteristics across diverse languages in both phonetic and orthographic domains.
+
+Since the revolution in ASR technologies driven by self-supervised learning (SSL) models~\cite{NEURIPS2020_92d1e1eb, conneau2020unsupervisedcrosslingualrepresentationlearning, hsu2021hubert, chen2022wavlm}, monolingual ASR has achieved superhuman transcription performance, shifting the main focus of recent research towards developing a universal model that spans multiple languages.
+
+There are two primary methods for building a multilingual ASR model.
+The first approach involves scaling the size of both the labeled dataset and the model itself, using a single universal model to enhance its capacity and cover a vast number (100+) of languages, thereby achieving multilingual ASR~\cite{radford2023robust}.
+Another approach involves incorporating language-specific modules into the universal model to address the performance inconsistencies of previous methods. 
+For example, MMS~\cite {JMLR:v25:23-1318} demonstrated the feasibility of scaling multilingual technology to over 1,000 languages by leveraging common features across languages and adding language-specific modules to improve the performance of each language.
+Indeed, there have been efforts to integrate both methods~\cite{zhang2023googleusmscalingautomatic}, combining their strengths to build a more robust and versatile model.
+
+Although these works have demonstrated strong performance across various languages, the trade-off between performance and complexity remains a substantial challenge.
+The first method, using a single universal pipeline, struggles to achieve consistent performance across languages, and its effectiveness in low-resource languages remains uncertain.
+On the other hand, despite achieving state-of-the-art performance and parameter efficiency, the second method cannot be considered a single universal model due to the inclusion of language-specific modules. Moreover, the use of language-specific modules like adapters, heads, and language models (LMs) sometimes complicates the training and inference pipeline, suggesting potential areas for future improvement.
+\input{figures/pipeline.tex}
+
+Simultaneously, large language models (LLMs) have garnered considerable attention for their remarkable capabilities in the natural language processing (NLP) domain.
+Following this trend, ASR pipelines have integrated audio SSL models as encoders and LLMs as decoders to enhance transcription quality~\cite{li2023prompting, fathullah2024prompting}.
+These approaches involve using projectors~\cite{yu2024connecting} or fine-tuning strategies~\cite{tang2024salmonn, du2024lauragptlistenattendunderstand} to align modalities and improve transcription capabilities across multilingual datasets.
+Subsequently, shallow fusion~\cite{chorowski2016betterdecodinglanguagemodel, kannan2018analysis} based scoring methods~\cite{hu2023massively, huang2024multilingual} were attempted to replace conventional LMs with LLMs during the decoding stage.
+Despite these efforts resulting in performance gain across various languages, a comprehensive method to fully leverage the diverse emergent abilities of LLMs remains to be developed.
+
+In this paper, we introduce a novel language-agnostic multilingual ASR pipeline that spans over 100 languages, including completely unseen languages. 
+As in Fig~\ref{fig:pipeline}, the proposed pipeline consists of two phases: universal transcription generation and language-specific transliteration.
+In the universal transcription generation phase, we focused on reducing orthographic complexity by unifying diverse orthographic systems into a consistent format, approximating phonetic features across multiple languages.
+In the language-specific transliteration phase, we regard the transformation from universal transcription to language-specific transcription as a transliteration task by leveraging a universal converter.
+Our experiments demonstrate notable transcription performance of~\shortname~across over 100 languages while using significantly smaller training data (only 680 hours) compared to other state-of-the-art multilingual ASR models.
+Furthermore, our proposed pipeline outperforms previous methods, especially in low-resource languages, and demonstrates proficiency in completely unseen languages, achieving performance comparable to existing language-agnostic ASR methods without relying on any language-specific modules.
+Our contributions are summarized as follows:
+
+\begin{itemize}
+    \item We propose a novel language-agnostic multilingual ASR pipeline consisting of two phases: universal transcription generation and language-specific transliteration.
+    \item We enabled our proposed pipeline to perform multilingual ASR with minimal data by unifying diverse orthographic systems through Romanization.
+    \item Our pipeline demonstrates consistent performance across over 100 seen languages and excels with completely unseen languages, all without relying on any language-specific modules or additional fine-tuning.
+    
+\end{itemize}

@@ -1,0 +1,47 @@
+% Preference learning is a post-training technique which has been widely adopted to align large language models (LLMs) with human preferences~\citep{DBLP:conf/nips/StiennonO0ZLVRA20, DBLP:conf/nips/Ouyang0JAWMZASR22, DBLP:journals/corr/abs-2204-05862} and enhance downstream capabilities such as coding or mathematics~\citep{DBLP:journals/corr/abs-2404-02078, DBLP:journals/corr/abs-2406-06592, DBLP:journals/corr/abs-2402-11411}.
+Aligning large language models (LLMs) with human preferences has remained a persistent challenge despite their recent success, particularly for tasks that involve generating nuanced, instruction-following responses.
+To address this bottleneck, \textbf{preference learning} has emerged as a vital technique applied in the final stages of LLM post-training~\citep{DBLP:conf/nips/StiennonO0ZLVRA20, DBLP:conf/nips/Ouyang0JAWMZASR22, DBLP:journals/corr/abs-2204-05862}.
+Preference learning refines the ability of LLMs to align with human expectations by fine-tuning them on pairs of (chosen, rejected) responses.
+Recent successes of using preference learning to develop frontier language models~\citep{DBLP:journals/corr/abs-2303-08774, DBLP:journals/corr/abs-2312-11805, Anthropic2024, DBLP:journals/corr/abs-2407-21783} have led to automated methods for curating preference pairs~\citep{DBLP:journals/corr/abs-2404-19733, DBLP:journals/corr/abs-2405-00451, DBLP:journals/corr/abs-2312-16682, DBLP:conf/naacl/KhakiLMYR24}.
+While these techniques yield synthetic preference pairs that significantly improve model capabilities in closed-ended tasks, it is yet unclear which attributes of the preference pairs contribute to the improved alignment and downstream capabilities.
+
+Existing research in preference learning has largely focused on the mechanics of optimization methods, such as Direct Preference Optimization (DPO,~\cite{DBLP:conf/nips/RafailovSMMEF23}) and Proximal Policy Optimization (PPO,~\cite{DBLP:journals/corr/SchulmanWDRK17}).
+While these methods are critical for updating model weights based on preference data, they operate with limited insight into how the structure, quality, and complexity of the preference datasets themselves affect outcomes~\citep{DBLP:journals/corr/abs-2406-09279, DBLP:journals/corr/abs-2410-15595}.
+For example, questions remain about whether shared prefixes in paired responses improve learning, whether training on high-contrast pairs is always optimal, or how the difficulty of training prompts impacts generalization.
+Without a systematic investigation of these factors, designing effective preference datasets is largely heuristic and suboptimal.
+
+In this work we seek to fill this gap by conducting a systematic investigation of how various attributes of automatically-curated preference datasets affect model performance.
+We approach this problem from the viewpoint of \textbf{instruction-following}~\citep{DBLP:journals/corr/abs-2311-07911, DBLP:journals/corr/abs-2407-03978, DBLP:journals/corr/abs-2408-01122}, which are ideal for such analysis due to their complexity and capacity for integrating multiple constraints, giving us finer control over the data compared to other domains with binary correctness such as mathematics or tool use~\citep{DBLP:conf/nips/HendrycksBKABTS21, DBLP:conf/iclr/MialonF0LS24}.
+Furthermore, we focus on \textit{verifiable} constraints that can be assessed by code, which allows us to enable precision by deterministically evaluating the quality of any response with respect to the constraints, and scalability by requiring much less compute than open-ended constraints.
+
+We first define an ontology of 23 verifiable constraints spanning diverse requirements such as adherence to specific structural, stylistic, or formatting requirements, yet \textit{distinct} from those presented in \texttt{IFEval}~\citep{DBLP:journals/corr/abs-2311-07911}.
+These constraints form the foundation of our synthetic data generation pipeline, loosely inspired by \texttt{Instruct-SkillMix}~\citep{DBLP:journals/corr/abs-2408-14774}, which (1) proposes new general-purpose prompts, (2) assigns valid combinations of verifiable constraints along with the parameters associated with each constraint and (3) generates new prompts that incorporate mixtures of the verifiable constraints in natural language over a wide variety of domains (e.g., blog post and cooking recipe).
+Using this pipeline, we obtain a total of 48K unique synthetic prompts which contain mixtures of four, five or six verifiable constraints.
+
+Using the synthetic prompts, we then apply two commonly-used methods for automatically curating preference pairs: rejection sampling (RS) and Monte Carlo Tree Search (MCTS).
+Rejection sampling presents a straightforward method to extract preference pairs for a given prompt by generating $N$ independent responses with the policy model, scoring each response and using (high, low) scoring pairs of responses as the preference pairs~\citep{DBLP:conf/icml/YuanPCLSXW24, DBLP:conf/naacl/KhakiLMYR24}.
+On the other hand, Monte Carlo Tree Search presents a more complex method for extracting preference pairs -- for a given tree obtained via MCTS, where each node represents the partial response generated for the given prompt, any pair of sibling nodes with (high, low) scoring pairs of responses are used as preference pairs~\citep{DBLP:journals/corr/abs-2405-00451, DBLP:journals/corr/abs-2406-03816}.
+The RS approach is computationally efficient but there is no structure to the generated responses.
+Meanwhile, the MCTS approach is more resource intensive, but returns pairs of responses that share common prefixes and a more nuanced contrast in their remaining suffixes.
+
+We use our synthetic prompts and the associated preference pairs to systematically investigate how different heuristics used for automatically curating preference pairs impact models' downstream performances.
+To this end, we focus on three critical dimensions that characterize a preference dataset:
+\begin{enumerate}
+    \item \textbf{Shared prefixes in preference pairs}: Does structural consistency (e.g., common prefixes) between chosen and rejected responses improve learning?
+    \item \textbf{Contrast and quality of responses}: Is high-contrast or low-contrast pairing always superior, or does a mix of high- and low-contrast pairs offer better results?
+    \item \textbf{Difficulty of training prompts}: How does the complexity of training prompts affect the model’s ability to generalize across different tasks?
+\end{enumerate}
+
+% We perform controlled experiments that vary one of the dimensions $d_1$ while keeping the other two dimensions ($d_2$, $d_3$) fixed, in order to measure how different values of $d_1$ impact model capabilities. 
+% Moreover, we repeat such experiments over multiple combinations of ($d_2$, $d_3$) to ensure that the observed behavior holds beyond one particular combination of ($d_2$, $d_3$).
+
+Our findings reveal several actionable insights:
+
+\textbf{1. Preference pairs with shared prefixes (MCTS) marginally outperforms preference pairs that do not (RS) consistently over different training configurations.}
+The performance of the MCTS-generated preference pairs is also more stable across different training configurations than the RS-generated preference pairs -- this stability is particularly valuable when response correctness is challenging to quantify.
+
+\textbf{2. Having only high-contrast preference pairs is better than having only low-contrast preference pairs, but having a mixture of both often provides the best performance by balancing learning efficiency and diversity.}
+Our results also consistently indicate that the relative \textit{contrast} between the chosen and rejected responses have a greater impact than their absolute correctness.
+
+\textbf{3. Training on moderately difficult prompts results in better generalization across evaluation tasks, including more complex ones.}
+Curating preference datasets with excessively challenging prompts returns a low yield rate of preference pairs due to the lower success rate, and even given the same dataset size, the difficulty of the prompts tend to overwhelm the model and hinder the learning efficiency.

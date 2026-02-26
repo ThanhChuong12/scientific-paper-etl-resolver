@@ -1,0 +1,93 @@
+\section{Dataset Collection}
+We collect two types of data: synthetic and real-world. Synthetic data enables controlled, diverse examples, including rare edge cases, but lacks the variety of real-world content. Real-world data captures authentic webpage diversity, supporting model robustness across HTML structures and styles. Combining both data types provides a comprehensive benchmark.
+
+This section outlines our collection of code-screenshot pairs for synthetic and real-world data, the extraction of resource lists, and the statistics of the sampled data.
+
+\subsection{Synthetic Data Collection} To create the synthetic UI-to-MRWeb dataset, we adopt and modify the WebSight dataset~\cite{laurençon2024unlocking}. The WebSight dataset contains 2 million HTML samples and their corresponding screenshots, covering a broad spectrum of website concepts. However, it cannot be used directly for an MRWeb dataset because 1) its websites lack valid internal or external links, making navigation to other pages impossible, and 2) images on the sites are randomly loaded via the Unsplash\footnote{\url{https://source.unsplash.com/}} API. This random loading causes visual inconsistencies, as identical code can result in different visuals, complicating benchmarking. To address these issues, we enhance the WebSight dataset through link insertion and image replacement.
+
+\paragraph{Link insertion.} Using all website links from the C4~\cite{Raffel2019ExploringTL} validation set, we create a URL list. For each HTML document, we parse its content and iterate over all hyperlink tags, assigning a randomly chosen URL from our list to each hyperlink attribute. This modification ensures that every website includes valid external links to other sites.
+
+\paragraph{Image replacement.} To ensure consistency and diversity in visual representation, we replace random images in the WebSight dataset with static, unique images for each webpage. Using the Unsplash API, we fetch images with specific keywords, dimensions, and properties to guarantee that the pictures remain consistent yet unique. 
+
+
+\subsection{Real-world Data Collection} We collect real-world data by capturing and simplifying HTML content from live websites. We first collect 500 URLs of real-world websites from the C4~\cite{Raffel2019ExploringTL} validation set as our data source. However, HTML files on the web often contain non-visible noise—such as comments, scripts, and hidden content—that makes them excessively lengthy and can exceed the token limits of most models. To create the real-world UI-to-MRWeb dataset, we develop a pipeline that collects and processes HTML code and screenshots from live websites. This pipeline ensures that each webpage captures authentic and static content while maintaining a simplified HTML structure compatible with our UI-to-MRWeb benchmark. The primary steps in this pipeline include saving HTML files, filtering HTML, simplifying HTML, and capturing screenshots, as outlined below:
+\begin{enumerate}[leftmargin=*]
+    \item Saving HTML files: The HTML+CSS content from each URL is saved into a single HTML file, ensuring all components are intact.
+    \item Filtering HTML: We discard websites that are blank or erroneous (e.g., page not found).
+    \item HTML Simplification: We simplify the HTML by removing all non-visible elements, comments, and non-functional Javascripts.
+    \item Final Screenshot: A final screenshot is taken after simplification, completing the real-world data pipeline.
+\end{enumerate}
+
+\subsection{Resource List Extraction} 
+Resource lists capture navigational and visual elements such as links, images, and backgrounds, structured to preserve the functionality and layout of each webpage. For each webpage:
+\begin{itemize}[leftmargin=*]
+    \item Links (\texttt{<a>} tags): We extract each hyperlink’s position, type, and target URL.
+    \item Images and Background Images: For images, including both image tags and CSS background images, we record their position and source URL.
+\end{itemize}
+The resource list is automatically constructed by iterating through the webpage’s elements using Python Selenium, collecting attributes for each, and verifying their visibility and functionality. 
+
+\subsection{Automation \& Dataset Statistics}
+We emphasize that the data collection pipeline is fully automated, enabling the on-demand generation of large-scale MRWeb training data. In principle, the synthetic dataset could match the full size of the WebSight dataset (two million), and the real-world data could encompass any website accessible on the internet. To support future research, however, we sampled 300 synthetic and 200 real-world instances. The statistics, quantitative metrics of the sampled dataset, and comparison with other datasets are provided in Table~\ref{tab:comparison}. To get a sense of the range of domains covered in our benchmark, we manually categorize what type of webpages they are based on their functions.  We present the pie chart of the most frequent domains in Figure~\ref{fig:domain-distribution}. The most prominent genres are companies' or organizations' websites and blogs. 
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{Sections/figs/categories_pie_chart.pdf}
+    \caption{Topic distribution of real-world web data in \taskname dataset.}
+    \label{fig:domain-distribution}
+    \vspace{-15pt}
+\end{figure}
+
+
+
+\section{Study Setup}
+\subsection{Evaluated Models}
+\label{sec:setup}
+We employ three state-of-the-art (SOTA) MLLMs: Gemini 1.5 \cite{google_gemini_api}, GPT-4o \cite{openai_gpt4o} and Claude-3.5 \cite{anthropic_claude} to evaluate their performance on \taskname. the specific model numbers are 20240806 for GPT-4o, 20240620 for Claude-3.5-Sonnet, and Gemini-1.5-Pro accessed during November 2024. For MLLM model configurations, we set the temperature to 0, the random seed to 42, and the $max\_tokens$ parameter to 4096 for each model. Other parameters are maintained at their default settings as specified in the corresponding API documentation~\cite{google_gemini_api_docs, openai_vision_guide, anthropic_vision_docs}.
+
+\subsection{Prompting Strategies}
+\label{subsubsec:prompt} 
+We use four types of prompting methods: self-contained, zero-shot, CoT, and self-refine. Self-contained prompting is adapted from Si et al.~\cite{Si2024Design2CodeHF} to let the model directly generate code from screenshots without resource lists. This method serves as a baseline for other methods that adopt input resource lists. Zero-shot prompting directly lets the model generate HTML code from screenshots and resource lists.  Chain-of-Thought (CoT) prompting~\cite{Wei2022ChainOT} generates a chain of thought for each question and then generates the corresponding code. For CoT, we use the "let’s think step by step" instruction from Chae et al. ~\cite{Chae2024LanguageMA}. Self-refine prompting~\cite{Chen2023TeachingLL} let the model refine its own generated code via multi-turn conversation. We adopt the self-refine prompting and direct promoting method from Si et al.~\cite{Si2024Design2CodeHF}. We list the exact prompts used in our experiments in Appendix~\ref{appendix:prompts}.
+
+\subsection{Metrics}
+\label{sec:metrics}
+\subsubsection{High-level Metrics}
+For high-level performance, we evaluate visual similarity and functional similarity. For visual similarity, we explore three levels of image similarity metrics commonly applied in design-to-code or other computer vision (CV) tasks~\cite{Wang2004ImageQA}: pixel, structural, and semantic. The detailed background and calculation of these metrics are in Appendix~\ref{appendix:similarity}.
+
+\noindent\textbf{Visual: Pixel-level metrics} 
+\begin{itemize}[leftmargin=*]
+    \item Mean Absolute Error (MAE)~\cite{Nguyen2015ReverseEM, Moran2018MachineLP}: Measures the average absolute difference in pixel intensities.
+    \item Peak Signal-to-Noise Ratio (PSNR)~\cite{Lim2017EnhancedDR, Wang2019EDVRVR}: Based on Mean Squared Error (MSE), with higher values indicating greater similarity.
+    \item Normalized Earth Mover's Distance (NEMD)~\cite{Arjovsky2017WassersteinG, Rubner2000TheEM}: Captures spatial differences between images, normalized to be size-independent. Higher NEMD values indicate greater similarity.
+\end{itemize}
+
+\noindent\textbf{Visual: Structure-level metrics} 
+\begin{itemize}[leftmargin=*]
+    \item Structural Similarity Index Measure (SSIM)~\cite{Zhou2024BridgingDA, Wang2004ImageQA}: Measures luminance, contrast, and structural changes.
+\end{itemize}
+
+\noindent\textbf{Visual: Semantic-level metrics} 
+\begin{itemize}[leftmargin=*]
+    \item CLIP Score~\cite{Radford2021LearningTV, Si2024Design2CodeHF}: Aligns image embeddings with language representations to capture high-level conceptual similarity.
+    \item Learned Perceptual Image Patch Similarity (LPIPS)~\cite{Zhang2018TheUE, Simonyan2014VeryDC}: Assesses perceptual similarity using deep features from VGG~\cite{Simonyan2014VeryDC}.
+\end{itemize}
+
+\noindent\textbf{Functional Metric:}
+\begin{itemize}[leftmargin=*]
+    \item Resource Existence Ratio (RER)$_\uparrow$: The proportion of resources in the reference resource list that exist (i.e., are successfully matched to corresponding resources) in the generated list is calculated as $\text{RER} = \frac{\text{\# Matched Resources in G}}{\text{\# Total Resources in R}}$. Matching is determined based on relevant attributes of resources, such as whether navigational elements direct to the same link or whether images share the same source. 
+\end{itemize}
+
+
+All image pairs, except for those used with CLIP Score, are padded with random noise to ensure consistent image sizes for comparison.
+
+\subsubsection{Fine-Grained Metrics}
+Beyond assessing visual and functional similarity, we employ a suite of fine-grained metrics to evaluate the specific capabilities of MLLMs, including visual grounding, color recognition, and text extraction. For each pair of matched resources in RER, we calculate:
+\begin{itemize}[leftmargin=*]
+    \item Position offset$_\downarrow$: Measures the position shift between the generated and the original element with respect to the size of the original web page. For each pair of matched resources $(r_p, g_q)$, the positional alignment is evaluated by comparing the normalized offset of their corresponding web elements' center points: $\text{Position Offset} = \max\left(\frac{|x_p - x_q|}{W}, \frac{|y_p - y_q|}{H}\right)$. $(x_p, y_p)$ and $(x_q, y_q)$ are the center positions of the bounding boxes enclosing the elements; $W$ and $H$ represent the width and height of the original webpage.  
+
+    \item Area Difference$_\downarrow$: Measures the differences in size between corresponding actionable elements with respect to the original area of the element: $\text{Area Difference} = \frac{|A_p - A_q|}{A_p}$, where $A_p$ and $A_q$ are the areas occupied by the reference and generated actionable elements. 
+    
+    \item Color Difference$_\downarrow$: We use the CIEDE2000 color difference formula~\cite{Luo2001TheDO} to assess the perceptual difference between the colors of element $r_p$ and $g_q$.
+
+    \item Text Difference$_\downarrow$: For resources that involve text, such as buttons, their text similarity $\text{\textit{Text Sim}}(r_p, g_q)$ is calculated by normalizing the number of matching characters by the total length of the text. We calculate the text difference by 1 - $\text{\textit{Text Sim}}(r_p, g_q)$.
+\end{itemize}

@@ -1,0 +1,992 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[preprint]{acl}
+
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+
+% My packages
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{array}
+\usepackage{graphicx} 
+
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
+
+\title{SimGRAG: Leveraging Similar Subgraphs for Knowledge Graphs \\Driven Retrieval-Augmented Generation}
+
+% Author information can be set in various styles:
+% For several authors from the same institution:
+\author{Yuzheng Cai\thanks{Equal contribution.}, Zhenyue Guo$^*$, Yiwen Pei, Wanrui Bian, Weiguo Zheng \\
+        Fudan University\\
+\texttt{\{yuzhengcai21, zhenyueguo23, ywpei23, wrbian23\}@m.fudan.edu.cn},\\
+\texttt{zhengweiguo@fudan.edu.cn}
+}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+Recent advancements in large language models (LLMs) have shown impressive versatility across various tasks. 
+To eliminate its hallucinations, retrieval-augmented generation (RAG) has emerged as a powerful approach, leveraging external knowledge sources like knowledge graphs (KGs). 
+In this paper, we study the task of KG-driven RAG and propose a novel \textit{\underline{Sim}ilar \underline{G}raph Enhanced \underline{R}etrieval-\underline{A}ugmented \underline{G}eneration}  (SimGRAG) method.
+It effectively addresses the challenge of aligning query texts and KG structures through a two-stage process: (1) query-to-pattern, which uses an LLM to transform queries into a desired graph pattern, and (2) pattern-to-subgraph, which quantifies the alignment between the pattern and candidate subgraphs using a graph semantic distance (GSD) metric.
+We also develop an optimized retrieval algorithm that efficiently identifies the top-$k$ subgraphs within 1-second latency on a 10-million-scale KG.  
+Extensive experiments show that SimGRAG outperforms state-of-the-art KG-driven RAG methods in both question answering and fact verification, offering superior plug-and-play usability and scalability.
+Our code is available at \url{https://github.com/YZ-Cai/SimGRAG}.
+\end{abstract}
+
+
+
+\section{Introduction}
+\label{sec: introduction}
+
+Pre-trained large language models (LLMs) have become popular for diverse applications due to their generality and flexibility \cite{LLM-survey-2023, LLM-survey-2024, agent-survey-2024}. 
+To avoid the hallucinations or outdated internal knowledge of LLMs \cite{LLM-hallucination, KAPING}, Retrieval-Augmented Generation (RAG) \cite{RAG-survey-2024-Feb, RAG-survey-2024-Jan} integrates LLMs with external databases or documents to ensure the generated outputs are grounded in the most relevant and up-to-date information.
+Recently, knowledge graphs (KGs) have emerged as a valuable data source for RAG \cite{graphRAG-survey}, which encode knowledge through interconnected entities and relationships \cite{KG-survey-2022}.
+State-of-the-art KG-driven RAG methods, such as KAPING \cite{KAPING}, KG-GPT \cite{kggpt}, KELP \cite{KELP}, and G-retriever \cite{G-retriever}, 
+typically follow a paradigm of retrieving subgraphs from the KG and feeding them into LLMs to generate the final response.
+As shown in Figure~\ref{fig: ideal features}, beyond achieving satisfactory answer quality, a practically ideal approach should address the following features.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ideal_features.pdf}
+    \caption{Ideal features for KG-driven RAG methods.}
+    \label{fig: ideal features}
+\end{figure}
+
+\begin{figure*}[t]
+    \centering
+    \vspace{-3mm}
+    \includegraphics[width=\linewidth]{figures/comparison.pdf}
+    \caption{Comparison of mechanisms for aligning query text with KG structures. The example task is fact verification, where the query comes from FactKG dataset \cite{FactKG} with DBpedia \cite{DBpedia}.}
+    \label{fig: comparison}
+\end{figure*}
+
+\textbf{Plug-and-Play.}
+To fully leverage the inherent generalization power of LLMs, an ideal approach should enable seamless integration with diverse KGs and LLMs without additional training or fine-tuning. 
+Otherwise, training a smaller, task-specific model would be a more cost-effective alternative, as confirmed by our experiments in Section~\ref{sec: comparison}. 
+
+\textbf{Avoidance of Entity Leaks.}
+In large-scale KGs, numerous entities may somehow related to a query.
+Thus, a practical approach should not assume that the ground-truth entities in the knowledge graph, which correspond to the mentions in the query, are directly provided by the users.
+
+\textbf{Conciseness.}
+The retrieved subgraphs should focus on the most relevant and essential nodes and edges, ensuring a clear context for LLMs. 
+
+\textbf{Scalability.}
+An ideal algorithm should scale to large KGs with tens of millions of nodes and edges while maintaining acceptable latency.
+
+These requirements converge on the critical challenge of effectively aligning query text with the underlying structures of a KG. 
+The limitations of existing solutions arise from their intrinsic mechanisms, as summarized in Figure~\ref{fig: comparison}.
+Specifically, 
+\textit{(i)} KELP \cite{KELP} trains a path selection model to identify paths that align with the query text, lacking the \textit{plug-and-play} usability. 
+\textit{(ii)} KAPING \cite{KAPING} and G-retriever \cite{G-retriever} rely on query text embeddings to retrieve similar triples or connected components in KG, which may introduce noisy information and compromise the \textit{conciseness}.
+\textit{(iii)} KG-GPT \cite{kggpt} segments the query text into sub-sentences for precision, but it depends on the LLM to align candidate relations in KG with the sub-sentences, compromising \textit{scalability} as the number of relations increases.
+\textit{(iv)} To compensate for the insufficient alignment capability between query text and KG structures, certain methods inadvertently lead to impractical \textit{entity leaks}.
+Both KG-GPT \cite{kggpt} and KELP \cite{KELP} expand the subgraphs or paths from the exact topic entities.
+Similarly, G-retriever \cite{G-retriever} limits the input KG to a 2-hop neighborhood grown from the ground-truth entities of the query. 
+
+In this paper, we introduce a novel approach for aligning query text with KG structures. 
+Specifically, we first utilize an LLM to generate a pattern graph that aligns with the query text.
+Then, to retrieve the best subgraphs from KG that semantically align with the pattern graph, we introduce a novel metric termed \textit{Graph Semantic Distance} (GSD).
+Derived from the pairwise matching distance \cite{pairwise-distance}, it quantifies the alignment by summing the semantic distances between corresponding nodes and relations in the pattern graph and the candidate isomorphic subgraphs.
+For example, in Figure~\ref{fig: comparison}, the LLM generates a star-shaped pattern graph aligning with the query.
+And the highlighted subgraph with the smallest GSD is considered as the best-aligned subgraph in KG. 
+
+Different from KG-GPT \cite{kggpt} that leverages LLMs to filter relations within large KG, we only ask LLMs to generate a small pattern graph.
+Also, our method targets subgraphs structurally and semantically aligned with the pattern, fundamentally differing from KAPING \cite{KAPING} and G-retriever \cite{G-retriever} that do not explicitly constrain subgraph structure or size. 
+Our method can support more complex pattern graph structures, diverging from KELP \cite{KELP} that trains a path selection model limited to 1-hop or 2-hop paths.
+Moreover, to retrieve the top-$k$ similar subgraphs w.r.t. the pattern graph with the smallest GSD, we further develop an optimized algorithm with an average retrieval time of less than one second per query on a 10-million-scale KG.
+
+Figure~\ref{fig: overview} presents the overview of the proposed \textit{\underline{Sim}ilar \underline{G}raph Enhanced \underline{R}etrieval-\underline{A}ugmented \underline{G}eneration} (SimGRAG) method.
+
+Our contributions are summarised as follows.
+\begin{itemize}[leftmargin=*]
+    \item We propose the query-to-pattern and pattern-to-subgraph alignment paradigm, ensuring plug-and-play usability and context conciseness.
+    \item We define the graph semantic distance and develop an optimized subgraph retrieval algorithm to ensure scalability and avoid entity leaks.
+    \item Extensive experiments across different KG-driven RAG tasks confirm that SimGRAG outperforms state-of-the-art baselines.
+\end{itemize}
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/overview_v2.pdf}
+    \caption{Overview of the SimGRAG method.}
+    \label{fig: overview}
+\end{figure}
+
+\section{Related Work}
+\label{sec: related work}
+
+\paragraph{Knowledge Graph Meets Large Language Models.}
+Recently, the pre-trained large language models have shown the ability to understand and handle knowledge graph (KG) related tasks \cite{KG-LLM-survey-2023-Aug, KG-LLM-survey-2023-Dec, KG-LLM-survey-2024-Jan, KG-LLM-survey-2024-TKDE, KG-LLM-survey-2024-IJCAI}, such as KG construction \cite{KG-construction-1}, KG completion \cite{KG-completion-1, KG-completion-2}, KG embedding \cite{KG-embedding-1}, and so on.
+Furthermore, existing studies \cite{GNN-LLM-2024-Jan, GNN-LLM-2024-Feb, GNN-LLM-2024-April, GNN-LLM-2024-June} have tried to integrate LLMs with Graph Neural Networks (GNNs) to enhance modeling capabilities for graph data.
+
+\paragraph{Retrieval-Augmented Generation.}
+In practice, LLMs may produce unsatisfactory outputs due to their hallucination or inner outdated knowledge \cite{KAPING}.
+Retrieval-Augmented Generation (RAG) \cite{RAG-survey-2024-Jan, RAG-survey-2024-Feb} is a promising solution that retrieves related information from external databases to assist LLMs.
+Driven by documents, naive RAG approaches divide them into text chunks, which are embedded into dense vectors for retrieval.
+There are a bunch of studies and strategies optimizing each step of the RAG process \cite{RAG-survey-2024-Feb}, including chunk division \cite{RAG-survey-2024-Jan}, chunk embedding \cite{RAG-embedding-1, RAG-embedding-2}, query rewriting \cite{RAG-rewriting-1}, document reranking \cite{RAG-survey-2024-Jan}, and LLM fine-tuning \cite{RAG-fintuning-1}.
+
+\paragraph{Knowledge Graph Driven Retrieval-Augmented Generation.}
+The intricate structures of knowledge graphs (KGs) present significant challenges to traditional RAG pipelines, prompting the development of various techniques for graph-based indexing, retrieval, and generation \cite{graphRAG-survey}. 
+As depicted in Figure~\ref{fig: comparison}, KAPING \cite{KAPING} retrieves KG triples most relevant to the query directly. 
+KG-GPT \cite{kggpt} segments the query and presents LLMs with all candidate relations in the KG for decision-making. 
+KELP \cite{KELP} trains a model to encode paths in the KG for selecting relevant paths, although it struggles to scale to structures more complex than 2-hop paths. 
+G-Retriever \cite{G-retriever} adopts a multi-step approach: it retrieves similar entities and relations, constructs a connected subgraph optimized via the prize-collecting Steiner tree algorithm, and employs a GNN to encode the subgraph for prompt tuning with the LLM. 
+
+\section{Preliminaries} 
+\label{sec: preliminary}
+
+A knowledge graph (KG) $\mathcal{G}$ is defined as a set of triples, i.e., $\mathcal{G} = \{(h, r, t) \mid h, t \in \mathcal{V}, r \in \mathcal{R} \}$, where $\mathcal{V}$ represents the set of entity nodes and $\mathcal{R}$ denotes the set of relations.
+
+Given a knowledge graph $\mathcal{G}$ and a user query $\mathcal{Q}$, the task of \textit{Knowledge Graph Driven Retrieval-Augmented Generation} is to generate an answer $\mathcal{A}$ by leveraging both large language models and the retrieved evidence from $\mathcal{G}$. 
+This task is general and encompasses a variety of applications, including but not limited to Knowledge Graph Question Answering (KGQA) and Fact Verification \cite{kggpt, KELP}.
+
+An embedding model (EM) transforms a textual input $x$ to an $n$-dimensional embedding vector $z$ that captures its semantic meaning, i.e., $z = \text{EM}(x) \in \mathbb{R}^n$.
+And the L2 distance between two vectors $z_1$ and $z_2$ is denoted by $\| z_1 - z_2 \|_2 \in \mathbb{R}$.
+
+\section{The SimGRAG Approach}
+\label{sec: approach}
+
+Effectively aligning query text with the intricate structures of KG is a critical challenge for KG-driven RAG approaches. 
+In this section, we introduce a novel strategy that decomposes this alignment task into two distinct phases: query-to-pattern alignment and pattern-to-graph alignment.
+
+\subsection{Query-to-Pattern Alignment}
+\label{sec: query-to-pattern}
+
+Given a query text $\mathcal{Q}$, we prompt the LLM to generate a pattern graph $\mathcal{P}$ consisting of a set of triples $\{(h_1, r_1, t_1), (h_2, r_2, t_2), \dots \}$ that align with the query semantics. 
+To guide the LLM in generating the desired patterns, our prompt first asks for the segmented phrases for each triple before generating all the triples.
+As shown in Table~\ref{tab: query-to-pattern FactKG prompts}, it also includes several explicit requirements, along with a few input-output examples to facilitate in-context few-shot learning \cite{few-shot-in-context}.
+
+Such query-to-pattern alignment leverages the inherent understanding and instruction-following capabilities of LLMs.
+For queries involving up to 3 hops in the FactKG dataset \cite{FactKG}, Llama 3 70B \cite{llama3} achieves an accuracy of 93\% in our experiments. 
+This demonstrates that such alignment can be effectively performed by the LLM without the need for additional training, ensuring plug-and-play usability. 
+Furthermore, as LLMs continue to evolve in both capability and cost-effectiveness, we expect the alignment accuracy to keep improving in the near future.
+
+\subsection{Pattern-to-Subgraph Alignment}
+\label{sec: pattern-to-subgraph}
+
+Given the generated pattern graph $\mathcal{P}$, our objective is to assess the overall similarity between $\mathcal{P}$ and a subgraph $\mathcal{S}$ in the knowledge graph $\mathcal{G}$.
+Since the pattern $\mathcal{P}$ defines the expected structure of a subgraph, we leverage graph isomorphism to enforce structural constraints on the desired subgraph.
+
+\begin{definition}[Graph Isomorphism]
+The pattern graph $\mathcal{P}$ has a node set $V_\mathcal{P}$, while the subgraph $\mathcal{S}$ has a node set $V_\mathcal{S}$.
+We say that $\mathcal{P}$ and $\mathcal{S}$ are isomorphic if there exists a bijective mapping $f: V_\mathcal{P} \rightarrow V_\mathcal{S}$ s.t. an edge $\langle u, v \rangle$ exists in $\mathcal{P}$ iff the edge $\langle f(u), f(v) \rangle$ exists in $\mathcal{S}$.
+\end{definition}
+
+Figure~\ref{fig: comparison} presents an isomorphism example.
+Note that when checking graph isomorphism, we do not consider the edge direction, as different KGs may vary for the same relations. 
+For instance, some KGs may express a relation such as ``person A directs movie B'', while others may use the reversed direction, ``movie B is directed by person A''.
+
+After aligning the subgraph structure through graph isomorphism, we proceed to consider the semantic information of the nodes and relations. 
+In traditional text-driven RAG pipelines, computing the distances between the query and document embeddings has proven effective. 
+Similarly, for each entity node $v$ and relation $r$ in both the pattern graph $\mathcal{P}$ and the subgraph $\mathcal{S}$, we obtain the corresponding embedding vectors $z$ as follows:
+\vspace{-3mm}
+\begin{equation}
+    z_v = \text{EM}(v), \quad z_r = \text{EM}(r)
+\end{equation}
+\vspace{-6mm}
+
+For a subgraph $\mathcal{S}$ isomorphic to $\mathcal{P}$, 
+the nodes and edges in $\mathcal{S}$ have a one-to-one mapping with those in $\mathcal{P}$. 
+The semantic similarity between the matched nodes or edges can be quantified by computing the L2 distance between their embeddings. 
+Therefore, we use the pairwise matching distance \cite{pairwise-distance} to derive the following overall graph semantic distance.
+
+\begin{definition}[Graph Semantic Distance, GSD]
+\label{def: subgraph similarity}
+Given the isomorphic mapping $f: V_\mathcal{P} \rightarrow V_\mathcal{S}$ between the pattern graph $\mathcal{P}$ and the KG subgraph $\mathcal{S}$, Graph Semantic Distance (GSD) is defined as follows, where $r_{\langle u,v \rangle}$ denotes the relation of the edge $\langle u,v \rangle$.
+\end{definition}
+\vspace{-4mm}
+{\fontsize{9.8}{12}\selectfont
+\begin{align} 
+    GSD(\mathcal{P}, \mathcal{S})=&\sum_{\text{node } v \in \mathcal{P}} \|z_v - z_{f(v)}\|_2 \\
+    &+ \sum_{\text{edge } \langle u, v \rangle \in \mathcal{P}} \left\|z_{r_{\langle u,v \rangle}} - z_{r_{\langle f(u), f(v) \rangle}} \right\|_2, \notag
+\end{align}}
+
+\begin{example}
+As illustrated in Figure~\ref{fig: comparison}, the highlighted subgraph in KG is isomorphic to the pattern graph. 
+By computing the text similarity (i.e., embedding distance) between the matched nodes and edges, the resulting GSD is 1.0.
+\end{example}
+
+Focusing exclusively on isomorphic subgraphs guarantees conciseness.
+In Section~\ref{sec: retrieval}, we will provide a detailed discussion on how to efficiently retrieve the top-$k$ isomorphic subgraphs with the smallest GSD in KG.
+
+Furthermore, the joint use of graph isomorphism and semantic similarity effectively reduces noise.
+In practice, KGs are often noisy, and even semantically similar entities or relations may not always constitute suitable evidence.
+Figure~\ref{fig: semantic similarity} presents the distance rankings over the 10-million-scale DBpedia for the pattern graph in Figure~\ref{fig: comparison}.
+There are numerous entities related to ``Georgian'', but only the entity ranked 112 contributes to the final subgraph. 
+Similarly, for the relation ``architecture style'', only the relation ranked 3 is useful.
+The proposed GSD metric can effectively incorporate somewhat distant entities or relations that still contribute valuable evidence to the overall subgraph, thereby eliminating the need for entity leaks.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/semantic_similarity.pdf}
+    \caption{Semantic L2 distance rankings of a given keyword with entities (relations) in DBpedia \cite{DBpedia}, computed using the embeddings generated by the Nomic model \cite{nomic}.}
+    \label{fig: semantic similarity}
+\end{figure}
+
+\subsection{Generalization to Unknown Entities or Relations} \label{sec: unknown entity or relation}
+
+In practice, some queries like ``Who is the director of the movie Her?'' may involve unknown entities. 
+To address this, we extend the query-to-pattern alignment process by allowing the LLM to represent unknown entities or relations with unique identifiers such as ``UNKNOWN director 1'', as illustrated by the pattern graph $\mathcal{P}$ in Figure~\ref{fig: overview}.
+
+In such cases, we further generalize the Graph Semantic Distance (GSD). 
+Specifically, since unknown entities or relations are ambiguous and difficult to match with corresponding entities or relations in the KG, we exclude them from the GSD computation. 
+Given the isomorphic mapping $f: V_\mathcal{P} \rightarrow V_\mathcal{S}$ between the pattern graph $\mathcal{P}$ and the KG subgraph $\mathcal{S}$, we generalize GSD to:
+\vspace{-2mm}
+{\fontsize{9.8}{12}\selectfont
+\begin{align}
+    GSD(\mathcal{P}, \mathcal{S})=&\sum_{\substack{\text{node } v \in \mathcal{P} \\ \text{s.t.} v \text{ is known}}} \|z_v - z_{f(v)}\|_2 \\
+    &+ \sum_{\substack{\text{edge } \langle u, v \rangle \in \mathcal{P} \\ r_{\langle u, v \rangle} \text{ is known}}} 
+    \|z_{r_{\langle u, v \rangle}} - z_{r_{\langle f(u), f(v) \rangle}}\|_2 \notag
+\end{align}
+}
+
+\begin{example} 
+As illustrated in Figure~\ref{fig: overview}, the top-1 subgraph from the KG yields a GSD of $0.2$.
+\end{example}
+
+\subsection{Verbalized Subgraph-Augmented Generation} 
+\label{sec: generation}
+
+Given the top-$k$ subgraphs with the smallest Graph Semantic Distance (GSD) from the KG, we now expect the LLM to generate answers to the original query based on these evidences. 
+To achieve this, we append each retrieved subgraph $\mathcal{S}$ to the query text in the prompt. 
+Each subgraph is verbalized as a set of triples $\{(h_1, r_1, t_1), (h_2, r_2, t_2), \dots\}$, as illustrated in Figure~\ref{fig: overview}. 
+Additionally, to facilitate in-context learning, we also include a few example queries with their corresponding subgraphs and expected answers in the prompt.
+Please refer to Appendix~\ref{app: prompts} for more details.
+
+\section{Semantic Guided Subgraph Retrieval}
+\label{sec: retrieval}
+
+Performing a brute-force search over all candidate subgraphs and computing the Graph Semantic Distance (GSD) for each one is computationally prohibitive. 
+To address this, we propose a practical retrieval algorithm in Section~\ref{sec: naive retrieval}, which is further optimized for efficiency in Section~\ref{sec: optimized retrieval}.
+
+\subsection{Top-$k$ Retrieval Algorithm}
+\label{sec: naive retrieval}
+
+Recent subgraph isomorphism algorithms often follow a \textit{filtering-ordering-enumerating} paradigm \cite{subgraph-matching-survey-2012, subgraph-matching-survey-2020, subgraph-matching-survey-2024}. 
+To narrow down the potential search space, we first apply semantic embeddings to filter out unlikely candidate nodes and relations.
+For each node $v_\mathcal{P}$ in the pattern graph $\mathcal{P}$, we retrieve the top-$k^{(n)}$ most similar entities from the knowledge graph $\mathcal{G}$, forming a candidate node set $C^{(n)}[v_\mathcal{P}]$. 
+Similarly, for each relation $r_\mathcal{P}$, we extract the top-$k^{(r)}$ similar relations to form the candidate relation set $C^{(r)}[r_\mathcal{P}]$. 
+Figure~\ref{fig: overview} illustrates an example of the candidate nodes and relations for the pattern graph node ``Tokyo Godfathers'' and the relation ``director''.
+For unknown nodes or relations, as discussed in Section~\ref{sec: unknown entity or relation}, we treat all nodes or relations in $\mathcal{G}$ as candidates with a semantic distance of $0$.
+
+The retrieval process is described in Algorithm~\ref{algo: naive}. 
+Initially, lines~\ref{line: order start}-\ref{line: order end} organize all edges in $\mathcal{P}$ according to a DFS traversal order. 
+For each candidate node $v_\mathcal{G}$ in the set $C^{(n)}[v^*_\mathcal{P}]$, we start an isomorphic mapping in lines~\ref{line: fix the first begin}-\ref{line: fix the first end} and iteratively expand the mapping using the \texttt{Expand} function until a valid mapping is found.
+In function \texttt{Expand}, when matching the $i^{th}$ triple $(h_\mathcal{P}, r_\mathcal{P}, t_\mathcal{P})$ in the ordered triple list $L$, the node $h_\mathcal{P}$ is mapped to the corresponding node $h_\mathcal{G}$ in $\mathcal{G}$ via the partial mapping $f$. 
+Then, lines~\ref{line: neighbor begin}-\ref{line: neighbor end} check each neighboring relation $r_\mathcal{G}$ and node $t_\mathcal{G}$ for $h_\mathcal{G}$ to see if they are valid candidates and do not contradict the existing mapping $f$.
+
+\subsection{Optimized Retrieval Algorithm}
+\label{sec: optimized retrieval}
+
+Despite the filtering approach, the above algorithm still suffers from a large search space, especially when there are too many candidate nodes and relations.
+As we only need the top-$k$ subgraphs with the smallest GSD, we propose an optimized strategy that can prune unnecessary search branches.
+
+Assume that during the expansion of the $i^{\text{th}}$ edge in $L$, the partial mapping from the pattern graph $\mathcal{P}$ to the knowledge graph $\mathcal{G}$ is represented by $f$. 
+Suppose there exists an isomorphic mapping $f'$ that can be completed by future expansion, resulting in a subgraph $\mathcal{S}$ with $GSD(\mathcal{P}, \mathcal{S})$.
+It can be decomposed into the following four terms, where $L[1:i]$ denotes the first $i-1$ triples in $L$ and $L[i:]$ denotes the remaining triples.
+
+\vspace{-7mm}
+{\fontsize{9}{14}\selectfont
+\begin{align} 
+&GSD(\mathcal{P}, \mathcal{S}) = \Delta^{(n)}_{\text{mapped}} + \Delta^{(n)}_{\text{remain}} + \Delta^{(r)}_{\text{mapped}} + \Delta^{(r)}_{\text{remain}}, \label{eq: total GSD}\\
+&\Delta^{(n)}_{\text{mapped}}
+= \sum_{\substack{\text{node } v_\mathcal{P} \in \mathcal{P} \\ \text{ mapped in } f}} \| z_{v_\mathcal{P}} - z_{f(v_\mathcal{P})} \|_2, \\ 
+&\Delta^{(n)}_{\text{remain}} =  \sum_{\substack{\text{node } v_\mathcal{P} \in \mathcal{P} \\ \text{ not mapped in } f}} \| z_{v_\mathcal{P}} - z_{f'(v_\mathcal{P})} \|_2, \label{eq: future nodes}\\
+&\Delta^{(r)}_{\text{mapped}} = \sum_{( h_\mathcal{P}, r_\mathcal{P}, t_\mathcal{P} ) \in L[1:i]} \| z_{r_\mathcal{P}} - z_{r_{\langle f(h_\mathcal{P}), f(t_\mathcal{P}) \rangle}} \|_2, \\
+&\Delta^{(r)}_{\text{remain}} = \sum_{( h_\mathcal{P}, r_\mathcal{P}, t_\mathcal{P} ) \in L[i:]} \| z_{r_\mathcal{P}} - z_{r_{\langle f'(h_\mathcal{P}), f'(t_\mathcal{P}) \rangle}} \|_2. \label{eq: future edges} 
+\end{align}
+}
+
+For Equations~(\ref{eq: future nodes}) and (\ref{eq: future edges}), notice that
+{\fontsize{8.5}{12}\selectfont
+\begin{align} 
+\Delta^{(n)}_{\text{remain}} &\geq \sum_{\substack{\text{node } v_\mathcal{P} \in \mathcal{P} \\ \text{ not mapped in } f}} \min_{v_\mathcal{G} \in C^{(n)}[v_\mathcal{P}]} \| z_{v_\mathcal{P}} - z_{v_\mathcal{G}} \|_2 \triangleq X. \label{eq: future node bounds} \\
+\Delta^{(r)}_{\text{remain}} &\geq \sum_{( h_\mathcal{P}, r_\mathcal{P}, t_\mathcal{P} ) \in L[i:]} \min_{r_\mathcal{G} \in C^{(r)}[r_\mathcal{P}]} \| z_{r_\mathcal{P}} - z_{r_\mathcal{G}} \|_2 \triangleq Y.
+\label{eq: future edge bounds}
+\end{align}
+}
+
+\vspace{-1mm}
+Combining Equations~(\ref{eq: total GSD}), (\ref{eq: future node bounds}), and (\ref{eq: future edge bounds}), we have
+{\fontsize{9}{12}\selectfont
+\begin{equation}
+GSD(\mathcal{P}, \mathcal{S}) \geq \Delta^{(n)}_{\text{mapped}} + \Delta^{(r)}_{\text{mapped}} + X + Y \triangleq B. 
+\end{equation}
+}
+
+When the lower bound $B$ exceeds the largest GSD of the top-$k$ subgraphs in current priority queue $res$, any subgraph $\mathcal{S}$ completed through future expansion will never become the desired top-$k$ subgraphs.
+That is, the current partial mapping $f$ can be safely discarded, effectively pruning subsequent unnecessary search branches.
+
+Moreover, to reduce the largest GSD in the top-$k$ priority queue $res$ for more pruning opportunities, we adopt a greedy strategy that prioritizes matching more promising subgraphs earlier.
+Specifically, for lines~\ref{line: fix the first begin}-\ref{line: fix the first end}, we can process the nodes $v_\mathcal{G} \in C^{(n)}[v^*_\mathcal{P}]$ in ascending order of their distances. 
+In line~\ref{line: neighbor begin} of the \texttt{Expand} function, the neighboring relation and node $(r_G, t_G)$ with the smaller sum of $\|z_{t_P} - z_{t_G}\|_2 + \|z_{r_P} - z_{r_G}\|_2$ will be expanded earlier.
+
+By combining the pruned and greedy expansion strategies, the optimized algorithm is guaranteed to produce the same results as the top-$k$ retrieval algorithm without any loss in solution quality.
+Experiments in Section~\ref{sec: efficacy} demonstrate that the optimized algorithm significantly accelerates retrieval.
+
+
+\begin{algorithm}[t]
+\caption{Top-$k$ Retrieval Algorithm}
+\label{algo: naive}
+\small
+\KwIn{Pattern graph $\mathcal{P}$, knowledge graph $\mathcal{G}$, node candidates $C^{(n)}$, relation candidates $C^{(r)}$, and the parameter $k$.}
+\KwOut{The top-$k$ subgraphs from $\mathcal{G}$ with the smallest GSD.}
+
+Select start node $v^*_\mathcal{P}$ in $\mathcal{P}$ with the fewest candidates\;\label{line: order start}
+$L \gets$ all triples of $\mathcal{P}$ in DFS traversal order from $v^*_\mathcal{P}$\;\label{line: order end}
+$res \gets$ a priority queue maintaining the top-$k$ subgraphs with the smallest GSD\;
+
+\ForEach{$v_\mathcal{G} \in C^{(n)}[v^*_\mathcal{P}]$ \label{line: fix the first begin}}{
+    Expand($1, \{v^*_\mathcal{P}:v_{\mathcal{G}}\}$)\;\label{line: fix the first end}
+}
+\Return $res$\;
+
+\vspace{2mm}
+\SetKwFunction{FMain}{Expand}
+\SetKwProg{Fn}{Function}{:}{}
+\Fn{\FMain{$i, f$}}{
+    \If{$f$ is a valid isomorphism mapping for $\mathcal{P}$}{
+        Push the mapped subgraph $\mathcal{S}$ to $res$\;
+        \Return\;
+    }
+    $(h_\mathcal{P}, r_\mathcal{P}, t_\mathcal{P}) \gets $ the $i^{th}$ triple in $L$ \label{line: ith triple}\;
+    $h_\mathcal{G} \gets f(h_\mathcal{P})$\;
+    \ForEach{$(r_G, t_G)$ s.t. $(h_G, r_G, t_G) \in \mathcal{G}$\label{line: neighbor begin}}{
+        \If{$r_\mathcal{G} \in C^{(r)}[r_\mathcal{P}] \land t_\mathcal{G} \in C^{(n)}[t_\mathcal{P}]$}{
+            \If{no contradiction for $t_\mathcal{P}$ in $f$}{
+                Expand($i + 1, f \cup \{t_\mathcal{P}: t_\mathcal{G}\}$)\;\label{line: neighbor end}
+            }
+        }
+    }
+}
+\end{algorithm}
+
+\section{Experiments}
+\label{sec: experiment}
+
+To evaluate the performance compared with existing approaches, we conduct extensive experiments on two tasks, i.e., \textit{Knowledge Graph Question Answering (KGQA)} and \textit{Fact Verification}.
+
+\subsection{Tasks and Datasets}
+\label{sec: datasets}
+
+\textbf{Knowledge Graph Question Answering.}
+We use the MoviE Text Audio QA dataset (MetaQA) \cite{MetaQA} in this task, which provides a knowledge graph related to the field of movies.
+All the queries in the test set are adopted for evaluation, consisting of Vanilla 1-hop, 2-hop, and 3-hop question-answering in the same field.
+
+\textbf{Fact Verification.}
+We adopt the FactKG dataset \cite{FactKG} in this task.
+It contains various statements including colloquial and written style claims, which can be verified using the DBpedia \cite{DBpedia}.
+All statements in the test set are used in the evaluation, and a method should return \textit{Supported} or \textit{Refuted} after verification.
+
+Please refer to Appendix~\ref{app: datasets} for detailed statistics and examples of the tasks and datasets.
+
+\subsection{Baselines}
+\label{sec: baselines}
+
+The included baselines are briefly introduced as follows.
+Please refer to Appendix~\ref{app: implementations} for more details.
+
+\textbf{Supervised task-specific models.}
+State-of-the-art models for KGQA include EmbedKGQA \cite{EmbedKGQA}, NSM \cite{NSM}, and UniKGQA \cite{UniKGQA}.
+They are trained on the MetaQA training set and evaluated by the test accuracy.
+For the task of fact verification, the KG version of GEAR \cite{GEAR} is included and trained on the FactKG training set.
+
+\textbf{Pre-trained LLMs.}
+For both tasks, we evaluate two popular LLMs, ChatGPT \cite{ChatGPT} and Llama 3 70B \cite{llama3}, using 12-shots without any provided evidence.
+
+\textbf{KG-driven RAG with training.}
+Recent method KELP \cite{KELP} trains the retriever over the training set, while G-retriever \cite{G-retriever} trains a graph neural network (GNN) to integrate query texts and subgraph evidences.
+
+\textbf{KG-driven RAG without training.}
+Both KAPING \cite{KAPING} and KG-GPT \cite{kggpt} only require retrieval subgraphs from the KGs without any training or fine-tuning.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{1.6mm}
+\begin{tabular}{l|c|c|c|c}
+\hline
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{3}{c|}{\textbf{MetaQA} (Hits@1)} & \textbf{FactKG} \\ \cline{2-4}
+                & \textbf{1-hop} & \textbf{2-hop} & \textbf{3-hop} &  (Accuracy)   \\ \hline
+\multicolumn{5}{c}{\textit{Supervised task-specific methods}} \\ \hline
+EmbedKGQA        & 97.5                  & 98.8                  & 94.8                  & -              \\
+NSM                    & 97.1                  & 99.9                  & 98.9                  & -              \\
+UniKGQA           & 97.5                  & 99.0                  & 99.1                  & -              \\ 
+GEAR              & -                  & -                  & -                  & 77.7              \\ \hline
+\multicolumn{5}{c}{\textit{Pre-trained LLMs}} \\ \hline
+ChatGPT                 & 60.0                  & 23.0                  & 38.7                  & 68.5          \\
+Llama 3 70B              & 56.7                  & 25.2                  & 42.3                  & 68.4          \\ \hline
+\multicolumn{5}{c}{\textit{KG-driven RAG with training (Llama 3 70B)}} \\ \hline
+KELP$^\dagger$                 & 94.7                  & 96.0                  & -                     & 73.3          \\ 
+G-Retriever$^\dagger$          & 98.5                  & 87.6                  & 54.9                     & 61.4        \\ \hline
+\multicolumn{5}{c}{\textit{KG-driven RAG without training (Llama 3 70B)}} \\ \hline
+KAPING                & 90.8                 & 71.2                 & 43.0                &   75.5            \\
+KG-GPT$^\dagger$              & 93.6                 & 93.6                 & 88.2                  & 69.5          \\
+SimGRAG (ours)         & 98.0                 & 98.4                 & 97.8                 & 86.8          \\ 
+\hline
+\end{tabular}
+\caption{Performance comparison of different approaches, where $^\dagger$ denotes the presence of entity leaks.}
+\label{tab: overall result}
+\end{table}
+
+\subsection{Comparative Results}
+\label{sec: comparison}
+
+As summarized in Table~\ref{tab: overall result}, supervised task-specific methods outperform KG-driven RAG approaches that require additional training, except on the MetaQA 1-hop dataset, where G-retriever achieves a 1\% performance gain. 
+Notably, supervised task-specific methods generally require smaller model sizes and lower training costs, making them a more cost-effective option in practice.
+
+To avoid the costs of training, preparing samples, or serving a trained model, the inherent capabilities of pre-trained LLMs simplify the process, especially with the widely available APIs. 
+However, directly using LLMs leads to the poorest performance.
+Thus, it is necessary to develop KG-driven RAG methods that do not require additional training.
+Among these methods, the proposed SimGRAG approach demonstrates substantially higher Hits@1 and accuracy in most cases. 
+In fact, SimGRAG performs comparably to supervised task-specific models and even outperforms the supervised GEAR method on the FactKG dataset, while maintaining the plug-and-play usability.
+
+Moreover, the performance gap between SimGRAG and other RAG approaches becomes larger as the complexity of the questions increases on the MetaQA dataset. 
+As discussed in Section~\ref{sec: pattern-to-subgraph}, the combined use of graph isomorphism and semantic similarity effectively reduces noise and ensures conciseness, thus benefiting the performance of SimGRAG for 2-hop and 3-hop questions.
+In contrast, KELP fails to support 3-hop paths due to the challenges of handling the vast number of potential paths with its trained path selection model. 
+
+\subsection{Error Analysis}
+\label{sec: error analysis}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{1.2mm}
+\begin{tabular}{c|ccc|c}
+\hline
+   \multirow{2}{*}{\textbf{Step}} & \multicolumn{3}{c|}{\textbf{MetaQA}} & \multirow{2}{*}{\textbf{FactKG}} \\ \cline{2-4}
+                & \textbf{1-hop} & \textbf{2-hop} & \textbf{3-hop} &  \\ \hline
+Query-to-pattern &              89\%                                                   & 64\%                                                            & 31\%                                                            & 49\%            \\
+Pattern-to-subgraph     & 0\%                                                           & 0\%                                                            & 0\%                                                            & 24\%            \\
+Augmented generation         &                                       11\%                         & 36\%                                                            & 69\%                                                            & 27\%      \\
+\hline
+\end{tabular}
+\caption{The statistics of errors from different steps.}
+\label{tab: error analysis}
+\end{table}
+
+Table~\ref{tab: error analysis} summarizes the error distribution across the three main steps of the SimGRAG method. 
+For detailed error examples, please refer to Appendix~\ref{app: error analysis}.
+
+The majority of errors occur during the query-to-pattern alignment step. 
+In this stage, the large language model (LLM) frequently fails to follow the given instructions and examples, thereby generating the undesired pattern graphs. 
+As the complexity of the queries increases in the MetaQA dataset, we also observe a higher incidence of errors in the subgraph-augmented generation step, since it is more difficult for the LLM to accurately extract relevant information for a complex question from the retrieved subgraphs.
+Also, errors are also encountered during the pattern-to-subgraph alignment phase on the FactKG dataset. 
+In these cases, while the LLM generates reasonable subgraphs in line with the guidance, mismatches occur because the ground-truth subgraphs have different structures and thus cannot be successfully aligned, as illustrated in Appendix~\ref{app: error analysis}.
+
+\subsection{Ablation Studies}
+\label{sec: ablation}
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{2.7mm}
+  \begin{tabular}{c|ccc|c}
+    \hline
+ \multirow{2}{*}{} & \multicolumn{3}{c|}{\textbf{MetaQA} (Hits@1)} & \textbf{FactKG} \\ \cline{2-4}
+       & \textbf{1-hop} & \textbf{2-hop} & \textbf{3-hop} &  (Accuracy)   \\ \hline
+   shot=4 & 98.6 & 96.5 & 92.8 & 84.0 \\
+  shot=8 & 98.3 & 96.4 & 98.8 & 87.9 \\
+  shot=12 & 98.0 & 98.4 & 97.8 & 86.8 \\\hline
+    $k=1$ & 95.2 & 98.2 & 97.0 & 88.1 \\
+    $k=2$ & 98.0 & 97.9 & 97.6 & 87.6 \\
+    $k=3$ & 98.0 & 98.4 & 97.8 & 86.8 \\\hline
+  \end{tabular}
+  \caption{Performance of the SimGRAG method by varying the number of few-shot examples and the parameter $k$ for semantic guided subgraph retrieval.}
+  \label{tab: vary k}
+  \label{tab: vary shots}
+\end{table}
+
+\textbf{Few-shot in-context learning.}
+Table~\ref{tab: vary shots} evaluates the proposed SimGRAG method by varying the number of examples in the prompts for the LLM, used in both pattern-to-graph alignment and verbalized subgraph-augmented generation. 
+For the simplest MetaQA 1-hop questions, performance is not sensitive to the number of shots. 
+In contrast, for more complex queries like those in the MetaQA 3-hop and FactKG datasets, we observe significant improvements when increasing from 4 to 8 shots.
+
+\textbf{Parameter $k$ for semantic guided subgraph retrieval.}
+Table~\ref{tab: vary k} reports the impact of parameter $k$ for retrieving top-$k$ subgraphs with the smallest graph semantic distance.
+For MetaQA 1-hop questions, setting $k=1$ leads to a significant drop in Hits@1, since many movies share the exactly same title, and retrieving fewer subgraphs makes it more difficult to cover the ground-truth answer.
+For MetaQA 2-hop and 3-hop questions, the choice of $k$ has a negligible impact on performance. 
+Conversely, increasing $k$ leads to a slight decrease in accuracy on the FactKG dataset, since the top-1 subgraph is often sufficient and including more subgraphs will introduce noise for LLM.
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{1.6mm}
+  \begin{tabular}{l|rrr|r}
+    \hline
+\multirow{2}{*}{} & \multicolumn{3}{c|}{\textbf{MetaQA}} & \multirow{2}{*}{\textbf{FactKG}} \\ \cline{2-4}
+                & \textbf{1-hop} & \textbf{2-hop} & \textbf{3-hop} &  \\ \hline
+    Vector search & 0.02 & 0.02 & 0.02 & 0.59 \\
+    Optimized retrieval & 0.0006 & 0.0007 & 0.002 & 0.15 \\ \hline
+    \textbf{Total} & 0.02 & 0.02 & 0.02 & 0.74 \\ \hline
+  \end{tabular}
+  \caption{Semantic guided subgraph retrieval time (s).}
+  \label{tab: time cost}
+\end{table}
+
+\begin{figure}[t] 
+\centering 
+\includegraphics[width=\linewidth]{figures/time_cost.pdf} 
+\caption{Pareto optimal curves for retrieval.} 
+\label{fig: time cost} 
+\end{figure}
+
+\subsection{Retrieval Efficiency} 
+\label{sec: efficacy}
+
+As discussed in Section~\ref{sec: retrieval}, prior to running the optimized retrieval algorithm for top-$k$ subgraphs, we first perform a vector search to obtain the top-$k^{(n)}$ candidate nodes and top-$k^{(r)}$ candidate relations. 
+Table~\ref{tab: time cost} reports the average retrieval time per query, in which the vector search time dominates the total time. 
+On the 10-million-scale DBpedia KG from the FactKG dataset, the overall retrieval time is 0.74 seconds per query, highlighting the efficiency and scalability of the optimized retrieval algorithm.
+
+Additionally, we conduct a grid search over the parameters $k^{(n)}$ and $k^{(r)}$ to compare the top-$k$ retrieval and the optimized retrieval algorithms. 
+Specifically, we randomly sample 100 queries that correctly generate patterns and manually identify the ground truth subgraphs for each query to evaluate retrieval performance using retrieval Hits@1. 
+For detailed setups, please refer to Appendix~\ref{app: grid search}. 
+By varying $k^{(n)}$ and $k^{(r)}$, Figure~\ref{fig: time cost}(a) presents the Pareto optimal curves, which plot the trade-off between average retrieval time and retrieval Hits@1.
+The results clearly show that the optimized retrieval algorithm significantly improves the performance, particularly in scenarios where a higher retrieval Hits@1 is desired in practice. 
+Also, Figure~\ref{fig: time cost}(b) shows the overall latency for the proposed SimGRAG method, consisting of query-to-pattern alignment, pattern-to-subgraph alignment, and the verbalized subgraph-augmented generation. 
+The top-$k$ retrieval algorithm without optimization dominates the overall latency when targeting higher retrieval Hits@1, while the optimized algorithm guarantees reasonable latency, surpassing even some fully-supervised models.
+
+\section{Conclusion}
+\label{sec: conclusion}
+
+In this paper, we investigate the problem of KG-driven RAG and introduce a novel SimGRAG approach that effectively aligns query texts with KG structures. 
+For query-to-pattern alignment, we employ an LLM to generate a pattern graph that aligns with the query text, ensuring plug-and-play usability without any training. 
+For pattern-to-subgraph alignment, we introduce the Graph Semantic Distance (GSD) metric to quantify the alignment between the desired pattern and the underlying subgraphs in the KG, ensuring context conciseness and preventing entity leaks. 
+Additionally, we propose an optimized algorithm to retrieve the top-$k$ similar subgraphs with the smallest GSD, improving retrieval efficiency and scalability. 
+Extensive experiments demonstrate that SimGRAG consistently outperforms existing KG-driven RAG approaches.
+
+
+\section{Limitations} 
+\label{sec: limitations}
+
+Since the proposed SimGRAG method is designed to offer plug-and-play usability, its performance is closely tied to the underlying capabilities of the large language model (LLM). 
+Specifically, the method relies heavily on the ability of LLMs to understand and follow instructions effectively in both steps of the query-to-pattern alignment and verbalized subgraph-augmented generation. 
+Thus, the performance of SimGRAG can be substantially degraded when utilizing lower-quality or less capable LLMs, especially in scenarios involving more complex queries that demand advanced reasoning skills. 
+
+% Bibliography entries for the entire Anthology, followed by custom entries
+%\bibliography{anthology,custom}
+% Custom bibliography entries only
+\bibliography{custom}
+
+$\quad$
+\begin{table*}[t]
+    \centering
+    \small
+    \setlength{\tabcolsep}{2.2mm}
+    \begin{tabular}{c|c|cccc}
+    \hline
+    \textbf{Dataset} & \textbf{The underlying knowledge graph} & \textbf{\# Entity nodes} & \textbf{\# Relation edges} & \textbf{\# Entity type} & \textbf{\# Relation type}                        \\
+    \hline
+    MetaQA     & MetaQA                     & 43,234                   & 269,482           & 9                       & 9                             \\
+    FactKG     & DBpedia                     & 9,912,183               & 42,879,918                & 467                     & 522  \\ \hline
+    \end{tabular}
+    \caption{Statistics of the knowledge graphs.}
+    \label{tab: dataset}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5mm}
+\begin{tabular}{ccc}
+\hline
+\textbf{Head}                          & \textbf{Relation} & \textbf{Tail}    \\
+\hline
+Champagne for Caesar                   & has genre         & Comedy           \\
+High Risk                              & starred actors    & Lindsay Wagner   \\
+Married to It                          & directed by       & Arthur Hiller    \\
+The Adventures of Huckleberry   Finn   & directed by       & Michael Curtiz   \\
+The Amazing Spider-Man 2               & directed by       & Marc Webb        \\
+The Eiger Sanction                     & starred actors    & Clint Eastwood   \\
+The Exterminating Angel                & has tags          & luis buñuel      \\
+The Life and Times of Hank   Greenberg & has genre         & Documentary      \\
+The Slumber Party Massacre             & directed by       & Amy Holden Jones \\
+Tokyo Godfathers                       & release year      & 2003   \\
+\hline
+\end{tabular}
+\caption{Example triples in the knowledge graph of MetaQA dataset.}
+\label{tab: MetaQA KG examples}
+\end{table*}
+
+\begin{table*}[!htp]
+\centering
+\small
+\begin{tabular}{m{4cm}<{\centering}m{10cm}}
+    \hline
+        \textbf{Dataset} & \multicolumn{1}{c}{\textbf{Example questions}} \\
+    \hline
+        MetaQA 1-hop &  1. what films did Michelle Trachtenberg star in? \newline 2. what are some words that describe movie Lassie Come Home? \newline 3. who is the director of The Well-Digger's Daughter? \\
+    \hline
+        MetaQA 2-hop &  1. which movies have the same actor of Jack the Bear? \newline 2. which movies share the same director of I Wanna Hold Your Hand? \newline 3. what were the release dates of Eric Mandelbaum written films? \\
+    \hline
+        MetaQA 3-hop &  1. who wrote movies that share directors with the movie Unbeatable? \newline 2. what genres do the movies that share directors with Fish Story fall under? \newline 3. who acted in the films written by the screenwriter of The Man Who Laughs? \\
+    \hline
+\end{tabular}
+\caption{Example questions in the MetaQA dataset.}
+\label{tab: MetaQA query examples}
+\end{table*}
+
+\newpage
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{2.4mm}
+\begin{tabular}{ccc}
+\hline
+\textbf{Head}                                                & \textbf{Relation} & \textbf{Tail}                      \\
+\hline
+Berlin                                                       & country           & Germany                            \\
+United States                                                & governmentType    & Republic                           \\
+Harry Potter                                                 & author            & J. K. Rowling                        \\
+Albert Einstein                                              & award             & Nobel Prize in Physics   \\
+Terrance Shaw                                                & college           & Stephen F. Austin State University \\
+Association for the Advancement of Artificial Intelligence & type              & Scientific   society               \\
+Nvidia                                                       & industry          & Computer hardware         \\
+\hline
+\end{tabular}
+\caption{Examples triples in the DBpedia knowledge graph used for FactKG dataset.}
+\label{tab: FactKG KG examples}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{1mm}
+\begin{tabular}{c}
+\hline
+\textbf{Example statements} \\
+\hline
+    1. It was Romano Prodi who was the prime minister. \\
+    2. Are you familiar with Terrance Shaw? He also attended college. \\
+    3. Yes, Anastasio J. Ortiz was the Vice President.\\
+\hline
+\end{tabular}
+\caption{Example statements from the FactKG dataset.}
+\label{tab: FactKG query examples}
+\end{table*}
+
+\appendix
+
+\section{Details of Tasks and Datasets}
+\label{app: datasets}
+
+Table~\ref{tab: dataset} summarizes the statistics of the underlying knowledge graph used for each dataset.
+
+\subsection{Knowledge Graph Question Answering}
+
+For the task of Knowledge Graph Question Answering, we use the MoviE Text Audio QA dataset (MetaQA), which is designed for research on question-answering systems on knowledge graphs \cite{MetaQA}.
+It provides a knowledge graph about movies, where entities include movie names, release years, directors, and so on, while the relations include starred actors, release year, written by, directed by, and so on.
+The queries are composed of Vanilla 1-hop, 2-hop, and 3-hop question answering in the field of movies. 
+For the test set of MetaQA dataset, there are 9,947 questions for 1-hop, 14,872 for 2-hop, and 14,274 for 3-hop.
+Table~\ref{tab: MetaQA KG examples} shows some example triples in the knowledge graph provided in the MetaQA \cite{MetaQA} dataset, while Table~\ref{tab: MetaQA query examples} are some example questions in the dataset.
+The MetaQA dataset is released under the Creative Commons Public License.
+
+\subsection{Fact Verification}
+For the task of fact verification, we use the FactKG dataset \cite{FactKG} that contains 5 different types of fact verification: One-hop, Conjunction, Existence, Multi-hop, and Negation, while all of them can be verified using the DBpedia knowledge graph \cite{DBpedia}.
+Its test set contains 9,041 statements to be verified.
+Table~\ref{tab: FactKG KG examples} shows some example triples in the DBpedia, while Table~\ref{tab: FactKG query examples} are some example statements in the FactKG test set.
+The FactKG dataset is licensed with CC BY-NC-SA 4.0.
+
+
+\section{Prompts}
+\label{app: prompts}
+
+In the query-to-pattern alignment stage, Table~\ref{tab: query-to-pattern MetaQA prompts} shows the prompt for MetaQA dataset, and Table~\ref{tab: query-to-pattern FactKG prompts} shows the prompt for FactKG dataset.
+
+For verbalized subgraph-augmented generation, Table~\ref{tab: answer MetaQA prompts} shows the prompt for MetaQA dataset, and Table~\ref{tab: answer FactKG prompts} shows the prompt for FactKG dataset.
+
+\section{Implementations for Approaches}
+\label{app: implementations}
+
+All programs are implemented with Python.
+
+\subsection{SimGRAG}
+Experiments are run with 1 NVIDIA A6000-48G GPU, employing the 4-bit quantized llama3 70B model within the Ollama framework.
+We use the Nomic embedding model \cite{nomic}, which generates 768-dim semantic embeddings for nodes and relations.
+For retrieving similar nodes (resp. relations), we use HNSW \cite{HNSW} algorithm implemented by Milvus vector database \cite{Milvus}, with maximum degree $M=64$, $efConstruction=512$ and $efSearch=8*k^{(n)}$ (resp. $efSearch=8*k^{(r)}$).
+
+By default, we use $k=3$ and $12$-shot in-context learning throughout all experiments, except for the ablation studies in Section~\ref{sec: ablation}.
+For MetaQA dataset, we use $k^{(n)}=k^{(r)}=16$ by default.
+For the task of fact verification using FactKG dataset, we use $k^{(n)}=16384$ and $k^{(r)}=512$ by default, except for the grid search that evaluates the retrieval efficiency in Section~\ref{sec: efficacy}.
+Moreover, for FactKG dataset, we further utilize the entity type associated with the entity nodes in DBpedia.
+Specifically, we construct a mapping that maps a type like ``person'' or ``organization'' to all its entity nodes.
+Then, for unknown entities in the pattern graph, such as ``UNKNONWN person 1'', we search for the top-$k^{(t)}$ similar types, then use all nodes with such similar types as the candidate nodes in the retrieval algorithm.
+By default, we set $k^{(t)}=16$.
+
+\subsection{Pre-trained LLMs}
+For pre-trained LLMs including ChatGPT \cite{ChatGPT} and Llama 3 70B \cite{llama3} without training or augmented knowledge, we also use 12 shots in-context learning for fair comparison.
+For Llama 3 70B, experiments are run with 1 NVIDIA A6000-48G GPU, employing the 4-bit quantized model within the Ollama framework.
+The license of Llama 3 70B can be found at \url{https://www.llama.com/llama3/license/}.
+
+\subsection{KG-GPT}
+For evaluation, we use 1 NVIDIA A6000-48G GPU with the 4-bit quantized Llama3 70B model within the Ollama framework. 
+We also use 12-shot in-context learning, and all other parameters are the same as their default setting \cite{kggpt}.
+
+\subsection{KELP}
+Experiments were conducted on 1 NVIDIA A6000-48G GPU system. 
+Aligned with their settings \cite{KELP}, it involves fine-tuning a 66M-parameter DstilBert model with the AdamW optimizer at a learning rate of $2e-6$ and a batch size of $60$. 
+For fairness, we also use 12-shot in-context learning in the prompt.
+And we also use Llama 3 70B as the LLM, using the 4-bit quantized model within the Ollama framework.
+
+\subsection{G-Retriever}
+Experiments are performed on a system with 6 NVIDIA A6000-48G GPUs. 
+The base LLM is the 4-bit quantized llama3 70B with frozen parameters. 
+The Graph Transformer served as the GNN, configured with 4 layers, 4 attention heads, and a 1024-dimensional hidden layer. 
+During training, we use the AdamW optimizer, a batch size of 4, and 10 epochs, with early stopping after 2 epochs.
+All the other parameters are the same with their default settings \cite{G-retriever}.
+
+\subsection{KAPING}
+For evaluation, we use 1 NVIDIA A6000-48G GPU with the 4-bit quantized Llama3 70B model within the Ollama framework. 
+Aligned with their recommended setting \cite{KAPING}, we retrieve top-10 similar triples using MPNet as the retrieval model.
+And their prompt follows a zero-shot approach.
+
+
+\section{Detailed Error Analysis}
+\label{app: error analysis}
+
+We manually categorize all the encountered errors of the SimGRAG method in our experiments.
+
+The errors occurring during the query-to-pattern alignment step are defined as: LLM fails to follow the given instructions and examples.
+For example, for the query ``The lady Anne Monson was born in the Darlington location of the ITL?'' from FactKG dataset, the LLM gives the pattern graph with only one triple ``('Anne Monson', 'born in', 'Darlington')'', which is not aligned with the query text.
+
+The error occurred during the subgraph-augmented generation step is defined as that given the correct retrieved subgraph, the LLM fails to provide the final correct response.
+For example, for the question ``what films did Lucky McKee star in'' from the MetaQA dataset, correct subgraphs of ``[('Lucky McKee', 'starred\_actors', 'Roman')]'' is successfully retrieved, along with the two subgraphs with lower GSD (``[('Lucky McKee', 'directed\_by', 'All Cheerleaders Die')]'' and ``[('Lucky McKee', 'directed\_by', 'May')]'').
+However, the LLM gives the final response of ``According to the evidences, there is no direct connection between Lucky McKee and a film they starred in. The graphs only mention that Lucky McKee directed films ('All Cheerleaders Die' and 'May'), but do not provide information about the films they acted in.''
+
+Errors occurring during the pattern-to-subgraph alignment phase are defined as: LLM follows the given instructions and examples to generate a satisfactory pattern graph, but the retrieval algorithm fails to retrieve the ground-truth subgraph for the query.
+It is because the ground-truth subgraphs have different structures and thus cannot be successfully aligned with the ground-truth subgraphs.
+For example, for the query ``A food is classed as a Dessert and can be served warm (freshly baked) or cold.'',
+the LLM-generated pattern graph is ``[('UNKNOWN food 1', 'classed as', 'Dessert'), ('UNKNOWN food 1', 'served', '"warm"'), ('UNKNOWN food 1', 'served', '"cold"')]''.
+However, the ground-truth subgraphs have the structure like ``[('The food name', 'classed as', 'Dessert'), ('The food name', 'served', '"warm (freshly baked) or cold"')]''.
+
+\section{Parameters for Grid Search}
+\label{app: grid search}
+
+We conduct the grid search for evaluating the top-$k$ retrieval algorithm and its optimized one on the FactKG dataset using DBpedia knowledge graph.
+We fix $k=1$ and try all combinations of the other parameters $k^{(n)}\in \{128, 256, 512, 1024, 2048, 4096, 8192, 16384\}$, $k^{(r)}\in \{128, 256, 512\}$, $k^{(t)}\in \{1, 2, 4, 8, 16\}$.
+For 100 queries, any program run out of the time limit of 10,000 seconds will be terminated and not reported.
+In Figure~\ref{fig: time cost}, the point at retrieval Hits@1=1.0 is achieved by using $k^{(n)}=16384$, $k^{(r)}=512$ and $k^{(t)}=16$.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{|>{\arraybackslash}m{14.5cm}|}
+\hline
+You need to segment the given query then extract the potential knowledge graph structures.\\
+\\
+\textbf{Notes)}\\
+1). Use the original description in the query with enough context, NEVER use unspecific words like 'in', 'appear in', 'for', 'of' etc.\\
+2). For nodes or relations that are unknown, you can use the keyword 'UNKNOWN' with a unique ID, e.g., 'UNKNOWN artist 1', 'UNKNOWN relation 1'.\\
+3). Return the segmented query and extracted graph structures strictly following the format:\\
+\hspace{10mm}\{
+        "divided": [
+            "segment 1",
+            ...
+        ],
+        "triples": [
+            ("head", "relation", "tail"),
+            ...
+        ]
+    \}\\
+4). NEVER provide extra descriptions or explanations, such as something like 'Here is the extracted knowledge graph structure'.\\
+\\
+\textbf{Examples)}\\
+1. query: "the actor in Flashpoint also appears in which films"\\
+\hspace{3.5mm}output: \{\\
+\hspace{14mm}"divided": [\\
+\hspace{18mm}"the actor in Flashpoint",\\
+\hspace{18mm}"this actor also appears in another films",\\
+\hspace{14mm}],\\
+\hspace{14mm}"triples": [\\
+\hspace{18mm}("UNKNOWN actor 1", "actor of", "Flashpoint"),\\
+\hspace{18mm}("UNKNOWN actor 1", "actor of", "UNKNOWN film 1"),\\
+\hspace{14mm}]\\
+\hspace{3.5mm}\}\\
+2. query: ...\\
+\hspace{3.5mm}output: ...\\
+\\
+\textbf{Your task)}\\
+Please read and follow the above instructions and examples step by step\\
+query: \{\{QUERY\}\}\\
+\hline
+\end{tabular}
+\caption{The query-to-pattern alignment prompt used in MetaQA dataset.}
+\label{tab: query-to-pattern MetaQA prompts}
+\end{table*}
+
+\begin{table*}[!htp]
+\centering
+\small
+\begin{tabular}{|>{\arraybackslash}m{14.5cm}|}
+\hline
+You need to segment the given query then extract the potential knowledge graph structures.\\
+\\
+\textbf{Notes)}\\
+1). Use the original description in the query with enough context, NEVER use unspecific words like 'in', 'appear in', 'for', 'of' etc.\\
+2). For nodes or relations that are unknown, you can use the keyword 'UNKNOWN' with a unique ID, e.g., 'UNKNOWN artist 1', 'UNKNOWN relation 1'.\\
+3). Return the segmented query and extracted graph structures strictly following the format:\\
+\hspace{10mm}\{
+        "divided": [
+            "segment 1",
+            ...
+        ],
+        "triples": [
+            ("head", "relation", "tail"),
+            ...
+        ]
+    \}\\
+4). NEVER provide extra descriptions or explanations, such as something like 'Here is the extracted knowledge graph structure'.\\
+\\
+\textbf{Examples)}\\
+1. query: "The College of William and Mary is the owner of the Alan B. Miller Hall, that is situated in Virginia."\\
+\hspace{3.5mm}output: \{\\
+\hspace{14mm}"divided": [\\
+\hspace{18mm}"The College of William and Mary is the owner of the Alan B. Miller Hall",\\
+\hspace{18mm}"Alan B. Miller Hall is situated Virginia",\\
+\hspace{14mm}],\\
+\hspace{14mm}"triples": [\\
+\hspace{18mm}("The College of William and Mary", "owner", "Alan B. Miller Hall"),\\
+\hspace{18mm}("Alan B. Miller Hall", "situated in", "Virginia"),\\
+\hspace{14mm}]\\
+\hspace{3.5mm}\}\\
+
+2. query: ...\\
+\hspace{3.5mm}output: ...\\
+\\
+\textbf{Your task)}\\
+Please read and follow the above instructions and examples step by step\\
+query: \{\{QUERY\}\}\\
+\hline
+\end{tabular}
+\caption{The query-to-pattern alignment prompt used in FactKG dataset.}
+\label{tab: query-to-pattern FactKG prompts}
+\end{table*}
+
+\begin{table*}[!htp]
+\centering
+\small
+\begin{tabular}{|>{\arraybackslash}m{14.5cm}|}
+\hline
+Please answer the question based on the given evidences from a knowledge graph. \\
+\\
+\textbf{Notes)}\\
+1). Use the original text in the valid evidences as answer output, NEVER rephrase or reformat them.\\
+2). There may be different answers for different evidences. Return all possible answer for every evidence graph, except for those that are obviously not aligned with the query.\\
+3). You should provide a brief reason with several words, then tell that the answer.\\
+\\
+\textbf{Examples)}\\
+1. query: "who wrote films that share actors with the film Anastasia?"\\
+\hspace{3.5mm}evidences: \{\\
+\hspace{14mm}"graph [1]": [\\
+\hspace{18mm}("Anastasia", "starred\_actors", "Ingrid Bergman"),\\
+\hspace{18mm}("Spellbound", "starred\_actors", "Ingrid Bergman"),\\
+\hspace{18mm}("Spellbound", "written\_by", "Ben Hecht"),\\
+\hspace{14mm}],\\
+\hspace{14mm}"graph [2]":[\\
+\hspace{18mm}("Anastasia", "starred\_actors", "John Cusack"),\\
+\hspace{18mm}("Floundering", "starred\_actors", "John Cusack"),\\
+\hspace{18mm}("Floundering", "written\_by", "Peter McCarthy"),\\
+\hspace{14mm}]\\
+\hspace{3.5mm}\}\\
+\hspace{3.5mm}answer: According to graphs [1][2], the writter is Ben Hecht or Peter McCarthy.
+
+2. query: ...\\
+\hspace{3.5mm}evidences: \{\\
+\hspace{3.5mm}output: ...\\
+\\
+\textbf{Your task)}\\
+Please read and follow the above instructions and examples step by step\\
+query: \{\{QUERY\}\}\\
+evidences: \{\{RETRIEVED SUBGRAPHS\}\}\\
+\hline
+\end{tabular}
+\caption{The verbalized subgraph-augemented generation prompt used in MetaQA dataset.}
+\label{tab: answer MetaQA prompts}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{|>{\arraybackslash}m{14.5cm}|}
+\hline
+Please verify the statement based on the given evidences from a knowledge graph. \\
+\\
+\textbf{Notes)}\\
+1). If there is any evidence that completely supports the statement, the answer is 'True', otherwise is 'False'.\\
+2). For questions like 'A has a wife', if there is any evidence that A has a spouse with any name, the answer is 'True'.\\
+3). You should provide a brief reason with several words, then tell that the answer is 'True' or 'False'.\\
+\\
+\textbf{Examples)}\\
+1. query: "Mick Walker (footballer, born 1940) is the leader of 1993–94 Notts County F.C. season."\\
+\hspace{3.5mm}evidences: \{\\
+\hspace{14mm}"graph [1]": [\\
+\hspace{18mm}('Mick Walker (footballer, born 1940)', 'manager', '1993–94 Notts County F.C. season'),\\
+\hspace{18mm}('Mick Walker (footballer, born 1940)', 'birthDate', '"1940-11-27"'),\\
+\hspace{14mm}],\\
+\hspace{14mm}"graph [2]":[\\
+\hspace{18mm}('Mick Walker (footballer, born 1940)', 'manager', '1994–95 Notts County F.C. season'),\\
+\hspace{18mm}('Mick Walker (footballer, born 1940)', 'birthDate', '"1940-11-27"')\\
+\hspace{14mm}]\\
+\hspace{3.5mm}\}\\
+\hspace{3.5mm}answer: As graphs [1][2] say that Mick Walker is the manager but not the leader, the answer is False.
+
+2. query: ...\\
+\hspace{3.5mm}evidences: \{\\
+\hspace{3.5mm}output: ...\\
+\\
+\textbf{Your task)}\\
+Please read and follow the above instructions and examples step by step\\
+query: \{\{QUERY\}\}\\
+evidences: \{\{RETRIEVED SUBGRAPHS\}\}\\
+\hline
+\end{tabular}
+\caption{The verbalized subgraph-augemented generation prompt used in FactKG dataset.}
+\label{tab: answer FactKG prompts}
+\end{table*}
+
+\end{document}

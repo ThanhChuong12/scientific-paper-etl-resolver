@@ -1,0 +1,358 @@
+\documentclass[aps,prb,amsmath,amssymb,twocolumn]{revtex4-2}
+
+%% Language and font encodings
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{bm}
+\usepackage{color}
+\usepackage{braket}
+\usepackage{standalone}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{mathrsfs}
+\usepackage[utf8]{inputenc}
+\usepackage{dsfont}
+\usepackage[colorlinks,bookmarks=true,citecolor=blue,linkcolor=red,urlcolor=blue]{hyperref}
+\usepackage{bbm}
+
+\definecolor{red}{rgb}{1,0,0}
+\definecolor{green}{rgb}{0,1,0}
+\definecolor{blue}{rgb}{0,0,1}
+
+\newcommand{\BM}[1]{{\color{red} BM: \@#1}}
+\newcommand{\TP}[1]{{\color{green} TP: \@#1}}
+\newcommand{\JCB}[1]{{\color{blue} JCB: \@#1}}
+
+\newcommand{\eq}[1]{Eq.~(\ref{#1})}
+\newcommand{\hc}{\text{H.c.}}
+
+\usepackage[caption=false]{subfig}
+\usepackage{bbm}
+\usepackage{floatrow}
+\usepackage{verbatim}
+\usepackage{mathtools}
+
+\usepackage[acronym]{glossaries}
+
+\captionsetup{labelfont=normalfont,
+	justification=raggedright,
+	format=plain,
+	labelformat = empty}
+
+\makenoidxglossaries
+
+\newacronym{dmrg}{DMRG}{density matrix renormalization group}
+\newacronym{caz}{CAZ}{Cartan-Altland-Zirbauer}
+\newacronym{2d}{2D}{two-dimensional}
+\newacronym{1d}{1D}{one-dimensional}
+\newacronym{sc}{SC}{superconducting}
+\newacronym{gs}{GS}{ground state}
+\newacronym{mps}{MPS}{matrix product state}
+\newacronym{mpste}{MPSTE}{matrix product state time evolution}
+\newacronym{bs}{BS}{backscattering}
+\newacronym{fs}{FS}{forward scattering}
+\newacronym{pbc}{PBC}{periodic boundary conditions}
+\newacronym{obc}{OBC}{open boundary conditions}
+\newacronym{bch}{BCH}{Baker-Campbell-Hausdorff}
+\newacronym{gsp}{GSP}{ground state preparation}
+
+
+\glsdisablehyper
+
+\begin{document}
+
+\title{Adiabatic preparation of a number-conserving atomic Majorana phase}
+\author{Benjamin Michen}
+\email{benjamin.michen@tu-dresden.de}
+\author{Tim Pokart}
+\email{tim.pokart@tu-dresden.de}
+\author{Jan Carl Budich}
+\email{jan.budich@tu-dresden.de}
+\affiliation{Institute of Theoretical Physics${\rm ,}$ Technische Universit\"{a}t Dresden and W\"{u}rzburg-Dresden Cluster of Excellence ct.qmat${\rm ,}$ 01062 Dresden${\rm ,}$ Germany}
+\date{\today}
+
+\begin{abstract}
+We construct a protocol to adiabatically prepare the ground state of a widely discussed number-conserving model Hamiltonian for ultracold atoms in optical lattices that supports Majorana edge states. In particular, we introduce a symmetry breaking mass term that amounts to threading a commensurate (artificial) magnetic flux through the plaquettes of the considered two-leg ladder which opens a constant bulk gap. This enables the preparation of the topological Majorana phase from a trivial Mott insulator state with optimal asymptotic scaling of the ramp time in system size, which is linear owing to the critical nature of the target state. Using constructive bosonization techniques that account for both finite size effects and global fermion number conservation, we are able to fully explain with theory the somewhat counterintuitive necessity of the aforementioned commensurate flux for a controlled bulk gap. Our analytical predictions are corroborated and quantified by unbiased numerical \gls{mps} simulations. Directly building up on previous experimental work, the crucial flux-term of the proposed protocol is feasible with state-of-the-art experimental techniques in atomic quantum simulators. 
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+\input{Introduction.tex}
+
+\section{Model} \label{Sec:Model}
+\input{Model.tex}
+
+\section{Ground state preparation} \label{Sec:GSP}
+\input{GSP.tex}
+
+\section{Bosonization} \label{Sec:Bosonization}
+\input{Bosonization.tex}
+
+\section{Conclusion}\label{Sec:conclusion}
+\input{Conclusion.tex}
+
+\acknowledgments
+{\it Acknowledgments.---}
+We would like to thank Sebastian Diehl for discussions. We acknowledge financial support from the German Research Foundation (DFG) through the Collaborative Research Centre SFB 1143, the Cluster of Excellence ct.qmat, and the DFG Project 419241108. Our numerical calculations were performed on resources at the TU Dresden Center for Information Services and High Performance Computing (ZIH).
+
+\begin{thebibliography}{10}
+\bibitem{Ultracold_atoms_1}
+I. Bloch, J. Dalibard, and W. Zwerger, {\em Many-Body Physics with Ultracold Gases}, \href{https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.80.885}{Rev. Mod. Phys. {\bf{80}}, 885 (2008)}.
+
+\bibitem{Ultracold_atoms_2}
+N. R. Cooper, J. Dalibard, I. B. Spielman, {\em Topological bands for ultracold atoms}, \href{https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.91.015005}{Rev. Mod. Phys. {\bf{91}}, 015005 (2019)}.
+
+\bibitem{Ultracold_atoms_3}
+F. Schäfer, T. Fukuhara, S. Sugawa, Y. Takasu, and Y. Takahashi, {\em Tools for quantum simulation with ultracold atoms in optical lattices}, \href{https://www.nature.com/articles/s42254-020-0195-3}{Nat. Rev. Phys. {\bfseries 2}, 411–425 (2020)}.
+
+\bibitem{Ultracold_atoms_4}
+N. Goldman, J. C. Budich, and P. Zoller, {\em Topological quantum matter with ultracold gases in optical lattices}, \href{https://www.nature.com/articles/nphys3803}{Nat. Phys. {\bfseries 12}, 639–645 (2016)}.
+
+\bibitem{Hall_Ribbons}
+M. Mancini, G. Pagano, G. Cappellini, L. Livi, M. Rider, J. Catani, C. Sias, P. Zoller, M. Inguscio, M. Dalmonte, and L. Fallani, {\em Observation of chiral edge states with neutral fermions in synthetic Hall ribbons}, \href{https://www.science.org/doi/10.1126/science.aaa8736}{Science {\bfseries 349}, 1510-1513 (2015)}.
+
+\bibitem{HasanKane2010}
+M. Z. Hasan and C. L. Kane, {\em Colloquium: Topological insulators}, \href{https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.82.3045}{Rev. Mod. Phys. {\bf{82}}, 3045 (2010)}.
+
+\bibitem{Qi2011}
+X.-L. Qi and S.-C. Zhang, {\em Topological insulators and superconductors}, \href{https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.83.1057}{Rev. Mod. Phys. {\bf{83}}, 1057 (2011)}.
+
+\bibitem{Budich2013}
+J. C. Budich and B. Trauzettel, {\em From the adiabatic theorem of quantum mechanics to topological states of matter}, \href{https://onlinelibrary.wiley.com/doi/10.1002/pssr.201206416}{Rap. Res. Lett. {\bf{7}} (1-2), 109-129 (2013)}.
+
+\bibitem{Wen2017}
+X.-G. Wen, {\em Colloquium: Zoo of quantum-topological phases of matter}, \href{https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.89.041004}{Rev. Mod. Phys. {\bf{89}}, 041004 (2017)}.
+
+\bibitem{Majorana_review_1}
+J. Alicea, {\em New directions in the pursuit of Majorana fermions in solid state systems}, \href{https://iopscience.iop.org/article/10.1088/0034-4885/75/7/076501}{Rep. Prog. Phys. {\bfseries 75}, 08076501105 (2012)}.
+
+\bibitem{Majorana_review_2}
+J. Alicea, {\em Majorana modes materialize}, \href{https://www.nature.com/articles/nnano.2013.178}{Nature Nanotech {\bfseries 8}, 623–624  (2013)}.
+
+\bibitem{Majorana_review_3}
+J.-B. Fu, B. Li, X.-F. Zhang, G.-Z. Yu, G.-Y. Huang, and M.-T. Deng{\em Experimental review on Majorana zero-modes in hybrid nanowires}, \href{https://link.springer.com/article/10.1007/s11433-021-1737-4}{Progress of Theoretical and Experimental Physics {\bfseries 64}, 107001 (2021)}.
+
+\bibitem{Majorana_review_4}
+Y. Tanaka, S. Tamura , and J. Cayao, {\em Theory of Majorana Zero Modes in Unconventional Superconductor}, \href{https://academic.oup.com/ptep/article/2024/8/08C105/7663572#479399640}{Progress of Theoretical and Experimental Physics {\bfseries 8}, 08C105 (2024)}.
+
+\bibitem{Majorana_TSC_1}
+G. E. Volovik , {\em Fermion zero modes on vortices in chiral superconductors}, \href{https://link.springer.com/article/10.1134/1.568223}{JETP Lett. {\bfseries 70}, 609 (1999)}.
+
+\bibitem{Majorana_TSC_2}
+N. Read and D. Green, {\em Paired states of fermions in two dimensions with breaking of parity and time-reversal symmetries and the fractional quantum Hall effect}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.61.10267}{Phys. Rev. B {\bfseries 61}, 10267 (2000)}.
+
+\bibitem{Majorana_TSC_3}
+L. Fu and C. L. Kane, {\em Superconducting Proximity Effect and Majorana Fermions at the Surface of a Topological Insulator}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.100.096407}{Phys. Rev. Lett. {\bfseries 100}, 096407 (2008)}.
+
+\bibitem{Majorana_TSC_4}
+J. D. Sau, S. Tewari, R. M. Lutchyn, T. D. Stanescu, and S. Das Sarma, {\em Non-Abelian quantum order in spin-orbit-coupled semiconductors: Search for topological Majorana particles in solid-state systems}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.82.214509}{Phys. Rev. B {\bfseries 82}, 214509 (2010)}.
+
+
+\bibitem{TQC_1}
+S. Tewari, S. Das Sarma, C. Nayak, C. Zhang, and P. Zoller, {\em Quantum Computation using Vortices and Majorana Zero Modes of a $p_x + i p_y$ Superfluid of Fermionic Cold Atoms}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.98.010506}{Phys. Rev. Lett. {\bfseries 98}, 010506 (2007)}.
+
+\bibitem{TQC_2}
+C. Nayak, S. H. Simon, A. Stern, M. Freedman, and S. Das Sarma, {\em Non-Abelian anyons and topological quantum computation}, \href{https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.80.1083}{Rev. Mod. Phys. {\bfseries 80}, 1083 (2008)}.
+
+\bibitem{TQC_3}
+J. Alicea, Y. Oreg, G. Refael, F. von Oppen, and M. P. A. Fisher, {\em Non-Abelian statistics and topological quantum information processing in 1D wire networks}, \href{https://www.nature.com/articles/nphys1915}{Rev. Mod. Phys. {\bfseries 80}, 1083 (2008)}.
+
+\bibitem{TQC_4}
+S. Das Sarma, M. Freedman, and C. Nayak, {\em Majorana zero modes and topological quantum computation}, \href{https://www.nature.com/articles/npjqi20151}{Nat. Phys. {\bfseries 7}, 412–417 (2011)}.
+
+\bibitem{TQC_5}
+V. Lahtinen and J. Pachos, {\em A Short Introduction to Topological Quantum Computation}, \href{https://www.nature.com/articles/npjqi20151}{SciPost Phys. {\bfseries 3}, 021 (2017)}.
+
+\bibitem{TQC_6}
+R. Aguado and L. P. Kouwenhoven, {\em Majorana qubits for topological quantum computing}, \href{https://pubs.aip.org/physicstoday/article/73/6/44/909657/Majorana-qubits-for-topological-quantum}{Physics Today {\bfseries 73}, 6 (2020)}.
+
+\bibitem{TQC_7}
+J. D. Sau, R. M. Lutchyn, S. Tewari, and S. Das Sarma, {\em Generic New Platform for Topological Quantum Computation Using Semiconductor Heterostructures}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.104.040502}{Phys. Rev. Lett. {\bfseries 104}, 040502 (2010)}.
+
+\bibitem{Majorana_FQH_1}
+G. Moore and N. Read, {\em Nonabelions in the fractional quantum hall effect}, \href{https://www.sciencedirect.com/science/article/pii/055032139190407O}{Nucl. Phys. B {\bfseries 360}, 362 (1991)}.
+
+\bibitem{Majorana_FQH_2}
+C. Nayak and F. Wilczek, {\em $2n$-quasihole states realize $2^{n-1}$-dimensional spinor braiding statistics in paired quantum Hall states}, \href{https://www.sciencedirect.com/science/article/pii/0550321396004300}{Nucl. Phys. B {\bfseries 479}, 529 (1996)}.
+
+\bibitem{Majorana_FQH_3}
+N. Read and E. Rezayi, {\em Quasiholes and fermionic zero modes of paired fractional quantum Hall states: The mechanism for non-Abelian statistics}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.54.16864}{Phys. Rev. B {\bfseries 54}, 16864 (1996)}.
+
+\bibitem{Majorana_FQH_4}
+S.-S. Lee, S. Ryu, C. Nayak, and M. P. A. Fisher, {\em Particle-Hole Symmetry and the $\nu = \frac{5}{2}$ Quantum Hall State}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.99.236807}{Phys. Rev. Lett. {\bfseries 99}, 236807 (2007)}.
+
+\bibitem{Majorana_FQH_5}
+M. Levin, B. I. Halperin, and B. Rosenow, {\em Particle-Hole Symmetry and the Pfaffian State}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.99.236806}{Phys. Rev. Lett. {\bfseries 99}, 236806 (2007)}.
+
+\bibitem{Majorana_FQH_6}
+P. Bonderson, V. Gurarie, and C. Nayak, {\em Plasma analogy and non-Abelian statistics for Ising-type quantum Hall states}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.83.075303}{Phys. Rev. B {\bfseries 83}, 075303 (2011)}.
+
+\bibitem{Kitaev_Honeycomb}
+A. Kitaev, {\em Anyons in an exactly solved model and beyond}, \href{https://arxiv.org/abs/cond-mat/0506438}{arXiv:cond-mat/0506438 (2005)}.
+
+\bibitem{Non_abelian_statistics_1}
+D. A. Ivanov, {\em Non-Abelian Statistics of Half-Quantum Vortices in $p$-Wave Superconductors}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.86.268}{Phys. Rev. Lett. {\bfseries 86}, 268 (2001)}.
+
+\bibitem{Non_abelian_statistics_2}
+M. Stone and S.-B. Chung, {\em Fusion rules and vortices in $p_x + i p_y$ superconductors}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.73.014505}{Phys. Rev. B {\bfseries 73}, 014505 (2006)}.
+
+\bibitem{Non_abelian_statistics_3}
+S. Das Sarma, C. Nayak, and S. Tewari, {\em Proposal to stabilize and detect half-quantum vortices in strontium ruthenate thin films: Non-Abelian braiding statistics of vortices in a $p_x + i p_y$ superconductor}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.73.220502}{Phys. Rev. B {\bfseries 73}, 220502 (2006)}.
+
+\bibitem{Non_abelian_statistics_4}
+M. Sato and S. Fujimoto, {\em Topological phases of noncentrosymmetric superconductors: Edge states, Majorana fermions, and non-Abelian statistics}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.79.094504}{Phys. Rev. B {\bfseries 79}, 094504 (2009)}.
+
+\bibitem{Kitaev_chain}
+A. Yu. Kitaev, {\em Unpaired majorana fermions in quantum wires}, \href{https://iopscience.iop.org/article/10.1070/1063-7869/44/10S/S29}{Phys.-Usp. 44 131 (2001)}.
+
+\bibitem{KC_related_models_1}
+T. D. Stanescu, R. M. Lutchyn, and S. Das Sarma,  {\em Majorana fermions in semiconductor nanowires}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.84.144522}{Phys. Rev. B {\bfseries 84}, 144522 (2011)}.
+
+\bibitem{KC_related_models_2}
+R. M. Lutchyn, T. D. Stanescu, and S. Das Sarma, {\em Search for Majorana Fermions in Multiband Semiconducting Nanowires}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.106.127001}{Phys. Rev. Lett. {\bfseries 106}, 127001 (2011)}.
+
+\bibitem{KC_related_models_3}
+S. Rex and A. Sudbø,  {\em Tilting of the magnetic field in Majorana nanowires: Critical angle and zero-energy differential conductance}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.90.115429}{Phys. Rev. B {\bfseries 90}, 115429 (2014)}.
+
+\bibitem{KC_related_models_4}
+H. Pan and S. D. Sarma, {\em Majorana nanowires, Kitaev chains, and spin models}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.107.035440}{Phys. Rev. B {\bfseries 107}, 035440 (2023)}.
+
+\bibitem{1D_TSC_from_proximity_1}
+R. M. Lutchyn, J. D. Sau, and S. Das Sarma, {\em Majorana Fermions and a Topological Phase Transition in Semiconductor-Superconductor Heterostructures}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.105.077001}{Phys. Rev. Lett. {\bfseries 105}, 077001 (2010)}.
+
+\bibitem{1D_TSC_from_proximity_2}
+Y. Oreg, G. Refael, and F. von Oppen, {\em Helical Liquids and Majorana Bound States in Quantum Wires}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.105.177002}{Phys. Rev. Lett. {\bfseries 105}, 177002 (2010)}.
+
+\bibitem{1D_TSC_from_proximity_3}
+A. Cook and M. Franz, {\em Majorana fermions in a topological-insulator nanowire proximity-coupled to an $s$-wave superconductor}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.84.201105}{Phys. Rev. B {\bfseries 84}, 201105(R) (2011)}.
+
+\bibitem{1D_TSC_from_proximity_4}
+L. Mao, M. Gong, E. Dumitrescu, S. Tewari, and C. Zhang, {\em Hole-Doped Semiconductor Nanowire on Top of an $s$-Wave Superconductor: A New and Experimentally Accessible System for Majorana Fermions}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.108.177001}{Phys. Rev. Lett. {\bfseries 108}, 177001 (2012)}.
+
+\bibitem{1D_TSC_from_proximity_5}
+E. B. Hansen, J. Danon, and K. Flensberg, {\em Phase-tunable Majorana bound states in a topological N-SNS junction}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.93.094501}{Phys. Rev. B {\bfseries 93}, 094501 (2016)}.
+
+\bibitem{1D_TSC_from_BEC_proximity_1}
+L Jiang, T. Kitagawa, J. Alicea, A. R. Akhmerov, D. Pekker, G. Refael, J. I. Cirac, E. Demler, M. D. Lukin, and P. Zoller, {\em Majorana Fermions in Equilibrium and in Driven Cold-Atom Quantum Wires}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.106.220402}{Phys. Rev. B {\bfseries 106}, 220402 (2011)}.
+
+\bibitem{1D_TSC_from_BEC_proximity_2}
+S. Nascimb\'ene, {\em Realizing one-dimensional topological superfluids with ultracold atomic gases}, \href{https://iopscience.iop.org/article/10.1088/0953-4075/46/13/134005/meta}{J. Phys. B: At. Mol. Opt. Phys. {\bfseries 46}, 13 (2013)}.
+
+\bibitem{Number_conserving_Majorana_1}
+G. Ortiz, J. Dukelsky, E. Cobanera, C. Esebbag, and C. Beenakker, {\em Many-Body Characterization of Particle-Conserving Topological Superfluids}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.113.267002}{Phys. Rev. Lett. {\bfseries 113}, 267002 (2014)}.
+
+\bibitem{Number_conserving_Majorana_2}
+J. Ruhman, E. Berg, and E. Altman, {\em Topological States in a One-Dimensional Fermi Gas with Attractive Interaction}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.114.100401}{Phys. Rev. Lett. {\bfseries 114}, 100401 (2015)}.
+
+\bibitem{Number_conserving_Majorana_3}
+A. Keselman and E. Berg, {\em Gapless symmetry-protected topological phase of fermions in one dimension}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.91.235309}{Phys. Rev. B {\bfseries 91}, 235309 (2015)}.
+
+\bibitem{Number_conserving_Majorana_4}
+N. Lang and H. P. Büchler, {\em Topological states in a microscopic model of interacting fermions}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.92.041118}{Phys. Rev. B {\bfseries 92}, 041118(R) (2015)}.
+
+\bibitem{Number_conserving_Majorana_5}
+F. Iemini, L. Mazza, D. Rossini, R. Fazio, and S. Diehl, {\em Localized Majorana-Like Modes in a Number-Conserving Setting: An Exactly Solvable Model}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.115.156402}{Phys. Rev. Lett. {\bfseries 115}, 156402 (2015)}.
+
+\bibitem{Number_conserving_Majorana_6}
+F. Iemini, L. Mazza, L. Fallani, P. Zoller, R. Fazio, and M. Dalmonte {\em Majorana Quasiparticles Protected by $\mathbb Z_2$ Angular Momentum Conservation}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.118.200404}{Phys. Rev. Lett. {\bfseries 118}, 200404 (2017)}.
+
+\bibitem{Number_conserving_Majorana_7}
+N. Tausendpfund, S. Diehl, and M. Rizzi, {\em Majorana zero modes in fermionic wires coupled by Aharonov-Bohm cages}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.107.035124}{Phys. Rev. B {\bfseries 107}, 035124 (2023)}.
+
+\bibitem{Zoller_model}
+C. V. Kraus, M. Dalmonte, M. A. Baranov, A. M. Läuchli, and P. Zoller, {\em Majorana Edge States in Atomic Wires Coupled by Pair Hopping}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.111.173004}{Phys. Rev. Lett. {\bfseries 111}, 173004 (2013)}.
+
+\bibitem{Tu_et_al}
+M. Cheng and H.-H. Tu, {\em Majorana edge states in interacting two-chain ladders of fermions}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.84.094503}{Phys. Rev. B {\bfseries 84}, 094503 (2011)}.
+
+\bibitem{Fidkowski_et_al}
+L. Fidkowski, R. M. Lutchyn, C. Nayak, and M. P. A. Fisher, {\em Majorana zero modes in one-dimensional quantum wires without
+long-ranged superconducting order}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.84.195436}{Phys. Rev. B {\bfseries 84}, 195436 (2011)}.
+
+\bibitem{Halperin_Sarma}
+Jay D. Sau, B. I. Halperin, K. Flensberg, and S. Das Sarma, {\em Number conserving theory for topologically protected degeneracy in one-dimensional fermions}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.84.144509}{Phys. Rev. B {\bfseries 84}, 144509 (2011)}.
+
+\bibitem{Mermin_Wagner}
+N. D. Mermin and H. Wagner, {\em Absence of Ferromagnetism or Antiferromagnetism in One- or Two-Dimensional Isotropic Heisenberg Models}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.17.1133}{Phys. Rev. Lett. {\bfseries 17}, 1133 (1966)}.
+
+\bibitem{Hohenberg}
+P. C. Hohenberg, {\em Existence of Long-Range Order in One and Two Dimensions}, \href{https://journals.aps.org/pr/abstract/10.1103/PhysRev.158.383}{Phys. Rev. {\bfseries 158}, 383 (1967)}.
+
+\bibitem{SC_in_1D}
+K.Yu. Arutyunov, D.S. Golubev, and A.D. Zaikin, {\em Superconductivity in one dimension}, \href{https://www.sciencedirect.com/science/article/pii/S0370157308001609}{Physics Reports {\bfseries 464}, issues 1–2, pages 1-70 (2008)}.
+
+\bibitem{crit_state_prep_1}
+T. Caneva, T. Calarco, R. Fazio, G. E. Santoro, and S. Montangero, {\em Speeding up critical system dynamics through optimized evolution}, \href{https://journals.aps.org/pra/abstract/10.1103/PhysRevA.84.012312}{Phys. Rev. A {\bfseries 84}, 012312 (2011)}.
+
+\bibitem{crit_state_prep_2}
+L. Innocenti, G. D. Chiara, M. Paternostro, and R. Puebla, {\em Ultrafast critical ground state preparation via bang–bang protocols}, \href{https://iopscience.iop.org/article/10.1088/1367-2630/abb1df}{New J. Phys. {\bfseries 22}, 093050 (2020)}.
+
+\bibitem{crit_state_prep_3}
+I. Sokolov, F. A. Bayocboc, M. M. Rams, and J. Dziarmaga, {\em Inhomogeneous adiabatic preparation of a quantum critical ground state in two dimensions}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.110.054410}{Phys. Rev. B {\bfseries 110}, 054410 (2024)}.
+
+\bibitem{crit_state_prep_4}
+K. Agarwal, R. N. Bhatt, and S. L. Sondhi, {\em Fast Preparation of Critical Ground States Using Superluminal Fronts}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.210604}{Phys. Rev. Lett. {\bfseries 120}, 210604 (2018)}.
+
+\bibitem{Review_QPT_Dziarmaga}
+J. Dziarmaga, {\em Dynamics of a Quantum Phase Transition and Relaxation to a Steady State}, \href{https://www.tandfonline.com/doi/abs/10.1080/00018732.2010.514702}{Advances in Physics {\bfseries 59}(6), 1063–1189 (2010)}.
+
+\bibitem{Adiabatic_theorem_Born_Fock}
+M. Born and V. Fock {\em Beweis des Adiabatensatzes}, \href{https://link.springer.com/article/10.1007/BF01343193}{Zeitschrift für Physik A Hadrons and Nuclei, {\bfseries 51}, 165 (1928)}.
+
+\bibitem{Adiabatic_theorem_Kato}
+T. Kato {\em On the Adiabatic Theorem of Quantum Mechanics}, \href{https://journals.jps.jp/doi/abs/10.1143/JPSJ.5.435}{J. Phys. Soc. Jpn. {\bfseries 5}, 435-439 (1950)}.
+
+\bibitem{Bosonization_OBC}
+M. Fabrizio and A. O. Gogolin, {\em Interacting one-dimensional electron gas with open boundaries}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.51.17827}{Phys. Rev. B {\bfseries 51}, 17827 (1995)}.
+
+\bibitem{Bosonization_Delft}
+J. v. Delft and H. Schoeller, {\em Bosonization for Beginners — Refermionization for Experts}, \href{https://arxiv.org/abs/cond-mat/9805275}{ arXiv:cond-mat/9805275 (1998)}.
+
+\bibitem{Bosonization_Schoenhammer}
+K. Schoenhammer, {\em Interaction fermions in one dimension: The Tomonaga-Luttinger model}, \href{https://arxiv.org/abs/cond-mat/9710330}{ arXiv:cond-mat/9710330v3 (1998)}.
+
+\bibitem{Giamarchi}
+T. Giamarchi, {\em Quantum Physics in One Dimension}, Clarendon Press, Oxford (2003).
+
+\bibitem{Itensor_basic} 
+M. Fishman, S. R. White, and E. Miles Stoudenmire, {\em The ITensor Software Library for Tensor Network Calculations}, \href{https://scipost.org/10.21468/SciPostPhysCodeb.4}{SciPost Phys. Codebases, 4 (2022)}.
+
+\bibitem{Itensor_codebase_release}
+M. Fishman, S. R. White, and E. Miles Stoudenmire, {\em Codebase release 0.3 for ITensor}, \href{https://scipost.org/10.21468/SciPostPhysCodeb.4-r0.3}{SciPost Phys. Codebases, 4-r0.3 (2022)}.
+
+\bibitem{Cutting_Majorana_Chain}
+C. V. Kraus, S. Diehl, P. Zoller, and M. A. Baranov, {\em Preparing and probing atomic Majorana fermions and topological order in optical lattices}, \href{https://iopscience.iop.org/article/10.1088/1367-2630/14/11/113036}{New J. Phys. {\bfseries 14}, 113036 (2012)}.
+
+\bibitem{Dissipative_Majorana_Preparation}
+F. Iemini, D. Rossini, R. Fazio, S. Diehl, and L. Mazza, {\em Dissipative topological superconductors in number-conserving systems}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.93.115113}{Phys. Rev. B {\bfseries 93}, 115113 (2016)}.
+
+\bibitem{Barbarino_et_al}
+S. Barbarino, J. Yu, P. Zoller, and J. C. Budich, {\em Preparing Atomic Topological Quantum Matter by Adiabatic Nonunitary Dynamics}, \href{https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.124.010401}{Phys. Rev. Lett. {\bfseries 124}, 010401 (2020)}.
+
+\bibitem{1d_topological_phases_1}
+F. Pollmann, E. Berg, A. M. Turner, and M. Oshikawa,{\em Entanglement spectrum of a topological phase in one dimension}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.81.064439}{Phys. Rev. B {\bfseries 81}, 064439 (2010)}.
+
+\bibitem{1d_topological_phases_2}
+L. Fidkowski and A. Kitaev, {\em Topological phases of fermions in one dimension}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.83.075103}{Phys. Rev. B {\bfseries 83}, 075103 (2011)}.
+
+\bibitem{1d_topological_phases_3}
+A. M. Turner, F. Pollmann, and E. Berg, {\em Topological phases of one-dimensional fermions: An entanglement point of view}, \href{https://journals.aps.org/prb/abstract/10.1103/PhysRevB.83.075102}{Phys. Rev. B {\bfseries 83}, 075102 (2011)}.
+
+\bibitem{Haldane}
+F. D. M. Haldane, {\em 'Luttinger liquid theory' of one-dimensional quantum fluids. I. Properties of the Luttinger model and their extension to the general 1D interacting spinless Fermi gas},
+\href{https://iopscience.iop.org/article/10.1088/0022-3719/14/19/010/meta}{J. Phys. C: Solid State Phys. {\bfseries 14} 2585 (1981)}.
+
+\bibitem{Haldane_2}
+F. D. M. Haldane, {\em Luttinger's Theorem and Bosonization of the Fermi Surface}, \href{https://arxiv.org/abs/cond-mat/0505529}{arXiv:cond-mat/0505529v1 (2005)}.
+	
+\end{thebibliography}
+
+\appendix
+
+\onecolumngrid
+
+\input{Appendix.tex}
+
+
+\end{document}

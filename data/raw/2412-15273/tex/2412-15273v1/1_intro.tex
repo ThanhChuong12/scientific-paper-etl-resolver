@@ -1,0 +1,113 @@
+\section{Introduction} \label{sec:intro}
+
+\begin{figure}[!ht]
+\centering
+    
+\begin{tcolorbox}[colframe=vblue, colback=vblue!15, coltitle=white, left=0mm, right=0mm, sharp corners=south, boxrule=0.8mm, boxsep=5pt, title=\centering\textbf{Voter FAQ}]
+{\bf \ttfamily \footnotesize Q: What are the Voter Registration Deadlines?}
+\end{tcolorbox}
+
+\vspace{-1.3em}  
+
+\begin{tcolorbox}[colframe=vindigo, colback=vindigo!20, coltitle=white, left=0mm, right=0mm, sharp corners=south, boxrule=0.8mm, boxsep=5pt, title=\centering\textbf{Illustrative Mainstream: MA}]
+{\ttfamily \tiny \tiny \textbf{A:} The deadline to register to vote, update your registration, or change your party is 10 days before any election or town meeting.} 
+\end{tcolorbox}
+
+\vspace{-1.3em}  
+
+\begin{tcolorbox}[colframe=vgreen, colback=vgreen!20, coltitle=white, left=0mm, right=0mm, sharp corners=south, boxrule=0.8mm, boxsep=5pt, title=\centering\textbf{Illustrative Leader: CA}]
+{\ttfamily \tiny \textbf{A:} The deadline to register to vote is 15 days prior to election day, often called e-15. you must submit the voter registration application by midnight on the registration deadline day. a timestamp will be attached to your online voter registration application...} 
+\end{tcolorbox}
+
+\vspace{-1.3em}  
+
+\begin{tcolorbox}[colframe=vred, colback=vred!10, coltitle=white, left=0mm, right=0mm, sharp corners=south, boxrule=0.8mm, boxsep=5pt, title=\centering\textbf{Illustrative Laggard: GA}]
+{\ttfamily \tiny \textbf{A:} You can register any time. You must be registered at least 30 days before an election to vote in that election. Look at the dates to ensure you're registering before the deadline for the election you want to participate in.} 
+\end{tcolorbox}
+
+\caption{A real-world example of Voter FAQ. Scores of content quality are (FIQS\textsubscript{voter}, FIQS\textsubscript{developer}) - MA (0.41, 0.38);  CA (0.7, 0.7); GA (0.13, 0.18). }
+\label{fig:intro-q}
+\vspace{-0.2in}
+\end{figure}
+
+
+Democracy is the leading form of governance where people have a say in who governs them. Its success depends on the ability of participants to vote in regular elections and the ability of the government to implement the subsequent orderly transfer of power \cite{american-election-issues,voting-american}.  
+% A vibrant democracy relies on engaged voters making informed decisions about their representatives and
+% keeping them accountable based on reliable information and secure election infrastructure. 
+Democracy at
+a practical level means empowering the voter with a right to choose and providing all relevant and reliable
+information including knowing about candidates, campaign finance, voting procedure, processing of
+votes, and declaration of results. 
+%Hence, voter participation is seen as a coarse measure of the vibrancy of democracy in a region.  
+However, around the world, stakeholders are struggling to find accurate information, which is now especially acute in the age of generative Artificial Intelligence (AI) and other technologies from the Natural Language Processing (NLP) and wider AI communities. 
+% They include, as examples, (a) Voters wanting to know about - voting logistics, candidate information, and issues, and historical information (b) Candidate wanting to know about voters, and (c)
+% Election Commissions wanting to know recruit and train poll workers.
+% - what voters care about, how can the candidate best position themselves to a group of voters.  (c) Election Commissions wanting to know about: what machines to buy, how to recruit and train poll workers. 
+%Although these are examples of {\em information gaps} based on field interviews we have conducted, 
+% These queries should only be seen as illustrative of the stakeholders and information gaps that they face today. 
+
+The situation is so bad with  information gap and  disorders that whenever AI is referenced in connection with elections, it often draws negative reactions due to the fear of bots, misinformation, and hacking. 
+As a baseline and illustration of the current situation, for elections, OpenAI declared that ChatGPT will defer election questions to human-curated Frequently Asked Questions (FAQs) \cite{openai-chatgpt-elections}, even though it has one of the best performance in QA settings. 
+This is particularly disappointing for AI, and especially chatbots, or bots, for short, since they are multi-modal collaborative assistants which have been studied since the early days of AI to help people complete useful tasks. For elections, people could have overcome voting complexity by  accessing authentic information 
+% such as voting dates, jurisdiction, locations, and issues (propositions) on the ballot; and be informed on the voting process, equipment, and facilities at voting sites, 
+conveniently in their own language or words through their smartphones, computers, and home devices.
+%like Alexa. 
+
+
+In the United States (US), state election commissions (SECs), often required by law, are the primary providers of Frequently Asked Questions (FAQs) (see \cref{fig:intro-q}) to voters, and secondary sources like non-profits such as  League of Women Voters (LWV) try to complement their information shortfall. 
+However, there is a general perception that  it is hard to find the right, accurate, information and in its absence,  the democratic processes are under increasing threats like {\em information disorders}, a term which covers misinformation, disinformation and malinformation \cite{american-election-issues,ai-maniputation-characterize,bot-politics-misinfo,fake-disinfo-shu2020mining,info-disorder}. 
+However, surprisingly, to the best of our knowledge, there is neither a single source with comprehensive FAQs nor a study analyzing the data at national level to identify current practices and ways to improve the status quo. In response, we  provide  a  dataset on Voter FAQs for the NLP community covering all the US states. We next present the related work, followed by data and NLP methods, and then analyze the FAQ data. We use the analysis to identify guidelines that lagging and mainstream states can adopt, and conclude. 
+
+
+In summary, our key contributions are:
+
+\begin{itemize}[leftmargin=15pt] %,nolistsep]
+    \item We present the \textbf{first NLP dataset of voter FAQs} encompassing all U.S. states (see \cref{sec:data}).
+    \item We introduce metrics for FAQ information quality score (FIQS)  with respect to  questions, answers, and answers to corresponding questions (see \cref{sec:setup}).
+    \item We use FIQS to analyze US FAQs to identify  leading, mainstream and lagging content practices and corresponding states. (cf. \cref{sec:analysis}).
+    \item We identify what states across the spectrum can do to improve FAQ quality and thus,  the overall information ecosystem.  (cf. \cref{sec:guidelines}).
+\end{itemize}
+
+
+% \biplav{Motivate. Setup the context for the need for official election data that helps voters. add citation}
+
+% \biplav{About the dataset. Data from democracies was make available in prior work - add citation. This work complements it -- link to new anonymous github}
+
+
+
+% \vipula{overall picture}
+% \bharath{ss}
+
+
+
+% In this study \cite{melleng-etal-2021-ranking}, .. our main contributions are that we:
+% \begin{enumerate}
+%     \item  collate, clean and make data available about FAQs for voters across the US from primary sources like state election commissions (SECs) and secondary source of Vote411, a non-profit that covers all the states.
+%     \item describe NLP methods we use to analyze the current state of FAQs across US and make corresponding tools publicly available
+%     \item present analysis about the questions, answers and answers to questions. 
+
+
+% \end{enumerate}
+
+% We answer the following research questions:
+
+% \begin{enumerate}[label=\bfseries RQ\arabic*] 
+    
+%     \item Who is the leader?
+%     \item Who is the laggard?
+%     \item What are the leaders doing good?
+%     \item How can the laggards improve?
+
+% \end{enumerate}
+
+% %misc
+% misc: \\
+% distribution of questions - a generic question is answered better in one state than another
+% long answer doesn't necessarily mean it is precise - give longer answer with more info - 
+
+% factual vs opinionated measured by subjectivity
+
+% Is the fine-tuned LLM trustworthy?
+% answer new questions
+% hallucination analysis - dont generate new answers - check if hallucination is higher - then just stick to old questions
+

@@ -1,0 +1,251 @@
+We perform experiments to systematically investigate the effects of preference dataset attributes on the downstream performance of language models.
+To this end, we examine three critical dimensions of the preference dataset: the (1) presence of shared prefixes between the (chosen, rejected) responses, (2) contrast and quality of the chosen and rejected responses, and (3) difficulty or complexity of the training prompts.
+
+\textbf{Data curation setup.}
+We implement rejection sampling by generating $N=64$ outputs for each prompt in our training set with a temperature of 1.0, and score each output using the verifier $\mathcal{V}$.
+Meanwhile, we implement Monte Carlo Tree Search with maximum depth of 5, number of actions 4, number of rollouts 4, $c_{puct} = 1.0$ and $\lambda = 0.2$.
+We score all rollouts using the same verifier $\mathcal{V}$.
+
+\textbf{Training setup.} 
+We run our experiments with \texttt{llama-3.1-8b-instruct}~\citep{DBLP:journals/corr/abs-2407-21783} and finetune the model on the preference dataset using DPO~\citep{DBLP:conf/nips/RafailovSMMEF23}.
+We finetune the model for one epoch and use a maximum sequence length of 2048, learning rate of \texttt{5e-7} with a linear scheduler and 4 gradient accumulation steps with a total batch size of 32.
+
+\textbf{Evaluation setup.}
+We evaluate our models on \texttt{IFEval}~\citep{DBLP:journals/corr/abs-2311-07911}, as well as three different synthetic evaluation sets that are designed to be more challenging than \texttt{IFEval}.
+Our synthetic evaluation sets are created using the same pipeline described in Section~\ref{subsection:prompt-generation}, but with the verifiable constraints provided in \texttt{IFEval} to maintain the distinction between the constraints used for training and for evaluation.
+We use $k\in \{4,5,6\}$ for our evaluation datasets and synthesize about 500 evaluation prompts for each value of $k$.
+
+Using the finetuned models, we generate 16 responses to each prompt at temperature 0.7 and measure the average score.
+We use two metrics to evaluate each response: 1) a hard score measuring whether the response satisfies \textit{all} the constraints, and 2) a soft score measuring the \textit{ratio} of the constraints satisfied by the response.
+
+\setlength{\tabcolsep}{2.4pt}
+\begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccclcccc}
+    \toprule
+        \multicolumn{5}{c}{\textbf{training k=4}} & \multicolumn{5}{c}{\textbf{training k=5}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$ & Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        RS, (c=4, r=1) & 79.24 & 37.49 & 20.54 & 13.78 & RS, (c=5, r=2) & 76.32 & 35.70 & 19.46 & 12.61 \\
+        MCTS, (c=4, r=1) & 79.48 & 39.16 & 20.39 & 14.11 & MCTS, (c=5, r=2) & 76.59 & 37.81 & 20.06 & 12.93 \\\midrule
+        RS, (c=4, r=2) & 78.86 & 38.56 & 21.66 & 14.71 & RS, (c=5, r=3) & 76.25 & 35.28 & 18.91 & 12.24 \\
+        MCTS, (c=4, r=2) & 79.68 & 39.22 & 22.43 & 15.75 & MCTS, (c=5, r=3) & 76.47 & 36.73 & 19.94 & 13.62 \\\midrule
+        RS, (c=4, r=3) & 76.74 & 35.02 & 19.40 & 12.85 & RS, (c=5, r=4) & 74.18 & 33.38 & 17.35 & 10.38 \\
+        MCTS, (c=4, r=3) & 79.59 & 39.05 & 21.61 & 14.96 & MCTS, (c=5, r=4) & 75.15 & 34.88 & 18.75 & 11.74 \\\midrule
+        RS, (c=3, r=0) & 80.06 & 39.25 & 21.54 & 14.37 & RS, (c=4, r=1) & 78.95 & 39.40 & 21.74 & 14.58 \\
+        MCTS, (c=3, r=0) & 79.39 & 39.15 & 21.56 & 13.61 & MCTS, (c=4, r=1) & 78.63 & 39.21 & 21.19 & 14.63 \\\midrule
+        RS, (c=3, r=1) & 80.06 & 39.15 & 21.90 & 15.20 & RS, (c=4, r=2) & 78.07 & 37.02 & 20.17 & 13.05 \\
+        MCTS, (c=3, r=1) & 79.94 & 39.23 & 22.15 & 14.93 & MCTS, (c=4, r=2) & 78.48 & 38.53 & 22.12 & 15.22 \\\midrule
+        RS, (c=3, r=2) & 77.52 & 36.20 & 19.52 & 12.48 & RS, (c=4, r=3) & 75.64 & 32.98 & 17.83 & 11.19 \\
+        MCTS, (c=3, r=2) & 77.89 & 38.89 & 21.51 & 13.97 & MCTS, (c=4, r=3) & 77.40 & 37.63 & 20.84 & 14.06 \\\midrule
+        RS, (c=4, r=1/2/3) & 78.70 & 36.68 & 20.20 & 13.57 & RS, (c=4, r=1/2/3) & 79.08 & 37.98 & 20.50 & 13.42 \\
+        MCTS, (c=4, r=1/2/3) & 79.97 & 39.31 & 22.19 & 15.89 & MCTS, (c=4, r=1/2/3) & 78.47 & 39.03 & 22.63 & 15.25 \\\midrule
+        RS, (c=3/4, r=0/1/2/3) & 79.10 & 37.62 & 20.98 & 13.99 & RS, (c=4/5, r=0/1/2/3) & 78.18 & 36.81 & 19.72 & 13.29 \\
+        MCTS, (c=3/4, r=0/1/2/3) & 79.42 & 39.37 & 22.24 & 15.20 & MCTS, (c=4/5, r=0/1/2/3) & 77.89 & 38.17 & 22.00 & 14.38 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results comparing preference data without shared prefixes (RS) and with shared prefixes (MCTS).
+    We show results for different training data configurations for $k\in\{4,5\}$.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The results for $k=6$ and the soft score metrics for all experiments are provided in Tables~\ref{tab:common_prefix_full_results_k4},~\ref{tab:common_prefix_full_results_k5} and~\ref{tab:common_prefix_full_results_k6} in the appendix.
+    }
+    \label{tab:common_prefix_results}
+\end{table}
+
+\subsection{Shared Prefixes in Preference Pairs}
+\label{subsection:common-prefix}
+We investigate the effect of having structural consistency between the (chosen, rejected) responses in the preference dataset.
+Recent techniques utilize tree search to curate fine-grained preference pairs where the (chosen, rejected) responses differ after a shared prefix -- we examine the effects of utilizing such preference pairs.
+To this end, we use rejection sampling (RS), which returns responses without shared prefixes, and Monte Carlo Tree Search (MCTS), which returns responses with shared prefixes, to curate preference datasets under identical conditions.
+
+\setlength{\tabcolsep}{5.5pt}
+\begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccclcccc}
+    \toprule
+        \multicolumn{5}{c}{\textbf{training k=4}} & \multicolumn{5}{c}{\textbf{training k=5}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$ & Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        RS, (c=3, r=0) & 79.04 & 39.45 & 20.86 & 13.82 & RS, (c=4, r=1) & 76.56 & 36.08 & 19.44 & 11.88 \\
+        RS, (c=3, r=1) & 78.66 & 38.47 & 20.56 & 14.02 & RS, (c=4, r=2) & 74.57 & 34.09 & 17.95 & 10.93 \\
+        RS, (c=3, r=2) & 74.60 & 33.59 & 18.46 & 11.23 & RS, (c=4, r=3) & 72.80 & 31.50 & 16.68 & 10.01 \\\midrule
+        RS, (c=4, r=1) & 79.24 & 37.49 & 20.54 & 13.78 & RS, (c=5, r=2) & 76.32 & 35.70 & 19.46 & 12.61 \\
+        RS, (c=4, r=2) & 77.44 & 37.69 & 20.33 & 13.77 & RS, (c=5, r=3) & 74.13 & 33.30 & 17.31 & 11.21 \\
+        RS, (c=4, r=3) & 74.09 & 33.38 & 17.65 & 10.73 & RS, (c=5, r=4) & 72.40 & 30.72 & 16.26 & 9.51 \\\midrule
+        MCTS, (c=3, r=0) & 78.30 & 37.86 & 20.52 & 12.81 & MCTS, (c=4, r=1) & 76.71 & 37.24 & 19.49 & 12.37 \\
+        MCTS, (c=3, r=1) & 77.58 & 38.03 & 19.76 & 13.71 & MCTS, (c=4, r=2) & 75.23 & 35.65 & 18.74 & 12.17 \\
+        MCTS, (c=3, r=2) & 75.05 & 34.96 & 18.69 & 11.53 & MCTS, (c=4, r=3) & 74.23 & 32.39 & 17.22 & 9.73 \\\midrule
+        MCTS, (c=4, r=1) & 79.48 & 39.16 & 20.39 & 14.11 & MCTS, (c=5, r=2) & 76.59 & 37.81 & 20.06 & 12.93 \\
+        MCTS, (c=4, r=2) & 77.76 & 38.25 & 20.00 & 14.26 & MCTS, (c=5, r=3) & 76.14 & 36.04 & 19.39 & 12.37 \\
+        MCTS, (c=4, r=3) & 75.65 & 35.03 & 18.80 & 12.36 & MCTS, (c=5, r=4) & 74.06 & 32.14 & 17.81 & 10.52 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results studying the effects of (chosen, rejected) response quality.
+    We provide results for different training prompt difficulties across $k\in\{4,5\}$, as well as for both RS- and MCTS-based data curation methods.
+    Each $(c=n_1,r=n_2)$ denotes that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The soft score metrics for all experiments are provided in Tables~\ref{tab:response_quality_results_k4} and~\ref{tab:response_quality_results_k5} in the appendix.
+    }
+    \label{tab:response_quality_results}
+\end{table}
+
+We perform our experiments by fixing the size of the training dataset as well as the number of unique prompts associated with the preference pairs that occur in each training set, across our comparison experiments.
+Meanwhile, we perform experiments by varying the other two dimensions: the correctness of the (chosen, rejected) responses, and the difficulty of the training prompts as measured by the values of $k$.
+
+Table~\ref{tab:common_prefix_results} shows the results of our experiments.
+We observe two key findings from the results.
+
+\textbf{MCTS outperforms RS by a small margin consistently over different training configurations.}
+While not a significant difference, we observe that models trained on preference datasets curated via MCTS slightly outperform models trained on preference datasets curated via RS across most of our training configurations.
+However, this difference may not be significant enough to warrant the added complexity introduced by MCTS in regular settings unless the additional performance gains are necessary.
+
+\textbf{MCTS offers more consistent performance over different training configurations than RS.}
+We observe that models trained on preference datasets curated via MCTS demonstrate more consistent performance across the training configurations than ones trained on preference datasets curated via RS.
+This implies that for cases where the constraint is not programmatically verifiable and the correctness of the response is more difficult to quantify, it may be more effective to use the preference dataset curated by MCTS as it offers more stable performance.
+
+\subsection{Contrast and Quality of Responses}
+\label{subsection:response-quality}
+We investigate the effects of controlling the quality, or correctness, of the (chosen, rejected) responses in the preference dataset.
+Across our experiments, we maintain the same training dataset size and the number of unique prompts given a fixed data curation method and training prompt difficulty.
+Table~\ref{tab:response_quality_results} shows the results of varying the correctness of the (chosen, rejected) pairs across diverse training configurations including the RS/MCTS-based curation method, as well as the training prompt difficulties with $k=4$ or $5$.
+
+Meanwhile, we also study the effects of having a mixture of both high- and low-contrast pairs.
+To compare its performance to those of using only high- or low-contrast pairs, we fix the training dataset size and the number of unique prompts, and replace some of the rejected responses with low correctness scores with rejected responses that have slightly higher correctness scores.
+For this experiment, we use MCTS for data curation while using $k=4$ or $5$ for the complexity of the training prompts.
+
+The results of our experiments are visualized in Figure~\ref{fig:quality_mixture_results}.
+We show the composition of the (chosen, rejected) responses in terms of their correctness on the x-axis, and the evaluation metric on the y-axis for each subplot.
+For example, for a training set with $k=4$ constraints, we begin with a (chosen, rejected) correctness of (c, r) $=$ (4, 1) and then mix in r$=$2 to obtain (c, r) $=$ (4, 1/2), and then mix in r$=$3 to obtain (c, r) $=$ (4, 1/2/3).
+
+We make three key observations from our experiments.
+
+\textbf{When used alone, high-contrast preference pairs is more helpful than low-contrast preference pairs.}
+Our results in Table~\ref{tab:response_quality_results} show that for a fixed correctness of the chosen response, increasing the correctness of the rejected response decreases the performance in a consistent manner.
+For example, using a correctness of c = 3 for the chosen response and changing the correctness of the rejected response from r = (0, 1, 2) for a training dataset with $k=4$ decreases the \texttt{IFEval} score from 79.04$\rightarrow$78.66$\rightarrow$74.60.
+This trend holds across both RS- and MCTS-based data curation methods, as well as across the difficulty of the training prompts.
+Likewise, we find that using high-contrast preference pairs is better than using low-contrast pairs for downstream performance.
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.6, clip, trim=0.1cm 1.6cm 0.2cm 0.1cm]{img/quality_mixture_k45.pdf}
+    \caption{
+    Evaluation results demonstrating the effects of mixing preference pairs with different margins between the (chosen, rejected) responses.
+    The two rows correspond to our training setup with different values of $k$ (number of verifiable constraints in each prompt), and the four columns correspond to our evaluation sets.
+    The x-axis indicates the correctness of the (chosen, rejected) responses with lower-margin pairs mixed in while keeping the same training size.
+    The y-axis represents the accuracies.
+    Results for more experiments are provided in Tables~\ref{tab:response_quality_results_mix_k4} and~\ref{tab:response_quality_results_mix_k5} in the appendix.
+    }
+    \label{fig:quality_mixture_results}
+\end{figure}
+
+\textbf{The margin between the (chosen, rejected) responses have a bigger impact than the absolute scores themselves.}
+Table~\ref{tab:response_quality_results} demonstrates that preference datasets with the same value of $c-r$ for the correctness of the (chosen, rejected) responses result in similar performances across our evaluation sets.
+For example, on the \texttt{IFEval} benchmark our results for rejection sampling with (c, r) $=(3, 0)$ and (c, r) $=(4, 1)$ with a training set of $k=4$ result in scores of 79.04 vs. 79.24, while our results for rejection sampling with (c, r) = $(4, 1)$ and (c, r) = $(5, 2)$ with a training set of $k=5$ result in scores of 76.56 vs. 76.32.
+Our results indicate that the margin between the preference pairs have more influence on the downstream performance than the absolute correctness of the (chosen, rejected) responses as long as the chosen responses are reasonably correct.
+
+\textbf{Having a mixture of both high-contrast and low-contrast pairs sometimes demonstrates better performance than only using high-contrast pairs.}
+Our experiments shown in Figure~\ref{fig:quality_mixture_results} indicate that given the same training dataset size, mixing high-contrast and low-contrast preference pairs sometimes return better performance than only using high contrast pairs.
+For example, in a case where there are $k=4$ constraints in the training set, a model trained on preference pairs with (c, r) = (4, 1) scores 78.49 on \texttt{IFEval}, but models trained on preference pairs with (c, r) = (4, 1/2) and (4, 1/2/3) score 79.77 and 79.97, respectively.
+However, in another case where there are $k=5$ constraints in the training set, a model trained on preference pairs with (c, r) = (4, 1) scores 78.88 on \texttt{IFEval}, but models trained on preference pairs with (c, r) = (4, 1/2) and (4, 1/2/3) score 78.50 and 78.47, not showing improvements.
+Our additional experiments in Tables~\ref{tab:response_quality_results_mix_k4} and~\ref{tab:response_quality_results_mix_k5} in the appendix also indicate that having a mixture of contrasts often helps, but the results are too mixed to yield a definitive conclusion.
+
+\subsection{Training Prompt Difficulty}
+\label{subsection:prompt-difficulty}
+We examine how the difficulty of prompts provided in a preference dataset affects downstream performance across evaluation sets of varying difficulties.
+Similar to previous experiments, we control the size of the training dataset and the number of unique prompts to compare across the prompt difficulties.
+For each experiment, we fix the preference data curation method and the margin between the (chosen, rejected) responses while comparing between the three complexities of the prompts in our training set with $k \in \{4, 5, 6\}$.
+Then, we repeat our experiments across our data curation methods and the qualities of the (chosen, rejected) responses.
+
+\setlength{\tabcolsep}{5.5pt}
+\begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccclcccc}
+    \toprule
+        \multicolumn{5}{c}{\textbf{Rejection Sampling (RS)}} & \multicolumn{5}{c}{\textbf{Monte Carlo Tree Search (MCTS)}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$ & Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        $k=4$, (c=3, r=0) & 79.70 & 38.41 & 21.15 & 14.27 & $k=4$, (c=3, r=0) & 78.94 & 39.00 & 21.60 & 14.40 \\
+        $k=5$, (c=4, r=1) & 79.51 & 38.66 & 21.48 & 14.70 & $k=5$, (c=4, r=1) & 78.72 & 39.42 & 21.43 & 14.25 \\
+        $k=6$, (c=5, r=2) & 77.83 & 36.42 & 20.15 & 12.28 & $k=6$, (c=5, r=2) & 78.13 & 38.55 & 21.64 & 14.45 \\\midrule
+        $k=4$, (c=3, r=1) & 79.36 & 39.22 & 22.00 & 14.78 & $k=4$, (c=3, r=1) & 79.12 & 38.81 & 21.72 & 15.66 \\
+        $k=5$, (c=4, r=2) & 78.58 & 37.70 & 21.42 & 13.61 & $k=5$, (c=4, r=2) & 77.53 & 38.93 & 21.69 & 15.20 \\
+        $k=6$, (c=5, r=3) & 76.73 & 36.16 & 19.96 & 12.87 & $k=6$, (c=5, r=3) & 77.18 & 37.06 & 20.16 & 12.84 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results investigating the effects of training prompt difficulty ($k\in \{4, 5, 6\}$) on downstream performance for evaluation sets of varying difficulties.
+    We provide results for both RS- and MCTS-based preference data curation methods, as well as for different margins between the (chosen, rejected) responses.
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The soft score metrics for all experiments are provided in Tables~\ref{tab:prompt_difficulty_full_results_rs} and~\ref{tab:prompt_difficulty_full_results_mcts} in the appendix.
+    }
+    \label{tab:prompt_difficulty_results}
+\end{table}
+
+Table~\ref{tab:prompt_difficulty_results} summarizes the results of our experiments.
+We observe two key findings from the results.
+
+\textbf{Training on moderately difficult prompts is overall more helpful than training on extremely difficult prompts.}
+We find that models trained on moderately difficult prompts perform better than models trained on extremely difficult prompts in all our evaluation sets.
+For example, our model trained on preference pairs for prompts with $k=4$ scores 79.70 and 79.36 on \texttt{IFEval} with (c, r) = (3, 0) and (3, 1), respectively, while the same model trained on preference pairs for prompts with $k=6$ scores 77.83 and 76.73 on \texttt{IFEval} with (c, r) = (5, 2) and (5, 3), respectively.
+The same pattern holds across other evaluation sets and across both data curation methods, showcasing the importance of moderating prompt complexities for preference learning.
+
+\textbf{Training on moderately difficult prompts is more helpful even for performing well on extremely difficult prompts at test time.}
+Models trained on moderately complex prompts ($k=4$) outperform models trained on extremely complex prompts ($k=6$) even for evaluation sets involving $k=6$ constraints.
+For example, our model trained on prompts of $k=4$ with preference pairs obtained via RS with (c, r) = (3, 0) scores 14.27 on our evaluation set with $k=6$ while our models trained on prompts of $k=6$ with preference pairs obtained via RS with (c, r) = (5, 2) scores 12.28 on the same evaluation set.
+Our results indicate that it is better to use training prompts of moderate difficulties to achieve generalization to more difficult prompts.
+
+\subsection{Additional Experiments}
+We perform two additional experiments to confirm that preference learning helps our models gain instruction-following skills, and investigate the limitations of our methods.
+To this end, we (1) compare the performances of SFT and DPO to ensure that our preference datasets teach meaningful skills to our models, and (2) examine how our RS-based preference data curation method scales with varying amounts of compute.
+
+\setlength{\tabcolsep}{2.0pt}
+\begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{lcccclcccc}
+    \toprule
+        \multicolumn{5}{c}{\textbf{Rejection Sampling (RS)}} & \multicolumn{5}{c}{\textbf{Monte Carlo Tree Search (MCTS)}}\\
+        Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$ & Method & IFEval & $\text{Ours}_{k=4}$ & $\text{Ours}_{k=5}$ & $\text{Ours}_{k=6}$\\\midrule
+        policy (\texttt{llama-3.1-8b-instruct}) & 71.71 & 27.77 & 14.15 & 7.34 & - & - & - & - & - \\\midrule
+        SFT, $k=4$, (c=4, r=1/2/3) & 74.77 & 28.17 & 15.10 & 7.10 & SFT, $k=4$, (c=4, r=1/2/3) & 73.30 & 29.70 & 15.02 & 7.50 \\
+        DPO, $k=4$, (c=4, r=1/2/3) & 78.70 & 36.68 & 20.20 & 13.57 & DPO, $k=4$, (c=4, r=1/2/3) & 79.97 & 39.31 & 22.19 & 15.89 \\\midrule
+        SFT, $k=5$, (c=4, r=1/2/3) & 74.75 & 28.36 & 14.53 & 7.74 & SFT, $k=5$, (c=4, r=1/2/3) & 73.87 & 28.54 & 13.49 & 6.68 \\
+        DPO, $k=5$, (c=4, r=1/2/3) & 79.08 & 37.98 & 20.50 & 13.42 & DPO, $k=5$, (c=4, r=1/2/3) & 78.47 & 39.03 & 22.63 & 15.25 \\
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Evaluation results comparing the performance of training on our preference datasets via DPO compared to the base policy model or running SFT on the chosen responses only.
+    We provide results for both RS- and MCTS-based preference data curation methods, as well as for different training prompt difficulties ($k\in \{4,5\}$).
+    Each $(c=n_1,r=n_2)$ indicates that the chosen response correctly addresses $n_1$ constraints and the rejected response correctly addresses $n_2$ constraints.
+    The soft score metrics for all experiments are provided in Tables~\ref{tab:sft_dpo_full_results_rs} and~\ref{tab:sft_dpo_full_results_mcts} in the appendix.
+    }
+    \label{tab:sft_dpo_results}
+\end{table}
+
+\textbf{Does preference learning actually help?}
+We demonstrate that our preference learning datasets teach meaningful instruction-following skills to the models and allows us to perform the comparison experiments shown in Sections~\ref{subsection:common-prefix},~\ref{subsection:response-quality} and~\ref{subsection:prompt-difficulty}.
+To this end, we compare the performances of the models trained via DPO with the base policy (\texttt{llama-3.1-8b-instruct}) and the policy trained via supervised fine-tuning (SFT) on the chosen responses only.
+For SFT, we train each model for three epochs with a maximum sequence length of 2048, learning rate of \texttt{2e-6} with a linear scheduler and 4 gradient accumulation steps with a total batch size of 32.
+
+Table~\ref{tab:sft_dpo_results} shows the results of our experiments.
+First, we confirm that DPO significantly improves over the baseline policy model even though the verifiable constraints in the training set and the evaluation sets are separate -- this indicates that training on a set of verifiable constraints can be helpful for generalizing to another set of verifiable constraints as long as they involve transferable skills.
+Moreover, we observe that DPO outperforms SFT across all training configurations, demonstrating the importance of our preference learning setup with the rejected responses in addition to the chosen responses.
+
+\textbf{How does rejection sampling scale?}
+We investigate how different values of $N$ during rejection sampling affect its overall quality and ensure that our RS-based method is designed to be competitive against MCTS.
+To this end, we re-run the rejection sampling curation pipeline for $N\in\{4, 8, 16, 32, 64\}$ for a fixed difficulty $k=5$ and correctness scores of (c, r) = (4, 1) and (4, 2) and measure the performance across all of our evaluation sets.
+
+Figure~\ref{fig:baseline-ablations} shows the results of our experiments.
+We observe that the performance of the models trained on preference pairs curated with RS-based methods increases with $N$, but also saturate around $N=32$ and do not observe significant performance improvements afterward.
+This indicates that curating preference data via rejection sampling, while efficient and straightforward to scale, has limitations that cannot be solved by simply scaling the number of generated outputs, and further improvements may require more sophisticated search strategies such as the MCTS-based data curation method implemented in this work.
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.6, clip, trim=0.1cm 2.2cm 0.2cm 0.1cm]{img/baseline_ablations.pdf}
+    \caption{
+    Evaluation results for increasing the number of outputs generated for rejection sampling (RS) from $N=4$ to $N=64$, given a set of training prompts with $k=5$ and (c, r) = (4, 1) or (4, 2).
+    We observe a steady improvement in performance as more outputs are generated per prompt until $N=32$, where it begins to saturate or even deteriorate.
+    }
+    \label{fig:baseline-ablations}
+\end{figure}

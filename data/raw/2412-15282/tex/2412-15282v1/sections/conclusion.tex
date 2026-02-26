@@ -1,0 +1,6 @@
+We systematically investigate the effects of various attributes of preference datasets on model capabilities from the perspective of instruction-following.
+To this end, we first build a data generation pipeline that combines general-purpose prompts with mixtures of verifiable constraints to synthesize challenging instruction-following prompts.
+We then automatically curate preference pairs using two popular methods: rejection sampling (RS) and Monte Carlo Tree Search (MCTS).
+Using the preference pairs, we examine the effects of (1) the existence of shared prefixes between the chosen and rejected responses, (2) the contrast and quality of the responses, and (3) the complexity of the training prompts.
+Our results indicate that having a common prefix in the preference pairs offers marginal yet consistent improvements, high-contrast preference pairs outperform low-contrast pairs but a mixture is sometimes better than both, and training on moderately difficult prompts is more helpful than training on extremely difficult prompts.
+Our work provides a systematic framework for curating different types of preference datasets and sets the groundwork for future studies that extend the scope beyond verifiable instruction-following constraints to more general constraints.

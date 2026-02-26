@@ -1,0 +1,57 @@
+\section{Introduction}
+
+Large Language Models (LLMs) have shown strong capabilities across diverse domains, including drug discovery \cite{liu2024drugagent}, legal analysis \cite{chalkidis2022lexglue}, and creative tasks \cite{yang2022survey}. Their strength lies in not only understanding and generating text but also leveraging vast common knowledge \cite{roberts2020much}, simulating diverse personas \cite{hu-collier-2024-quantifying}, and modeling human behavior in complex social contexts \cite{bommasani2021opportunities}. LLMs excel in human-like reasoning \cite{zhou2020evaluating, alkhamissi2022review} and have been applied to simulate decision-making in various settings \cite{zhou2023large, ziems2024can}.
+
+Notably, recent work has extended LLMs to political science, analyzing policy documents, campaign speeches, and public sentiment \cite{xu2022deep, haq2023large, li2024political}. Beyond language processing, their ability to integrate knowledge and apply human-like reasoning positions them as powerful tools for simulating the intricate dynamics of political decision-making \cite{Argyle_Busby_Fulda_Gubler_Rytting_Wingate_2023, Bisbee_Clinton_Dorff_Kenkel_Larson_2024}.
+
+
+
+\begin{figure*}[!ht]
+    \centering
+    \includegraphics[width=\textwidth]{figs/Intro_hook2.pdf}  
+    \vspace{-0.3in}
+    \caption{Demonstration of three prompt designs in \S \ref{subsec:overview}. V1 is the direct prompt on voter demographic information, while V2 introduces time-dependent information to capture candidates' agenda and V3 also uses multi-step reasoning.
+    In this example for 2020 Ohio result prediction, only V3 can accurately predict the results, demonstrating the importance of leveraging both time-dependent information and multi-step reasoning for election result prediction.}
+    \vspace{-0.2in}
+    \label{fig:comparision}
+\end{figure*}
+
+
+\noindent \textbf{Background}.
+Despite LLMs' achievements in more straightforward political science tasks, their capacity to handle more challenging efforts, such as election prediction, is not well understood \cite{lerer2022political}.
+% On the one hand, 
+% LLMs can access large volumes of historical information and have performed well in some predictive tasks, raising the possibility that they could forecast election outcomes.
+% % On the other hand, 
+% However, election forecasting poses distinct challenges. 
+LLMs’ access to extensive historical data suggests potential for forecasting, but election prediction introduces unique challenges. 
+\textit{First}, 
+the high cost of acquiring voter-level data complicates both experimentation and model validation. 
+\textit{Second}, election forecasting involves modeling not only voter behavior, but also the shifting political context, making it unclear whether text-based data alone can capture the full complexity \cite{graefe2014accuracy}.
+\textit{Third}, accurate predictions require reasoning about multiple factors\cite{holbrook2016forecasting}. Whether LLMs can perform this more advanced reasoning remains unknown.
+\cite{wei2022chain}.
+
+
+
+\np{This Work}  
+We present \textbf{a large-scale empirical study} to address two key questions in election prediction with LLMs:
+(\textit{\textbf{i}}) how can LLMs be leveraged to achieve \textit{accurate} election predictions, and (\textbf{\textit{ii}}) beyond accuracy, what \textit{additional considerations} are crucial for understanding LLM capabilities in election forecasting tasks?
+
+
+\noindent
+\textbf{Contribution 1: Multi-Step Reasoning Framework for Accurate Election Prediction (\S \ref{sec:pipeline})}.
+To handle the scarcity of detailed voter-level data, we employ the \textit{Sync} synthetic data generation framework \cite{li2020sync}, which probabilistically reconstructs individual demographic and behavioral profiles from aggregated public datasets. 
+We pair this synthetic data with real-world datasets, notably the American National Election Studies (ANES) Time Series \cite{ANES2020}, ensuring that our model aligns with actual voting behaviors.
+Our approach also adapts to evolving political conditions by incorporating time-dependent factors. We aggregate information from presidential campaign data, including candidates' policy agendas and backgrounds, to align the model with changing political environments \cite{holbrook2016forecasting}.
+Finally, we introduce a multi-step reasoning framework guided by Chain of Thought prompting \cite{wei2022chain}. 
+By breaking down the prediction process into intermediate steps, the model can systematically integrate demographic details, ideological alignment, and time-sensitive information. This approach strengthens the model's accuracy and mitigates biases and overfitting issues observed in simpler models.
+As shown in Figs. \ref{fig:comparision} and \ref{fig:example}, we refine our pipeline through iterations. The final version significantly improves predictive accuracy and alignment with real-world data via extensive experiments.
+
+
+\np{Contribution 2: New Insights and Directions Beyond Accurate Prediction (\S \ref{Beyond})}  
+Our experiments uncover several key insights that extend beyond raw predictive accuracy. 
+First, while our multi-step reasoning pipeline reduces bias and improves alignment with real-world outcomes, residual skewness persists, highlighting the influence of pretrained corpora on political predictions. 
+Second, although LLMs can replicate known demographic voting patterns, they tend to exaggerate these differences, raising concerns about reinforcing stereotypes. 
+Finally, our results indicate that integrating richer contextual information and refining prompt strategies can further enhance predictive reliability.
+We thus propose meaningful future directions on reducing political skewness in pretrained corpora and mitigating stereotype biases in election prediction.
+\vspace{-0.1in}
+

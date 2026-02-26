@@ -1,0 +1,193 @@
+\section{Design}
+
+\begin{figure*}[t!]
+\centering
+  \includegraphics[width=0.85\textwidth]{figures/flows/pre-training_v2.pdf}
+  \vspace{-4mm}
+  \caption{\emph{Processing the dataset is essential for effective pre-training. This step addresses the challenges posed by the dataset’s diversity, ensures alignment of the dataset with the model’s context window size limitations, and formats the data appropriately for its usage with the subsequent training process.}}
+    \vspace{-4mm}
+  \label{fig:dataset-prep}
+\end{figure*}
+
+\system\space  enables the training of custom foundational models for embedded sensing for deployment on edge devices.  It manages various process stages, including pre-processing diverse datasets to facilitate pre-training for a foundational model tailored for embedded sensing applications. \system\space also provides tools for fine-tuning models to align with the application scenario. The final step involves training and deploying the model on an edge device. We illustrate various steps in the \system\space in the Figure~\ref{fig:training}, and describe them next.
+
+\subsection{Dataset preparation for pre-training of a model}
+
+Training a foundational model requires a large corpus of data. When relying on third-party foundational models, users typically have very little control over the datasets used in the pre-training process, creating several challenges. \emph{First}, users are unsure if datasets relevant to their specific use case are included in the model’s pre-training, often leading them to opt for larger models with a higher likelihood of containing such information. This, however, increases parameter size and the computational requirements for inference. \emph{Second}, the opaque nature of these models raises legal and compliance concerns, as users cannot verify whether the model was trained on copyrighted or restricted content. \emph{Finally}, third-party models may also incur additional costs or impose licensing restrictions, further limiting their usability.
+
+\system\space enables users to curate the dataset used for pre-training, giving them greater control over the information included in the model's training process. This approach reduces non-essential information being part of the pre-training dataset, resulting in the generation of highly specialized, smaller models tailored for the specific application scenario.
+
+\subsection{Processing of the pre-training dataset}
+
+After preparing the dataset for pre-training, the next step in the framework involves curating it for its efficient use during the training. This step is crucial since datasets often come in diverse formats and structures, which must be handled properly before use. Additionally, models have limited context windows, so the data must be structured to maximize the efficient use of this window. Finally, the dataset is tokenized to ensure compatibility with the training process. The processing step ensures data consistency for subsequent usage in the training process. We illustrate the various steps involved in the processing stage of the framework in  Figure~\ref{fig:dataset-prep}.
+
+\fakepar{Transformation} The dataset structure often varies based on the application, with much of it consisting of numerical data. The first step focuses on transforming data into text since models are primarily trained using textual information. If the data contains timestamps, it may be grouped by timestamp into separate rows and columns. The transformation also involves data cleaning to optimize usage within the model’s limited context window. For example, 
+GPT-2's 1024-token context window can limit longer prompts. We address this by normalizing readings to integers within specific ranges (0 to 100), reducing each reading to two characters. The framework adjusts character counts based on use cases and available context windows, keeping data compact and suitable for model training. The specific steps would vary by application and the model that is employed.
+
+%In embedded sensing, data structure and format depend on the sensors used, and some events may require simultaneous readings from multiple sensors. In such cases, sensor readings are grouped by timestamp or event. One important consideration is to ensure that any transformations in this step do not compromise the accuracy of the original sensor readings.
+
+\fakepar{Tokenization} Tokenization prepares datasets for pre-training by converting text into numerical data that models can process. It breaks text into tokens, which are smaller units representing words, characters, or subwords. \system\space  uses the GPT-2 tokenizer to process the datasets. The tokenizer processes tokens organized into data shards by \system\space and marks row separations with end tokens. For unstructured datasets, we fill shards sequentially until the file is completed. For structured datasets with multiple columns, we merge columns into single prompts. Each prompt begins with dataset context, including information about units and data range, followed by data output and an end token. To optimize memory usage, we merge, tokenize, and store all prompts in fixed-size shards (200 MB). When tokens exceed shard size, we create new shards from the excess tokens.
+
+\fakepar{Splitting and Mixing} The final step before pre-training involves mixing tokens from multiple datasets. Users can define the appropriate proportions for different types of data. For example, if the dataset includes textual conversations, the user can specify the proportion of tokens from such conversations. 
+Using lazy loading, the framework loads the tokenized datasets in chunks, efficiently managing large data sizes. Tokens from different datasets are sampled based on user-defined ratios. A probability-based sampling method ensures that tokens are randomly selected from each dataset, maintaining the specified proportions. The selected tokens are then accumulated and saved into fixed-size shards, following the same process as in earlier steps. By default, \system\space splits the dataset into training and test sets in a 98:2 ratio.
+
+%In particular, we have used the Fineweb dataset, a vast collection of over 15 trillion tokens containing CommonCrawl dumps since 2013, and we selected 9 billion tokens. We also used the SHL dataset~\cite{shl}, an annotated collection of data collected through smartphone sensors for human activity recognition. This dataset includes accelerometers, gyroscopes, magnetometers, barometers, and GPS in various positions (e.g., in hand, pocket, or bag) during daily activities of the user like walking, running, sitting, and driving. Further, we expanded dataset by incorporating the ExtraSensory dataset. This multi-sensor collection aids context and activity recognition  using mobile and wearable devices including accelerometers, gyroscopes, audio, and location sensors. Sixty participants contributed to this dataset over several days, amassing 300,000 information minutes. The ExtraSensory dataset provides labeled instances of various user activities (e.g., walking, sitting, talking) and environmental contexts (e.g., outdoors, at home) sampled every minute.
+
+\subsection{Training a custom foundational model}
+Next, we describe steps to process a custom foundational model based on the processed dataset. We discuss the architecture of the model that we pre-train in this work.
+
+\fakepar{Model architecture} We design the model architecture based on GPT-2~\cite{llm_gpt2}, a transformer-based, decoder-only language model that generates text by predicting the next word in a sequence. This architecture effectively supports training smaller parameter-sized models, which motivated our choice. Specifically, by adjusting the number of transformer blocks, the model offers variants with parameter counts between 30M and 124M. Additionally, \system\space ensures flexibility, allowing users to select and implement other architectures.
+
+The architecture consists of an input embedding layer, positional encoding, multiple transformer blocks (each containing multi-head attention and feed-forward networks), and a final output layer as shown in the Figure~\ref{fig:llm-arch}.
+
+\emph{Input Embedding:}\space Converts input tokens into dense vectors of fixed size $C$. These vectors represent the input tokens in a high-dimensional space where similar words have similar vectors. The input tokens are characterised by the vocabulary size ($V$), which is the number of unique tokens (words or subwords) the model can recognize and generate.
+
+\emph{Positional Encoding:}\space This layer adds the positional information to the token embeddings so that the model can distinguish between the positions of tokens in a sequence. This is important since the transformer architecture itself does not inherently encode order information.
+
+\emph{Transformer Block (Repeated $l$ Times):}\space Each transformer block consists of multiple sub-blocks which are as follows: 1) {Layer Normalization:} Normalizes the inputs to the block to stabilize and speed up the training process. 2) {Multi-Head Attention:} Applies self-attention to the inputs, allowing the model to simultaneously focus on different parts of the sequence. This is done in multiple "heads" in parallel, each learning different aspects of the sequence. 3) {Feed-Forward Network (FFN):} Consists of two linear transformations with a non-linearity (Gaussian Error Linear Unit (GeLU)) in between. It helps capture complex patterns by transforming the output of the attention mechanism. 4) {Residual Connections and Additional LayerNorm:} Adds the input of each sub-layer (Attention and FFN) to its output to form a residual connection. This  helps in stabilizing the learning process.
+
+
+\begin{figure}[t!]
+\centering
+  \includegraphics[width=0.75\columnwidth]{figures/others/llm-arch.pdf}
+  \vspace{-4mm}
+  \caption{\emph{The high-level representation of the architecture for the model used in this work is based on the GPT-2. The model architecture consists of \textit{l} transformer blocks}}
+    \vspace{-4mm}
+  \label{fig:llm-arch}
+\end{figure}
+
+
+\fakepar{Training process} To train a model, the \system\space builds ontop of llm.c, that provides implementation of GPT-2.  It consists of  $l$ transformer blocks, with the total number of parameters $N$  summarized: The input embedding layer has $V \times C$ parameters, and the Positional Encoding layer has $T \times C$ parameters.
+Each transformer block contains layer normalization, multi-head attention, and feed-forward network components. The total parameters per block are $l \times (12C^2+12C)$.
+With $V = 50,257$, $T = 1,024$, $C = 64l$, we can estimate the total parameters of the model (in Million) approximately using the empirical expression:
+
+\begin{equation}
+N = 0.05l^3 + 3.2l
+\end{equation}
+
+By varying $l$, we can scale the model to different sizes, balancing model capacity with computational requirements.
+
+\begin{table}[ht]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{cccc}
+\hline
+Depth ($l$) & Hidden Size ($C$) & Parameters ($N$) & RAM Usage (MB) \\
+\hline
+6  & 384 & 30M  & 95.49   \\
+8  & 512 & 51M  & 148.37 \\
+10 & 640 & 82M  & 219.27 \\
+11 & 704 & 102M & 262.89 \\
+12 & 768 & 124M & 312.7  \\
+\hline
+\end{tabular}
+}
+\caption{Approximate parameter count and RAM usage of the GPT-2 model for given depth and hidden size values}
+\label{tab:gpt2_parameters}
+\end{table}
+
+
+Embedded platforms are often limited in memory and processing capabilities. Therefore, we intentionally select a parameter size between 30M and 124M, as shown in Table~\ref{tab:gpt2_parameters}, for pre-training the foundational model. As demonstrated later, this choice enables the model to perform rapid inference even on constrained embedded platforms, such as SBCs which are commonly used as edge devices.
+
+\fakepar{Parameters and resources} We default to a 12-layer model unless stated otherwise. The training parameters include a micro-batch size of 64 and a sequence length of 1024. The model runs over 10 billion tokens for one epoch, approximately 20,000 steps. The training process requires around 25GB of GPU memory. It was conducted on a single Nvidia H100 GPU and completed in roughly 9 hours. To ensure stable training, we incorporated techniques such as learning rate scheduling—with 700 warm-up steps followed by cosine decay—and gradient clipping with a maximum norm of 1.0. 
+
+% We initialize the model with $l = 12$ transformer blocks, 12 attention heads per block, and a hidden size of 768, matching the GPT-2 small architecture. 
+
+
+
+\begin{figure}[t!] 
+\centering
+\begin{tcolorbox}[
+    enhanced,
+    attach boxed title to top left={yshift=-3mm,yshifttext=-1mm, xshift=3mm},
+    colback=white, colframe=black, boxrule=0.5mm, rounded corners,
+    title=Prompt: Gesture Detection, fonttitle=\bfseries,
+    boxed title style={colframe=black, colback=white, rounded corners, boxrule=0.5mm, fontupper=\bfseries\footnotesize, interior style={draw=none, fill=none}}
+]
+\textbf{\#\#\# Instruction:}\\
+Sensor data values are provided in the following order: proximity, red, green, and blue light intensity values. Using these sensor values, determine the hand gesture performed. Give your answer only as Tap, Double, or Hold.\\
+\\
+\textbf{\#\#\# Input:}\\
+\textit{Proximity: [2, 10, ..., 23] \\Red: [244, 243, ..., 20] \\Blue: [255, 255, ..., 255] \\Green: [200, 201, ..., 45]}\\
+\\
+\textbf{\#\#\# Response:}\\
+Hold
+
+\end{tcolorbox}
+\vspace{-4mm}
+\caption{We borrow a template from Alpaca for prompts and dataset entries required for fine-tuning a pre-trained model. Fine-tuning is an important step to ensure accurate responses to user queries for the specific  application scenario.}
+\vspace{-4mm}
+\label{alpaca_prompt}
+\end{figure}
+    
+
+\begin{figure*}[ht]
+\centering
+  \includegraphics[width=\textwidth]{figures/flows/fine-tuning_v1.pdf}
+  \vspace{-4mm}
+  \caption{\emph{Pre-trained foundational models, despite careful dataset curation, often show lower accuracy. Fine-tuning these models with a small, curated dataset from the target application scenario significantly improves their accuracy. Our \system\space framework supports fine-tuning foundational models for deployment at the edge.}}
+    \vspace{-4mm}
+  \label{fig:fine-tuning}
+\end{figure*}
+
+\subsection{Finetuning of pre-trained custom model}
+Even with curated datasets, we observed that the pre-trained model struggles to answer specific user queries~\cite{finetune}, even when similar examples exist within the pre-training data. Consequently, the model requires an additional fine-tuning step tailored to the specific application scenario. This step introduces new queries that the model has not encountered before and uses these examples to improve its ability to answer related queries. \system\space supports the fine-tuning of the custom-trained foundational model through several steps. 
+
+The process begins with collecting relevant data for fine-tuning, requiring structured data formatted as input-output pairs. Each entry includes an input query and the expected output from the model based on the provided input. To optimize token usage and fit within the model’s limited context window, we apply min-max normalization to reduce the character count. Each dataset entry used in the process must be formatted according to predefined prompt templates. We adopt the Alpaca model template~\cite{alpaca}, which consists of three components: an instruction that describes the task, an input that provides additional context, and a response that completes the request, as illustrated in Figure~\ref{alpaca_prompt}. Each prompt must include relevant context within the prompt entry, thus ensuring a coherent input-output pair. The next step involves shuffling the dataset entries and splitting them into training, validation, and test sets. The split ratio depends on the size and nature of the data (e.g., 80\% training, 10\% validation, and 10\% test). This step ensures the model generalizes better by preventing overfitting to any specific order in the data. The final step involves the fine-tuning process.
+
+Various techniques are available for fine-tuning, including PEFT (Parameter-Efficient Fine-Tuning). PEFT methods are popular because they allow users to train only a fraction of the model’s parameters, significantly reducing the memory footprint compared to full model fine-tuning. One such method is LoRA (Low-Rank Adaptation)~\cite{loraft}, which requires setting the adapter size and other parameters. As a result, we employ LoRA as part of the \system\space framework.
+
+The key parameters for fine-tuning are the number of fine-tuning steps (or epochs), batch size, learning rate (which must be carefully tuned to prevent overfitting or underfitting), and dropout rates to control model regularization. Specifically for LoRA, the parameters include the adapter size, which determines how much the model adapts to new information; the rank of adaptation, which specifies the layers of the model affected by fine-tuning; and the scaling factor, which controls the contribution of various parameters.
+
+\fakepar{Post-Fine-Tuning Evaluation:} Once fine-tuning is complete, the model generates domain-specific responses by passing queries using the  template employed during training.
+
+
+
+
+%We do note that only a tiny number of queries are required for the fine-tuning phase.
+
+
+
+
+% \begin{figure}[t!]
+%   \includegraphics[width=\columnwidth]{figures/breathing_overview.pdf}
+%   \vspace{-8mm}
+%   \caption{We evaluate our framework on a breathing detection application. A TunnelSense tag captures radio frequency signals from a user, which are used to train a foundational model. The trained model is then deployed on an edge device to estimate breathing rate.}
+%     % \vspace{-6mm}
+%   \label{fig:breathing_overview}
+% \end{figure}
+
+
+
+% \begin{figure}[t!] % Change htb to your desired placement
+% \centering
+% \begin{tcolorbox}[
+%     enhanced,
+%     attach boxed title to top left={yshift=-3mm,yshifttext=-1mm, xshift=3mm},
+%     colback=white, colframe=black, boxrule=0.5mm, rounded corners,
+%     title=Prompt: Breathing Rate Calculation, fonttitle=\bfseries,
+%     boxed title style={colframe=black, colback=white, rounded corners, boxrule=0.5mm, fontupper=\bfseries\footnotesize, interior style={draw=none, fill=none}}
+% ]
+%     \textbf{Instruction:} 
+%     You have an array of data capturing the frequency of chest movements of a human being, recorded at a sampling rate of 31.8 Hz over a duration of approximately 30 seconds. The data ranges from 0 to 100. Using this data, calculate the person's breathing rate in breaths per minute.
+%     \\ \textbf{Input:}  [16, 16, 7, ... , 73]
+%     % \textbf{LLM Response:} 11.10477316
+% \end{tcolorbox}
+% % \vspace{-6mm}
+% \caption{Prompt for breathing rate calculation}
+% \vspace{-5mm}
+% \label{breathe_prompt}
+% \end{figure}
+
+
+
+% \fakepar{Inference} Next, the foundational model is merged with the LoRA layers and converted to GGUF format, making it compatible with the llama.cpp library\footnote{\url{https://github.com/ggerganov/llama.cpp}}. This allows for efficient inferencing of the models with a C++ wrapper, enabling inference on various computing platforms, including mobile devices, wearables, and single-board computers.
+
+\subsection{Implementation}
+Embedded sensing applications often do not produce sufficient data to train a language model independently. General information must also be incorporated to enhance interaction through natural language prompts with such specialized models. We curated a base dataset of over 9 billion tokens from publicly available sources, which can be combined with user-provided datasets for pre-training the foundational model. This addresses scenarios where the available data from the user is limited. Specifically, we utilized the Fineweb dataset~\cite{fineweb_dataset_hf}, selecting 9 billion tokens from a collection of over 15 trillion tokens compiled from CommonCrawl dumps since 2013. Additionally, we incorporated the SHL dataset~\cite{shl}, which contains annotated data collected via smartphone sensors (e.g., accelerometers, gyroscopes, magnetometers, barometers, GPS) for human activity recognition across activities like walking, running, sitting, and driving. To further enhance the dataset, we included the ExtraSensory dataset~\cite{extra_sensory}, which comprises multi-sensor data from 60 participants over several days, totaling 300,000 minutes of activity and environmental context (e.g., walking, sitting, outdoors, at home) sampled every minute.
+
+The mixed dataset integrates Fineweb and sensor datasets in user-defined proportions, totaling 9 billion tokens. We split the dataset into training and validation sets using a 98:2 ratio. For the SHL dataset, we merged sensor values corresponding to a given timestamp with descriptive prompts followed by the associated human action. We maintained consistency by splitting the datasets into 60-65\% for training, 20-30\% for testing, and 10-15\% for validation.
+
+The Hugging Face Transformers library\footnote{\url{https://huggingface.co/docs/transformers/en/index}} was employed for fine-tuning. We used LoRA adapters with ranks varying in powers of 2 (from 16 to 256) and dropout probabilities between 0.1 and 0.3, with gradient accumulation over six steps. Learning rates ranged from $4e^{-4}$ to $6e^{-4}$, and the training steps varied from 100 to 300, using the AdamW optimizer~\cite{adamw} for fine-tuning. Gradient checkpointing was enabled, with evaluations performed at each logging step. The best model, determined by evaluation loss, was saved.
+
+After fine-tuning, the base model was merged with the LoRA layers and converted to GGUF format, ensuring compatibility with the llama.cpp library~\cite{llama.cpp}. This conversion allows efficient inferencing on various embedded edge platforms through a C++ wrapper.

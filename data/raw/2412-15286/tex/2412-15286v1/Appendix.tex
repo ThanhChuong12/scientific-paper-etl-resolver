@@ -1,0 +1,276 @@
+\section{Bosonization} \label{App:Sec:Bosonization}
+\subsection{Fermionic continuum fields for \gls{obc}}
+
+We consider fermionic fields defined on the interval $[0, \tilde{L}]$ with \gls{obc} following Ref.~\cite{Bosonization_OBC}, which obey the boundary conditions
+\begin{align}
+\psi_\gamma(0) = \psi_\gamma(\tilde{L}) = 0, \quad \gamma = \mathrm{a, b}. \label{EqnApp:def_OBC}    
+\end{align}
+The fields can be expanded in Fourier modes
+\begin{align}
+\psi_\gamma(x) = \sqrt{\frac{2}{\tilde{L}}} \sum_{n = 1}^\infty \sin(k_n x) c_{\gamma, n} \label{EqnApp:Mode_expansion_OBC}
+\end{align}
+where $c_n$ annihilates a particle with momentum $k_n = n \pi / \tilde{L}$. Note that there are only positive momenta and accordingly only a single Fermi point at some $k_\mathrm{F} > 0$. Now, slowly varying chiral fields can be defined 
+\begin{align}
+\psi_\mathrm{\gamma, R}(x) = -\frac{i}{\sqrt{2 \tilde{L}}} \sum_{n = 1}^\infty e^{i (k_n - k_F) x}c_{\gamma,n}, \quad \psi_\mathrm{\gamma, L}(x) = \frac{i}{\sqrt{2 \tilde{L}}} \sum_{n = 1}^\infty e^{-i (k_n - k_F)  x}c_{\gamma, n}, \label{EqnApp:Mode_expansion_Psi_RL_OBC}    
+\end{align}
+Later on, the approximation of letting the sums run to $- \infty$ will be made. This is the usual approximation taken in bosonization schemes, justified by the assumption that all the relevant physics take place close to the Fermi surface where $n \approx \tilde{L} k_\mathrm{F} / \pi$. The L/R fields are composed of the same set of momentum operators and related by 
+\begin{align}
+\psi_\mathrm{\gamma, L}(x) = - \psi_\mathrm{\gamma, R}(-x). \label{EqnApp:relation_Psi_RL_OBC}    
+\end{align}
+The fermionic field can be written in terms of L/R fields as 
+\begin{align}
+\psi_\gamma(x) = e^{i k_\mathrm{F} x} \psi_\mathrm{\gamma, R}(x)  + e^{-i k_\mathrm{F} x} \psi_\mathrm{\gamma, L}(x) = e^{i k_\mathrm{F} x} \psi_\mathrm{\gamma, R}(x)  - e^{-i k_\mathrm{F} x} \psi_\mathrm{\gamma, R}(-x).  \label{EqnApp:LR_decomposition}    
+\end{align}
+
+\subsection{Bosonization identity and commutators}
+The R fields have periodicity $\tilde{L}' = 2 \tilde{L}$ and are therefore bosonized by a constructive bosonization approach for periodic fermion fields following Schönhammer \cite{Bosonization_Schoenhammer}
+\begin{align}
+\psi_\mathrm{a, R}(x) &= \frac{1}{\sqrt{2 \pi \alpha}} e^{i \hat k_\mathrm{a}} e^{i \frac{2\pi}{\tilde{L}'} \Delta N_\mathrm{a} x} e^{i \vartheta_\mathrm{a}(x)} = \frac{1}{\sqrt{2 \pi \alpha}} e^{i \hat k_\mathrm{a}} e^{i \frac{\pi}{\tilde{L}} \Delta N_\mathrm{a} x} e^{i \vartheta_\mathrm{a}(x)} = \frac{1}{\sqrt{2 \pi \alpha}} e^{i \frac{\pi}{\tilde{L}} [\Delta N_\mathrm{a} +1]x} e^{i [\hat k_\mathrm{a} + \vartheta_\mathrm{a}(x)]}, \nonumber \\
+\psi_\mathrm{b, R}(x) &= \frac{(-1)^{N_\mathrm{a}}}{\sqrt{2 \pi \alpha}} e^{i \hat k_\mathrm{b}} e^{i \frac{2\pi}{\tilde{L}'} \Delta  N_\mathrm{b}x} e^{i \vartheta_\mathrm{b}(x)} = \frac{(-1)^{N_\mathrm{a}}}{\sqrt{2 \pi \alpha}} e^{i \hat k_\mathrm{b}} e^{i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{b}x} e^{i \vartheta_\mathrm{b}(x)} = \frac{(-1)^{N_\mathrm{a}}}{\sqrt{2 \pi \alpha}} e^{i \frac{\pi}{\tilde{L}} [\Delta  N_\mathrm{b}+ 1]x} e^{i[\hat k_\mathrm{b} +  \vartheta_\mathrm{b}(x)]}, \label{EqnApp:Bosonization_ID_2LL}
+\end{align}
+for which we formally extend the summation in \eq{EqnApp:Mode_expansion_Psi_RL_OBC} to $- \infty$. In the above equation, $\alpha$ plays the role of a regularization parameter, $\Delta  N_\gamma = N_\gamma - \tilde{L} k_\mathrm{F} / \pi$ counts the number of $\gamma = \mathrm{a, b}$ particles relative to the Fermi surface, and the Hermitian operators $\hat k_\gamma$ are conjugate to the particle number in the sense that 
+\begin{align}
+[N_\gamma, e^{\pm i \hat k_{\gamma'}}] = \mp e^{\pm i \hat k_\gamma}\delta_{\gamma, \gamma'} \quad \Leftrightarrow \quad (N_\gamma \pm \delta_{\gamma, \gamma'}) e^{\pm i \hat k_\gamma'} = e^{\pm i \hat k_\gamma'}  N_\gamma, \label{EqnApp:N_k_relation_2}
+\end{align}
+while they commute among themselves and with the fields $\vartheta_\gamma$. The operator $e^{\pm i \hat k_\gamma}$ represents the particle-number changing property of $\psi_\mathrm{\gamma, R}(x)$ and anticommutes with the associated parity $(-1)^{N_\gamma}$. This ensures the anticommutation of different fermion species in \eq{EqnApp:Bosonization_ID_2LL} and provides an explicit construction of Klein factors. As a side remark, some parts of the literature claim the stronger relation $[N_\gamma, \hat k_{\gamma'}] = i \delta_{\gamma, \gamma'}$, however, corrections arise on the level of constructive bosonization that only permit the weaker statement (see again \cite{Bosonization_Schoenhammer}). All results presented here are derived using the correct commutator.
+
+To construct the phase fields, bosonic operators are defined from the Fourier components of the electron density as 
+\begin{align}
+b_{\gamma, n} = \frac{-i}{\sqrt{|n|}} \sum_{m} c^\dagger_{\gamma, n} c_{\gamma, n+m}, \quad b_{\gamma, n}^\dagger = \frac{i}{\sqrt{|n|}} \sum_{m} c^\dagger_{\gamma, n +m} c_{\gamma, n}, \quad \text{for } n > 0. \label{EqnApp:def_b_n}
+\end{align}
+whose bosonic commutation relations 
+\begin{align}
+[b_{\gamma, n},b_{\gamma', n'}] = [b_{\gamma, n}^\dagger,b_{\gamma', n'}^\dagger] = 0, \quad [b_{\gamma, n},b_{\gamma', n'}^\dagger] = \delta_{\gamma, \gamma'} \delta_{n, n'} \label{EqnApp:b_com}
+\end{align}
+follow immediately from the properties of the fermionic operators $c_{\gamma, n}$. The fields from \eq{EqnApp:Bosonization_ID_2LL} are then 
+\begin{align}
+\vartheta_\gamma(x) = \sum_{n > 0} \frac{e^{- \alpha q_n / 2}}{\sqrt{n}} \left[e^{i q_n x} b_{\gamma, n} +  e^{- i q_n x}b_{\gamma, n}^\dagger \right ] \label{EqnApp:def_vartheta_ab}
+\end{align}
+and the commutator has been derived in \cite{Bosonization_Delft} 
+\begin{align}
+[\vartheta_\gamma(x), \vartheta_{\gamma'}(y)] =&\; \; \delta_{\gamma,\gamma'} i [2\arctan[(x-y)/\alpha] - \pi (x-y) /  \tilde{L}], \nonumber \\
+\stackrel{\mathclap{\alpha \to 0}}{=} & \;\; \delta_{\gamma,\gamma'} i \pi [\text{sign}(x-y) -(x-y) /  \tilde{L}] \quad \text{for } x,y \in [- \tilde{L}, \tilde{L}]. \label{EqnApp:com_vartheta_ab}
+\end{align}
+It is convenient to define the fields
+\begin{align}
+\theta_\gamma(x) &= \frac{\vartheta_\gamma(x) + \vartheta_\gamma(-x)}{2} = \sum_{n > 0} \frac{e^{ - \alpha q_n / 2} \cos(q_n x)}{\sqrt{n}} \left [b_{\gamma, n} + b_{\gamma, n}^\dagger \right], \nonumber \\ 
+\phi_\gamma(x) &= \frac{\vartheta_\gamma(x) - \vartheta_\gamma(-x)}{2} = \sum_{n > 0} \frac{e^{ - \alpha q_n / 2} i\sin(q_n x)}{\sqrt{n}} \left [b_{\gamma, n} - b_{\gamma, n}^\dagger \right]. \label{EqnApp:def_theta_phi}
+\end{align}
+which are used to express the bosonization identity in the main text. The above equation makes clear that these fields have a periodicity of $2 \tilde{L}$ as well as the properties $\theta_\gamma(-x) = \theta_\gamma(x)$, $\phi_\gamma(-x) = -\phi_\gamma(x)$, and crucially $\phi_\gamma(0) = \phi_\gamma(\tilde{L}) = 0$. Their commutators are readily derived from \eq{EqnApp:b_com} and \eq{EqnApp:com_vartheta_ab}:
+
+\begin{align}
+[\theta_{\gamma}(x), \theta_{\gamma'}(y)] = [\phi_{\gamma}(x), \phi_{\gamma'}(y)]  = 0
+\end{align}
+and 
+\begin{align}
+[\theta_{\gamma}(x), \phi_{\gamma'}(y)] &= \delta_{\gamma,\gamma'} \frac{i}{2} \big \{ 2\arctan[(x-y)/\alpha] - 2\arctan[(x+y)/\alpha] + 2 \pi y / \tilde{L} \big\} ] \quad \text{for } x,y \in [0, \tilde{L}]. 
+\end{align}
+Assuming that $x$ and $y$ differ by a sufficiently large amount, we can approximate $2\arctan[(x+y)/\alpha] \approx \pi$ and write
+\begin{align}
+[\theta_{\gamma}(x), \phi_{\gamma'}(y)] &\approx \delta_{\gamma, \gamma'} \frac{i \pi}{2} \left\{ [\text{sign}(x-y) - 1] + \frac{2 }{\tilde{L}} y \right \} \quad \text{for } x,y \in [0, \tilde{L}]. 
+\end{align}
+
+\subsubsection{Symmetric and antisymmetric fields}
+Later on, we will find it useful to work with the symmetric / antisymmetric superpositions of the phase fields
+\begin{align}
+\vartheta_{\pm}(x) = \frac{1}{\sqrt{2}} [\vartheta_\mathrm{a}(x) \pm \vartheta_\mathrm{b}(x)] \label{EqnApp:def_vartheta_pm}
+\end{align}
+Using \eq{EqnApp:com_vartheta_ab}, it is straightforward to show that they satisfy the similar relations to $\vartheta_\mathrm{a/b}$, i.e.,
+\begin{align}
+[\vartheta_{s}(x), \vartheta_{s'}(y)] =& \;\; \delta_{s,s'} i [2\arctan[(x-y)/\alpha] - \pi (x-y) / \tilde{L}] \nonumber \\
+\stackrel{\mathclap{\alpha \to 0}}{=} & \;\; \delta_{s,s'} i \pi [\text{sign}(x-y) - (x-y) / \tilde{L}] \quad \text{for } x,y \in [-\tilde{L}, \tilde{L}], \label{EqnApp:com_vartheta_pm}
+\end{align}
+where $s, s' = \pm$. We also introduce symmetric and antisymmetric combinations of the fields $\theta_\gamma$, $\phi_\gamma$
+\begin{align}
+\hat \theta_{\pm}(x) &= \frac{1}{\sqrt{2}} [\hat k_\mathrm{a} \pm  \hat k_\mathrm{b} + \theta_\mathrm{a}(x) \pm \theta_\mathrm{b}(x)], \nonumber \\
+\phi_{\pm}(x) &= \frac{1}{\sqrt{2}} [\phi_\mathrm{a}(x) \pm \phi_\mathrm{b}(x)],  \label{EqnApp:theta_phi_pm}
+\end{align}
+where the operators $\hat k_\gamma$ are absorbed by the fields $\hat \theta_{\pm}$. The final bosonized version of our theory will be expressed in terms of these fields. Importantly, the fields from the $+$ and $-$ sector commute as is evident from the previously discussed relations.
+
+\subsection{Bosonization of the Majorana Hamiltonian}
+\subsubsection{Free part}
+The free part is given by the lattice model
+\begin{align}
+H_0 =& -t\sum_{\gamma = \mathrm{a,b}}\sum_{j = 1}^{L-1} \left[(c_{\gamma,j}^\dagger c_{\gamma,j+1} + c_{\gamma,j+1}^\dagger c_{\gamma,j}) \right],
+\end{align}
+which exhibits a dispersion $2 t \cos(k a_0)$ for both species $\gamma = \mathrm{a,b}$ of fermions, where we introduced the lattice constant $a_0$. Assuming a filling fraction $\nu$ such that $k_\mathrm{F} = \frac{\nu  \pi}{a_0}$, this can be seen as a lattice approximation to the continuum theory 
+\begin{align}
+H_0 &\sim v_\mathrm{F} \sum_\mathrm{\gamma = a. b} \int_0^{\tilde{L}} :\left[\psi_\mathrm{\gamma,R}^\dagger(x) (-i \partial_x) \psi_\mathrm{\gamma,R}(x) + \psi_\mathrm{\gamma,L}^\dagger(x)  (i \partial_x) \psi_\mathrm{\gamma,L}(x) \right]: \mathrm d x \nonumber\\
+&= v_\mathrm{F} \sum_\mathrm{\gamma  = a. b} \int_{-\tilde{L}}^{\tilde{L}}  :\left[\psi_\mathrm{\gamma,R}^\dagger(x) (-i \partial_x) \psi_\mathrm{\gamma,R}(x) \right]: \mathrm d x,
+\end{align}
+where $:...:$ denotes normal-ordering w.r.t. the Fermi surface and $v_\mathrm{F} = 2 t a_0 \sin(k_\mathrm{F} a_0)$. We assume that the continuum fields obey OBC in the sense of \eq{EqnApp:def_OBC} and set $\tilde{L} = (L + 1) a_0$, which can be thought of as adding an additional site at each end of the lattice where the wave functions are zero. \gls{obc} justify the second line as an immediate consequence of \eq{EqnApp:relation_Psi_RL_OBC}. Applying the standard bosonization procedure \cite{Bosonization_Delft} to the $2 \tilde{L}$ periodic fields $\psi_{\gamma,R}(x)$ yields 
+\begin{align}
+H_0 &\sim v_\mathrm{F}  \sum_\mathrm{\gamma = a. b} \left[\int_{-\tilde{L}}^{\tilde{L}} \frac{1}{2} :(\partial_x \vartheta_\gamma(x) )^2:  \frac{\mathrm d x}{2\pi}  + \frac{\pi}{\tilde{L}} \frac{1}{2} \Delta  N_\gamma (\Delta N_\gamma + 1) \right] \nonumber \\
+&= v_\mathrm{F}  \sum_\mathrm{\gamma = a. b} \left[ \sum_{n>0} k_n b_{\gamma,n}^\dagger b_{\gamma,n} + \frac{\pi}{\tilde{L}} \frac{1}{2} \Delta  N_\gamma (\Delta N_\gamma + 1) \right],
+\end{align}
+where $k_n = n \frac{\pi}{\tilde{L}}$. The finite-size terms do not affect the physics in any relevant way and will vanish in the limit $\tilde{L} \to \infty$, so we neglect them in the following. The remaining part can be expressed through the fields from \eq{EqnApp:def_theta_phi} or \eq{EqnApp:theta_phi_pm} as 
+\begin{align}
+H_0 \;\; \stackrel{\mathclap{ \tilde{L} \to \infty}}{\sim}& \;\;\; \frac{v_\mathrm{F}}{2 \pi} \sum_\mathrm{\gamma = a, b} \int_{0}^{ \tilde{L}} :\left[ (\partial_x \theta_\gamma(x) )^2 + (\partial_x \phi_\gamma(x) )^2 \right] : \mathrm d x \nonumber \\
+=& \;\;\; \frac{v_\mathrm{F}}{2 \pi} \sum_{s = {\pm}} \int_{0}^{\tilde{L}} :\left \{ [\partial_x \hat \theta_s(x)]^2 + [\partial_x \phi_s(x)]^2 \right\} : \mathrm d x.
+\end{align}
+
+\subsubsection{Pair hopping}
+The pair hopping Hamiltonian is 
+\begin{align}
+H_W &= W \sum_{j = 1}^{L-1} \left[c_{\mathrm{a},j}^\dagger c_{\mathrm{a},j+1}^\dagger c_{\mathrm{b},j} c_{\mathrm{b},j+1} + \hc \right]
+\end{align}
+and we start by deriving the associated fermionic continuum theory. To this end, we take the operators on the lattice to be continuum fields evaluated at discrete positions: $c_{\gamma, j} = \sqrt{a_0} \psi_\gamma(j a_0)$. The resulting expression is
+
+\begin{align}
+H_W &= W a_0^2  \sum_{j = 1}^{L-1}\left[\psi_\mathrm{a}^\dagger[j a_0] \psi_\mathrm{a}^\dagger[(j+1) a_0] \psi_\mathrm{b}[j a_0] \psi_\mathrm{b}[(j+1) a_0] + \hc \right], \label{EqnApp:pair_hopping}
+\end{align}
+which we may write in terms of the L/R fields by using \eq{EqnApp:LR_decomposition}. Then, terms with oscillating prefactors $\propto e^{\pm2 i k_\mathrm{F} j a_0}$ and $e^{\pm4i k_\mathrm{F} j a_0}$ appear, whose contributions will integrate out from the long-wavelength effective theory, allowing us to neglect them \cite{Giamarchi}. At filling fraction $\nu = \frac{1}{2}$ corresponding to $k_\mathrm{F} = \frac{\pi}{2 a_0}$, terms with the prefactor $e^{\pm4i k_\mathrm{F} j a_0} = 1$ such as $\psi_\mathrm{a, R}^\dagger [j a_0] \psi_\mathrm{b, L}[j a_0] \psi_\mathrm{a, R}^\dagger[(j+1) a_0] \psi_\mathrm{b, L}[(j+1) a_0]$ should be retained. Based on the bosonization analysis presented later on, we expect these interchain backscattering terms to prevent the formation of a Majorana phase at $\nu = \frac{1}{2}$ in consistency with the numerical results of \cite{Zoller_model}.
+
+Keeping this in mind, we find 
+\begin{align}
+&\psi_\mathrm{a}^\dagger[j a_0] \psi_\mathrm{a}^\dagger[(j+1) a_0] \psi_\mathrm{b}[j a_0] \psi_\mathrm{b}[(j+1) a_0] \nonumber \\
+\sim & \left[\psi_\mathrm{a, R}^\dagger[j a_0] \psi_\mathrm{a, R}^\dagger[(j+1) a_0] \psi_\mathrm{b, R}[j a_0] \psi_\mathrm{b, R}[(j+1) a_0] \right . \nonumber \\
+& + \psi_\mathrm{a, R}^\dagger[j a_0] \psi_\mathrm{a, L}^\dagger[(j+1) a_0] \psi_\mathrm{b, R}[j a_0] \psi_\mathrm{b, L}[(j+1) a_0] \nonumber \\
+& +  e^{2 i k_\mathrm{F} a_0} \psi_\mathrm{a, R}^\dagger[j a_0] \psi_\mathrm{a, L}^\dagger[(j+1) a_0] \psi_\mathrm{b, L}[j a_0] \psi_\mathrm{b, R}[(j+1) a_0] \nonumber \\
+& +  e^{-2 i k_\mathrm{F} a_0} \psi_\mathrm{a, L}^\dagger[j a_0] \psi_\mathrm{a, R}^\dagger[(j+1) a_0] \psi_\mathrm{b, R}[j a_0] \psi_\mathrm{b, L}[(j+1) a_0] \nonumber \\
+& + \psi_\mathrm{a, L}^\dagger[j a_0] \psi_\mathrm{a, R}^\dagger[(j+1) a_0] \psi_\mathrm{b, L}[j a_0]\psi_\mathrm{b, R}[(j+1) a_0] \nonumber \\
+& \left. + \psi_\mathrm{a, L}^\dagger[j a_0] \psi_\mathrm{a, L}^\dagger [(j+1) a_0]  \psi_\mathrm{b, L}[j a_0]\psi_\mathrm{b, L}[(j+1) a_0] \right].
+\end{align}	
+This expression contains hopping terms such as $\psi_\mathrm{a, R}^\dagger[j a_0] \psi_\mathrm{a, R}^\dagger[(j+1) a_0] \psi_\mathrm{b, R}[j a_0] \psi_\mathrm{b, R}[(j+1) a_0]$, which will be suppressed by the Pauli principle in the continuum limit. We thus neglect the first and last term of the previous expression. Moving forward, we note that all the fields appearing in the remaining terms such as $\psi_\mathrm{a, R}^\dagger[j a_0] \psi_\mathrm{a, L}^\dagger[(j+1) a_0] \psi_\mathrm{b, R}[j a_0] \psi_\mathrm{b, L}[(j+1) a_0]$ simply anticommute with one another, so the whole expression is already normal-ordered and there is no need for regularization / point splitting later on. Hence, we may neglect the differences of $a_0$ in the spatial arguments of the fields and arrive at the fermionic continuum theory corresponding to \eq{EqnApp:pair_hopping}:
+
+\begin{align}
+H_W \sim 2 W a_0 \left[1 - \cos(k_\mathrm{F} a_0) \right] \int_{0}^{\tilde{L}} \left [\psi_\mathrm{a, R}^\dagger(x) \psi_\mathrm{a, L}^\dagger(x) \psi_\mathrm{b, R}(x) \psi_\mathrm{b, L}(x) + \hc\right ] \mathrm d x.
+\end{align}
+
+Using \eq{EqnApp:relation_Psi_RL_OBC} and the bosonization identity \eq{EqnApp:Bosonization_ID_2LL} yields
+\begin{align}
+&\quad\psi_\mathrm{a, R}^\dagger(x) \psi_\mathrm{a, L}^\dagger(x) \psi_\mathrm{b, R}(x) \psi_\mathrm{b, L}(x)  = - \psi_\mathrm{a, R}^\dagger(x) \psi_\mathrm{b, R}(x) \psi_\mathrm{a, R}^\dagger(-x) \psi_\mathrm{b, R}(-x) \nonumber\\
+&= - \frac{1}{(2 \pi \alpha)^2} e^{-i \vartheta_\mathrm{a}(x)} e^{-i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{a} x} e^{-i \hat k_\mathrm{a}}   (-1)^{N_\mathrm{a}}   e^{i \hat k_\mathrm{b}} e^{i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{b}x} e^{i \vartheta_\mathrm{b}(x)} \nonumber \\
+&\quad \times e^{-i \vartheta_\mathrm{a}(-x)} e^{i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{a}  x} e^{-i \hat k_\mathrm{a}}    (-1)^{N_\mathrm{a}}   e^{i \hat k_\mathrm{b}} e^{-i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{b}x} e^{i \vartheta_\mathrm{b}(-x)} \nonumber \\
+&=e^{-i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{a} x} e^{i \frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{b}+1) x}   e^{i \frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{a} -1) x}  e^{-i \frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{b}+2) x}  \frac{1}{(2 \pi \alpha)^2} e^{-i \vartheta_\mathrm{a}(x)}  e^{-i \hat k_\mathrm{a}}    e^{i \hat k_\mathrm{b}}  e^{i \vartheta_\mathrm{b}(x)} \nonumber \\
+&\quad \times e^{-i \vartheta_\mathrm{a}(-x)} e^{-i \hat k_\mathrm{a}}     e^{i \hat k_\mathrm{b}}  e^{i \vartheta_\mathrm{b}(-x)} \nonumber \\
+&= e^{-i 2 \pi x/\tilde{L}} \frac{1}{(2 \pi \alpha)^2} e^{-i [\hat k_\mathrm{a} + \vartheta_\mathrm{a}(x) - \hat k_\mathrm{b}- \vartheta_\mathrm{b}(x)]} e^{-i [\hat k_\mathrm{a} + \vartheta_\mathrm{a}(-x) - \hat k_\mathrm{b}- \vartheta_\mathrm{b}(-x)]} \nonumber \\
+&= e^{-i 2 \pi x/\tilde{L}} \frac{1}{(2 \pi \alpha)^2} e^{-i [\hat k_\mathrm{a} - \hat k_\mathrm{b}+ \sqrt{2} \vartheta_- (x)]} e^{-i [\hat k_\mathrm{a} - \hat k_\mathrm{b}+ \sqrt{2} \vartheta_-(-x) ]}.
+\end{align}
+Remember that the operators $\hat k_\gamma$ commute with the fields $\vartheta$. If $[X, [X,Y]] = 0$ and $[Y, [X,Y]] = 0$, the \gls{bch} identity $e^{X} e^{Y} = e^{X+Y} e^{[X,Y]/2}$ holds, and we may use the commutator \eq{EqnApp:com_vartheta_pm} to write
+\begin{align}
+e^{-i \sqrt{2} \vartheta_- (x)} e^{-i \sqrt{2} \vartheta_-(-x)} &= e^{-i \sqrt{2} [\vartheta_- (x) + \vartheta_- (-x)]} e^{-[\vartheta_- (x), \vartheta_- (-x)]} \nonumber \\
+&= e^{-i \sqrt{2} [\vartheta_- (x) + \vartheta_- (-x)]} e^{-i\pi[ 1 - 2x/\tilde{L}} = -e^{-i \sqrt{2} [\vartheta_- (x) + \vartheta_- (-x)]} e^{i 2 \pi x/\tilde{L}}
+\end{align}
+The phase factor $e^{i 2 \pi x/\tilde{L}}$ precisely cancels the one from the penultimate equation. We arrive at
+\begin{align}
+\psi_\mathrm{a, R}^\dagger(x) \psi_\mathrm{a, L}^\dagger(x) \psi_\mathrm{b, R}(x) \psi_\mathrm{b, L}(x)  = -\frac{1}{(2 \pi \alpha)^2} e^{-i \sqrt{2} [\sqrt{2} (\hat k_\mathrm{a} - \hat k_\mathrm{b}) + \vartheta_- (x) + \vartheta_- (-x)]}
+\end{align}
+Using \eq{EqnApp:def_theta_phi}, \eq{EqnApp:def_vartheta_pm}, and \eq{EqnApp:theta_phi_pm} leads to the final expression 
+\begin{align}
+H_W \sim \frac{4[\cos(2 k_\mathrm{F} a_0) - 1] W a_0}{(2 \pi \alpha)^2} \int_0^{\tilde{L}} \cos(\sqrt{8} \hat \theta_-) \mathrm d x. 
+\end{align}
+
+\subsection{Bosonization of flux hopping}
+The lattice Hamiltonian 
+\begin{align}
+H_\phi &= r \sum_{j = 1}^{L}  \left[ e^{2 \pi i \phi j}c_{\mathrm{a},j}^\dagger c_{\mathrm{b},j} + e^{-2 \pi i \phi j}c_{\mathrm{b},j}^\dagger c_{\mathrm{a},j} \right], \label{EqnApp:H_phi}
+\end{align}
+is mapped to a continuum fermionic theory in the same way as before:
+\begin{align}
+H_\phi &\sim r \int_{0}^{\tilde{L}} \left\{ e^{2 \pi i \phi x/a_0} \left[ \psi_\mathrm{R, a}^\dagger(x) \psi_\mathrm{R, b}(x) + \psi_\mathrm{L, a}^\dagger(x) \psi_\mathrm{L, b}(x) + e^{-2i k_\mathrm{F} x} \psi_\mathrm{R, a}^\dagger(x) \psi_\mathrm{L, b} [x]+  e^{2 i k_\mathrm{F} x} \psi_\mathrm{L, a}^\dagger(x) \psi_\mathrm{R, b}(x)\right] + \hc \right \}\mathrm d x. \label{EqnApp:H_phi_continuum} 
+\end{align}
+In general, the oscillating prefactors will suppress this term from the effective low-energy theory. At $\phi = 0$, the \gls{fs} terms survive, while at $\phi = \pm \nu$, one of the \gls{bs} terms will make an impact because $2 \pi \phi$ exactly cancels $2k_\mathrm{F} = \frac{2 \pi \nu }{a_0}$.
+
+\subsubsection{Bosonization for $\phi = 0$}
+At $\phi = 0$, \eq{EqnApp:H_phi_continuum} reduces to regular \gls{fs}. We apply the bosonization identity \eq{EqnApp:Bosonization_ID_2LL} to find 
+\begin{align}
+\left[\psi_\mathrm{R, a}^\dagger(x) \psi_\mathrm{R, b}(x) + \hc \right] &= \frac{1}{2 \pi \alpha} \left [e^{-i \vartheta_\mathrm{a}(x)} e^{-i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{a} x} e^{-i \hat k_\mathrm{a}}   (-1)^{N_\mathrm{a}}  e^{i \frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{b} + 1) x} e^{i \hat k_\mathrm{b}} e^{i \vartheta_\mathrm{b}(x)} \right . \nonumber \\
+&\quad+ \left .  e^{- i \vartheta_\mathrm{b}(x)} e^{-i \frac{\pi}{\tilde{L}} \Delta N_\mathrm{b} x} e^{- i \hat k_\mathrm{b}}(-1)^{N_\mathrm{a}} e^{i \frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{a} + 1) x} e^{i \hat k_\mathrm{a}} e^{i \vartheta_\mathrm{a}(x)} \right] \nonumber \\
+&= \frac{1}{2 \pi \alpha} (-1)^{N_\mathrm{a}} \left[e^{i \frac{\pi}{\tilde{L}} (N_\mathrm{b}  - N_\mathrm{a} + 1) x} e^{i[\hat k_\mathrm{a} - \hat k_\mathrm{b} + \sqrt{2} \vartheta_-(x)]} - \hc\right]
+\end{align}
+and similarly 
+\begin{align}
+\left[\psi_\mathrm{L, a}^\dagger(x) \psi_\mathrm{L, b}(x) + \hc \right] = \left[\psi_\mathrm{R, a}^\dagger(-x) \psi_\mathrm{R, b}(-x) + \hc \right]  = \frac{1}{2 \pi \alpha} (-1)^{N_\mathrm{a}} \left[e^{-i \frac{\pi}{\tilde{L}} (N_\mathrm{b}  - N_\mathrm{a} + 1) x} e^{i[\hat k_\mathrm{a} - \hat k_\mathrm{b} + \sqrt{2} \vartheta_-(-x)]} - \hc\right].
+\end{align}
+Given the relations between the various fields, it is readily seen that 
+\begin{align}
+\hat k_\mathrm{a} - \hat k_\mathrm{b} +  \sqrt{2} \vartheta_-(\pm x) = \sqrt{2} \hat \theta_-(x) \pm \sqrt{2} \phi_-(x),
+\end{align}
+which leads to the bosonized expression stated in the main text
+\begin{align}
+H_{\phi = 0} &\sim r \frac{(-1)^{N_\mathrm{a}}}{2 \pi \alpha} \int_{0}^{\tilde{L}}  \left[e^{i \frac{\pi}{\tilde{L}} (N_\mathrm{b}  - N_\mathrm{a} + 1) x} e^{i\sqrt{2}  [\hat \theta_-(x) + \phi_-(x)]} +  e^{- i \frac{\pi}{\tilde{L}} (N_\mathrm{b}  -  N_\mathrm{a} + 1) x} e^{i\sqrt{2} [\hat \theta_-(x) - \phi_-(x)]} - \hc \right] \mathrm d x.
+\end{align}
+
+In the main text, we argue that the relative minus sign arising from the finite size term $\pi (N_\mathrm{b}  - N_\mathrm{a} + 1) x / (\tilde{L})$ will cancel contributions to the \gls{gs} splitting from the left and right end. While this is more of a qualitative argument, the cancellation can be shown on an exact level by considering that in addition to parity symmetry, the Hamiltonian $H_0 + H_W$ is also invariant under the action of the unitary inversion symmetry $U_\mathrm{I}$ defined by
+\begin{align}
+U_\mathrm{I} c_{\gamma, j} U_\mathrm{I}^\dagger = c_{\gamma, N - j + 1}, \quad U_\mathrm{I} c^\dagger_{\gamma, j} U_\mathrm{I}^\dagger = c^\dagger _{\gamma, N - j + 1}. \label{EqnApp:U_I}
+\end{align}
+This is nothing but a mirroring at the center of the chain. $U_\mathrm{I}$ squares to one, which restricts the possible eigenvalues to $\pm 1$,  and commutes with $P_\mathrm{a}$, so the two \gls{gs} $\ket{P_\mathrm{a} = \pm 1}$ are also eigenstates of $U_\mathrm{I}$. 
+To determine the relative contribution of fluxless hoppings to the \gls{gs} splitting from the left and right end, we consider a collection of hoppings located on the left side of the chain and denote it by $H_{\phi = 0}^\mathrm{L}$. Inversion symmetry maps this to the mirrored set of hoppings on the opposite side: $U_\mathrm{I} H_{\phi = 0}^\mathrm{L} U_\mathrm{I}^\dagger = H_{\phi = 0}^\mathrm{R}$. At small enough hopping amplitude $r$, it is sufficient to take into account the matrix elements between the two \gls{gs} to determine the splitting as the antisymmetric sector exhibits a large excitation gap. Since the operators will change the parity, we only need to look at the matrix element
+
+\begin{align}
+\bra{P_\mathrm{a} = 1} H_{\phi = 0}^\mathrm{R} \ket{P_\mathrm{a} = -1} = \bra{P_\mathrm{a} = 1} U_\mathrm{I} H_{\phi = 0}^\mathrm{L} U_\mathrm{I}^\dagger \ket{P_\mathrm{a} = -1} = u_\mathrm{I,+} u_\mathrm{I,-}\bra{P_\mathrm{a} = 1} H_{\phi = 0}^\mathrm{L} \ket{P_\mathrm{a} = -1}.
+\end{align}
+Here, $u_\mathrm{I,\pm}$ denotes the eigenvalue of $U_\mathrm{I}$ associated with the positive or negative parity eigenstate $U_\mathrm{I} \ket{P_\mathrm{a} = \pm 1} =  u_\mathrm{I,\pm} \ket{P_\mathrm{a} = \pm 1}$. Depending on whether these eigenvalues have the same or opposite signs, the contributions from the left and right end will either amplify or cancel exactly. The relative sign that we derive from the field-theoretical analysis suggests that $u_\mathrm{I,\pm}$ will have opposite sign for even $N_\mathrm{tot}$ and same sign for odd $N_\mathrm{tot}$ in consistency with numerical data. 
+
+\subsubsection{Bosonization for $\phi = \nu$}
+We derive the bosonization of \eq{EqnApp:H_phi} for $\phi = \nu$ here, the case of $\phi = -\nu$ can be treated on similar footing. Applying \eq{EqnApp:Bosonization_ID_2LL} to the \gls{bs} term appearing in \eq{EqnApp:H_phi_continuum} yields
+\begin{align}
+&\quad[\psi_\mathrm{R, a}^\dagger(x) \psi_\mathrm{L, b}(x) + \psi_\mathrm{L, b}^\dagger(x) \psi_\mathrm{R, a}(x) + \hc] = -[\psi_\mathrm{R, a}^\dagger(x) \psi_\mathrm{R, b}(-x) + \psi_\mathrm{R, b}^\dagger(-x) \psi_\mathrm{R, a}(x) + \hc] \nonumber \\
+&= - \left[ e^{-i \vartheta_\mathrm{a}(x)} e^{-i \frac{\pi}{\tilde{L}} \Delta  N_\mathrm{a} x} e^{-i \hat k_\mathrm{a}} \frac{(-1)^{N_\mathrm{a}}}{2 \pi \alpha} e^{-i \frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{b} + 1)x} e^{i \hat k_\mathrm{b}}  e^{i \vartheta_\mathrm{b}(-x)} + \hc \right ] \nonumber \\
+&=\frac{(-1)^{N_\mathrm{a}}}{2 \pi \alpha} \left[ e^{-i \frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{a} + \Delta  N_\mathrm{b} + 1) x}  e^{-i[\hat k_\mathrm{a} - \hat k_\mathrm{b} +  \vartheta_\mathrm{a}(x) -  \vartheta_\mathrm{b}(-x)]} - \hc \right ] 
+\end{align}
+We have $\vartheta_\mathrm{a}(x) - \vartheta_\mathrm{b}(-x) = [\phi_\mathrm{a}(x) + \phi_\mathrm{b}(x) + \theta_\mathrm{a}(x) - \theta_\mathrm{b}(x)]$. Keeping in mind that the fields from the symmetric and antisymmetric sector commute and that all operators without hat commute with the particle numbers, we write 
+\begin{align}
+[\psi_\mathrm{R, a}^\dagger(x) \psi_\mathrm{L, b}(x) + \psi_\mathrm{L, b}^\dagger(x) \psi_\mathrm{R, a}(x) + \hc] =\frac{(-1)^{N_\mathrm{a}}}{2 \pi \alpha} \left[ e^{-i [\frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{a} + \Delta  N_\mathrm{b} + 1) x + \sqrt{2} \phi_+(x)]}  e^{-i \sqrt{2} \hat \theta_-(x)} - \hc \right ]. 
+\end{align}
+Because $e^{\pm i (k_\mathrm{a} - k_\mathrm{b})}$ does not change the total particle number, $\Delta  N_\mathrm{a} + \Delta  N_\mathrm{b}$ commutes with $e^{\pm i \sqrt{2} \hat \theta_-(x)}$, allowing us to write
+\begin{align}
+H_{\phi = \nu} &\sim \frac{-i r (-1)^{N_\mathrm{a}}}{\pi \alpha}  \int_{0}^{\tilde{L}} \left \{ \sin \left [\frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{a} + \Delta  N_\mathrm{b} + 1) x + \sqrt{2} \phi_+(x) \right] \cos \left[ \sqrt{2} \hat \theta_-(x) \right]  \right. \nonumber \\
+&\quad + \left . \cos \left [\frac{\pi}{\tilde{L}} (\Delta  N_\mathrm{a} + \Delta  N_\mathrm{b} + 1) x + \sqrt{2} \phi_+(x) \right] \sin \left[ \sqrt{2} \hat \theta_-(x) \right]  \right \} \mathrm d x. 
+\end{align}
+We have $k_\mathrm{F} = \frac{\nu  \pi}{a_0}$ and $\tilde{L} = (L+1) a_0$, so the finite-size term is $\Delta N_\mathrm{a} + \Delta N_\mathrm{b} = N_\mathrm{a} + N_\mathrm{b} - 2 k_F \tilde{L} / \pi = N_\mathrm{tot} - 2 \nu (L + 1)$, which yields the expression stated in the main text. 
+	
+To conclude this section, we argue why $H_{\phi = \nu}$ will always lift the finite-size gap based on a mean-field treatment. The bosonized version of the base model decouples into a symmetric and an antisymmetric sector, i.e., $H_0 + H_W \sim H_+ \otimes \mathbb I_- +  \mathbb I_+\otimes H_- $, such that the eigenstates can be thought of as tensor products $\ket{\psi}_+ \otimes \ket{\psi'}_-$ of $H_+$ and $H_-$ eigenstates. In the antisymmetric sector, there are two degenerate \gls{gs}  $\ket{\theta_1}_-$ and $ \ket{\theta_2}_-$ separated from the rest by a large gap, allowing us to restrict the antisymmetric sector to these two states in the spirit of degenerate perturbation theory. At negative $W$, the (Hermitian!) term $i (-1)^{N_\mathrm{a}} \cos \left[ \sqrt{2} \hat \theta_-(x) \right] $ is zero in this restricted subspace, while $i (-1)^{N_\mathrm{a}} \sin \left[ \sqrt{2} \hat \theta_-(x) \right] $ has some non-trivial action ($\sin \left[ \sqrt{2} \hat \theta_-(x) \right]$ yields $\pm 1$ when applied to the states $\ket{\theta_1}_-$, $\ket{\theta_2}_-$, while $(-1)^{N_\mathrm{a}}$ exchanges them). After diagonalizing this operator in the two-state space, the Hilbert space further decouples into states of the form $\ket{\psi}_+ \otimes \ket{\Gamma_+}_-$ and $\ket{\psi}_+ \otimes \ket{\Gamma_-}_-$, where $\Gamma_{\pm}$ denotes the eigenvalue of $i (-1)^{N_\mathrm{a}} \cos \left[ \sqrt{2} \hat \theta_-(x) \right] $.
+In these two subspaces, we are left with the Sine-Gordon theory
+
+\begin{align}
+\frac{v_\mathrm{F}}{2 \pi} \int_{0}^{\tilde{L}} \left \{ [\partial_x \hat \theta_+(x)]^2 + [\partial_x \phi_+(x)]^2 \right\}  \mathrm d x -  \frac{r \Gamma_{\pm} }{\pi \alpha}  \int_{0}^{\tilde{L}} \cos \left [ \sqrt{2} \phi_+(x) \right] \mathrm d x,
+\end{align}
+for which standard RG-flow equations indicate the formation of a massive phase for any value of $r$ \cite{Giamarchi}, in consistency with numerical data. The same line of reasoning applies to the case $W> 0$.
+
+\section{Critical state preparation with a spatially inhomogeneous ramp} \label{App:Sec:IH_ramp}
+Spatially inhomogeneous ramps of the mass term have also been proposed in the literature as a way to achieve optimal (i.e., $\propto 1/L$) scaling of the preparation time $t_\mathrm{tot}$ \cite{crit_state_prep_3, crit_state_prep_4}. However, in the present case, we find that the homogeneous ramp with a power $p$ adjusted to system size significantly outperforms the inhomogeneous ramp approach. Concretely, we implement a procedure oriented on Ref.~\cite{crit_state_prep_4}, but with the generalization to multiple critical fronts that propagate in space with a velocity $v_\mathrm{r}$. For this, we introduce the ramp function
+\begin{align}
+\epsilon(u) = \mathbbm{1}_{(-\infty, \pi/2]}(u) + 0.5 [1 - \sin(u)] \mathbbm{1}_{(-\pi/2, \pi/2]}(u), \label{EqnApp:def_epsilon}
+\end{align}
+and the auxiliary function 
+\begin{align}
+u(x, t) = \min_{l = 1, ..., n_\mathrm{r}}\alpha\left[v  t  - |x - x_l| - d/2 \right], \label{EqnApp:def_epsilon}
+\end{align}
+where $x_l = 1 + \Delta_{n_\mathrm{r}} (2l - 1) $ is the starting position of the $l$th front, the spacing is $\Delta_{n_\mathrm{r}} = (L - 1) / (2 n_r)$, and the offset is $d = \pi / \alpha$. The composition $\epsilon(u(x, t))$ describes $n_\mathrm{r}$ fronts starting at evenly spaced points on the interval $[1, L]$ and propagating at velocity $v$ through the system. The parameter $\alpha$ controls the smoothness of the ramp by smearing out each front over the distance $d$. 
+
+We then consider the flux-hopping Hamiltonian with spatially varying and time-dependent amplitudes  
+\begin{align}
+H_\phi(t) &=  \sum_{j = 1}^L  r_j(t) \left[ e^{2 \pi i \phi j}c_{\mathrm{a},j}^\dagger c_{\mathrm{b},j} + e^{-2 \pi i \phi j}c_{\mathrm{b},j}^\dagger c_{\mathrm{a},j} \right] \label{EqnApp:H_phi_r_j}
+\end{align}
+and set their time-dependence to $r_j(t) = r(j, t)$ by introducing the function
+\begin{align}
+r(x,t) = r_0 \epsilon(u(x, t)). \label{EqnApp:def_r_x_t}
+\end{align}
+Other than that, we still work at an exact filling fraction of $\nu = 1/3$ and set $\phi = \nu = 1/3$. At $t = 0$, all couplings are set to $r_j  = r_0$, which we put to $r_0 = 0.1$, thereby starting at the beginning of stage three of \eq{Eqn:time_dependence_p1}. We illustrate the ramp function at two different times in Fig.~\ref{Fig:fidelity_data_appendix_a} for $n_\mathrm{r} = 2$ fronts, velocity $v_{n_\mathrm{r} = 2} = 0.1$, smoothness parameter $\alpha = 1/4$, and a system size of $L = 48$. The relation between the time $t_\mathrm{tot}$ to complete the protocol in the sense of arriving at $r_j(t_\mathrm{tot} = 0)\; \forall j$ and the ramp velocity $v_\mathrm{r}$ is
+\begin{align}
+t_\mathrm{tot} = \left[d + \frac{L-1}{2 n_\mathrm{r}} \right] \frac{1}{v_{n_\mathrm{r}}}\; \Leftrightarrow \; v_{n_\mathrm{r}} = \left[d + \frac{L - 1}{2 n_\mathrm{r}} \right] \frac{1}{t_\mathrm{tot}}, \label{EqnApp:t_tot_v_r}
+\end{align}
+where the constant offset is due to the finite width $d = \pi / \alpha$ of the critical front. 
+
+We conduct \gls{mpste} simulations to compare this approach against the strategy of a global ramp with a power law $p(L)$ adjusted to system size that we present in the main text. In general, we find that a smoothness $\alpha \lesssim 1/4$ is sufficient for adiabatic preparation. However, contrary to the claims of \cite{crit_state_prep_3}, the ramp speed $v_\mathrm{r}$ has to be adapted to system size to keep the time evolution adiabatic when starting only a single front, corresponding to $n_\mathrm{r} = 1$. While we find that this can be countered to some degree by starting multiple fronts for larger systems, the strategies presented in the main text outperform this procedure in either case for the investigated system sizes, with a clear trend of the advantage to increase with system size. Concretely, we present data for system sizes $L = 24$, $L = 48$, and $L = 72$ in Fig.~\ref{Fig:fidelity_data_appendix_b} to Fig.~\ref{Fig:fidelity_data_appendix_d} for the case of $n_\mathrm{r} = 1$ (similar to the study in \cite{crit_state_prep_3}) and an increasing value of $n_\mathrm{r}$.
+
+
+
+\begin{figure}[htp!]	 
+{
+        \vbox to 0pt {
+                \raggedright
+                \textcolor{white}{
+                    \subfloatlabel[1][Fig:fidelity_data_appendix_a]
+                    \subfloatlabel[2][Fig:fidelity_data_appendix_b]
+                    \subfloatlabel[3][Fig:fidelity_data_appendix_c]
+                    \subfloatlabel[4][Fig:fidelity_data_appendix_d]
+                }
+            }
+    }
+    \includegraphics[width=\textwidth]{plots/Fidelities_appendix/Fidelities_appendix.png}
+\caption{(a) Illustration of the ramp function $r(x,t)$ as per \eq{EqnApp:def_r_x_t} for a system size of $L = 48$, with $r_0 = 0.1$, $v_{n_\mathrm{r} = 2} = 0.1$, $\alpha  =1/4$, and $n_\mathrm{r} = 2$ at times $t= 50$ and $t = 100$. (b) \gls{gs} fidelity $F$ after adiabatic evolution with the inhomogeneous ramp for $n_\mathrm{r} = 1$, $\alpha = 1/4$ as a function of preparation time $t_\mathrm{tot}$ for a system of size $L = 24$ at filling  $\nu = 1/3$ with the time axis rescaled proportional to system size by $12 / (5 L)$. Other Parameters are $t = 1$, $W = -1.8$, and $\phi = 1/3$. Additionally, the reciprocal $[v_{n_\mathrm{r} = 1}]^{-1}$ of the corresponding ramp velocity as per \eq{EqnApp:t_tot_v_r} is indicated on the upper axis. For comparison, the fidelity curves of the global ramp protocol discussed in the main text (cf. Fig.~(\ref{Fig:fidelity_data})) are also shown in black. (c) Similar data for a system size of $L = 48$ at filling $\nu = 1/3$. We present data for a single front $n_\mathrm{r} = 1$ (red line) and two fronts $n_\mathrm{r} = 2$ (blue line) in comparison to the data from the global ramp. The reciprocal velocity associated to the $n_\mathrm{r} = 1$ case is again indicated on the upper axis. (d) Similar to (c), but for $L = 72$ at filling $\nu = 1/3$ and with the blue line representing the fidelity for $n_\mathrm{r} = 3$ critical fronts.}
+\end{figure}

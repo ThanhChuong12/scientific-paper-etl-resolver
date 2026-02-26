@@ -1,0 +1,25 @@
+\section{Related Works}
+\subsection{Multilingual ASR}
+Initially, multilingual ASR models handled a limited number of languages~\cite{toshniwal2018multilingual, pratap2020massivelymultilingualasr50}, under 60. 
+However, recent advancements have led to the development of models capable of managing a broader range of languages.
+Whisper~\cite{radford2023robust} uses a sequence-to-sequence~\cite{NIPS2014_a14ac55a} approach with 680,000 hours of weakly supervised data, and its neural decoder serves as a LM, enhancing transcription performance.
+With this method, Whisper attained impressive performance across most supported languages.
+
+Google USM~\cite{zhang2023googleusmscalingautomatic} employs a Conformer~\cite{gulati20_interspeech} encoder with various types of heads~\cite{graves2012sequencetransductionrecurrentneural, chan2016listen} and is trained on an extensive dataset. 
+It also employs a three-stage training incorporating speech-only, speech-text paired, and text-only data. 
+Furthermore, to enhance transcription performance for low-resource languages, USM integrates language-specific adapters and employs Noisy Student Training (NST) techniques~\cite{9156610, Park_2020}. 
+
+MMS~\cite{JMLR:v25:23-1318}, a state-of-the-art multilingual ASR model, employed a Connectionist Temporal Classification (CTC) based approach~\cite{graves2006connectionist} on a dataset covering over 1,000 languages. 
+It utilizes a two-stage fine-tuning pipeline.
+The first stage involves Romanization-based fine-tuning to learn a global representation across diverse languages. 
+In the second stage, language-specific adapters and heads are added to capture detailed features for each language and fine-tuned.
+
+\subsection{Zero-Shot ASR}
+ASR-2K~\cite{li22aa_interspeech} is a zero-shot ASR model which utilizes three universal models to cover a range of languages: an acoustic model~\cite{li2020universal}, a pronunciation model~\cite{li2022zero}, and a LM~\cite{scannell12007crubadan}.
+This suggests the potential for a universal multilingual ASR model capable of functioning in a zero-shot environment without relying on any language-specific components.
+Consequently, Zero-Shot MMS~\cite{zhao2024scalingsimpleapproachzeroshot} utilized language-specific lexicon and n-gram LMs in the decoding phase to enhance zero-shot transcription performance. 
+
+\subsection{LLM-Supported Multilingual ASR}
+\citealt{hu2023massively} trained a multilingual LLM covering 84 languages and employed a shallow fusion-based per-frame scoring to enhance transcription quality in multilingual ASR.
+Subsequently,~\citealt{huang2024multilingual} introduced non-autoregressive per-segment scoring, which improves transcription performance and reduces the computational burden.
+These methods primarily leveraged the strengths of a multilingual acoustic model (USM) and achieved further accuracy by incorporating LLMs into the decoding step.

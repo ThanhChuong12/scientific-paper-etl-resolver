@@ -1,0 +1,164 @@
+\section{Method}
+% 为了统一多样的数据格式和差异的数据分布，这个通用解决方案涉及两个关键设计：
+To unify diverse data formats and varied data characteristics, our universal solution includes two key designs:
+1) The mobility tokenizer transforms trajectory and flow into a unified spatiotemporal token format, facilitating the utilization of the powerful diffusion transformer architecture.
+2) The individual and collective alignment is designed to jointly train different data types within the same model framework, effectively aligning the differences in individual and collective mobility behavior. 
+
+\subsection{Overall framework}
+The framework of UniMob is shown in Figure~\ref{fig:framework}, which consists of four modules:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Multi-view Mobility Tokenizer:} It first standardizes different data types through tokenization and then uses two mobility encoders to capture the spatiotemporal dynamics of trajectory and flow from multiple views.
+    \item \textbf{Bidirectional Individual-Collective Alignment:} This module consists of two parts: Individual-to-Collective alignment and Collective-to-Individual alignment. Individual-to-Collective alignment utilizes the I2C loss function, which captures collective dynamics by aligning aggregated trajectories with the flow. Collective-to-Individual alignment uses the C2I loss function, which employs contrast learning to align individual trajectory and crowd flow with the same spatiotemporal pattern.
+    
+    \item \textbf{Joint Noise Predictor:} Learning the spatiotemporal distribution of mobility behavior can be represented as a denoising diffusion process, utilizing a joint noise predictor for trajectories and flows to model individual and collective mobility effectively.
+    
+    \item \textbf{Mobility Predictor:} The goal of the mobility predictor is to decode high-dimensional spatiotemporal features, capture the dynamic changes in trajectory or flow, and achieve accurate prediction results.
+\end{itemize}
+Overall, the training of the model is supervised by three types of losses: I2C loss, C2I loss, and prediction loss. The first two losses are designed to promote alignment between individuals and collective, while the prediction loss targets the joint noise predictor of the diffusion model to estimate the noise to be removed and improve prediction accuracy. The combined effect of these losses significantly improves the accuracy and robustness of UniMob in understanding and predicting complex mobility behaviors.
+
+
+
+\subsection{Multi-view Mobility Tokenizer}
+To address the challenge of diverse data formats, tokenization is applied to process different data types into a unified sequential format. Subsequently, two encoders capture the spatiotemporal dynamics inherent in the mobility data from multiple views.
+
+\subsubsection{\textbf{Tokenization}}
+Tokenization is applied to mobility data such as trajectories and flow data, converting it into compact token sequences to enable more efficient computation and standardized processing.
+We divide the trajectory $X^{traj}$ and flow $X^{flow}$ into several continuous overlapping or non-overlapping tokens, each with a length of $p$. Therefore, the total number of input tokens is $C=\frac{(T-p)}{Q}$, where $T$ denotes the total number of time intervals and $Q$ represents the horizontal sliding stride.
+
+\subsubsection{\textbf{Trajectory Encoder}}\label{sec:encoder}
+In this module, we model trajectory from the spatial and temporal perspectives. 
+Firstly, to capture the geographical continuity of mobility, we construct a spatial graph \( G = (V, E) \). The nodes \( V \) represent all visited locations, and the edges \( E \) define the connections between these locations. Each edge \( e = (u, v) \) is an unordered pair with a positive weight \( w_{uv} \), representing the Euclidean distance between locations \( u \) and \( v \).
+We use a graph embedding approach $\mathcal{F}(\cdot)$ to get the location embedding $S$, which is denoted as follows:
+\begin{equation}\label{equ:graph}
+S={\mathcal{F}}_\theta(G),
+\end{equation}
+We obtain a spatial embedding matrix $S \in \mathbb{R}^{L \times W}$, where $L$ is the number of regions, and $W$ is the dimension of embedding.
+
+Then, to capture the periodicity of time, we use temporal embedding matrices $H \in \mathbb{R}^{T_h \times W}$ and $D \in \mathbb{R}^{T_d \times w}$ to represent the time features. \(T_h\) is the number of time slots in a day (determined by the sampling frequency), and \(T_d = 7\) is the number of days in a week.
+
+Finally, the trajectory embedding $R$ is obtained by concatenating the spatial and temporal embeddings, represented as:
+\begin{equation}\label{equ:traj_embedding}
+R_t=[S_t; H_t; D_t],
+\end{equation}
+where \(R_t\) is the vector representation of the \(t\)-th trajectory point.
+
+\subsubsection{\textbf{Flow Encoder}}
+The flow can obtain corresponding spatial and temporal embeddings like the trajectory. Moreover, the flow has an extra embedding for historical values, achieved by mapping the raw historical time series $X^{flow}_{[t-p:t]}$ into the latent space $V_t \in \mathbb{R}^{W}$:
+\begin{equation}\label{equ:flow_embedding}
+V_t = FC(X^{flow}_{[t-p:t]}),
+\end{equation}
+where $FC(\cdot)$ is a fully connected layer and $W$ is the dimension of embedding.
+
+Thus, we connect the spatial embedding, the temporal embedding, and historical embedding to obtain the flow embedding $F$:
+\begin{equation}\label{equ:flow_embedding}
+F_t=[S_t; H_t; D_t; V_t].
+\end{equation}
+
+\subsection{Joint Noise Predictor}
+Formally, suppose we have two types of mobility data sampled from the distribution $q(R_0, F_0)$. Our goal is to design a diffusion-based model that can capture some related distributions determined by $q(R_0, F_0)$, specifically the marginal distributions $q(R_0)$ and $q(F_0)$.
+
+According to Bao et al.~\cite{bao2023one}, different forms of distributions can be unified into the general form of $\mathbb{E}[\epsilon^R, \epsilon^F \mid R_{t^R}, F_{t^F}]$, where $t^R$ and $t^F$ are two different timesteps, and $R_{t^R}$ and $F_{t^F}$ are the corresponding perturbed data. Particularly, a maximum timestep $T$ means marginalizing it. By setting $t^F = T$, we have $\mathbb{E}[\epsilon^R \mid R_{t^R}, F_T] \approx \mathbb{E}[\epsilon^R \mid R_{t^R}]$, which corresponds to the marginal distribution $q(R_0)$. 
+Similarly, by setting $t^R = T$, we have $\mathbb{E}[\epsilon^F \mid F_{t^F}, R_T] \approx \mathbb{E}[\epsilon^F \mid F_{t^F}]$, which corresponds to the marginal distribution $q(F_0)$.
+
+Inspired by the unified view, we learn $\mathbb{E}[\epsilon^R, \epsilon^F \mid R_{t^R}, F_{t^F}]$ for all $0 \leq t^R, t^F \leq T$ to model all relevant distributions determined by $q(R_0, F_0)$. We employ a joint noise prediction network $\epsilon_\theta(R_{t^R}, F_{t^F}, t^R, t^F)$ to predict the noise injected into $R_{t^R}$ and $F_{t^F}$ together:
+\begin{equation}\label{equ:predicted noise}
+\hat{\epsilon}_{\theta}=\epsilon_\theta(R_{t^R}, F_{t^F}, t^R, t^F),
+\end{equation}
+
+We train a joint noise prediction network based on the trajectory and flow embeddings obtained in Section~\ref{sec:encoder}. Naturally, to capture the spatiotemporal correlations of mobility data, we use a transformer-based backbone in UniMob to process inputs from different mobility data types.
+
+\subsection{Mobility Predictor}
+After the denoising process in the latent space is complete, the target of the predictor is to transform the embeddings back into the form of the original data.
+
+\subsubsection{\textbf{Trajectory Predictor}}
+For the discrete space domain, we add an inverse step at the end of the denoising process, which converts the real-valued embedding of $\hat{R}_0$ to the probability distribution of locations $d=\{d_1,d_2,...,d_N\}$ as follows:
+\begin{equation}
+P(E) = (E^T E)^{-1} E^T,
+\end{equation}
+where $E$ denotes Embedded Matrix, $E^T$ denotes the transpose of matrix $E$, and $(\cdot)^{-1}$ represents the matrix inverse.
+
+\begin{equation}
+d = \hat{R}_0*P(E),
+\end{equation}
+where $d$ denotes the probability of visiting each location in the trajectory.
+
+\begin{equation}
+i = argmax(d),
+\end{equation}
+where $argmax(\cdot)$ function is used to find the maximum value index in a vector, and $i$ denotes the next location id.
+
+\subsubsection{\textbf{Flow Predictor}}
+The regression layer makes predictions based on the following:
+\begin{equation}\label{equ:flow_embedding}
+Y_{[t:t+f]} = FC(\hat{F}_0),
+\end{equation}
+where $FC(\cdot)$ is a fully connected layer and $Y_{[t:t+f]}$ is future flow.
+
+\subsection{Bidirectional Individual-Collective Alignment}
+To address significant characteristic differences in two modalities of mobility data, we design several alignment mechanisms, including Individual-to-Collective and Collective-to-Individual alignment. These methods enable collaborative perception and complementary expression of multi-source mobility data. 
+After obtaining well-interacted representations of trajectories and flows, we employ the prediction loss from a joint noise prediction network.
+
+
+\subsubsection{\textbf{Individual-to-Collective Alignment}}
+The alignment from individuals to collective is designed to aggregate individual movements from the bottom up, collaborating with collective mobility patterns to capture collective dynamics. Thus, we utilize I2C (Individual to Collective) loss to align trajectory with flow. Specifically, we first aggregate multiple trajectory embeddings:
+\begin{equation}\label{equ:aggregate}
+R^{all} = R^{u_1} + R^{u_2} + ... + R^{u_n},
+\end{equation}
+where \(R^{all}\) is the aggregated trajectory embeddings of multiple users, while \(R^{u_n}\) represents the trajectory embedding of user \(u_n\).
+
+This aggregated embedding captures and displays the collective behavioral characteristics and trends. Then, we interact this aggregated result with the flow embedding. We can optimize their collaborative representation by maximizing the similarity between these two embeddings:
+\begin{equation}\label{equ:flow_loss}
+\mathcal{L}_{I2C} = 1 - \frac{{u} \cdot {v}}{||u|| ||v||},
+\end{equation}
+Through the I2C loss, we can more accurately capture and describe the dynamic changes of collective in space and time.
+
+\subsubsection{\textbf{Collective-to-Individual Alignment}}
+The alignment from the collective to the individual aims to impose constraints on individual behavior through collective mobility patterns, better modeling individual movement preferences.
+Through contrastive learning, we utilize C2I (Collective to Individual) loss to identify common spatiotemporal patterns in micro-level trajectories and macro-level flows.
+We determine positive and negative samples based on the spatiotemporal consistency between trajectory data and flow data:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Positive samples $R^+$:} If at a specific time and location, the flow data shows a peak (for example, a traffic hub during the morning rush hour), then individual trajectory data that matches this time and location are considered positive samples. This implies that these individual trajectories are aligned with the spatiotemporal patterns of the flow data.
+    \item \textbf{Negative samples $R^-$:} Trajectories that appear at the same location when there is no flow peak or at different times and locations are considered negative samples. These trajectories do not align with the spatiotemporal patterns of the flow data.
+\end{itemize}
+
+For example, in a commercial area, we observe that the flow of people peaks between 5 PM and 6 PM every day, mainly because most office workers leave work during this period. The positive samples are the trajectories recorded in the commercial area during this time. These trajectories reflect the common behavior of most office workers leaving work on time, showing the main flow direction in the commercial area. On the other hand, negative samples are the trajectories recorded in other areas (such as suburbs or residential areas) during the same period. These represent people who leave work early or those whose workplaces are not in the commercial area.
+By comparing these samples, we can align collective mobility dynamics with individual mobility preferences, ensuring consistency between micro-level and macro-level mobility patterns.
+
+According to the contrast learning framework, we maximize the similarity between anchors and augmented positive examples while minimizing the similarity between anchors and negative examples lost through InfoNCE~\cite{oord2018representation}:
+\begin{equation}\label{equ:flow_loss}
+\mathcal{L}_{C2I} =\sum_{i=1}^{N} \log \frac{\boldsymbol{\varphi}\left(\boldsymbol{F}, {\boldsymbol{R}}^{+}\right)}{\sum_{\boldsymbol{R}^{-} \in S} \boldsymbol{\varphi}\left(\boldsymbol{F}, \boldsymbol{R}^{-}\right)},
+\end{equation}
+where $\boldsymbol{\varphi}(i, j)=\exp (\operatorname{sim}(i, j) / \tau)$ measures the correlation between two representations, where $\operatorname{sim}(\cdot, \cdot)$ denotes the cosine similarity function, ${R}^{+}$ represents the positive sample. $S$ is a set of random negative samples from the same batch.
+
+\subsection{Training}
+We model the embedding of trajectories and flows using a joint noise prediction network with the following prediction loss function:
+\begin{equation}\label{equ:prediction_loss}
+\mathcal{L}_{pred} = {\mathbb{E}_{\boldsymbol{R}_{0}, \boldsymbol{F}_{0}, \boldsymbol{\epsilon}^{R}, \boldsymbol{\epsilon}^{F}, t^{R}, t^{F}}||\boldsymbol{\epsilon}_{\boldsymbol{\theta}}(\boldsymbol{R}_{t^{R}}, \boldsymbol{F}_{t^{F}}, t^{R}, t^{F})-[\boldsymbol{\epsilon}^{R}, \boldsymbol{\epsilon}^{F}]||_{2}^{2},},
+\end{equation}
+where $[, ]$ denotes concatenation, ${\epsilon}^{R}$ and ${\epsilon}^{F}$ are sampled from standard Gaussian distributions, and $t_R$ and $t_F$ are uniformly sampled from $\{1, 2, . . . , T\}$ independently.
+
+Finally, the total loss is expressed as:
+\begin{equation}\label{equ:loss}
+\mathcal{L}_{total} = \alpha\mathcal{L}_{I2C} + \beta\mathcal{L}_{C2I} + \gamma\mathcal{L}_{pred},
+\end{equation}
+The weights $\alpha$, $\beta$, and $\gamma$ correspond to the three loss terms, allowing the total loss function $\mathcal{L}_{total}$ to simultaneously enable trajectory and flow interactions and accurately predict mobility.
+
+
+\subsection{Variants}
+In the real world, universal models have a wide range of application scenarios and diverse application requirements. For example, in some cases, there is only one type of mobility data available; in other cases, to save computational resources, it is desirable to use a shared set of parameters to perform flow and trajectory predictions simultaneously. Therefore, we design four model variants to ensure our model can flexibly adapt to different application scenarios and possess greater practicality. As shown in Figure~\ref{fig:use}, these variants are based on whether parameters are shared and whether both types of mobility data are used during testing:
+\begin{itemize}[leftmargin=*]
+\item \textbf{UniMob-v1}: This variant is designed for scenarios with limited data types and constrained computational resources.
+\item \textbf{UniMob-v2}: This variant is suitable for scenarios with multiple types of mobility data but needs to save computational resources.
+\item \textbf{UniMob-v3}: This variant can handle scenarios with rich data types but limited computational resources.
+\item \textbf{UniMob-v4}: This variant is designed for users with rich data types and ample computational resources.
+\end{itemize}
+
+% 不同使用方式
+\begin{figure}[t]
+\centering
+\includegraphics[width=1.0\linewidth]{figure/use.pdf}
+\vspace{-0.3cm}
+\caption{Four model variants based on whether parameters are shared and whether two types of mobility data are used during testing.}
+\label{fig:use}
+\vspace{-0.3cm}
+\end{figure}

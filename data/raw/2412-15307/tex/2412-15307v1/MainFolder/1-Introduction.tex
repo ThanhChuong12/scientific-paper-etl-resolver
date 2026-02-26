@@ -1,0 +1,61 @@
+\section{Introduction}\label{sec:introduction}
+%background
+An invasive imaging modality such as the Intravascular Ultrasound (IVUS) image is used to evaluate Coronary Artery Diseases (CAD) and the severity of lesion stenosis \cite{CHO2024132543}. The leading cause of coronary artery diseases is atherosclerosis. Atherosclerosis is the buildup of plaque, composed of collagen, fat, calcium, cholesterol, macrophages, and microvessels \cite{STONE20202289, Saito2024}. With the accumulation of plaque and the thickening and extension of atheroma, the lumen area becomes narrow, decreasing the amount of oxygen-rich blood that could pass through. Insufficient oxygen causes coronary artery ischemia. When cardiovascular intervention with intravascular imaging is performed, images of the plaque morphology, burden, and detailed treatment strategies are provided \cite{HUANG2023102922}. Because the accumulation of plaque narrows the coronary artery, intravascular imaging is essential to estimate the plaque's location, thickness, length, and burden \cite{Li2021IVUSSeg}.
+
+IVUS provides 2D grayscale images of vessel wall structures in 360 degrees, offering real-time imaging during surgery at video-rate speed without the need for contrast, as compared to Optical Coherence Tomography (OCT) \cite{9844289, Hui2017IVUS}. Despite its advantages, IVUS generates low-resolution grayscale images with indistinct borders, as illustrated in Figure \ref{fig:RelatedWork Canny Edge Detection.}. This low resolution, common in ultrasonography, makes diagnosis more challenging. Plaque regions on IVUS images are typically identified manually by doctors using their naked eyes, relying heavily on extensive experience and professional knowledge. However, this traditional approach carries the risk of misjudgment due to the inherent subjectivity and complexity of the process.
+
+% \subsection{Contributions of This Work}
+This paper applied image segmentation technology to patients' IVUS images. The multi-stage IVUS image segmentation models mark the positions of the External Elastic Membrane (EEM), the lumen area, and the plaque, respectively. However, because of security concerns, cross-hospital medical data cannot be easily exchanged \cite{Liu_Chen_Zhao_Yu_Liu_Bao_Jiang_Nie_Xu_Yang_2022, Yan2021FL}. Therefore, the "federated learning" algorithm is proposed to address these issues and solve the cross-hospital data problem. The federated learning framework is successfully proposed to enable all cross-hospital institutions to create win-win results. It improves the feasibility of implementation. The designed model is an indispensable and effective segmentation tool in the surgical process. 
+
+\textbf{Contribution:} Our main contributions can be summarized as follows: 
+\begin{itemize}
+ \item A model for automatic IVUS segmentation is proposed to highlight plaque borders and locations in arteries. The model can provide spatial information and improve image readability.
+ \item In diagnosis, the proposed method is intended to overcome the difficulty of detecting circular boundaries (Figure \ref{fig:RelatedWork Canny Edge Detection.}) for improving the treatment efficiency by area segmentation models. Data are preprocessed with coordinate conversions, and lumen and EEM areas are segmented with parallel U-Net models. The plaques are identified by subtracting both locations from one another.
+ \item Moreover, the proposed federated learning architecture significantly diagnoses and classifies plaques based on intravascular ultrasound images. The system gives all inter-hospital institutions a win-win situation and makes implementation easier. Additionally, it can estimate the volume of the lesion area based on the position of the external elastic membrane, lumen, and plaque. It's essential for effective segmentation during surgery.
+\end{itemize} 
+
+\begin{figure}[ht]
+\centering
+ \begin{subfigure}[c]{0.47\linewidth}
+ \centering
+ \includegraphics[scale=0.26]{figures/f_ivus_sample.pdf}
+ \caption{Original 2D IVUS image}
+ \end{subfigure}\hfill
+ \begin{subfigure}[c]{0.47\linewidth}
+ \centering
+ \includegraphics[scale=0.26]{figures/f_cannyEdgeDetection.pdf}
+ \caption{Result of edge detection}
+ \end{subfigure}\hfill
+%\begin{multicols}{2}
+%\centering
+\caption{Fragmentary boundaries after edge detection on IVUS images}
+\label{fig:RelatedWork Canny Edge Detection.}
+%\end{multicols}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.24]{figures/FLFramework_aaai.pdf}
+\caption{Federated learning framework among multi-hospitals.}
+\label{fig: Methods FL Procedure.}
+\end{figure} 
+
+
+%%%%%%%%%%%%%%
+% The remainder of the paper is arranged as follows. Research related to the research problem will be discussed in Section \ref{sec:relatedwork}. Section \ref{sec:proposedmethods} describes the methods proposed in this study. Experimental results and discussions are presented in Section \ref{sec:experiments} and Section \ref{sec:discussion}. The conclusion and future works are presented in Section \ref{sec:conclusion}.
+
+
+% Imaging modalities can be divided into two types, non-invasive and invasive. 
+
+% Non-invasive imaging modalities include computer tomography (CT); this examination does not need to invade the human body and can only obtain a surface view of the arteries; therefore, CT is only appropriate for clinical diagnosis. 
+
+% Alternatively, invasive imaging modalities have the advantage of providing both a quantitative assessment of the entire coronary tree \cite{Lüscher2018Invasive} and can be utilized in clinical diagnosis and treatment as well. Optical coherence tomography (OCT) and intravascular ultrasound are two primary invasive imaging modalities used to diagnose atherosclerotic plaques. 
+
+% They are used under different conditions and have some differences. In OCT, near-infrared light is used, thus, a contrast medium is necessary. Consequently, OCT reaches higher resolutions but has lower tissue penetration and does not provide real-time results, compared with IVUS \cite{MAEHARA2017IVUSOCT}. Moreover, the OCT did not provided real time assessment and need contrast to fill up coronary artery, therefore due to these limitations it was not widely adopted \cite{Grand2019OCT}. Conversely, IVUS uses ultrasound waves produced by a transducer. Although IVUS images have poor resolution, compared with OCT, \cite{Ueki2019IVUS},  Owing to the comparison described above, IVUS could be widely used in more scenarios than OCT. In addition to delivering real-time intra-coronary information, IVUS has helped locate lesions and plan treatment strategies, which have become increasingly popular in recent years \cite{MAEHARA2017IVUSOCT, Koganti2016IVUSOCT}. 
+
+
+% \subsection{Problem Description}
+% \subsection{Intravascular Ultrasound (IVUS) Images}
+
+
+% Additionally, many medical images or videos are collected during medical imaging examinations; however, lesions can differ significantly among patients and may be irregularly shaped, making it burdensome to identify lesions during diagnostic procedures. Although, virtual histology (VH)-IVUS plaque provided plaque characteristics, recently, 60 Hz IVUS becomes popular due to better resolution, close to information OCT provided. Hence, it would be helpful to have a biomarker tool to annotate regions of interest in medical images promptly and precisely in this context. The application of deep learning (DL) techniques, such as convolution neural networks (CNNs), has enabled scientists to engage in a brand-new era of AI-based diagnosis, which can detect lesions at an early stage of development. However, at the training stage, a sufficient data volume poses a barrier to improving performance. Data collection in multi-hospital systems cannot be easily carried out because of regulatory and privacy concerns. Therefore, it is essential to design a decentralized architecture that does not allow centralized or shared medical images while simultaneously protecting patient privacy. 

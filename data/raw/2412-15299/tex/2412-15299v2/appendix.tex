@@ -1,0 +1,44 @@
+\section{Appendix}
+The following appendix sections propose additional experimental results and specifications for \shortname, which can be instrumental in deeper understanding or validating the strengths of the proposed pipeline.
+The first section of the appendix presents the specifications of the languages we leveraged in the experiments, given the corresponding ISO-639 language code.
+Consequently, the second section demonstrates the transcription performance of \shortname~for each language used in the experiments.
+Then, the third section suggests the end-to-end transcription performance comparison between IPA-based \shortname~and Romanization-based \shortname, further to validate the effectiveness of Romanization in orthography unification.
+Finally, in the last section, we would like to discuss possible advancements of \shortname~and our further research direction. 
+
+\section{Languages and Language Codes}
+\input{tables/code_mapping}
+Table~\ref{appendix_langcode} indicates the languages that were leveraged in the experiments of our manuscript.
+All of the seen languages comprise 102 languages in the FLEURS dataset, and they are used in both training and evaluation of \shortname.
+Evaluation samples for unseen languages were chosen from the official test split of the CommonVoice 17.0 dataset, which ensured that they possessed an adequate volume of data.
+
+\section{Language-Specific Performance of \shortname}
+\input{tables/cers_roman_all}
+\input{tables/cers_all}
+In this section, we present a detailed performance analysis for each language, comparing transcription performance from the universal transcription generation phase to that after passing through the universal converter. 
+Additionally, we analyze these results further to explore the correlation between orthographic characteristics and transcription performance.
+First of all, Table ~\ref{appendix_cer_roman_all} suggests the language-specific transcription performance of the Romanization-based universal transcription generator, and Table~\ref{appendix_performance_every_all} presents the language-specific end-to-end (E2E) language-specific transcription performance of \shortname.
+In the case of the universal transcription generator, CERs were consistently similar across most languages with minimal variation. However, in the end-to-end pipeline with language-specific transliteration, notably higher error rates were observed for certain languages, and the languages highlighted in bold represent the top 10 languages with the most significant increases in error rate observed in the end-to-end pipeline compared to the CER values during the universal transcription phase.
+Interestingly, the 10 languages that exhibited the most significant performance degradation after passing through the universal converter were all non-Latin script languages, with the majority being languages that do not employ spacing in their orthography.
+This suggests that when a pre-trained LLM is utilized as a universal converter, languages with non-Latin orthography which inherently exhibit different structural characteristics compared to Latin-based languages, are more prone to error propagation.
+
+\section{E2E Comparison on Unification Methods}
+\input{tables/e2e_comparison}
+In this section, we would like to further clarify the effectiveness of utilizing Romanization as an intermediate representation.
+Since the experimental results from Table~\ref{orthography_comp_tab} were limited to the universal transcription generation phase, we
+supplement the previous results with the full performance comparison between IPA-based and Romanization-based end-to-end architecture of \shortname, both in upper bound assessment and transcription performance.
+Table~\ref{appendix_e2e} proposes the end-to-end performance comparison between IPA-based \shortname~and Romanization-based \shortname.
+The only difference between the two models is the orthography unification method utilized in the universal transcription generator. (e.g., the IPA-based model utilizes IPA as an intermediate representation, while the Romanization-based one leverages Romanized transcription as an intermediate representation.
+In the results, Romanization-based \shortname~consistently outperforms IPA-based \shortname~as a substantial difference in both CER and WER.
+These results strongly demonstrate the superiority of Romanization over IPA when leveraging LLMs as a universal converter, since LLMs are primarily trained with Latin scripts and optimized tokenization strategy for them.
+Furthermore, there are some inconsistencies in the results of the IPA-based \shortname, where passing predicted IPA transcriptions along with a few examples to the universal converter yielded better performance than passing ground truth IPA transcriptions without examples.
+This is presumably because the LLMs did not frequently encounter IPA-driven tokens during its training process.
+
+\section{Discussion and Future Work}
+\shortname~showed comparable or better performance compared to previous works even without language-specific modules (e.g., adapters, lexicons, n-gram LMs), while achieving efficient training with a significantly reduced dataset size.
+However, there is still room for further improvement in both the universal transcription generator and the universal converter.
+First, the transcription performance of the universal transcription generator can be improved. For instance, the universal transcription generator of \shortname~can leverage additional linguistic information (e.g., embedding from a pre-trained language classifier) to further enhance the transcription quality of the first phase.
+Secondly, our pipeline shows relatively lower performance for languages with distinct linguistic structures, like Korean, and those with additional features (e.g., tones), such as Chinese, in the language-specific transliteration phase.
+Since our universal converter is replaceable, this issue will naturally be resolved in line with the development of LLMs.
+Finally, the utilization of prompt learning techniques~\cite{li2021prefixtuningoptimizingcontinuousprompts, liu2022ptuningv2prompttuning, gu-etal-2022-ppt} might improve transliteration performance.
+We plan to address these aspects in future research.
+\vspace{30pt}

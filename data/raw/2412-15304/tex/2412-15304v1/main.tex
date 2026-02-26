@@ -1,0 +1,86 @@
+% \documentclass[sigplan,nonacm,anonymous]{acmart}
+\documentclass[sigplan,twocolumn]{acmart}
+% \usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{url}
+\usepackage{subcaption}
+
+\usepackage{multirow}
+% \usepackage{algorithm} 
+% \usepackage{algpseudocode} 
+% \usepackage{lipsum}
+\usepackage[most]{tcolorbox}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{placeins}
+% \usepackage{soul}
+\microtypecontext{spacing=nonfrench} 
+
+\newcommand{\system}{\textsc{TinyLLM}}
+
+\newcommand{\fakeparagraph}[1]{\vspace{.5mm}\noindent\textbf{#1.}}
+\newcommand{\fakepar}[1]{\fakeparagraph{#1}}
+
+
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\settopmatter{printfolios=true,printacmref=false}
+
+\begin{document}
+
+\title{\system: A Framework for Training and Deploying  Language Models at the Edge Computers}
+
+\author [Kandala]{Savitha Viswanadh Kandala}
+\orcid{0009-0009-0969-0953}
+\affiliation{
+  \institution{National University of Singapore}
+  \country{}   
+  }
+\email{viswanadh@u.nus.edu}
+
+\author [Medaranga] {Pramuka Medaranga}
+\orcid{0009-0006-1512-4841}
+\affiliation{
+  \institution{National University of Singapore}
+  \country{}   
+  }
+\email{pramukas@comp.nus.edu.sg}
+  
+
+\author[Varshney] {Ambuj Varshney}
+\orcid{0000-0002-9282-4108}
+\affiliation{
+  \institution{National University of Singapore}
+  \country{}   
+  }
+\email{ambujv@nus.edu.sg}
+
+
+\renewcommand{\shortauthors}{Viswanadh and Ambuj}
+
+\input{sections/abstract}
+
+
+\maketitle
+
+\input{sections/introduction}
+\input{sections/background}
+\input{sections/language}
+\input{sections/design}
+\input{sections/evaluation}
+% \input{sections/results}
+\input{sections/discussion}
+\input{sections/related}
+\input{sections/conclusion}
+\input{sections/acknowledgement}
+
+
+\bibliographystyle{plain}
+% \bibliographystyle{ACM-Reference-Format}
+\FloatBarrier
+\bibliography{ref}
+
+
+\end{document}

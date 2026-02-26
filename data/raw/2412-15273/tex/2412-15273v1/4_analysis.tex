@@ -1,0 +1,249 @@
+\section{Analyzing the state of FAQs} \label{sec:analysis}
+
+We analyze and compare state-level data using individual and composite metrics, presenting results for \textbf{Question ($Q$)}, \textbf{Answer ($A$)} and \textbf{Question + Answer ($Q$ + $A$)}.
+
+
+\begin{table}[!htp]\centering
+\scriptsize
+\begin{tabular}{lrrr}\toprule
+& \textbf{mean} & \textbf{std. dev.} \\\midrule
+\textbf{FIQS\textsubscript{voter}} &0.4084 &0.17 \\
+\textbf{FIQS\textsubscript{developer}} &0.41832 &0.15 \\
+\bottomrule
+\end{tabular}
+\caption{This table presents the mean and standard deviation for FIQS\textsubscript{voter} and FIQS\textsubscript{developer}.}
+\label{tab:mean}
+\end{table}
+
+
+\begin{figure*}[ht]
+\begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth, height=5cm]{img/fiqs_voter_1sd.pdf}
+    \label{fig:enter-label}
+\end{subfigure}
+\begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth, height=5cm]{img/fiqs_developer_1sd.pdf}
+    \label{fig:composite-comparison}
+\end{subfigure}
+
+\caption{US states leading and lagging in voter FAQ content quality, as assessed using cut-off of one standard deviation  from mean on the metric (i.e., $\geq$  ($\mu$ $\pm \sigma$); $\leq$ ($\mu$ $\pm \sigma$)).  We call them leaders and laggards, respectively.}
+\label{fig:composite-comparison}
+\end{figure*}
+
+% Topic Analysis Summary - QA Pair
+\begin{table*}[!ht]\centering
+\caption{Question + Answer Topic Analysis Summary}\label{tab:qa_topic_analysis_sum }
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}\toprule
+\textbf{Topic} &\textbf{Final Score} &\textbf{Prevalence} &\textbf{Coherence} &\textbf{Distinctiveness} &\textbf{Coverage} &\textbf{Top Terms} \\\midrule
+Topic 1: Political Parties and Primary Elections &461 &288 &443 &804 &308 &party, primary, political, election, primary election \\
+Topic 2: Voter Registration &764 &826 &915 &521 &793 & registration, voter, voter registration, address, register \\
+Topic 3: Absentee Voting &411 &499 &529 &88 &527 &ballot, absentee, absentee ballot, mail, return \\
+Topic 4: Voting Equipment Security &163 &0 &0 &653 &0 &machines, write, secure, paper, card \\
+Topic 5: Voter Identification Requirements &239 &66 &58 &694 &137 &photo, id, photo id, business, report \\
+Topic 6: Military and Overseas Voting &392 &157 &0.19 &1 &223 &overseas, military, vote, register, register vote \\
+Topic 7: Campaign Filing and Candidates &259 &65 &86 &771 &114 &campaign, candidates, filing, committee \\
+Topic 8: Election Day and Polling Information &0.75 &1 &1 &0 &1 &election, ballot, day, voting, polling \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+\subsection{Readability}
+
+Our results revealed that questions in the dataset consistently received lower readability scores, indicating they were easier to comprehend. Conversely, the answers scored higher, suggesting greater complexity, likely due to the inclusion of specialized vocabulary and a focus on precision over simplicity. To identify the states with the highest ease of readability, all readability metrics were averaged and ranked by their lowest average scores. The readability scores for the question, answer, and combined question and answer are presented in \cref{tab:q_readability_table}, \cref{tab:a_readability_table}, and \cref{tab:qa_readability_table}, respectively. Please refer to \cref{app:read} for more details. 
+
+The top three states in this category were Georgia, Maryland, and Pennsylvania. In contrast, states such as North Carolina, California, and Louisiana presented election information at higher levels of reading complexity.
+%The top three states in this category were Georgia, Maryland, and Pennsylvania. These states provided election information through both official and non-profit sources at a literacy level accessible to a broad audience, often characterized by less specialized language. Conversely, states presenting election information at higher levels of reading difficulty included North Carolina, California, and Louisiana.
+
+\subsection{Summarization} 
+To identify the states that provide the highest quality answers, we averaged the relevance metrics for each state. The states achieving the highest average relevance scores were deemed the leaders in response quality. From our analysis, Delaware, Kansas, and Michigan emerged as the top three performers, indicating superior alignment between their answers and corresponding questions. In contrast, Massachusetts, Rhode Island, and Hawaii scored the lowest, suggesting room for improvement in the quality of their responses. The summarization analysis for the question is presented for both \textit{Abstractive} (\cref{tab:a_q_sum_analysis}) and \textit{Extractive} (\cref{tab:e_q_sum_analysis}) approaches, while the analysis for the answer is provided for \textit{Abstractive} (\cref{tab:a_a_sum_analysis}) and \textit{Extractive} (\cref{tab:e_a_sum_analysis}) methods. Additionally, the summarization analysis for the combined question and answer is shown for \textit{Abstractive} (\cref{tab:a_qa_sum_analysis}) and \textit{Extractive} (\cref{tab:e_qa_sum_analysis}). Please refer to \cref{app:summ} for more details.
+
+
+\subsection{Topic Analysis}
+
+The topic modeling and scoring system results were analyzed to identify key topics in the election-related FAQ dataset. Each topic was evaluated based on its final score, component contributions (Prevalence, Coherence, Distinctiveness, and Coverage), and its distribution across states. Various visualization techniques were used to present these findings. Below are the key metrics:
+
+\begin{itemize}[nolistsep]
+    \item \textbf{Top Words:} Most representative words based on their probabilities in the topic-word distribution.
+    \item \textbf{Prevalence:} Average proportion of the topic across all documents.
+    \item \textbf{Coherence:} Semantic consistency of the top words.
+    \item \textbf{Distinctiveness:} Uniqueness of the topic relative to others.
+    \item \textbf{Coverage:} Proportion of documents where the topic probability exceeds 0.1.
+\end{itemize}
+
+A heatmap was generated to visualize the distribution of topics across states \cref{fig:topic_distribution_heatmap}.
+
+The state performance in election FAQ coverage is assessed using a comprehensive scoring formula that incorporates multiple components (see \cref{eq:final_state_score}).
+\vspace{-5mm}
+\begin{equation}
+\scalebox{0.8}{$
+\begin{aligned}
+\text{Final State Score} = 
+& \textstyle \sum 
+( \text{Topic\_Value} 
+ \times \text{Topic\_Weight} \\
+& \times \text{FAQ\_Normalization}
+ \times \text{FAQ\_Penalty} ) 
+\end{aligned}
+$}
+\label{eq:final_state_score}
+\end{equation}
+
+where, \textit{Topic\_Value} represents the state's coverage of each topic based on topic distribution, \textit{Topic\_Weight} indicates each topic's importance from the final analysis scores, and \textit{FAQ\_Normalization} and \textit{FAQ\_Penalty} are defined in \cref{eq:faq_normalize,eq:faq_penalty}.
+\vspace{-5mm}
+
+\begin{equation}
+\scalebox{0.75}{$
+\begin{aligned}
+\text{FAQ\_Normalization} &= 
+\frac{\text{state\_faq\_count}}{\text{max\_faq\_count}}
+\end{aligned}
+$}
+\label{eq:faq_normalize}
+\end{equation}
+
+
+\begin{equation}
+\scalebox{0.75}{$
+\begin{aligned}
+\text{FAQ\_Penalty} &= \min\left(1.0, \frac{\text{faq\_count}}{20}\right)
+\end{aligned}
+$}
+\label{eq:faq_penalty}
+\end{equation}
+
+% to adjust for states with insufficient FAQ coverage. 
+\cref{tab:qa_topic_analysis_sum } presents the distribution of final topic scores across the eight identified topics.
+The topic analysis for the question, answer, and combined question and answer is provided in \cref{tab:question_topic_analysis}, \cref{tab:answer_topic_analysis}, and \cref{tab:qa_topic_analysis}, respectively. Please refer to \cref{app:topic} for more details.
+
+The analysis revealed significant variations in
+state performance. Michigan emerged as the leading state with a score of 0.572, supported by a comprehensive collection of 123 FAQs and strong coverage across all topics, particularly in Administrative \& Filing (0.271) and Voter Registration (0.141). Florida followed with a score of 0.413 and 111 FAQs, demonstrating well-balanced coverage across topics. Nevada (0.389), Oklahoma (0.388), and North Carolina (0.344) completed the top five, each maintaining robust FAQ counts above 75 and showing strong performance in key topics like Voter Registration and Administrative procedures.
+Conversely, the analysis identified states with significant room for improvement. Mississippi ranked lowest with a score of 0.002, primarily due to having the least FAQs, resulting in minimal coverage across all topics. Similar patterns emerged for South Dakota (0.013), Wisconsin (0.015), Nebraska (0.019), and Montana (0.029), all characterized by FAQ counts below 12 and consequently limited topic coverage.
+
+\begin{comment}
+
+\textbf{Analysis and Visualization}
+
+The results of the topic modeling and scoring system were analyzed to identify the most significant topics in the election-related FAQ dataset. Each topic was examined based on its final score, component contributions (Prevalence, Coherence, Distinctiveness, and Coverage), and the representation of topics across states. To effectively communicate these findings, various visualization techniques were employed.
+
+\textbf{Table of Key Metrics:}
+A detailed table was created to summarize the key metrics for each topic. The table includes:
+\begin{itemize}[nolistsep]
+    \item \textbf{Top Words:} The most representative words for each topic, based on their probabilities in the topic-word distribution.
+    \item \textbf{Prevalence:} The average proportion of the topic across all documents.
+    \item \textbf{Coherence:} The semantic consistency of the top words in the topic.
+    \item \textbf{Distinctiveness:} The uniqueness of the topic relative to others.
+    \item \textbf{Coverage:} The proportion of documents where the topic probability exceeds a threshold of 0.1.
+    \item \textbf{Final Score:} The overall score computed for the topic.
+\end{itemize}
+ 
+\textbf{Heatmap of Topic Representation Across States:}
+To examine the distribution of topics across different states, a heatmap was generated. This visualization highlights the relative prevalence of each topic in each state, providing insights into regional variations in voter information focus areas. States with higher topic proportions are visually emphasized, allowing for easy identification of underrepresented topics.
+
+The calculation of state performance in election FAQ coverage implements a comprehensive scoring methodology that integrates multiple components. The fundamental formula used for calculating the final state score is:
+
+
+The analysis revealed significant variations in state performance. Michigan emerged as the leading state with a score of 0.572, supported by a comprehensive collection of 123 FAQs and strong coverage across all topics, particularly in Administrative \& Filing (0.271) and Voter Registration (0.141). Florida followed with a score of 0.413 and 111 FAQs, demonstrating well-balanced coverage across topics. Nevada (0.389), Oklahoma (0.388), and North Carolina (0.344) completed the top five, each maintaining robust FAQ counts above 75 and showing strong performance in key topics like Voter Registration and Administrative procedures.
+
+Conversely, the analysis identified states with significant room for improvement. Mississippi ranked lowest with a score of 0.002, primarily due to having the least FAQs, resulting in minimal coverage across all topics. Similar patterns emerged for South Dakota (0.013), Wisconsin (0.015), Nebraska (0.019), and Montana (0.029), all characterized by FAQ counts below 12 and consequently limited topic coverage.
+
+\end{comment}
+
+
+\subsection{Sentiment Analysis}
+
+To identify the leaders and laggards in sentiment analysis across U.S. states, we analyzed the average compound sentiment scores obtained from VADER. The compound score, was used as the primary metric to assess the sentiment polarity and intensity associated with election-related FAQs. States with the highest average compound scores were identified as leaders, while those with the lowest average compound scores were categorized as laggards. 
+ 
+\noindent \textbf{Leaders:} These states exhibited a higher proportion of positive sentiment, emphasizing optimistic and clear communication in their FAQs.\\
+\textbf{Top 3 Leaders:} were Nebraska (0.380), Texas (0.372) and Arizona (0.327); average score in ().
+
+% \begin{itemize}[nolistsep]
+%     \item Nebraska with an average score of 0.380
+%     \item Texas with an average score of 0.372
+%     \item Arizona with an average score of 0.327
+% \end{itemize}
+
+\noindent \textbf{Laggards:} These states displayed a higher proportion of negative sentiment, potentially due to the phrasing of FAQs, lack of clarity, or underlying concerns in the election-related context. \\
+\textbf{Top 3 Laggards:} were South Dakota (-0.053), Alaska (-0.068)
+    and Wisconsin (-0.097); noting average score in ().
+% \begin{itemize}[nolistsep]
+%     \item South Dakota with an average score of -0.053
+%     \item Alaska with an average score of -0.068
+%     \item Wisconsin with an average score of -0.097
+% \end{itemize}
+
+The detailed results for \textbf{Question} (\cref{tab:q_sentiment_analysis})
+\textbf{Answer} (\cref{tab:a_sentiment_analysis})
+\textbf{Question + Answer} (\cref{tab:qa_sentiment_analysis}) are given in \cref{app:sent}.
+
+
+% Specificity Analysis
+\subsection{Analyzing Questions for State Specificity}
+
+Ensuring accessibility and informed decision-making requires election information provided by US state authorities and non-profit organizations to maintain a balance between generic and specific questions. Generic questions facilitate accessibility for voters with limited prior knowledge, such as first-time voters, by addressing fundamental aspects of the voting process. In contrast, specific questions localize information to the unique procedures and requirements of each state, enabling more precise voter guidance. This study conducted a specificity analysis on the questions from QA pairs across all 50 states to assess the balance between generic and specific content. A key aim was to identify commonalities in language across the questions posed by different states. If a state’s questions were similar to those of other states, they were classified as generic. For instance, a typical question such as ``Who can register to vote?'' is found in some form in many states' QA datasets, making it generic. On the other hand, state-specific questions feature distinctive language relevant to that jurisdiction, such as ``How do I obtain a document to prove I’m registered to vote in Hawaii?''
+
+Our methodology involved several steps. First, we extracted the set of questions from each state’s dataset and processed them by removing stop words using the Natural Language Toolkit (NLTK) library to isolate key terms and focus on substantive content. We then generated sentence embeddings for each question using the Sentence Transformer model, providing a numerical representation of the semantic content of the questions. To account for variations in the number of questions across states, we normalised the embeddings, ensuring fair comparisons. Finally, we measured the similarity between questions using pairwise cosine similarity. A similarity threshold of 0.8 was used to classify questions as generic, while pairs with a similarity score of 1.0 were excluded to account for potential duplicate questions within states. \cref{fig:specificity-analysis}  in the Appendix, illustrates our findings, plotting the number of generic versus specific questions for each state. This visualization highlights trends in how states balance these two types of content, offering insights into the consistency and localization of voter information across the United States. 
+
+
+\begin{figure*}[ht] 
+    \centering
+    \begin{minipage}{0.6\textwidth} 
+        \includegraphics[width=\linewidth]{img/specificity_analysis.pdf} 
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.35\textwidth} 
+        \caption{Scatter Plot of Generic vs Specific Questions Across States.
+This scatter plot illustrates the distribution of generic and specific questions across the QA datasets of all 50 US states. Generic questions, which address fundamental aspects of the voting process, are plotted against specific questions, which localize information to state-specific procedures and requirements. The plot highlights the balance maintained by each state in providing voter information, with clusters indicating common trends and outliers suggesting unique patterns of question specificity.}
+        \label{fig:specificity-analysis}
+    \end{minipage}
+\end{figure*}
+
+
+%prompt analysis
+
+\subsection{Prompt Analysis}
+%\vipula{motivation to use an LLM and do finetuning} 
+Since Large Language Models (LLMs) are being used in NLP tasks extensively, we also wanted to analyze how the FAQ content is amenable to LLM-based processing. 
+In this study, we finetune a pretrained LLM specifically Llama-3.1-8B \cite{dubey2024llama} on the election dataset. The overall fine-tuning process involves the following steps:
+
+\noindent \textbf{1. Dataset Preparation} 
+The initial dataset for each state consists of question-answer pairs with metadata (source, timestamp, and state). For fine-tuning, the dataset is loaded via the Datasets library \cite{lhoest-etal-2021-datasets}, converted into a conversational format, and augmented with schema details in the system message. This enables fine-tuning with additional context. See \cref{fig:chat template} for the template.
+ 
+\noindent \textbf{2. Model Fine-tuning} 
+We fine-tuned the Meta LLaMA-3.1-8B model using the SFTTrainer from trl (Transformer Reinforcement Learning) \cite{vonwerra2022trl}, integrated with PEFT for efficient LLM tuning via QLoRA. The training used LoRA configurations with a learning rate of 2e-4, 3\% warmup, and a constant scheduler. The dataset was split 80\% for training, 10\% for validation, and 10\% for testing. Optimization employed AdamW with weight decay, adaptive learning rates, and cross-entropy loss for causal modeling. The model trained for 10 epochs with a batch size of 4, 2 gradient accumulation steps, and memory optimization via gradient checkpointing, 4-bit quantization, NF4, and bfloat16. Gradient clipping was applied with a max norm of 0.3, and LoRA had an alpha of 128, dropout of 0.05, and rank 256. Training took 11 hours on a Tesla V100-PCIE-32GB. 
+
+
+\noindent  \textbf{3. Evaluation}
+The fine-tuned model is assessed on downstream tasks such as Readability, Summarization, Topic Modeling, and Sentiment Analysis, and evaluated by generating answers to training questions. Performance is measured using the same metrics as for the original question-answer pairs. %The result for \textbf{Readability} is shown in \cref{tab:llm_readability_analysis_a}. For \textbf{Topic Analysis}, the heatmap of topic distribution across states is shown in \cref{fig:state_topic_dist}, with final topics and relevant metrics summarized in \cref{tab:llm_topic_analysis_a}. The result for \textbf{Sentiment Analysis} is shown in \cref{tab:llm_sentiment_analysis_a}.
+We do not conduct experiments for questions, as the LLM solely generates responses without altering the input questions. Consequently, the outcomes remain consistent with previous results. The results are systematically presented in the formats of \textbf{Answer} and \textbf{Question + Answer}. Following this structure, readability results are detailed in (\cref{tab:llm_readability_analysis_a})
+and (\cref{tab:llm_readability_analysis_qa}). Similarly, both \textit{Abstractive} and \textit{Extractive} summarization outcomes are organized in tables \cref{tab:llm_a_summary_analysis_a} and \cref{tab:llm_e_summary_analysis_a} for the answer, and \cref{tab:llm_a_summary_analysis_qa} and \cref{tab:llm_e_summary_analysis_qa} for the combined question and answer. Furthermore, topic analysis findings are provided in \cref{tab:llm_topic_analysis_a} and \cref{tab:llm_topic_analysis_qa}. Lastly, sentiment analysis results are also presented in \cref{tab:llm_sentiment_analysis_a} and \cref{tab:llm_sentiment_analysis_qa} (\cref{app:prompt}).
+
+
+
+\begin{comment}
+% \begin{table*}[h]
+% \centering
+% \resizebox{\textwidth}{!}{%
+% \begin{tabular}{llllllll}
+% \toprule
+% \textbf{Index} & \textbf{Topic} & \textbf{Final Score} & \textbf{Prevalence} & \textbf{Coherence} & \textbf{Distinctiveness} & \textbf{Coverage} & \textbf{Top Terms} \\
+% \midrule
+% 0 & Polling & 0.207 & 0.049 & 0.144 & 0.559 & 0.077 & polling, polling place, place, hours, 00 \\
+% 1 & Voter Registration & 0.815 & 1.000 & 1.000 & 0.261 & 1.000 & registration, voter, vote, id, voter registration \\
+% 2 & Overseas and Military Voting & 0.310 & 0.071 & 0.081 & 1.000 & 0.089 & overseas, poll, worker, poll worker, verify voter \\
+% 3 & Election Timing & 0.226 & 0.000 & 0.000 & 0.905 & 0.000 & campaign, candidates, contributions, information, measures \\
+% 4 & Election Details & 0.405 & 0.175 & 0.185 & 0.957 & 0.305 & states, questions, elections, data \\
+% 5 & Political Parties & 0.416 & 0.435 & 0.335 & 0.414 & 0.481 & party, primary, election, political, vote \\
+% 6 & Early Voting & 0.243 & 0.114 & 0.102 & 0.616 & 0.139 & early, results, election, early voting, voting \\
+% 7 & Absentee Voting & 0.517 & 0.628 & 0.784 & 0.000 & 0.654 & ballot, absentee, absentee ballot, mail, election \\
+% \bottomrule
+% \end{tabular}
+% }
+% \caption{Topic Analysis Summary with Final Scores for LLM Generated Answers}
+% \label{tab:topic_analysis_summary_llm}
+% \end{table*}
+\end{comment}

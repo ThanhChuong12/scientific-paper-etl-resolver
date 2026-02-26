@@ -1,0 +1,1335 @@
+%File: formatting-instructions-latex-2025.tex
+%release 2025.0
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage{aaai25}  % DO NOT CHANGE THIS
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet}  % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NO\textit{}T ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in} % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in} % DO NOT CHANGE THIS
+%
+% These are recommended to typeset algorithms but not required. See the subsubsection on algorithms. Remove them if you don't have algorithms in your paper.
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% ------------------- add -------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}%[section]
+\newtheorem{lemma}{Lemma}%[section]
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newcommand{\stitle}[1]{\vspace*{0.4em}\noindent{\underline{#1.}\/}}
+% ------------------- add -------------------------
+%
+% These are are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
+\usepackage{newfloat}
+\usepackage{listings}
+\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+	basicstyle={\footnotesize\ttfamily},% footnotesize acceptable for monospace
+	numbers=left,numberstyle=\footnotesize,xleftmargin=2em,% show line numbers, remove this entire line if you don't want the numbers.
+	aboveskip=0pt,belowskip=0pt,%
+	showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+%
+% Keep the \pdfinfo as shown here. There's no need
+% for you to add the /Title and /Author tags.
+\pdfinfo{
+/TemplateVersion (2025.1)
+}
+
+% DISALLOWED PACKAGES
+% \usepackage{authblk} -- This package is specifically forbidden
+% \usepackage{balance} -- This package is specifically forbidden
+% \usepackage{color (if used in text)
+% \usepackage{CJK} -- This package is specifically forbidden
+% \usepackage{float} -- This package is specifically forbidden
+% \usepackage{flushend} -- This package is specifically forbidden
+% \usepackage{fontenc} -- This package is specifically forbidden
+% \usepackage{fullpage} -- This package is specifically forbidden
+% \usepackage{geometry} -- This package is specifically forbidden
+% \usepackage{grffile} -- This package is specifically forbidden
+% \usepackage{hyperref} -- This package is specifically forbidden
+% \usepackage{navigator} -- This package is specifically forbidden
+% (or any other package that embeds links such as navigator or hyperref)
+% \indentfirst} -- This package is specifically forbidden
+% \layout} -- This package is specifically forbidden
+% \multicol} -- This package is specifically forbidden
+% \nameref} -- This package is specifically forbidden
+% \usepackage{savetrees} -- This package is specifically forbidden
+% \usepackage{setspace} -- This package is specifically forbidden
+% \usepackage{stfloats} -- This package is specifically forbidden
+% \usepackage{tabu} -- This package is specifically forbidden
+% \usepackage{titlesec} -- This package is specifically forbidden
+% \usepackage{tocbibind} -- This package is specifically forbidden
+% \usepackage{ulem} -- This package is specifically forbidden
+% \usepackage{wrapfig} -- This package is specifically forbidden
+% DISALLOWED COMMANDS
+% \nocopyright -- Your paper will not be published if you use this command
+% \addtolength -- This command may not be used
+% \balance -- This command may not be used
+% \baselinestretch -- Your paper will not be published if you use this command
+% \clearpage -- No page breaks of any kind may be used for the final version of your paper
+% \columnsep -- This command may not be used
+% \newpage -- No page breaks of any kind may be used for the final version of your paper
+% \pagebreak -- No page breaks of any kind may be used for the final version of your paperr
+% \pagestyle -- This command may not be used
+% \tiny -- This is not an acceptable font size.
+% \vspace{- -- No negative value may be used in proximity of a caption, figure, table, section, subsection, subsubsection, or reference
+% \vskip{- -- No negative value may be used to alter spacing above or below a caption, figure, table, section, subsection, subsubsection, or reference
+
+\setcounter{secnumdepth}{2} %May be changed to 1 or 2 if section numbers are desired.
+
+% The file aaai25.sty is the style file for AAAI Press
+% proceedings, working notes, and technical reports.
+%
+
+% Title
+
+% Your title must be in mixed case, not sentence case.
+% That means all verbs (including short verbs like be, is, using,and go),
+% nouns, adverbs, adjectives should be capitalized, including both words in hyphenated terms, while
+% articles, conjunctions, and prepositions are lower case unless they
+% directly follow a colon or long dash
+
+% \affiliations{
+%     %Afiliations
+%     \textsuperscript{\rm 1}Association for the Advancement of Artificial Intelligence\\
+%     % If you have multiple authors and multiple affiliations
+%     % use superscripts in text and roman font to identify them.
+%     % For example,
+
+%     % Sunil Issar\textsuperscript{\rm 2},
+%     % J. Scott Penberthy\textsuperscript{\rm 3},
+%     % George Ferguson\textsuperscript{\rm 4},
+%     % Hans Guesgen\textsuperscript{\rm 5}
+%     % Note that the comma should be placed after the superscript
+
+%     1101 Pennsylvania Ave, NW Suite 300\\
+%     Washington, DC 20004 USA\\
+%     % email address must be in roman text type, not monospace or sans serif
+%     proceedings-questions@aaai.org
+% %
+% % See more examples next
+% }
+
+
+% \iffalse
+%Example, Multiple Authors, ->> remove \iffalse,\fi and place them surrounding AAAI title to use it
+
+% Zijie Zhou\,\orcidlink{0009-0003-8084-1490},
+% Zhaoqi Lu\,\orcidlink{0009-0004-2894-7076},
+% Xuekai Wei\,\orcidlink{0000-0002-3761-1759}, \\
+% Rongqin Chen\,\orcidlink{0000-0002-8498-0346}, 
+% Shenghui Zhang\,\orcidlink{0009-0000-8018-8899}, 
+% Pak Lon Ip\,\orcidlink{0009-0001-9220-5884}, and 
+% Leong Hou U\,\orcidlink{0000-0002-5135-5165}
+% \IEEEcompsocitemizethanks{
+% % \IEEEcompsocthanksitem $\bullet$ The authors are with State Key Laboratory of Internet of Things for Smart City, University of Macau, Macao SAR, China. Email: \{zhou.zijie, lu.zhaoqi, chen.rongqin, zhang.shenhui\}@connect.um.edu.mo; \{xuekaiwei, paklonip, ryanlhu\}@um.edu.mo.
+% % \IEEEcompsocthanksitem $\bullet$ Zijie Zhou and Zhaoqi Lu (sorted by coin order) contribute equally to this work and should be treated as co-first authors.
+% % \IEEEcompsocthanksitem $\bullet$ Corresponding author: Leong Hou U (email: ryanlhu@um.edu.mo).\\
+% \IEEEcompsocthanksitem Manuscript received xxxx; revised xxxx; accepted xxxx. Date of publication xxxx; date of current version xxxx. This work was supported by xxxx. Recommended for acceptance by xxxx. \textit{(Zijie Zhou and Zhaoqi Lu are co-first authors.) (Corresponding author: Leong Hou U.)}
+% \IEEEcompsocthanksitem The authors are with State Key Laboratory of Internet of Things for Smart City, University of Macau, Macao SAR, China. Email: \{zhou.zijie, lu.zhaoqi, chen.rongqin, zhang.shenghui\}@connect.um.edu.mo; xuekaiwei2-c@my.cityu.edu.hk; \{paklonip, ryanlhu\}@um.edu.mo.
+
+\title{Tokenphormer: Structure-aware Multi-token Graph Transformer \\ for Node Classification}
+\author{
+    Zijie Zhou\textsuperscript{\rm 1}\equalcontrib,
+    Zhaoqi Lu\textsuperscript{\rm 1, \rm 2, \rm 3}\equalcontrib,
+    Xuekai Wei\textsuperscript{\rm 1}, 
+    Rongqin Chen\textsuperscript{\rm 1}, 
+    Shenghui Zhang\textsuperscript{\rm 1}, 
+    Pak Lon Ip\,\textsuperscript{\rm 1}, 
+    Leong Hou U\textsuperscript{\rm 1}\thanks{Corresponding author.}
+}
+\affiliations{
+    %Afiliations
+    \textsuperscript{\rm 1}University of Macau\\
+    \textsuperscript{\rm 2}The Hong Kong Polytechnic University\\
+    \textsuperscript{\rm 3}Guangdong Institute of Intelligent Science and Technology, China\\
+    % If you have multiple authors and multiple affiliations
+    % use superscripts in text and roman font to identify them.
+    % For example,
+
+    % Sunil Issar\textsuperscript{\rm 2}, 
+    % J. Scott Penberthy\textsuperscript{\rm 3}, 
+    % George Ferguson\textsuperscript{\rm 4},
+    % Hans Guesgen\textsuperscript{\rm 5}
+    % Note that the comma should be placed after the superscript
+
+    \{zhou.zijie, lu.zhaoqi\}@connect.um.edu.mo; xuekaiwei2-c@my.cityu.edu.hk; \{chen.rongqin, zhang.shenghui\}@connect.um.edu.mo; \{paklonip, ryanlhu\}@um.edu.mo.
+    % 1900 Embarcadero Road, Suite 101\\
+    % Palo Alto, California 94303-3310 USA\\
+    % email address must be in roman text type, not monospace or sans serif
+    % proceedings-questions@aaai.org
+%
+% See more examples next
+% \thanks{
+% This work was supported by the Science and Technology Development Fund Macau SAR (0003/2023/RIC, 0052/2023/RIA1, 0031/2022/A, 001/2024/SKL for SKL-IOTSC), the Research Grant of University of Macau (MYRG2022-00252-FST),  Shenzhen-Hong Kong-Macau Science and Technology Program Category C (SGDX20230821095159012), and Wuyi University joint Research Fund (2021WGALH14). This work was performed in part at SICC which is supported by SKL-IOTSC, University of Macau. 
+% }
+}
+
+
+% REMOVE THIS: bibentry
+% This is only needed to show inline citations in the guidelines document. You should not need it and can safely delete it.
+\usepackage{bibentry}
+% END REMOVE bibentry
+
+
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Graph Neural Networks (GNNs) are widely used in graph data mining tasks. Traditional GNNs follow a message passing scheme that can effectively utilize local and structural information. However, the phenomena of over-smoothing and over-squashing limit the receptive field in message passing processes. Graph Transformers were introduced to address these issues, achieving a global receptive field but suffering from the noise of irrelevant nodes and loss of structural information. Therefore, drawing inspiration from fine-grained token-based representation learning in Natural Language Processing (NLP), we propose the Structure-aware Multi-token Graph Transformer (Tokenphormer), which generates multiple tokens to effectively capture local and structural information and explore global information at different levels of granularity. Specifically, we first introduce the walk-token generated by mixed walks consisting of four walk types to explore the graph and capture structure and contextual information flexibly. To ensure local and global information coverage, we also introduce the SGPM-token (obtained through the Self-supervised Graph Pre-train Model, SGPM) and the hop-token, extending the length and density limit of the walk-token, respectively. Finally, these expressive tokens are fed into the Transformer model to learn node representations collaboratively. Experimental results demonstrate that the capability of the proposed Tokenphormer can achieve state-of-the-art performance on node classification tasks.
+\end{abstract}
+
+% Uncomment the following to link to your code, datasets, an extended version or similar.
+%
+\begin{links}
+    \link{Code}{https://github.com/Dodo-D-Caster/Tokenphormer}
+    % \link{Datasets}{https://aaai.org/example/datasets}
+    % \link{Extended version}{https://aaai.org/example/extended-version}
+\end{links}
+
+
+\section{Introduction}\label{introduction}
+Graph structures are commonly seen in both physical and virtual domains, such as anomaly detection~\cite{aaai21AnomalyDetection}, traffic~\cite{aaai24Traffic}, and recommendation~\cite{aaai24Recommendation}. Mining tasks face a significant challenge due to the inherent complexity of various graphs and their intricate features. Graph Neural Networks (GNNs) have emerged as a successful learning framework capable of solving various graph-based tasks. Traditional GNNs follow the message passing scheme~\cite{GraphSAGE_Hamilton2017InductiveRL}, aggregating neighboring nodes to update node representation. However, these methods are hindered by issues such as over-smoothing~\cite{Chen2020} and over-squashing~\cite{Alon_Yahav_2020}.
+
+\begin{figure}[tb!]
+    \centering
+    \includegraphics[width=0.45\textwidth, trim=0 220 0 0, clip]{motivation.png}
+    \caption{Idea of Tokenphormer. 
+    % In Tokenphormer, we leverage {\em walk-token} to learn node representations by flexibly exploring the large neighborhood of the target node (yellow area). Additionally, {\em SGPM-token} and {\em hop-token} are added for global (blue area) and local (green area) information which expand the length and density limit of {\em walk-token}.
+    }
+    \label{motivation}
+\end{figure}
+
+Transformer~\cite{Vaswani_Shazeer_Parmar_Uszkoreit_Jones_Gomez_Kaiser_Polosukhin_2017} has demonstrated remarkable performance due to its powerful modeling capability, making it a potent architecture for graphs as well. The traditional graph Transformer treats the entire input graph as a fully connected entity, where individual nodes are regarded as independent tokens, and a unified sequence encompassing all nodes is constructed, thus alleviating the limitations of Message Passing Neural Networks (MPNNs). This approach allows the graph Transformer to extend the receptive field to the global, which benefits node representation learning. However, this scheme also results in high computational complexity, introduces noise from irrelevant nodes, and leads to a loss of structural information~\cite{Kreuzer_Beaini_Hamilton_Létourneau_Tossou_2021}. This limitation potentially hinders a comprehensive understanding of the entire graph. 
+
+In recent years, researchers have developed token-based methods~\cite{Kreuzer_Beaini_Hamilton_Létourneau_Tossou_2021, Gophormer, ANS-GT} that generate a sequence for each node
+% , incorporating structural encoding~\cite{Kreuzer_Beaini_Hamilton_Létourneau_Tossou_2021} or attention biases~\cite{Gophormer}
+, which have shown improved performance compared to the traditional graph Transformer. However, these models encounter difficulties when dealing with various graphs, as they lack the flexibility to thoroughly {\em explore the complete graph structure} due to the monotonous token design. For instance, NAGphormer~\cite{NAGphormer}, which serves as a representative and has achieved competitive results on homogeneous graphs, utilizes hop information to form tokens. These tokens are coarse-grained since they overlook crucial information, such as relationships among nodes within the same hop and data beyond the designated $k$-hop neighborhood, limiting the model's performance on diverse graph types like heterogeneous graph.
+
+% 2 key aspects of token generation strategy
+To address the aforementioned limitations, token generation strategies should be enhanced in two key aspects: 1) \textbf{Fine-grained.} Given the diverse and complex nature of graph structures, tokens should be more fine-grained, effectively capturing intricate structures and node relationships. 2) \textbf{Comprehensive.} To gain a better understanding of the entire graph, tokens should provide an approximate full coverage, capturing both global and local information for improved expressiveness. A natural question arises: {\em Can we design token generation strategies that can create multiple effective tokens for graph nodes that substantially improve the ability to investigate varied graph structures?}
+
+To answer this question, motivated by fine-grained token-based representation learning in Natural Language Processing (NLP), we propose {\em graph serialization}, which transforms the graph structure into {\em graph document} consisting of {\em graph sentences} using random walk, to effectively serialize the entire graph as well as node's neighborhood with minimal information loss. Graph serialization is the foundation for designing multiple token generators, enabling a more flexible exploration of diverse graph types.
+
+% Transformer~\cite{Vaswani_Shazeer_Parmar_Uszkoreit_Jones_Gomez_Kaiser_Polosukhin_2017} has demonstrated remarkable performance due to its powerful modeling capability, making it a potent architecture for graphs as well. Vanilla graph Transformer treats the entire input graph as a fully connected entity, where individual nodes are regarded as independent tokens, and a unified sequence encompassing all nodes is constructed. This approach allows graph Transformer to extend the receptive field to global, which benefits node representation learning. However, it also results in high computational complexity, introduces noise from irrelevant nodes, and leads to a loss of structural information~\cite{Kreuzer_Beaini_Hamilton_Létourneau_Tossou_2021}.
+% Facing these challenges, NAGphormer~\cite{NAGphormer} proposed Node2Seq to learn node representation through generating sequence for nodes rather than the whole graph. Nonetheless, the model extracts information from graphs in a coarse-grained manner. 
+% % This limitation, in turn, restricts expressiveness, especially as the number of input tokens grows (details can be found in Table \ref{allnagtp}).
+
+% Real-world graph datasets are characterized by considerable heterogeneity, which poses challenges for GNNs that may not adapt universally across various graph types. Typically, the distribution of critical information for nodes varies not only between different graphs, but also within the same graph. However, most Transformer-based approaches depend on a single-pattern token sequence, leading to a partial representation of graph information for each node. To address this limitations, token generation strategies should be enhanced in two key aspects: 1) \textbf{Fine-grained.} Given the diverse and complex nature of graph structures, tokens should be able to capture intricate structures and node relationships. 2) \textbf{Comprehensive.} To gain a better understanding of the entire graph, tokens should provide an approximate full coverage, capturing both global and local information. 
+
+% A natural question arises: {\em Can we design token generation strategies that can create multiple effective tokens for graph nodes that substantially improves the ability to investigate varied graph structures?} Motivated from Natural Language Processing (NLP), we propose {\em graph serialization}, which transforms the graph structure into {\em graph document} consisting of {\em graph sentences} using random walk, to serialize the entire graph as well as node's neighborhood with minimal information loss. Graph serialization serves as the foundation for designing multiple token generators, enabling a more flexible exploration of diverse graph types. 
+
+Figure~\ref{motivation} shows the idea of Tokenphormer. To meet the fine-grained requirement, we utilize {\em walk-token} to flexibly explore the graph (yellow area in Figure~\ref{motivation}). Specifically, the {\em walk-token} incorporates four distinct walk types, each representing a serialized node's neighborhood with varying receptive fields and walking strategies. These walk types are designed to capture a diverse range of information, making them suitable for various graph structures. The four types are: uniform random walk, non-backtracking random walk, our proposed neighborhood jump walk, and non-backtracking neighborhood jump walk. It should be noted that each walk type is non-irreplaceable, just as a tailored design of data augmentation to address the requirement of fine-grained.
+
+Given the limited receptive field of {\em walk-token}, we address the comprehensive requirement by introducing two additional token types: {\em SGPM-token} (blue area in Figure~\ref{motivation}) and {\em Hop-token} (green area in Figure~\ref{motivation}), extending the length and density limit of {\em walk-token}. Specifically, {\em SGPM-tokens} are obtained from the Self-supervised Graph Pre-train Model (SGPM), which pre-trains on the graph document (serialized entire graph), ensuring the global coverage of the {\em walk-token}. Moreover, {\em Hop-tokens} are generated through each hop's message, ensuring the local coverage of the {\em walk-token}.
+
+Finally, we introduce Tokenphormer (Structure-aware Multi-token Graph Transformer),
+% \footnote{Codes and appendix are available at: \textit{https://github.com/Dodo-D-Caster/Tokenphormer}.}, 
+a node classification approach that leverages the power of Transformer to jointly learn all these token types. Tokenphormer pioneers {\em the generation of diverse fine-grained and comprehensive tokens for data augmentation, adaptly extracting information across a spectrum of scales, from local to global contexts} and is adaptive to diverse graphs, outperforming other methods on both homogeneous and heterogeneous graphs.
+% Considering differences in granularities and receptive fields among tokens, we introduce a Transformer-based backbone to jointly learn the final node representation. 
+The main contributions of this work are as follows:
+\begin{itemize}   
+  \item  We present Tokenphormer, a pioneering node classification approach that generates multiple tokens rich in structural information and varying granularities through diverse walk strategies, to address the limitations of existing graph Transformers.
+  %\item We propose using neighborhood jump walks to extract essential information from distant neighbors. Additionally, we employ the mixed walk approach, comprising four types of walks with distinct receptive fields and walk tendencies, to enhance the expressive power of {\em walk-token}.
+  \item We propose an effective way to serialize the graph into a graph document and introduce SGPM to capture global and contextual information from our proposed graph documents in the pre-train period.
+  % \item The feasibility of serializing the graph using random walks (e.g., expressiveness and coverage) is analyzed theoretically, and experiments also prove the analysis.
+  \item Experimental results demonstrate that Tokenphormer outperforms existing state-of-the-art graph Transformers and mainstream MPNNs on most homogeneous and heterogeneous graph benchmark datasets, showcasing its applicability to diverse graphs. %Specifically, as the number of effective tokens increases, Tokenphormer's expressiveness also grows, highlighting its capability for enhanced performance.
+\end{itemize} 
+
+% The rest of the proposed work is organized as follows: Related work is presented in Section \ref{RelatedWork}; Details about the proposed Tokenphormer structure are discussed in Section \ref{ProposedMethod}; Section \ref{AnalysisTokenphormer} analyses different components of Tokenphormer; The performance evaluation and experimental results are presented in Section \ref{Experiment} followed by the conclusion of the proposed work in Section \ref{Conclusion}. 
+
+% \input{2-relatedWork}
+
+\section{Related Work}\label{RelatedWork}
+\subsection{Existing Graph Learning Architectures} \label{GNNs}
+% GNN methods are broadly classified into two methodologies: MPNNs (Message Passing Neural Networks) and graph Transformers. The MPNN scheme consists of two main steps: aggregation and update. Each node first aggregates features from its adjacent neighbors, then updates its representation by fusing its own features with the aggregated data~\cite{MPNN1_pmlr-v80-xu18c, MPNN2_pmlr-v70-gilmer17a}. Renowned models like GCN~\cite{GCN_kipf2017semi}, GAT~\cite{GAT_veličković2018graph} and GraphSAGE~\cite{GraphSAGE_Hamilton2017InductiveRL} have shown robust performance using this approach. Despite these advancements, MPNNs confront issues such as over-smoothing~\cite{Chen2020} and over-squashing~\cite{Alon_Yahav_2020}. Facing these challenges, several methods have been developed. For instance, Huang et al.~\cite{dropedge} introduce the DropEdge method to mitigate over-smoothing by randomly eliminating a specific number of edges during each training epoch. Chen et al.~\cite{NEURIPS2022_RFGNN} focus on minimizing redundancy in the message passing process to avoid the over-squashing issue.
+
+
+% Transformer~\cite{FirstTransformers_vaswani2017attention} architecture has been increasingly popular in graph representation learning as a solution to these problems. 
+% % Graph Transformers, characterized by weighted adjacency matrices of fully connected graphs, have revolutionized traditional GNNs with innovative strategies. 
+% For instance, GT~\cite{GT} uses Laplacian eigenvectors for positional encoding, while GraphTrans~\cite{GraphTrans} and GROVER~\cite{GROVER} incorporate GNNs as auxiliary modules to capture structural information. Graphormer~\cite{Graphormer} employs centrality and spatial encoding to integrate structural inductive bias into the attention mechanism. These methods treat the entire graph as a single sequence of node tokens. While recent advancements like Gophormer~\cite{Gophormer} samples relevant nodes from the raw graph to construct token sequence, changing the training target of Transformer from the entire graph to node sequences. NAGphormer~\cite{NAGphormer} introduces a Hop2Token mechanism to convert the neighborhood features from each hops into different token sequence.
+
+GNN methods can be generally categorized nto  Message Passing Neural Networks (MPNNs) and graph Transformers. The MPNN approach involves two main steps: aggregation and update. Each node first aggregates features from its neighbors and then updates its representation by combining its features with the aggregated data~\cite{MPNN1_pmlr-v80-xu18c, MPNN2_pmlr-v70-gilmer17a}. Notable models like GCN~\cite{GCN_kipf2017semi}, GAT~\cite{GAT_veličković2018graph}, and GraphSAGE~\cite{GraphSAGE_Hamilton2017InductiveRL} have demonstrated strong performance with this method. However, MPNNs face challenges such as over-smoothing~\cite{Chen2020} and over-squashing~\cite{Alon_Yahav_2020}. To address these issues, methods like DropEdge~\cite{dropedge}, which randomly removes edges during training, and techniques to reduce message passing redundancy~\cite{NEURIPS2022_RFGNN}, have been developed.
+
+The Transformer architecture~\cite{Vaswani_Shazeer_Parmar_Uszkoreit_Jones_Gomez_Kaiser_Polosukhin_2017, schmitt-etal-2021-modeling, dufter2022position, GOAT, largeGT} has gained popularity in graph representation learning as a solution to these problems. For example, GT~\cite{GT} uses Laplacian eigenvectors for positional encoding, while GraphTrans~\cite{GraphTrans} and GROVER~\cite{GROVER} incorporate GNNs as auxiliary modules to capture structural information. Graphormer~\cite{Graphormer} integrates centrality and spatial encoding to add structural inductive bias into the attention mechanism. These methods treat the entire graph as a sequence of node tokens and are of high computation complexity. Recent advancements like Gophormer~\cite{Gophormer} sample relevant nodes to form token sequences, shifting the Transformer's training focus from the entire graph to node sequences. NAGphormer~\cite{NAGphormer} introduces the Hop2Token mechanism, converting neighborhood features from each hop into different token sequences. However, though the complexity is decreased, the simplex design of tokens limits these models' performance on diverse graphs.
+
+\begin{figure*}[!hbt]
+\centering
+\includegraphics[width=0.79\textwidth]{framework2.png}
+\caption{Tokenphormer generates diverse tokens with different levels of granularity for the target node (red node), respectively {\em walk-tokens} (yellow area), {\em SGPM-token} (blue area) and {\em hop-token} (green area), comprehensively mining essential information from the whole graph. Then, all these tokens are constructed into a sequence and fed into the Transformer-based backbone to jointly learn the final node representation. Finally, an MLP-based module is employed for node classification tasks.
+}
+\label{tokenphormer}
+\end{figure*}
+
+\subsection{Token-based Representations}\label{NLP}
+% NLP has seen significant progress due to deep learning techniques and large language models (LLMs) like GPT~\cite{GPT}. These advances hinge on sophisticated token representations, which capture semantic meaning and syntactic structure, enabling applications like sentiment analysis and machine translation. Deep learning introduced refined token representations, such as Word2Vec~\cite{Word2Vec} and GloVe~\cite{GloVe}, which use neural networks to situate words in continuous vector spaces, enhancing contextual understanding. As seen in models like GPT~\cite{GPT}, contextualized embeddings take this further by considering the context of surrounding words, enabling nuanced semantic comprehension.
+
+% Expanding on pursuing more nuanced token representations, there is a natural extension to explore enhanced tokens within the context of graph nodes~\cite{Graph-Bert}. Conventional graph Transformers~\cite{GT_yun2019GTN, Graphormer} use independent nodes as tokens to construct a unique sequence. However, these Node2Token methods have high computational complexity and involve noise information. Subsequently, Node2Sequence methods like Gophormer~\cite{Gophormer} sample ego-graphs for each node as tokens and replenish shared global nodes to form sequences. Nevertheless, the final generated sequences still ignore edge information between nodes, which is insufficient to learn informative node representations. NAGphormer~\cite{NAGphormer} introduces a new method named Hop2Token, inspired by decoupled GCN, aggregating each hop into a token. However, their tokens are still coarse-grained and can not fully use graph node relationships. 
+
+% Inspired by subword and character-level tokenization methods~\cite{Word2Vec}, generating more effective tokens for nodes can better capture graph structure intricacies. The rationale behind this exploration lies in recognizing that a single token for a node may not fully encapsulate the richness of linguistic information~\cite{NAGphormer}. By generating multiple tokens for a node within the graph, the potential exists to capture a diverse array of nuances, contextual dependencies, and semantic intricacies specific to that node. This approach aligns with the broader trend of leveraging comprehensive token-based representations to enhance the performance of graph models.
+
+NLP has advanced significantly due to deep learning and large language models (LLMs) like GPT~\cite{GPT}. These improvements hinge on sophisticated token representations that capture semantic and syntactic nuances, enabling applications like sentiment analysis and machine translation. Techniques like Word2Vec~\cite{Word2Vec} and GloVe~\cite{GloVe} use neural networks to place words in continuous vector spaces, enhancing contextual understanding. Models like GPT~\cite{GPT} further improve this with contextualized embeddings that consider surrounding words, leading to nuanced semantic comprehension.
+
+
+In pursuing advanced token representations, there is a shift towards enhanced tokens within graph nodes~\cite{Graph-Bert}. Traditional graph Transformers~\cite{GT_yun2019GTN, Graphormer} use independent nodes as tokens, resulting in high computational complexity and increased noise. Node2Sequence methods like Gophormer~\cite{Gophormer} sample ego-graphs and add global nodes to form sequences but still overlook edge information, limiting node representation. The Hop2Token method proposed by NAGphormer~\cite{NAGphormer} aggregates each hop into a token but remains coarse-grained. Inspired by subword and character-level tokenization~\cite{Word2Vec}, generating multiple tokens for nodes can better capture graph structure details, nuances, and semantic intricacies, aligning with the trend of comprehensive token representations to enhance graph models.
+
+
+
+\section{The Proposed Method}\label{ProposedMethod}
+
+% \begin{figure*}[!hbt]
+% \centering
+% \includegraphics[width=0.8\textwidth]{framework2.png}
+% \caption{Structure of Tokenphormer. Tokenphormer generates diverse tokens with different levels of granularity for the target node (red node), respectively {\em walk-tokens} (yellow area), {\em SGPM-token} (blue area) and {\em hop-token} (green area), comprehensively mining essential information from the whole graph. Then, all these tokens are constructed into a sequence and fed into the Transformer-based backbone to jointly learn the final node representation. Finally, an MLP-based module is employed for node classification tasks.
+% }
+% \label{tokenphormer}
+% \end{figure*}
+
+
+% Tokenphormer framework, illustrated in Figure~\ref{tokenphormer}, addresses challenges in learning node representations by serializing the graph structure into diverse token types, including {\em walk-tokens}, {\em SGPM-tokens}, and {\em hop-tokens}. By jointly learning node representations across these tokens, from global to local levels, we enhance nodes' expressiveness while preserving important structural and contextual information.
+
+% In the following, we delve into the technological aspects of Tokenphormer. We begin by introducing notations and preliminaries, followed by a discussion of Graph Serialization. Then, three different token types, walk-token, SGPM-token, and hop-token, are introduced. Finally, we provide a detailed implementation of the Tokenphormer architecture.
+
+\subsection{Notations and Problem Formulation}
+\label{notationsAndProblemFormulation}
+Consider $G=(V, E)$ be an unweighted graph with node set $V$ and edge set $E$, where $V = \{{v_1, v_2, \cdots, v_n}\}$ and $n=|V|$. Each node's feature vector $x_v \in X$, where $X \in \mathbb{R}^{n \times d_F}$ is a feature matrix with $d_F$ dimensions to describe the attribute information of nodes. The adjacency matrix of $G$ is denoted by $A \in \mathbb{R}^{n \times n}$. A random walk in the graph $G$ follows a transition probability matrix $P$, which varies depending on the type of walk. Here, $P_{ij}$ denotes the probability of node $i$ choosing node $j$ as its next state. In this paper, we focus mainly on the semi-supervised node classification task. Specifically, given nodes in the training set $T_V$ with known labels $Y_v$ and feature vectors $X_v$ for $v \in V$, our aim is to predict the unknown $Y_u$ for all $u \in (V - T_V )$.
+
+\subsection{Preliminaries}\label{preliminary}
+
+\stitle{Markov chain and graph random walk}
+% A Markov chain~\cite{chung1967markov}  is a stochastic process that transitions between states within a defined state space. Its Markov and memoryless property implies that the probability distribution of transitioning to the next state depends solely on the current state. Moreover, a Markov chain is said to have the recurrence property if it can repeatedly revisit certain states during its evolution after initially reaching them. A {\em random walk}~\cite{lovasz1993random} on a graph can be viewed as a Markov chain, where each step depends solely on the current vertex, reflecting the Markov property.
+A Markov chain~\cite{chung1967markov} is a stochastic process where transitions between states depend only on the current state, reflecting its memoryless property. It has the recurrence property if it can revisit certain states. A {\em random walk}~\cite{lovasz1993random} on a graph is a type of Markov chain, where each step depends on the current vertex.
+
+
+% \stitle{Limiting distribution}
+% % The stationary distribution of a Markov chain (denoted as $\pi$) represents a probability distribution that remains unchanged as the Markov chain evolves. Mathematically, for a given transition probability matrix $P$, the stationary distribution $\pi$ satisfies the equation $\pi P = \pi$. A Markov chain with recurrence property can finally reach stationary distribution while a stationary distribution ($\pi$) is limiting distribution if the Markov chain satisfies:
+% % \begin{equation}
+% % \lim_{n \to \infty} (S_n = s_i) = \pi (s_i)
+% % \end{equation}
+% % where $S_n$ is the $n$-th state the Markov chain wants to choose, $s_i$ denotes the $i$-th state in state space. If a Markov chain with recurrence property can reproduce its state with a period greater than 1, then we call it {\em periodic}. The stationary distribution of a Markov chain is equal to limiting distribution when it is recurrent but not {\em periodic}.
+% % The stationary distribution of a Markov chain (denoted as $\pi$) is a probability distribution that remains unchanged as the chain evolves. For a transition matrix $P$, $\pi$ satisfies $\pi P = \pi$. A recurrent Markov chain reaches the stationary distribution, which is a limiting distribution if:
+% % \begin{equation}
+% % \lim_{n \to \infty} (S_n = s_i) = \pi (s_i)
+% % \end{equation}
+% % where $S_n$ is the $n$-th state, and $s_i$ is the $i$-th state in the state space. If a recurrent Markov chain has a period greater than 1, it is {\em periodic}. The stationary and limiting distributions are equal when the chain is recurrent but not {\em periodic}.
+% The stationary distribution of a Markov chain (denoted $\pi$) is a probability distribution that remains unchanged as the chain evolves, satisfying $\pi P = \pi$ for a transition matrix $P$. A recurrent Markov chain reaches a stationary (limiting) distribution if:
+% \begin{equation}
+% \lim_{n \to \infty} (S_n = s_i) = \pi (s_i)
+% \end{equation}
+% where $S_n$ is the $n$-th state, and $s_i$ is the $i$-th state. A recurrent chain is {\em periodic} if it has a period greater than 1. The stationary and limiting distributions are equal for recurrent but non-periodic chains.
+
+
+
+\stitle{Central limit theorem in graphs}
+% The central limit theorem~\cite{10.1214/154957804100000051} in the Markov chain shows that if two independent Markov chains are given two arbitrary initial distributions. When the time step reaches infinity, the difference between the limiting distributions of the two chains tends to be 0 if they share the same transition probability matrix.
+% In the context of a connected and non-bipartite graph, a random walk on it is recurrent and aperiodic; thus, it can reach the limiting distribution and satisfies the central limit theorem, as the following lemma shows:
+% \begin{lemma}\label{lemma1}
+% If G is a connected graph that is not bipartite, then for any initial distribution $\pi_0$ on $v\in V$, we have:
+% \begin{equation}
+%     \lim_{n \rightarrow \infty}(\pi_0 P^n)(v)=\pi(v)
+% \end{equation}
+% \end{lemma}
+% The central limit theorem~\cite{10.1214/154957804100000051} states that if two independent Markov chains have arbitrary initial distributions, their limiting distributions converge to the same value as time approaches infinity, provided they share the same transition matrix.
+% For a connected, non-bipartite graph, a random walk on it is recurrent and aperiodic, reaching a limiting distribution and satisfying the central limit theorem. This is formalized in the following lemma:
+% \begin{lemma}\label{lemma1}
+% If G is a connected graph that is not bipartite, then for any initial distribution $\pi_0$ on $v\in V$, we have:
+% \begin{equation}
+%     \lim_{n \rightarrow \infty}(\pi_0 P^n)(v)=\pi(v)
+% \end{equation}
+% \end{lemma}
+The central limit theorem for Markov chains states that if two independent chains with arbitrary initial distributions share the same transition matrix, their limiting distributions will converge to the same value as time approaches infinity~\cite{10.1214/154957804100000051}. The limiting distribution can be reached by a Markov chain with {\em recurrence} and {\em aperiodic} property, satisfying:
+\begin{equation}
+\lim_{n \to \infty} (S_n = s_i) = \pi (s_i)
+\end{equation}
+where $S_n$ is the $n$-th state of the Markov chain and $s_i$ is the $i$-th state in the state space. A random walk on a connected and non-bipartite graph is recurrent and aperiodic, guaranteeing convergence to the limiting distribution and satisfying the central limit theorem, as formalized in the following lemma:
+\begin{lemma}\label{lemma1}
+If $G$ is a connected, non-bipartite graph, then for any initial distribution $\pi_0$ on $v \in V$, we have:
+\begin{equation}
+    \lim_{n \to \infty} (\pi_0 P^n)(v) = \pi(v)
+\end{equation}
+\end{lemma}
+
+
+
+\subsection{Graph Serialization}\label{Graph-Serialization}
+
+Graph serialization encompasses transforming a graph structure into a sequence structure
+% , thereby amplifying the expressiveness of the target node by serializing its neighborhood and generating a document to represent the entire graph. 
+% As most graphs follow the homogeneity assumption, where closer nodes are more similar and hold higher importance to the target node, generating multiple {\em random walks} starting from the target node to serialize its neighborhood as an extension of information is appropriate. These walks will traverse through similar nodes and explore further areas. 
+and there exist two cases:
+
+\stitle{Case 1: Serializing a graph by a long walk} 
+%Leveraging the principles of the central limit theorem in the context of graphs provides a practical approach to serialize the entire graph. 
+Leveraging the principles of the central limit theorem (Lemma~\ref{lemma1}) in the context of graphs offers a viable strategy for graph serialization. When the length of a random walk on a graph tends towards infinity, the initial distribution's impact diminishes, leading to a more comprehensive depiction of the underlying graph structure. We name the document generated through this method the {\em Graph Document}, defined as follows:
+
+\begin{definition}[Graph sentence and document]
+\label{graphDocument}
+Graph sentence refers to an individual walk in the graph; the collection of a large number of graph sentences starting from every node in the graph constitutes a graph document.
+\end{definition}
+
+% And the expressiveness of graph document is theoretically analysed in Appendix \ref{graphdocumentDis}. 
+Nevertheless, it is crucial to acknowledge that employing an infinite-length walk on a graph is impractical during training. In practice, the limiting distribution can be approximated through a finite number of random walks, each with a limited length. 
+Let $walk(v_i, v_j)$ denote a walk starting from node $v_i$ and ending at node $v_j$. Then $walk(v_i, v_j)$ and $walk(v_j, v_k)$ can be viewed as partitions of $walk(v_i, v_k)$. By concatenating the graph sentences, we can create significantly longer walks that encompass all the nodes in the graph.
+
+
+\stitle{Case 2: Serializing nodes by diverse walks} Despite serializing the whole graph into graph document, it is also important to serialize the node's neighborhood for node classification tasks. 
+To ensure that all sentences in the graph are strongly connected with the target node, the graph serialization approach can involve multiple diverse random walks initiated from the target node.
+Moreover, We also demonstrate that the coverage speed of a node's neighborhood increases exponentially through this neighborhood serialization method in Appendix A.2\footnote{Appendix is available at: \textit{https://github.com/Dodo-D-Caster/Tokenphormer}.}.
+% (of our technical report~\cite{}).
+
+\subsection{Graph Tokenization}
+Based on graph serialization, graph tokenization tokenizes the graph into various token types to meet the requirement of fine-grained and comprehensive node representation.
+
+% As mentioned in Section~\ref{introduction}, to address the issues present in existing methods, we employ the graph serialization techniques described in Section~\ref{Graph-Serialization} to tokenize the graph into various token types, facilitating the learning of node representations. 
+% %to tackle the problems existed in current approaches, we tokenize the graph into different token types through graph serialization methods mentioned in Section~\ref{Graph-Serialization} to jointly learn the node representation. 
+% Specifically, we first fulfill the fine-grained requirement by introducing the walk-token (Section~\ref{walk_token}) to explore the graph flexibly. Additionally, the SGPM-token (Section~\ref{sgpm-token}) and the Hop-token (Section~\ref{hop_toekn}), which extend the length and density limit of walk-tokens, are replenished to ensure the comprehensiveness. 
+
+\subsubsection{Walk-token}\label{walk_token}
+Walk-tokens aim to achieve fine-grained representation, aligning with the second case of graph serialization. They are generated through four distinct walk types, each capturing information from nearby and distant neighbors at varying granularity levels.
+
+%The uniform random walk allows for free exploration within a fixed-sized neighborhood, enabling the acquisition of diverse insights. Conversely, the neighborhood jump walk expands the receptive field, and essential nodes are more likely to be reached by the target node within the neighborhood. The non-backtracking property ensures that the walks are more inclined to explore uncharted territories, reducing redundancy and expanding graph coverage. These four walk types jointly contribute to graph exploration, and their combined use in mixed walks demonstrates superior performance compared to individual walk types. To streamline computation, we employ sum pooling to convert the nodes encountered during the walks into walk-tokens. The following provides a comprehensive description of the four walk types:
+
+\stitle{(1) Uniform and non-backtracking random walk}
+{\em Uniform random walk} randomly selects the next node from the current node's neighbors. Additionally, we explore non-backtracking random walk, which exhibits faster convergence to its limiting distribution compared to uniform random walk in most cases~\cite{ALON_BENJAMINI_LUBETZKY_SODIN_2007}.
+
+\begin{definition}[Non-backtracking random walk]
+\label{def2}
+    A non-backtracking random walk on G is a sequence $(v_0, v_1, \ldots, v_k)$ of vertices $v_i \in V$ where $v_{i+1}$ is randomly selected from the neighbors of $v_i$, and it must satisfy the condition $v_{i+1} \ne v_{i-1}$ for $i=1,\ldots,k-1$.
+\end{definition}
+
+% The non-backtracking random walk is designed to avoid revisiting the node that was last encountered. This property may appear to contradict the Markov property of a Markov chain. However, by redefining the state space from nodes to edges, we can continue to view the non-backtracking random walk within the context of a Markov chain~\cite{Non-backtracking}, allowing us to utilize the theorem mentioned earlier. 
+The non-backtracking random walk avoids revisiting the last encountered node. This seems to contradict the Markov property. However, by redefining the state space from nodes to edges, the non-backtracking random walk can still be seen as a Markov chain~\cite{Non-backtracking}, allowing us to use the earlier mentioned theorem. 
+
+Let the edge connecting node $u$ to node $v$ be denoted as $(u,v)$. The transition probability matrix $\tilde P((u,v),(x,y))$ for the non-backtracking random walk can be expressed as: 
+\begin{equation}
+    \tilde P((u,v),(x,y))  =\left\{
+    \begin{array}{rcl}
+    \displaystyle{\frac{1}{d_v-1}}       &      & {if \;  v=x, \; y\ne u}\\
+    0                                    &      & {otherwise}\\
+    \end{array} \right.
+\end{equation}
+where $d_v$ denotes the degree of node $v$.
+
+Furthermore, non-backtracking random walks can traverse longer distances and reduce redundancy in the generated walk sequences~\cite{NEURIPS2022_RFGNN}.
+
+
+\stitle{(2) Neighborhood jump walk and non-backtracking version} 
+% The coverage area of conventional random walk approaches is indeed limited by the length of the walk. Although information from nearby neighbors generally holds greater significance, disregarding information from distant neighbors entirely would be unwise.
+% In this study, we define the neighborhood jump walk as a variant of walk within the {\em walk-token} framework. Unlike the uniform random walk, the neighborhood jump walk can jump from the current node to any node within its $k$-hop neighborhood, regardless of an edge between the nodes, and recursively continuing this procedure. As a result, the reachable area of the neighborhood jump walk expands by a factor equal to the radius of the neighborhood. Below is the definition of the neighborhood jump walk:
+Conventional random walk approaches are limited by walk length. While the information from nearby neighbors is more significant, disregarding distant neighbors is not advisable. Inspired by dilated convolution~\cite{dilatedConv}, which has been proved to be effective~\cite{dilatedConvProof}, we define the neighborhood jump walk as a random walk with dilated transition probability. Unlike uniform random walks, the neighborhood jump walk can jump to any node within its $k$-hop neighborhood and continue recursively. Thus, the neighborhood jump walk's reachable area expands by the neighborhood's radius. Below is the definition of the neighborhood jump walk:
+
+
+\begin{definition}[Neighborhood jump walk]
+\label{def3}
+    A neighborhood jump walk on G is a sequence $(v_0, v_1, ..., v_k)$ of vertices $v_i \in V$ where $v_{i+1}$ is chosen among the nodes in the $k$-hop neighborhood of $v_i$. The transition probability of $v_i$ to choose $v_{i+1}$ in $v_i$'s $k$-hop neighborhood follows $k$-step probability propagation.
+\end{definition}
+
+% The process of {\em neighborhood jump walk} can be visualized as starting from a single node and throwing darts into an area centered around that node. Each neighbor within the area has its territory, which may differ in size. The node that wins the {\em dart throw} becomes the next node in the walk, and the process is repeated. Moreover, the probability of each node winning the bid is biased towards nodes with higher hit rates in a $k$-step random walk. For instance, when visiting a node $v_i$ and determining the next state, the walk will reconstruct the $k$-hop neighborhood of $v_i$ by connecting all nodes to $v_i$. This restructured graph is then restored after the next node is selected. This dynamic restructuring allows the walk to explore a more expansive and interconnected graph space.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.49\textwidth]{tp_neighborhoodjump.png}
+\caption{Transition Probability of Neighborhood Jump Walk.}
+\label{tp_neighborhoodjump}
+\end{figure}
+
+The transition probability matrix for the neighborhood jump walk, described in Definition \ref{def3}, is computed using a $k$-step probability propagation process. In the given graph (Figure~\ref{tp_neighborhoodjump}), for the $1$-st step, the probability of node 1 (100\%) is split averagely to its neighbors, node 2 (50\%) and node 3 (50\%). This process iterates to calculate the likelihood of node 1 reaching each node within its 3-hop neighborhood. By aggregating and normalizing these probabilities, the overall probability of node 1 visiting any node in its 3-hop neighborhood is established. 
+
+%node 1 has two 1-hop neighbors, node 2 and node 3, resulting in a 50\% probability for node 1 to visit either of them in a 1-hop walk. This process is repeated to compute the probabilities of node 1 visiting each node in its 3-hop neighborhood. By summing and normalizing these probabilities, we can determine the probability of node 1 visiting all nodes within its 3-hop neighborhood. 
+These probabilities can be calculated in advance, thereby preserving the Markov property.
+% As depicted in Figure~\ref{tp_neighborhoodjump}, a neighborhood jump walk can provide broader node coverage than a uniform random walk. 
+Moreover, to prevent a node from revisiting itself, the probability of self-loops is eliminated. The likelihood of returning to the last visited node can also be negated to embed the {\em non-backtracking property}, which can accelerate the walk's convergence. 
+% For instance, in Figure \ref{tp_neighborhoodjump}, suppose node 2 is the previously visited node, then we can set the probabilities for node 1 to visit node 2 to zero to avoid backtracking in the walk.
+
+\subsubsection{SGPM-token}\label{sgpm-token}
+SGPM-token extends the length limit of walk-tokens, aligning with the first case of graph serialization and facilitating a comprehensive exploration of positional nuances across nodes in the graph. SGPM-tokens are created by applying weights derived from the Self-supervised Graph Pre-trained Model (SGPM). 
+
+\stitle{Self-supervised Graph Pre-trained Model, SGPM}
+Self-supervised pre-trained models have emerged as a highly effective approach for learning representations from unlabeled NLP data. Inspired by this, we introduce SGPM to learn from graph document unsupervisedly. 
+
+\stitle{(1) Document generation}
+% As stated in Definition \ref{graphDocument}, a graph document consists of numerous graph sentences, which are walks generated by individual nodes with varying lengths. In the pre-training phase of SGPM, preserving the raw node connections is of utmost importance to facilitate learning the graph's structure and contextual information. Considering this, we apply non-backtracking random walk as our final choice since it can extend the walk as far as possible while maintaining the original relationships. The walk length follows a normal distribution, denoted as $\mathcal{N}(\mu, \sigma^2)$, where the mean $\mu$ corresponds to the graph's radius $R$ and the standard deviation $\sigma$ is set to 1.
+As stated in Definition \ref{graphDocument}, a graph document consists of numerous graph sentences, which are walks generated by individual nodes with varying lengths. In the pre-training phase of SGPM, preserving the raw node connections is crucial for learning the graph's structure and contextual information. Thus, we use non-backtracking random walks as our final choice, as they extend the walk while maintaining original relationships. The walk length follows a normal distribution, $\mathcal{N}(\mu, \sigma^2)$, where the mean $\mu$ corresponds to the graph's radius $R$ and the standard deviation $\sigma$ is set to 1.
+
+
+\stitle{(2) Tokenizer and input representation}
+% After generating the graph document, the next step involves tokenizing the sentences. Similar to the tokenization process in NLP, a vocabulary is created to encompass all the tokens. In the context of graph structures, where each node appears only once, a direct mapping is established between each node in the graph and a corresponding token. Moreover, five special tokens are added, aligning with practices in NLP tasks. These special tokens include \texttt{PAD}, utilized for sequence padding to ensure uniform walk lengths; \texttt{UNK}, representing nodes not present in the vocabulary; \texttt{CLS} and \texttt{SEP}, denoting the start and end of a sequence respectively; and \texttt{MASK}, employed for replacing hidden nodes.
+After generating the graph document, the next step involves tokenizing the sentences. Similar to tokenization in NLP, a {\em vocabulary} is created to encompass all tokens. In graph structures, each node maps directly to a corresponding token. Additionally, five special tokens are added: \texttt{PAD} for sequence padding, \texttt{UNK} for unknown nodes, \texttt{CLS} and \texttt{SEP} for sequence boundaries, and \texttt{MASK} for replacing hidden nodes.
+
+Once the vocabulary is established, the graph sentences are tokenized into sequences comprised of these tokens. Before input into the SGPM, input representations for each token in the sequence are needed. Notably, let \( S \) denote the set of tokens, and for each token $j \in S$, the token embeddings $T_{j}$ and position embeddings $P_{j}$ are added, which are commonly used in NLP pre-train models. Furthermore, our input representation $h_{j}$ is enriched by incorporating node features $X_{j}$ and measures of node centrality $C_{j}$. Finally, we fuse these embeddings using sum pooling:
+\begin{align}
+    h_{j} = \text{SUM}(T_{j}, P_{j}, X_{j}, C_{j})
+\end{align}
+% This augmentation ensures that the input representations not only capture the inherent relationships between nodes but also encompass a broader context that reflects the structural intricacies of the graph document.
+\stitle{(3) Graph pre-training process}
+Based on experience from NLP, we employ the Masked Language Model (MLM)~\cite{BERT} as SGPM's pre-train task. Let \( \mathbf{H} = [h_1, h_2, \ldots, h_N] \) represent the input sequence of tokens, and \( N \) the total number of tokens. Initially, 15\% of the tokens are randomly replaced with the special token \texttt{MASK}. This masked sequence is then input into the bidirectional Transformer model, which generates individual scores \( \mathbf{S} = [s_1, s_2, \ldots, s_N] \) for each token. These scores represent the likelihood of each token given its context and are then compared to the actual ground truth values \( \mathbf{Y} = [y_1, y_2, \ldots, y_N] \), where \( y_i \) is the true label of the masked token \( h_i \). The cross-entropy loss is calculated as:
+\begin{equation}
+    \mathcal{L} = -\frac{1}{N} \sum_{i=1}^{N} y_i \log(s_i)
+\end{equation}
+
+
+\subsubsection{Hop-token}\label{hop_toekn}
+{\em Hop-token} is designed to capture hop information within a limited $k$-hop neighborhood, ensuring a structured and comprehensive representation of a node's local context. In Tokenphormer, the $k$-th {\em Hop-token} of the target node is computed as decoupled $(k+1)$-th layer of message passing, as depicted in Fig \ref{tokenphormer}. This approach allows us to incorporate the information from nodes within the $k$-hop radius, providing a rich representation of the node's immediate surroundings.
+
+\begin{table*}[htb!]
+    \begin{center}
+    \small
+    % \begin{tabular*}{1\textwidth}{@{}@{\extracolsep{\fill}}lccccccc@{}}
+    % \resizebox{0.815\textwidth}{!}
+    \setlength{\tabcolsep}{1mm}{%
+    \begin{tabular}{lccccccc}
+    \hline
+    \textbf{Method} &\textbf{Year} &\textbf{Cora} &\textbf{Citeseer} &\textbf{Flickr} &\textbf{Photo} &\textbf{DBLP} &\textbf{Pubmed}\\
+    \hline
+    GCN & 2017 & 87.33$\pm$0.38 & 79.43$\pm$0.26 & 61.49$\pm$0.61 & 92.70$\pm$0.20 & 83.62$\pm$0.13 & 86.54$\pm$0.12\\
+    GAT & 2017 & 86.29$\pm$0.53 & 80.13$\pm$0.62 & 54.29$\pm$2.56 & 93.87$\pm$0.11 & 84.19$\pm$0.19 & 86.32$\pm$0.16\\
+    GraphSAGE & 2018 & 86.90$\pm$0.84 & 79.23$\pm$0.53 & 60.37$\pm$0.27 & 93.84$\pm$0.40 & 84.73$\pm$0.28 & 86.19$\pm$0.18\\
+    APPNP & 2018 & 87.15$\pm$0.43 & 79.33$\pm$0.35 & \textbf{93.25$\pm$0.24} & 94.32$\pm$0.14 & 84.40$\pm$0.17 & 88.43$\pm$0.15\\
+    JKNet & 2018 & 87.70$\pm$0.65 & 78.43$\pm$0.31 & 53.66$\pm$0.40 & - & 84.57$\pm$0.28 & 87.64$\pm$0.26\\
+    %GraphSAINT & 2020 & - & - & - & 91.72$\pm$0.13 & - & 88.96$\pm$0.16\\
+    GPR-GNN & 2021 & 88.27$\pm$0.40 & 78.46$\pm$0.88 & - & 94.49$\pm$0.14 & - & 89.34$\pm$0.25\\
+    GATv2 & 2022 & - & - & - & - & 84.96$\pm$0.47 & 85.75$\pm$0.55\\
+    GRAND+ & 2022 & 85.8x$\pm$0.4x &  75.6x$\pm$0.4x & - & 94.75$\pm$0.12 & - & 88.64$\pm$0.09\\
+    \hline
+    GT & 2020 & 71.84$\pm$0.62 & 67.38$\pm$0.76 & 68.59$\pm$0.64 & 94.74$\pm$0.13 & 81.04$\pm$0.27 & 88.79$\pm$0.12\\
+    Graphormer & 2021 & 72.85$\pm$0.76 & 66.21$\pm$0.83 & 66.16$\pm$0.24 & 92.74$\pm$0.14 & 80.93$\pm$0.39 & 82.76$\pm$0.24\\
+    SAN & 2021 & 74.02$\pm$1.01 & 70.64$\pm$0.97 & 70.26$\pm$0.73 & 94.86$\pm$0.10 & 83.11$\pm$0.32 & 88.22$\pm$0.15\\
+    % GraphGPS & 74.20* & - & - & 95.06 & - & - & 88.94\\
+    Gophormer & 2021 & 87.85$\pm$0.10 & 80.23$\pm$0.09 & 91.51$\pm$0.28 & - & 85.20$\pm$0.20 & 89.40$\pm$0.14\\
+    ANS-GT & 2022 & 88.60$\pm$0.45 & 80.25$\pm$0.39 & - & 94.41$\pm$0.62 & - & 89.56$\pm$0.55 \\
+    GraphGPS & 2022 & - & - & - & 95.06$\pm$0.13 & - & 88.94$\pm$0.16\\
+    Exphormer & 2023 & - & - & - & 95.27$\pm$0.42 &- & 89.52$\pm$0.54 \\
+    Gapformer & 2023 & 87.37$\pm$0.76 & 76.21$\pm$1.47 & - & 94.81$\pm$0.45 & \textbf{85.50$\pm$0.43} & 88.98$\pm$0.46 \\
+    NAGphormer & 2023 & 90.56$\pm$0.39 & 80.02$\pm$0.80 & 89.66$\pm$0.63 & 95.49$\pm$0.11 & 84.62$\pm$0.13 & 89.60$\pm$0.14\\
+    \hline
+    Tokenphormer & ours &  \textbf{91.20$\pm$0.47} &  \textbf{81.04$\pm$0.24} & 92.44$\pm$0.35 &  \textbf{96.14$\pm$0.14} & 85.13$\pm$0.10 &  \textbf{89.94$\pm$0.20}\\
+    \hline
+    \end{tabular}
+    }
+    \end{center}
+    
+    \caption{Comparison of Tokenphormer with baselines on various datasets. The best results are in \textbf{bold}. `x' and `-' mean unknown numbers. Part values of NAGphormer are run by ourselves due to missing of standard deviation in raw paper~\cite{NAGphormer}.}
+    \label{tab:main}
+\end{table*}
+
+
+% \begin{table*}[htb!]
+%     \begin{center}
+%     % \begin{tabular*}{1\textwidth}{@{}@{\extracolsep{\fill}}lcccccc@{}}
+%     \resizebox{0.8\textwidth}{!}{%
+%     \begin{tabular}{lcccccc}
+%     \hline
+%     \textbf{Method} &\textbf{Cora} &\textbf{Citeseer} &\textbf{Flickr} &\textbf{Photo} &\textbf{DBLP} &\textbf{Pubmed}\\
+%     \hline
+%     Tokenphormer&  \textbf{91.20$\pm$0.47} &  \textbf{81.04$\pm$0.24} &  \textbf{92.44$\pm$0.35} &  \textbf{96.14$\pm$0.14} &  \textbf{85.13$\pm$0.10} &  \textbf{89.94$\pm$0.20}\\
+%     \hline
+%     w/o SGPM-token & 90.33$\pm$0.30 & 79.85$\pm$1.00 & 91.75$\pm$0.50 & 95.61$\pm$0.47 & 84.42$\pm$0.41 & 89.38$\pm$0.46\\
+%     w/o walk-token & 88.37$\pm$1.23 & 79.70$\pm$0.71 & 92.24$\pm$0.35 & 94.81$\pm$0.44 & 83.93$\pm$0.16 & 89.60$\pm$0.35\\
+%     w/o hop-token& 90.73$\pm$0.34 & 80.19$\pm$2.32 & 91.97$\pm$0.71 & 95.80$\pm$0.30 & 85.01$\pm$0.16 & 89.35$\pm$0.36\\
+%     \hline
+%     only URW & 90.41$\pm$0.56 & 80.69$\pm$0.49 & 92.07$\pm$0.77 & 95.83$\pm$0.32 & 84.90$\pm$0.39 & 89.33$\pm$0.39\\
+%     only NBRW & 89.72$\pm$0.36 & 80.03$\pm$0.90 & 92.27$\pm$0.53 & 95.74$\pm$0.41 & 84.86$\pm$0.25 & 89.26$\pm$0.45\\
+%     only NJW & 90.80$\pm$0.66 & 80.92$\pm$0.50 & 92.38$\pm$0.70 & 95.61$\pm$0.38 & 84.70$\pm$0.44 & 89.50$\pm$0.36\\
+%     only NBNJW & 89.63$\pm$0.64 & 80.56$\pm$0.74 & 92.09$\pm$0.39 & 96.00$\pm$0.31 & 84.71$\pm$0.35 & 89.36$\pm$0.35\\
+%     \hline
+%     \end{tabular}
+%     }
+%     \end{center}
+%     \caption{Ablation Experiment. Best results are in \textbf{bold}. URW, NBRW, NJW, and NBNJW represent uniform random walk, non-backtracking random walk, neighborhood jump walk, and non-backtracking neighborhood jump walk. 
+%     %The first part compares Tokenphormer with the situation of {\em SGPM-token}, {\em walk-token} or {\em hop-token} withdrawn; The second part compares Tokenphormer with the situation of only single walk type left.
+%     }
+%     \label{tab:abla}
+% \end{table*}
+
+\subsection{Tokenphormer}\label{Multi-tokenContextualGraphTransformer}
+Tokenphormer aims to utilize diverse tokens to jointly learn node embeddings for node classification. As illustrated in Figure~\ref{tokenphormer}, each node $v$ has one SGPM-token, $n$ hop-tokens, and $m$ walk-tokens. These tokens are sequentially input into the Transformer encoder for processing, which includes multi-head self-attention (MSA) and position-wise feed-forward network (FFN) components, to compute the output of the $l$-th Transformer layer $H_{v}^{l}$:
+\begin{equation}
+    \begin{split}
+        &\hat{H}_{v}^{l} = MSA(Norm(H_{v}^{l-1}))  + H_{v}^{l-1} \\
+        &H_{v}^{l} = FFN(Norm(\hat{H}_{v}^{l}) + \hat{H}_{v}^{l}
+    \end{split}
+\end{equation}
+where $l = 1, \ldots , L$ denotes the $l$-th Transformer layer. Within each mini-batch of inputs, we apply Layer Normalization using the $Norm(\cdot)$ function.
+
+Since tokens are generated using different strategies, they may have varying contributions to the target node embedding. Instead of employing commonly used readout functions such as mean and summation, we employ an attention-based readout function to learn the different weights of token embeddings. Let $H \in R^{K \times d_{h}}$ denote the token representation of a node. Here, $K$ represents the total number of tokens, $d_h$ is the hidden dimension of the Transformer, and $H_k$ is the $k$-th token representation of the node. We calculate the attention parameter between different tokens by:
+
+\begin{equation}
+    \alpha_k = \frac {exp(H_kW_a^{\top})}{\sum_{i=1}^{K}(exp(H_iW_a^{\top}))}
+\end{equation}
+where $W_a \in R^{1 \times 2d_h}$ denotes the learnable parameter matrix, and $i = 1, \ldots , K$. 
+Based on this, the final node representation $H_{fin}$ is aggregated as follows:
+\begin{equation}
+    H_{fin} = \sum_{k=1}^{K} \alpha_{k}H_{k}
+\end{equation}
+
+% \input{4-analysisOfTokenphormer}
+
+\subsection{Analysis of Components}
+Based on Definition \ref{graphDocument} and the analysis presented in graph serialization part, it is evident that graph documents can converge to the limiting distribution. Notably, this distribution tends to vary across different graphs. Consequently, we propose the following Lemma to examine the expressiveness of graph documents and prove it through graph isomorphism, which can be found in Appendix A.1.
+
+\begin{lemma}
+Graph documents possess the capability to distinguish non-isomorphic graphs.
+\end{lemma}
+
+Additionally, we also analyze the walk coverage of walk tokens mathematically and draw the conclusion that it is feasible to approximate full information coverage with a limited number of walk tokens. We prove that the probability of a particular information type being uncovered decreases at a rate faster than exponential decay. The detailed proof can be found in Appendix A.2.
+
+The expressiveness of different token types is also analyzed in Appendix A.3. Our analysis concludes that SGPM-tokens can capture global information, Hop-tokens have the potential to match or exceed the performance of MPNNs, and Walk-tokens demonstrate superiority over hop-wise tokens, such as those in NAGphormer \cite{NAGphormer}. Lastly, we analyze the time and space complexity of Tokenphormer. Detailed analyses are provided in Appendix A.4.
+
+\section{Experiments}
+\label{Experiment}
+
+% \begin{table*}[htb!]
+%     \begin{center}
+%     % \begin{tabular*}{1\textwidth}{@{}@{\extracolsep{\fill}}lccccccc@{}}
+%     \resizebox{0.8\textwidth}{!}{%
+%     \begin{tabular}{lccccccc}
+%     \hline
+%     \textbf{Method} &\textbf{Year} &\textbf{Cora} &\textbf{Citeseer} &\textbf{Flickr} &\textbf{Photo} &\textbf{DBLP} &\textbf{Pubmed}\\
+%     \hline
+%     GCN & 2017 & 87.33$\pm$0.38 & 79.43$\pm$0.26 & 61.49$\pm$0.61 & 92.70$\pm$0.20 & 83.62$\pm$0.13 & 86.54$\pm$0.12\\
+%     GAT & 2017 & 86.29$\pm$0.53 & 80.13$\pm$0.62 & 54.29$\pm$2.56 & 93.87$\pm$0.11 & 84.19$\pm$0.19 & 86.32$\pm$0.16\\
+%     GraphSAGE & 2018 & 86.90$\pm$0.84 & 79.23$\pm$0.53 & 60.37$\pm$0.27 & 93.84$\pm$0.40 & 84.73$\pm$0.28 & 86.19$\pm$0.18\\
+%     APPNP & 2018 & 87.15$\pm$0.43 & 79.33$\pm$0.35 & \textbf{93.25$\pm$0.24} & 94.32$\pm$0.14 & 84.40$\pm$0.17 & 88.43$\pm$0.15\\
+%     JKNet & 2018 & 87.70$\pm$0.65 & 78.43$\pm$0.31 & 53.66$\pm$0.40 & - & 84.57$\pm$0.28 & 87.64$\pm$0.26\\
+%     %GraphSAINT & 2020 & - & - & - & 91.72$\pm$0.13 & - & 88.96$\pm$0.16\\
+%     GPR-GNN & 2021 & 88.27$\pm$0.40 & 78.46$\pm$0.88 & - & 94.49$\pm$0.14 & - & 89.34$\pm$0.25\\
+%     GATv2 & 2022 & - & - & - & - & 84.96$\pm$0.47 & 85.75$\pm$0.55\\
+%     GRAND+ & 2022 & 85.8x$\pm$0.4x &  75.6x$\pm$0.4x & - & 94.75$\pm$0.12 & - & 88.64$\pm$0.09\\
+%     \hline
+%     GT & 2020 & 71.84$\pm$0.62 & 67.38$\pm$0.76 & 68.59$\pm$0.64 & 94.74$\pm$0.13 & 81.04$\pm$0.27 & 88.79$\pm$0.12\\
+%     Graphormer & 2021 & 72.85$\pm$0.76 & 66.21$\pm$0.83 & 66.16$\pm$0.24 & 92.74$\pm$0.14 & 80.93$\pm$0.39 & 82.76$\pm$0.24\\
+%     SAN & 2021 & 74.02$\pm$1.01 & 70.64$\pm$0.97 & 70.26$\pm$0.73 & 94.86$\pm$0.10 & 83.11$\pm$0.32 & 88.22$\pm$0.15\\
+%     % GraphGPS & 74.20* & - & - & 95.06 & - & - & 88.94\\
+%     Gophormer & 2021 & 87.85$\pm$0.10 & 80.23$\pm$0.09 & 91.51$\pm$0.28 & - & \textbf{85.20$\pm$0.20} & 89.40$\pm$0.14\\
+%     ANS-GT & 2022 & 88.60$\pm$0.45 & 80.25$\pm$0.39 & - & 94.41$\pm$0.62 & - & 89.56$\pm$0.55 \\
+%     GraphGPS & 2022 & - & - & - & 95.06$\pm$0.13 & - & 88.94$\pm$0.16\\
+%     Exphormer & 2023 & - & - & - & 95.27$\pm$0.42 &- & 89.52$\pm$0.54 \\
+%     NAGphormer & 2023 & 90.56$\pm$0.39 & 80.02$\pm$0.80 & 89.66$\pm$0.63 & 95.49$\pm$0.11 & 84.62$\pm$0.13 & 89.60$\pm$0.14\\
+%     \hline
+%     Tokenphormer & ours &  \textbf{91.20$\pm$0.47} &  \textbf{81.04$\pm$0.24} & 92.44$\pm$0.35 &  \textbf{96.14$\pm$0.14} & 85.13$\pm$0.10 &  \textbf{89.94$\pm$0.20}\\
+%     \hline
+%     \end{tabular}
+%     }
+%     \end{center}
+    
+%     \caption{Comparison of Tokenphormer with baselines on various datasets. Best results are in \textbf{bold}. `x' and `-' mean unknown number. Part values of NAGphormer are run by ourselves due to missing of standard deviation in raw paper~\cite{NAGphormer}.}
+%     \label{tab:main}
+% \end{table*}
+
+
+% \begin{table*}[htb!]
+%     \begin{center}
+%     % \begin{tabular*}{1\textwidth}{@{}@{\extracolsep{\fill}}lcccccc@{}}
+%     \resizebox{0.8\textwidth}{!}{%
+%     \begin{tabular}{lcccccc}
+%     \hline
+%     \textbf{Method} &\textbf{Cora} &\textbf{Citeseer} &\textbf{Flickr} &\textbf{Photo} &\textbf{DBLP} &\textbf{Pubmed}\\
+%     \hline
+%     Tokenphormer&  \textbf{91.20$\pm$0.47} &  \textbf{81.04$\pm$0.24} &  \textbf{92.44$\pm$0.35} &  \textbf{96.14$\pm$0.14} &  \textbf{85.13$\pm$0.10} &  \textbf{89.94$\pm$0.20}\\
+%     \hline
+%     w/o SGPM-token & 90.33$\pm$0.30 & 79.85$\pm$1.00 & 91.75$\pm$0.50 & 95.61$\pm$0.47 & 84.42$\pm$0.41 & 89.38$\pm$0.46\\
+%     w/o walk-token & 88.37$\pm$1.23 & 79.70$\pm$0.71 & 92.24$\pm$0.35 & 94.81$\pm$0.44 & 83.93$\pm$0.16 & 89.60$\pm$0.35\\
+%     w/o hop-token& 90.73$\pm$0.34 & 80.19$\pm$2.32 & 91.97$\pm$0.71 & 95.80$\pm$0.30 & 85.01$\pm$0.16 & 89.35$\pm$0.36\\
+%     \hline
+%     only URW & 90.41$\pm$0.56 & 80.69$\pm$0.49 & 92.07$\pm$0.77 & 95.83$\pm$0.32 & 84.90$\pm$0.39 & 89.33$\pm$0.39\\
+%     only NBRW & 89.72$\pm$0.36 & 80.03$\pm$0.90 & 92.27$\pm$0.53 & 95.74$\pm$0.41 & 84.86$\pm$0.25 & 89.26$\pm$0.45\\
+%     only NJW & 90.80$\pm$0.66 & 80.92$\pm$0.50 & 92.38$\pm$0.70 & 95.61$\pm$0.38 & 84.70$\pm$0.44 & 89.50$\pm$0.36\\
+%     only NBNJW & 89.63$\pm$0.64 & 80.56$\pm$0.74 & 92.09$\pm$0.39 & 96.00$\pm$0.31 & 84.71$\pm$0.35 & 89.36$\pm$0.35\\
+%     \hline
+%     \end{tabular}
+%     }
+%     \end{center}
+%     \caption{Ablation Experiment. Best results are in \textbf{bold}. URW, NBRW, NJW, and NBNJW represent uniform random walk, non-backtracking random walk, neighborhood jump walk, and non-backtracking neighborhood jump walk. 
+%     %The first part compares Tokenphormer with the situation of {\em SGPM-token}, {\em walk-token} or {\em hop-token} withdrawn; The second part compares Tokenphormer with the situation of only single walk type left.
+%     }
+%     \label{tab:abla}
+% \end{table*}
+
+
+% \subsection{Experiment Details}
+
+
+% For the model configuration of Tokenphormer, in SGPM, we generate 100 non-backtracking random walks for each node on the graph as the training dataset, where the walk lengths follow a normal distribution $\mathcal{N}(\mu= $ graph radius or 10$, \sigma^2=1)$, and 20 walks are generated as the validate dataset. In the {\em walk-token} part, we generate 100 walks with lengths starting from 4 and a ratio of mixed walk types starting from $25\%:25\%:25\%:25\%$ and tune these hyper-parameters to the best. For {\em hop-token}, we fixed the hop number to 3 for all datasets. In model training, we adopt the AdamW optimizer~\cite{AdamW} and set the learning rate to $1e^{-2}$ for Flickr and Photo and $5e^{-3}$ for other datasets and weight decay to $1e^{-5}$. The dropout rate is set to $0.1$, and the Transformer head is set to 1. The batch size is set to 2000. For SGPM, as a pre-train phase, we conducted it on a Linux server with DGX-H800 (4 $\times$ NVIDIA H800 80 GB) GPU. Tokenphormer was conducted on a Linux server with 1 R9-5950X CPU and an NVIDIA RTX 3090TI (24GB) GPU.
+
+% \section{Experiments}
+% \label{Experiment}
+
+\begin{figure*}[tb]
+\centering
+\includegraphics[width=0.78\textwidth]{AllNAGTP23.png}
+\caption{Expressiveness Comparison.
+% Change of Accuracy of Tokenphormer (green line) and NAGphormer (orange line) with the increase of token number. 
+The grey dashed line denotes graph diameter. For Flickr and DBLP, the orange dashed line means the NAN result.}
+\label{allnagtp}
+\end{figure*}
+
+\subsection{Comparison of Tokenphormer with Baselines}
+Table \ref{tab:main} compares all benchmark methods (Detailed descriptions of methods and datasets can be found in Appendix B.1) with Tokenphormer for node prediction tasks. Tokenphormer's results, presented as mean values with standard deviations from 10 runs with different random seeds, demonstrate state-of-the-art performance, outperforming most baselines on six datasets of varying sizes, proving the model's effectiveness.
+
+Tokenphormer outperforms most MPNN baselines, showcasing strong generalization ability due to two factors: (1) Utilizing {\em hop-tokens} to enhance the density limit of {\em walk-tokens}, approximating layer-wise MPNN; (2) Capturing information beyond traditional MPNNs with diverse token types. As message passing layers increase, MPNNs suffer from over-smoothing and over-squashing, limiting their capacity to utilize information from distant neighbors.
+
+
+
+Tokenphormer's superiority over graph Transformer baselines is due to several advantages: (1) {\em SGPM-tokens} extend the length limit of {\em walk-token}, capturing valuable contextual and global information for each node; (2) {\em Hop-tokens} extend the density limit of {\em walk-token}, retaining essential information from neighboring nodes and maintaining local relationships; (3) {\em Walk-tokens} generated through four types of walks add flexibility in capturing information from near and far neighbors. These mechanisms enable Tokenphormer to learn node representations through fine-grained tokens, capturing intricate details and relationships across the entire graph, leading to superior performance.
+
+\subsection{Ablation Study}
+The effectiveness of various token types was verified through ablation experiments conducted on all datasets. The results, detailed in Appendix B.3, show a decrease in accuracy with the removal of any token type.
+
+Furthermore, we compared mixed walks of uniform random walks, non-backtracking random walks, neighborhood jump walks, and non-backtracking neighborhood jump walks with four single walks. The findings, which can be found in Appendix B.4, also demonstrate the superiority of mixed walks.
+
+\subsection{Expressiveness Comparison}
+
+% \begin{figure*}[htbp]
+% \centering
+% \includegraphics[width=1\textwidth]{AllNAGTP23.png}
+% \caption{\textbf{Expressiveness Comparison.} Change of Accuracy of Tokenphormer (green line) and NAGphormer (orange line) with the increase of token number. The step of token number is 10 for both methods, and the step for NAGphormer is set to 1 when token number is less than graph diameter (grey dashed line). For Flickr and DBLP, orange dashed line means NAN result. }
+% \label{allnagtp}
+% \end{figure*}
+
+
+% Take Citeseer for example, we show the expressiveness of Tokenphormer in Figure \ref{et}. The left figure shows the changing trend of accuracy as the number of Walk-tokens increases (SGPM-token number is fixed to 1 and Hop-token number is fixed to 3). The right figure shows the changing trend of NAGphormer's accuracy as the number of tokens increases, and the green dotted line above represents the average accuracy of Tokenphormer (see table \ref{tab:main}). Moreover, the maximum number of tokens in NAGphormer is set to 34. This is because the tokens in NAGphormer are converted from Hop information, and the diameter of Citeseer is 34. Therefore, when the number of tokens is 34, NAGphormer is already able to capture global information. It can be seen that as the number of tokens increases, the expression ability of Tokenphormer increases rapidly and becomes stable, while NAGphormer shows a trend of first increasing and then decreasing. At the same time, the comparison in the right picture reflects that the highest accuracy of Tokenphormer is better than that of NAGphormer, which also proves that the expressive power of multiple tokens is better than that of single hop information.
+
+
+Tokenphormer enhances model performance by utilizing a more extensive set of valuable tokens. 
+% Exposing the Transformer model to more useful tokens improves node information mining and graph structure exploration. 
+To evaluate Tokenphormer's token expressive ability with a maximum number of tokens, we conducted a thorough quantitative and qualitative analysis, comparing NAGphormer~\cite{NAGphormer} and Tokenphormer under various token number settings.
+
+For Tokenphormer, we use a step size of 10 {\em walk-tokens} to explore up to 140 {\em walk-tokens} with 1 fixed {\em SGPM-token} and 3 {\em hop-tokens}. For NAGphormer, we set step size as 1 for token numbers ranging from $1$ to graph diameter and 10 for other cases. Figure~\ref{allnagtp} shows the quantitative performance across six benchmark datasets. As the token number increases, NAGphormer's performance rises rapidly, peaks before the token number equals the graph diameter, and then declines, falling below Tokenphormer. This means that NAGphormer's Hop2Token strategy still suffers from some extent of over-smoothing with the token number's increase. Conversely, Tokenphormer improves in accuracy and becomes more stable with more tokens.
+
+% The experimental observations illustrate three key points: First, Tokenphormer demonstrates comprehensive coverage and stability, as evidenced in Section~\ref{Walk Coverage}, showcasing its robustness. Second, Tokenphormer is more fine-grained than NAGphormer, consistently distinguishing different graph structures. Third, Tokenphormer excels at capturing global information and, in some graphs, outperforms NAGphormer even with the same limited number of {\em hop-tokens}. The experimental observations illustrate three key points: First, Tokenphormer demonstrates comprehensive coverage and stability, showcasing robustness (Section~\ref{Walk Coverage}). 
+
+
+\subsection{Experiments on Heterogeneous Datasets}
+
+Three more heterogeneous datasets, including Cornell, Wisconsin, and Actor, were also evaluated (Table~\ref{hetero}). Results show that even without SGPM, Tokenphormer is comparable to other methods and highly expressive on heterogeneous graphs. 1) GCN-based models perform poorly on heterogeneous graphs as they aggregate information from directly connected nodes. 2) Some Transformer-based models perform poorly, indicating susceptibility to irrelevant noise. 3) Tokenphormer performs remarkably well, especially better than NAGphormer, indicating its ability to explore graphs comprehensively and flexibly, thus obtaining richer information for target node representation learning.
+
+\begin{table}[tbp]
+
+    \centering
+    % \fontsize{10}
+    % \resizebox{\columnwidth}{!}
+    \small
+    \setlength{\tabcolsep}{1mm}{%
+    \begin{tabular}{lcccc}
+    % \toprule
+    \hline
+    \textbf{Method} &\textbf{Year} &\textbf{Cornell}  &\textbf{Wisconsin} &\textbf{Actor}\\
+    % \midrule
+    \hline
+    GCN & 2017 & 45.67$\pm$7.96 & 52.55$\pm$4.27 &  28.73$\pm$1.17\\
+    GAT & 2017 & 47.02$\pm$7.66 & 57.45$\pm$3.51 & 28.33$\pm$1.13 \\
+    APPNP & 2018 & 41.35$\pm$7.15 & 55.29$\pm$3.90 & 29.42$\pm$0.81 \\
+    GATv2 & 2022 & 50.27$\pm$8.97 & 52.74$\pm$3.96 & 28.79$\pm$1.47 \\
+    % \midrule
+    % MLP & 2015 & 71.62$\pm$5.57 & 82.15$\pm$6.93 &  33.26$\pm$0.91\\
+    % MixHop & 2019 & 76.48$\pm$2.97 & 85.48$\pm$3.06 &  34.92$\pm$0.91\\
+    % H2GCN & 2020 & 75.40$\pm$4.09 & 77.57$\pm$4.11 &  36.18$\pm$0.45\\
+    % FAGCN & 2021 & 67.56$\pm$5.26 & 75.29$\pm$3.06 &  32.13$\pm$1.33\\
+    % GPRGNN & 2021 & 76.76$\pm$2.16 & 82.66$\pm$5.62 &  35.30$\pm$0.80\\
+    % \midrule
+    \hline
+    SAN & 2021 & 50.85$\pm$8.54 & 51.37$\pm$3.08 & 27.12$\pm$2.59 \\
+    % Gapformer(AGP-G) & 2023 &  \textbf{77.57$\pm$3.43} & 83.53$\pm$3.42 & 36.90$\pm$0.82 \\
+    Gapformer & 2023 &  \textbf{77.57$\pm$3.43} & 83.53$\pm$3.42 & 36.90$\pm$0.82 \\
+    NAGphormer & 2023 & 56.22$\pm$8.08 & 63.51$\pm$6.53 & 34.33$\pm$0.94\\
+    % \midrule
+    \hline
+    Tokenphormer & ours & 76.22$\pm$2.13 & \textbf{86.17$\pm$2.30} &  \textbf{37.01$\pm$0.83} \\
+    % \bottomrule
+    \hline
+    % \multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
+    \end{tabular}
+    }
+    \caption{Experiments on Heterogeneous Datasets. The results of Tokenphormer here are obtained without SGPM-tokens. Best results are in \textbf{bold}. The experiment results of baselines are taken from~\cite{gapformer}.}
+    \label{hetero}
+\end{table}
+
+% \begin{table}[htbp]
+
+%     \centering
+%     % \fontsize{9}
+%     % \resizebox{\columnwidth}{!}
+%     \small
+%     \setlength{\tabcolsep}{1mm}{%
+%     \begin{tabular}{lccc}
+%     % \toprule
+%     \hline
+%     \textbf{Method}&\textbf{Cornell}  &\textbf{Wisconsin} &\textbf{Actor}\\
+%     % \midrule
+%     \hline
+%     GCN & 45.67$\pm$7.96 & 52.55$\pm$4.27 &  28.73$\pm$1.17\\
+%     GAT & 47.02$\pm$7.66 & 57.45$\pm$3.51 & 28.33$\pm$1.13 \\
+%     APPNP & 41.35$\pm$7.15 & 55.29$\pm$3.90 & 29.42$\pm$0.81 \\
+%     GATv2 & 50.27$\pm$8.97 & 52.74$\pm$3.96 & 28.79$\pm$1.47 \\
+%     % \midrule
+%     % MLP & 2015 & 71.62$\pm$5.57 & 82.15$\pm$6.93 &  33.26$\pm$0.91\\
+%     % MixHop & 2019 & 76.48$\pm$2.97 & 85.48$\pm$3.06 &  34.92$\pm$0.91\\
+%     % H2GCN & 2020 & 75.40$\pm$4.09 & 77.57$\pm$4.11 &  36.18$\pm$0.45\\
+%     % FAGCN & 2021 & 67.56$\pm$5.26 & 75.29$\pm$3.06 &  32.13$\pm$1.33\\
+%     % GPRGNN & 2021 & 76.76$\pm$2.16 & 82.66$\pm$5.62 &  35.30$\pm$0.80\\
+%     % \midrule
+%     \hline
+%     SAN & 50.85$\pm$8.54 & 51.37$\pm$3.08 & 27.12$\pm$2.59 \\
+%     % Gapformer(AGP-G) & 2023 &  \textbf{77.57$\pm$3.43} & 83.53$\pm$3.42 & 36.90$\pm$0.82 \\
+%     Gapformer &  \textbf{77.57$\pm$3.43} & 83.53$\pm$3.42 & 36.90$\pm$0.82 \\
+%     NAGphormer & 56.22$\pm$8.08 & 63.51$\pm$6.53 & 34.33$\pm$0.94\\
+%     % \midrule
+%     \hline
+%     Tokenphormer & 76.22$\pm$2.13 & \textbf{86.17$\pm$2.30} &  \textbf{37.01$\pm$0.83} \\
+%     % \bottomrule
+%     \hline
+%     % \multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
+%     \end{tabular}
+%     }
+%     \caption{Experiments on Heterogeneous Datasets. The results of Tokenphormer here are obtained without SGPM-tokens. Best results are in \textbf{bold}. The experiment results of baselines are taken from~\cite{gapformer}.}
+%     \label{hetero}
+% \end{table}
+
+
+% \input{6-conclusion}
+\section{Conclusion}
+This paper proposes Tokenphormer, a novel graph Transformer architecture that addresses the limitations of MPNNs and graph Transformers by incorporating node contextual information and generating expressive tokens for each node. Specifically, to make the tokens more fine-grained, walk-tokens are generated through a diverse set of walks, incorporating four walk types with varying receptive fields to explore graphs flexibly. Moreover, comprehensiveness is ensured through SGPM-token and hop-token. SGPM-tokens are generated through SGPM to capture global information, extending the length limit of walk-tokens. Hop-tokens are generated through decoupling message passing layers to ensure comprehensive coverage of local information, expanding the density limit of walk-tokens. Tokenphormer has demonstrated state-of-the-art performance in node classification tasks across diverse graph datasets, demonstrating its effectiveness in capturing structural information from raw graphs. We believe that Tokenphormer has the potential to be used in a variety of graph downstream tasks.
+
+% This paper proposes Tokenphormer, a novel graph Transformer that overcomes the limitations of MPNNs and graph Transformers by generating fine-grained and comprehensive node tokens. Walk-tokens, created through diverse walks with varying walk tendencies and receptive fields, ensure fine-grained exploration of the graph. SGPM-tokens capture global information, extending the length limit of walk-tokens for greater comprehensiveness, while hop-tokens, generated by decoupling message-passing layers, enhance local coverage. Tokenphormer achieves state-of-the-art performance on node classification on diverse datasets, demonstrating its effectiveness for various graph tasks.
+
+\section*{Acknowledgments}
+This work was supported by the Science and Technology Development Fund Macau SAR (0003/2023/RIC, 0052/2023/RIA1, 0031/2022/A, 001/2024/SKL for SKL-IOTSC), the Research Grant of University of Macau (MYRG2022-00252-FST),  Shenzhen-Hong Kong-Macau Science and Technology Program Category C (SGDX20230821095159012), and Wuyi University joint Research Fund (2021WGALH14). This work was performed in part at SICC which is supported by SKL-IOTSC, University of Macau. 
+
+
+% \bibliography{aaai25}
+\begin{thebibliography}{49}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Agrawal et~al.(2024)Agrawal, Sirohi, Kumar et~al.}]{aaai24Recommendation}
+Agrawal, N.; Sirohi, A.~K.; Kumar, S.; et~al. 2024.
+\newblock No Prejudice! Fair Federated Graph Neural Networks for Personalized Recommendation.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, volume~38, 10775--10783.
+
+\bibitem[{Akiba, Iwata, and Kawata(2015)}]{graphDiameter}
+Akiba, T.; Iwata, Y.; and Kawata, Y. 2015.
+\newblock An exact algorithm for diameters of large real directed graphs.
+\newblock In \emph{Experimental Algorithms: 14th International Symposium, SEA 2015, Paris, France, June 29--July 1, 2015, Proceedings 14}, 56--67. Springer.
+
+\bibitem[{Alon et~al.(2007)Alon, Benjamini, Lubetzky, and Sodin}]{ALON_BENJAMINI_LUBETZKY_SODIN_2007}
+Alon, N.; Benjamini, I.; Lubetzky, E.; and Sodin, S. 2007.
+\newblock Non-backtracking random walks mix faster.
+\newblock \emph{Communications in Contemporary Mathematics}, 09(04): 585–603.
+
+\bibitem[{Alon and Yahav(2021)}]{Alon_Yahav_2020}
+Alon, U.; and Yahav, E. 2021.
+\newblock On the Bottleneck of Graph Neural Networks and its Practical Implications.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{Brody, Alon, and Yahav(2021)}]{GATv2}
+Brody, S.; Alon, U.; and Yahav, E. 2021.
+\newblock How Attentive are Graph Attention Networks.
+\newblock \emph{arXiv: Learning,arXiv: Learning}.
+
+\bibitem[{Chen et~al.(2020)Chen, Lin, Li, Li, Zhou, and Sun}]{Chen2020}
+Chen, D.; Lin, Y.; Li, W.; Li, P.; Zhou, J.; and Sun, X. 2020.
+\newblock Measuring and Relieving the Over-Smoothing Problem for Graph Neural Networks from the Topological View.
+\newblock \emph{Proceedings of the {AAAI} Conference on Artificial Intelligence}, 34(04): 3438--3445.
+
+\bibitem[{Chen et~al.(2023)Chen, Gao, Li, and He}]{NAGphormer}
+Chen, J.; Gao, K.; Li, G.; and He, K. 2023.
+\newblock NAGphormer: A Tokenized Graph Transformer for Node Classification in Large Graphs.
+\newblock In \emph{Proceedings of the International Conference on Learning Representations}.
+
+\bibitem[{Chen et~al.(2022)Chen, Zhang, U, and Li}]{NEURIPS2022_RFGNN}
+Chen, R.; Zhang, S.; U, L.~H.; and Li, Y. 2022.
+\newblock Redundancy-Free Message Passing for Graph Neural Networks.
+\newblock In Koyejo, S.; Mohamed, S.; Agarwal, A.; Belgrave, D.; Cho, K.; and Oh, A., eds., \emph{Advances in Neural Information Processing Systems}, volume~35, 4316--4327. Curran Associates, Inc.
+
+\bibitem[{Chien et~al.(2021)Chien, Peng, Li, and Milenkovic}]{GPR-GNN}
+Chien, E.; Peng, J.; Li, P.; and Milenkovic, O. 2021.
+\newblock Adaptive Universal Generalized PageRank Graph Neural Network.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{Chung(1967)}]{chung1967markov}
+Chung, K.~L. 1967.
+\newblock Markov chains.
+\newblock \emph{Springer-Verlag, New York}.
+
+\bibitem[{Contreras, Ceberio, and Kreinovich(2021)}]{dilatedConvProof}
+Contreras, J.; Ceberio, M.; and Kreinovich, V. 2021.
+\newblock Why Dilated Convolutional Neural Networks: A Proof of Their Optimality.
+\newblock \emph{Entropy}, 23(6).
+
+\bibitem[{Deng and Hooi(2021)}]{aaai21AnomalyDetection}
+Deng, A.; and Hooi, B. 2021.
+\newblock Graph neural network-based anomaly detection in multivariate time series.
+\newblock In \emph{Proceedings of the AAAI conference on artificial intelligence}, volume~35, 4027--4035.
+
+\bibitem[{Devlin et~al.(2019)Devlin, Chang, Lee, and Toutanova}]{BERT}
+Devlin, J.; Chang, M.-W.; Lee, K.; and Toutanova, K. 2019.
+\newblock BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding.
+\newblock In \emph{Proceedings of the 2019 Conference of the North}.
+
+\bibitem[{Dufter, Schmitt, and Sch{\"u}tze(2022)}]{dufter2022position}
+Dufter, P.; Schmitt, M.; and Sch{\"u}tze, H. 2022.
+\newblock Position information in transformers: An overview.
+\newblock \emph{Computational Linguistics}, 48(3): 733--763.
+
+\bibitem[{Dwivedi and Bresson(2021)}]{GT}
+Dwivedi, V.~P.; and Bresson, X. 2021.
+\newblock A Generalization of Transformer Networks to Graphs.
+\newblock \emph{AAAI Workshop on Deep Learning on Graphs: Methods and Applications}.
+
+\bibitem[{Dwivedi et~al.(2023)Dwivedi, Liu, Luu, Bresson, Shah, and Zhao}]{largeGT}
+Dwivedi, V.~P.; Liu, Y.; Luu, A.~T.; Bresson, X.; Shah, N.; and Zhao, T. 2023.
+\newblock Graph transformers for large graphs.
+\newblock \emph{arXiv preprint arXiv:2312.11109}.
+
+\bibitem[{Feng et~al.(2022)Feng, Dong, Huang, Yin, Cheng, Kharlamov, and Tang}]{GRAND+}
+Feng, W.; Dong, Y.; Huang, T.; Yin, Z.; Cheng, X.; Kharlamov, E.; and Tang, J. 2022.
+\newblock Grand+: Scalable graph random neural networks.
+\newblock In \emph{Proceedings of the ACM Web Conference 2022}, 3248--3258.
+
+\bibitem[{Gilmer et~al.(2017)Gilmer, Schoenholz, Riley, Vinyals, and Dahl}]{MPNN2_pmlr-v70-gilmer17a}
+Gilmer, J.; Schoenholz, S.~S.; Riley, P.~F.; Vinyals, O.; and Dahl, G.~E. 2017.
+\newblock Neural Message Passing for Quantum Chemistry.
+\newblock In Precup, D.; and Teh, Y.~W., eds., \emph{Proceedings of the 34th International Conference on Machine Learning}, volume~70 of \emph{Proceedings of Machine Learning Research}, 1263--1272. PMLR.
+
+\bibitem[{Hamilton, Ying, and Leskovec(2017)}]{GraphSAGE_Hamilton2017InductiveRL}
+Hamilton, W.; Ying, Z.; and Leskovec, J. 2017.
+\newblock Inductive representation learning on large graphs.
+\newblock \emph{Advances in neural information processing systems}, 30.
+
+\bibitem[{Hoeffding(1994)}]{Hoeffding}
+Hoeffding, W. 1994.
+\newblock \emph{Probability Inequalities for sums of Bounded Random Variables}, 409–426.
+
+\bibitem[{Huang et~al.(2020)Huang, Rong, Xu, Sun, and Huang}]{dropedge}
+Huang, W.; Rong, Y.; Xu, T.; Sun, F.; and Huang, J. 2020.
+\newblock Tackling over-smoothing for general graph convolutional networks.
+\newblock \emph{arXiv preprint arXiv:2008.09864}.
+
+\bibitem[{Jones(2004)}]{10.1214/154957804100000051}
+Jones, G.~L. 2004.
+\newblock {On the Markov chain central limit theorem}.
+\newblock \emph{Probability Surveys}, 1(none): 299 -- 320.
+
+\bibitem[{Kempton(2016)}]{Non-backtracking}
+Kempton, M. 2016.
+\newblock Non-backtracking random walks and a weighted Ihara's theorem.
+\newblock \emph{arXiv preprint arXiv:1603.05553}.
+
+\bibitem[{Kipf and Welling(2017)}]{GCN_kipf2017semi}
+Kipf, T.~N.; and Welling, M. 2017.
+\newblock Semi-Supervised Classification with Graph Convolutional Networks.
+\newblock In \emph{International Conference on Learning Representations (ICLR)}.
+
+\bibitem[{Klicpera, Bojchevski, and Günnemann(2018)}]{Klicpera_Bojchevski_Günnemann_2018}
+Klicpera, J.; Bojchevski, A.; and Günnemann, S. 2018.
+\newblock Predict then Propagate: Graph Neural Networks meet Personalized PageRank.
+\newblock \emph{International Conference on Learning Representations,International Conference on Learning Representations}.
+
+\bibitem[{Kong et~al.(2023)Kong, Chen, Kirchenbauer, Ni, Bruss, and Goldstein}]{GOAT}
+Kong, K.; Chen, J.; Kirchenbauer, J.; Ni, R.; Bruss, C.~B.; and Goldstein, T. 2023.
+\newblock GOAT: A global transformer on large-scale graphs.
+\newblock In \emph{International Conference on Machine Learning}, 17375--17390. PMLR.
+
+\bibitem[{Kong, Guo, and Liu(2024)}]{aaai24Traffic}
+Kong, W.; Guo, Z.; and Liu, Y. 2024.
+\newblock Spatio-Temporal Pivotal Graph Neural Networks for Traffic Flow Forecasting.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, volume~38, 8627--8635.
+
+\bibitem[{Kreuzer et~al.(2021)Kreuzer, Beaini, Hamilton, L{\'e}tourneau, and Tossou}]{Kreuzer_Beaini_Hamilton_Létourneau_Tossou_2021}
+Kreuzer, D.; Beaini, D.; Hamilton, W.; L{\'e}tourneau, V.; and Tossou, P. 2021.
+\newblock Rethinking graph transformers with spectral attention.
+\newblock \emph{Advances in Neural Information Processing Systems}, 34: 21618--21629.
+
+\bibitem[{Liu et~al.(2023)Liu, Zhan, Ma, Ding, Tao, Wu, and Hu}]{gapformer}
+Liu, C.; Zhan, Y.; Ma, X.; Ding, L.; Tao, D.; Wu, J.; and Hu, W. 2023.
+\newblock Gapformer: Graph transformer with graph pooling for node classification.
+\newblock In \emph{Proceedings of the 32nd International Joint Conference on Artificial Intelligence (IJCAI-23)}, 2196--2205.
+
+\bibitem[{Loshchilov and Hutter(2017)}]{AdamW}
+Loshchilov, I.; and Hutter, F. 2017.
+\newblock Decoupled weight decay regularization.
+\newblock \emph{arXiv preprint arXiv:1711.05101}.
+
+\bibitem[{Lov{\'a}sz(1993)}]{lovasz1993random}
+Lov{\'a}sz, L. 1993.
+\newblock Random walks on graphs.
+\newblock \emph{Combinatorics, Paul erdos is eighty}, 2(1-46): 4.
+
+\bibitem[{Mikolov et~al.(2013)Mikolov, Chen, Corrado, and Dean}]{Word2Vec}
+Mikolov, T.; Chen, K.; Corrado, G.; and Dean, J. 2013.
+\newblock Efficient Estimation of Word Representations in Vector Space.
+\newblock \emph{International Conference on Learning Representations,International Conference on Learning Representations}.
+
+\bibitem[{Pennington, Socher, and Manning(2014)}]{GloVe}
+Pennington, J.; Socher, R.; and Manning, C. 2014.
+\newblock Glove: Global Vectors for Word Representation.
+\newblock In \emph{Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP)}.
+
+\bibitem[{Radford et~al.(2018)Radford, Narasimhan, Salimans, Sutskever et~al.}]{GPT}
+Radford, A.; Narasimhan, K.; Salimans, T.; Sutskever, I.; et~al. 2018.
+\newblock Improving language understanding by generative pre-training.
+
+\bibitem[{Ramp{\'a}{\v{s}}ek et~al.(2022)Ramp{\'a}{\v{s}}ek, Galkin, Dwivedi, Luu, Wolf, and Beaini}]{rampasek2022GPS}
+Ramp{\'a}{\v{s}}ek, L.; Galkin, M.; Dwivedi, V.~P.; Luu, A.~T.; Wolf, G.; and Beaini, D. 2022.
+\newblock Recipe for a general, powerful, scalable graph transformer.
+\newblock \emph{Advances in Neural Information Processing Systems}, 35: 14501--14515.
+
+\bibitem[{Rong et~al.(2020)Rong, Bian, Xu, Xie, Wei, Huang, and Huang}]{GROVER}
+Rong, Y.; Bian, Y.; Xu, T.; Xie, W.; Wei, Y.; Huang, W.; and Huang, J. 2020.
+\newblock Self-supervised graph transformer on large-scale molecular data.
+\newblock \emph{Advances in Neural Information Processing Systems}, 33: 12559--12571.
+
+\bibitem[{Schmitt et~al.(2021)Schmitt, Ribeiro, Dufter, Gurevych, and Sch{\"u}tze}]{schmitt-etal-2021-modeling}
+Schmitt, M.; Ribeiro, L. F.~R.; Dufter, P.; Gurevych, I.; and Sch{\"u}tze, H. 2021.
+\newblock Modeling Graph Structure via Relative Position for Text Generation from Knowledge Graphs.
+\newblock In Panchenko, A.; Malliaros, F.~D.; Logacheva, V.; Jana, A.; Ustalov, D.; and Jansen, P., eds., \emph{Proceedings of the Fifteenth Workshop on Graph-Based Methods for Natural Language Processing (TextGraphs-15)}, 10--21. Mexico City, Mexico: Association for Computational Linguistics.
+
+\bibitem[{Shirzad et~al.(2023)Shirzad, Velingker, Venkatachalam, Sutherland, and Sinop}]{Exphormer}
+Shirzad, H.; Velingker, A.; Venkatachalam, B.; Sutherland, D.~J.; and Sinop, A.~K. 2023.
+\newblock Exphormer: Sparse transformers for graphs.
+\newblock In \emph{International Conference on Machine Learning}, 31613--31632. PMLR.
+
+\bibitem[{Sun et~al.(2022)Sun, Deng, Yang, Wang, Xu, Huang, Cao, Wang, and Chen}]{sun2022beyond}
+Sun, Y.; Deng, H.; Yang, Y.; Wang, C.; Xu, J.; Huang, R.; Cao, L.; Wang, Y.; and Chen, L. 2022.
+\newblock Beyond homophily: structure-aware path aggregation graph neural network.
+\newblock In \emph{Proceedings of the Thirty-First International Joint Conference on Artificial Intelligence, IJCAI}, 2233--2240.
+
+\bibitem[{Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, and Polosukhin}]{Vaswani_Shazeer_Parmar_Uszkoreit_Jones_Gomez_Kaiser_Polosukhin_2017}
+Vaswani, A.; Shazeer, N.; Parmar, N.; Uszkoreit, J.; Jones, L.; Gomez, A.~N.; Kaiser, {\L}.; and Polosukhin, I. 2017.
+\newblock Attention is all you need.
+\newblock \emph{Advances in neural information processing systems}, 30.
+
+\bibitem[{Veličković et~al.(2018)Veličković, Cucurull, Casanova, Romero, Liò, and Bengio}]{GAT_veličković2018graph}
+Veličković, P.; Cucurull, G.; Casanova, A.; Romero, A.; Liò, P.; and Bengio, Y. 2018.
+\newblock Graph Attention Networks.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{Wu et~al.(2021)Wu, Jain, Wright, Mirhoseini, Gonzalez, and Stoica}]{GraphTrans}
+Wu, Z.; Jain, P.; Wright, M.; Mirhoseini, A.; Gonzalez, J.~E.; and Stoica, I. 2021.
+\newblock Representing long-range context for graph neural networks with global attention.
+\newblock \emph{Advances in Neural Information Processing Systems}, 34: 13266--13279.
+
+\bibitem[{Xu et~al.(2018)Xu, Li, Tian, Sonobe, Kawarabayashi, and Jegelka}]{MPNN1_pmlr-v80-xu18c}
+Xu, K.; Li, C.; Tian, Y.; Sonobe, T.; Kawarabayashi, K.-i.; and Jegelka, S. 2018.
+\newblock Representation Learning on Graphs with Jumping Knowledge Networks.
+\newblock In Dy, J.; and Krause, A., eds., \emph{Proceedings of the 35th International Conference on Machine Learning}, volume~80 of \emph{Proceedings of Machine Learning Research}, 5453--5462. PMLR.
+
+\bibitem[{Ying et~al.(2021)Ying, Cai, Luo, Zheng, Ke, He, Shen, and Liu}]{Graphormer}
+Ying, C.; Cai, T.; Luo, S.; Zheng, S.; Ke, G.; He, D.; Shen, Y.; and Liu, T.-Y. 2021.
+\newblock Do transformers really perform badly for graph representation?
+\newblock \emph{Advances in Neural Information Processing Systems}, 34: 28877--28888.
+
+\bibitem[{Yu and Koltun(2016)}]{dilatedConv}
+Yu, F.; and Koltun, V. 2016.
+\newblock Multi-Scale Context Aggregation by Dilated Convolutions.
+\newblock In \emph{ICLR}.
+
+\bibitem[{Yun et~al.(2019)Yun, Jeong, Kim, Kang, and Kim}]{GT_yun2019GTN}
+Yun, S.; Jeong, M.; Kim, R.; Kang, J.; and Kim, H.~J. 2019.
+\newblock Graph transformer networks.
+\newblock \emph{Advances in neural information processing systems}, 32.
+
+\bibitem[{Zhang et~al.(2020)Zhang, Zhang, Xia, and Sun}]{Graph-Bert}
+Zhang, J.; Zhang, H.; Xia, C.; and Sun, L. 2020.
+\newblock Graph-Bert: Only Attention is Needed for Learning Graph Representations.
+\newblock \emph{arXiv: Learning,arXiv: Learning}.
+
+\bibitem[{Zhang et~al.(2022)Zhang, Liu, Hu, and Lee}]{ANS-GT}
+Zhang, Z.; Liu, Q.; Hu, Q.; and Lee, C.-K. 2022.
+\newblock Hierarchical graph transformer with adaptive node sampling.
+\newblock \emph{Advances in Neural Information Processing Systems}, 35: 21171--21183.
+
+\bibitem[{Zhao et~al.(2021)Zhao, Li, Wen, Wang, Liu, Sun, Ye, and Xie}]{Gophormer}
+Zhao, J.; Li, C.; Wen, Q.; Wang, Y.; Liu, Y.; Sun, H.; Ye, Y.; and Xie, X. 2021.
+\newblock Gophormer: Ego-Graph Transformer for Node Classification.
+\newblock \emph{CoRR}, abs/2110.13094.
+
+\end{thebibliography}
+
+
+\newpage
+\appendix
+\begin{center}
+\LARGE
+    Appendix
+\end{center}
+
+% \section{A. Proof}
+% \subsection{A.1 Proof of non-backtrakcing can be viewed as Markov chain}
+
+% Let the edge connecting node $u$ to node $v$ be denoted as $(u,v)$. The transition probability matrix $\tilde P((u,v),(x,y))$ for the non-backtracking random walk can be expressed as: 
+% \begin{equation}
+%     \tilde P((u,v),(x,y))  =\left\{
+%     \begin{array}{rcl}
+%     \displaystyle{\frac{1}{d_v-1}}       &      & {if \;  v=x, \; y\ne u}\\
+%     0                                    &      & {otherwise}\\
+%     \end{array} \right.
+% \end{equation}
+% where $d_v$ denotes the degree of node $v$.
+
+\section{Theoretical Analysis of Tokenphormer}\label{AnalysisTokenphormer}
+In this section, we conduct various analyses to evaluate the effectiveness and expressiveness of Tokenphormer. 
+%Furthermore, we analyze the coverage of walks in Subsection \ref{Walk Coverage}, providing insights into the extent to which the walks encapsulate the graph's information. 
+Through these analyses, we aim to gain a deeper understanding of the capabilities and performance of Tokenphormer in effectively representing graph data.
+
+\subsection{Analysis of Graph Documents}\label{gdAnalysis}
+
+In main content, we propose the following Lemma to examine the expressiveness of graph documents.
+
+\begin{lemma}
+Graph documents possess the capability to distinguish non-isomorphic graphs.
+\end{lemma}
+\begin{proof}
+\label{graphdocumentDis}
+Suppose $G$ is an undirected, weighted, and connected graph. If there exists an edge between two arbitrary nodes, denote as $v_i$ and $v_j$, then its weight $w_{ij}=w_{ji}>0$, else $w_{ij}=w_{ji}=0$. The transition probability of random walk from $v_i$ to $v_j$ is:
+\begin{equation}
+    P_{ij} = \frac{w_{ij}}{\sum_k{w_{ik}}}
+\end{equation}
+
+Since random walk on $G$ can be viewed as an invertible Markov chain, we have:
+\begin{equation}
+    \pi (v_i)P_{ij} = \pi (v_j)P_{ji} \rightarrow \frac{\pi (v_i)}{\sum_k w_{ik}} = \frac{\pi (v_j)}{\sum_k w_{jk}}
+\end{equation}
+
+Then, for all node $v_i$, we have:
+\begin{equation}
+    \frac{\pi (v_i)}{\sum_k w_{ik}} = C \rightarrow \pi (v_i) = C \sum_k w_{ik}
+\end{equation}
+where $C$ is a constant. Since $\pi$ is a probability distribution on all states, we have $\sum_i \pi (v_i) = 1$. Then we can get:
+\begin{equation}
+    \sum_i (C \sum_k w_{ik}) = 1 \rightarrow C = \frac{1}{\sum_i  \sum_k w_{ik}}
+\end{equation}
+
+Finally, the limiting distribution of the Markov Chain is calculated:
+\begin{equation}
+    \pi (v_i) = \frac{\sum_k w_{ik}}{\sum_i  \sum_k w_{ik}}
+\end{equation}
+
+Alternatively, in the scenario where $G$ is unweighted, i.e., the weight between two connected nodes is 1, the resulting limiting distribution of the graph document can be described as follows:
+\begin{equation}
+    \pi (v_i) = \frac{\sum_k w_{ik}}{\sum_i  \sum_k w_{ik}} = \frac{d_i}{\sum_i d_i} = \frac{d_i}{2|E|}
+\end{equation}
+
+Let $G_a$ and $G_b$ represent two arbitrary graphs. If they are isomorphic, the limiting distribution of these two graphs must equal each other. In other words, set $\pi_{ai}$ ($i \in V_{G_a}$) and set $\pi_{bj}$ ($j\in V_{G_b}$) are bijective to each other. In this case, the graph document ensures that it would not distinguish isomorphic graphs into different graphs. 
+
+If $G_a$ and $G_b$ are non-isomorphic, there are two situations. For the first situation, if $G_a$ differs from $G_b$ in $|V|$, it is clear that $\pi_a \ne \pi_b$ since the larger set between $\pi_{ai}$ and $\pi_{bj}$ is not surjective to smaller one. Thus, the graph document can easily distinguish them. For another situation, when $G_a$ and $G_b$ differs in $|V|$, $G_a$ and $G_b$ are indistinguishable to graph document if and only if $G_a$ and $G_b$ satisfy: $f(x) = x$ is bijective function when:
+\begin{equation}
+\small
+    D = \left\{ \frac{\sum_k w_{aik}}{\sum_{ai}  \sum_k w_{aik}} \Big\vert i\in V_{G_a}\right\}, 
+    R = \left\{ \frac{\sum_k w_{bjk}}{\sum_{bj}  \sum_k w_{bjk}} \Big\vert j \in V_{G_b} \right\}
+\end{equation}
+and
+\begin{equation}
+\small
+    D = \left\{ \frac{\sum_k w_{bjk}}{\sum_{bj}  \sum_k w_{bjk}} \Big\vert j \in V_{G_b} \right\}, 
+    R = \left\{ \frac{\sum_k w_{aik}}{\sum_{ai}  \sum_k w_{aik}} \Big\vert i\in V_{G_a}\right\}
+\end{equation}
+where $D$ is the domain and $R$ represents the range of rejection function $f(x) = x$. In this case, the probability for two graphs with the same $|V|$ and different structures to be indistinguishable drops rapidly with the increase of $|V|$.
+\end{proof}
+
+Under this analysis, the distinguishing ability of the graph document enables it to capture unique characteristics and structures inherent to the graph, thus obtaining high expressive power.
+
+
+%Secondly, since the neighborhood jump walk follows k-step probability propagation, the final transition probability obtained intends to jump to more important nodes in the neighborhood (nodes that are more likely to be visited, e.g., nodes with high centrality can receive a higher propagated probability).
+
+\subsection{Analysis of Walk Coverage}\label{Walk Coverage}
+
+Walk coverage pertains to the extent of information coverage within a node's neighborhood, utilizing a limited number of walks. We classify walks based on node labels to achieve this, enabling a systematic analysis of the information encapsulated within the walks. 
+
+When two walks have the same length ($k$) and share identical node labels at corresponding positions, we assume the information obtained from these walks is similar. Consequently, we classify such walks into the same information type, denoted as ${ l_1, l_2, ..., l_k }$, where $l_i$ represents the label of node $i$. By doing so, we can analyze walk coverage based on the coverage of information types present in a node's neighborhood.
+
+\begin{figure}[!t] 
+\centering
+\includegraphics[width=0.42\textwidth]{Figure_1.png}
+\caption{\textbf{Coverage Analysis.} Let $\sigma = \frac{\exp\left(-2\epsilon^2n\right)}{n}$, the figure shows the change of $\sigma$ with increase of $n$ in case of different $\epsilon$ in equation \ref{equCoverage}.}
+\label{coverageanaFig}
+\end{figure}
+
+%If two walks with same length ($k$) share same labels for nodes in corresponding position, we assume the information obtained from the two walks are similar and they can be classified to the same information type (denote as $\{ l_1, l_2, ..., l_k \}$, where $l_i$ represents the label of node $i$). Thus, walk coverage is analyzed through the coverage of information types in node's neighborhood.
+
+% walks that have at least one different label for nodes in the same position. Suppose $\{ v_1, v_2, v_3, \ldots, v_n \}$ and $\{ v_1, v_a, v_b, \ldots, v_N \}$ are two walks with the same length starting from the same node $v_1$. If any node of the same position has different labels, the two walks are considered different attributed walks. In general, nodes with the same label are expected to have similar features. This implies that a new attributed walk is generated only if nodes with dissimilar features are sampled. Hence, to capture semantic information from the neighborhood, the number of sampled attributed walks is crucial~\cite{sun2022beyond}.
+
+As proven by~\cite{sun2022beyond}, we follow a similar approach to analyzing the walk coverage. The definition of label-limited transition matrix $P^{(l)}$ is:
+\begin{equation}
+    P_{i,j}^{(l)}=
+    \begin{cases}
+        P_{i,j}, & Y_j = l \\
+        0, & \text{otherwise}
+    \end{cases}
+\end{equation}
+where $l$ denotes the specified label, $Y_j$ is the label of $v_j$ and $P_{i,j}$ is the raw transition probability of $v_i$ to $v_j$. Then the probability of $v_i$ transition to $v_j$ through the type of $\{ l_1, l_2, ..., l_k \}$ is:
+\begin{equation}
+    P^{ \{ l_1, l_2, \ldots, l_k \}} = \prod_{i=1}^{k} P^{(l_i)}
+\end{equation}
+
+Then, the probability of an information type $\{ l_1, l_2, \ldots, l_k \}$ starting from $v_S$ being sampled is:
+\begin{equation}
+    P_{S}^{\{l_1, l_2, \ldots, l_k\}} = \sum_{i=1}^{|V|} P_{S,i}^{\{ l_1, l_2, \ldots, l_k \}}
+\end{equation}
+
+Let $N_{S}^{\{ l_1, l_2, \ldots, l_k \}}$ denotes number of sampled information types in $n$ times sampling. It is clear that $N_{S}^{\{ l_1, l_2, \ldots, l_k \}}$ follows a binominal distribution:
+\begin{equation}
+    N_{S}^{\{l_1, l_2, \ldots, l_k\}} \sim B(n, P_{S}^{\{l_1, l_2, \ldots, l_k\}})
+\end{equation}
+
+At last, according to Hoeffding's inequality~\cite{Hoeffding}, we have:
+% \begin{equation}
+% \begin{aligned}
+%     P\left(\left|  \frac {N_{S}^{\{l_1, l_2, \ldots, l_k\}}}{M} - P_{S}^{\{l_1, l_2, \ldots, l_k\}} \right| > \epsilon\right) \\ 
+%     \leq 2 \exp\left(-2\epsilon^2m\right)
+% \end{aligned}
+% \end{equation}
+\begin{equation}
+    \label{equCoverage}
+    \begin{aligned}
+        D_{S}^{\{l_1, l_2, \ldots, l_k\}} = |\frac {N_{S}^{\{l_1, l_2, \ldots, l_k\}}}{n} - P_{S}^{\{l_1, l_2, \ldots, l_k\}}|\\
+        P(D_{S}^{\{l_1, l_2, \ldots, l_k\}} > \epsilon) \leq \frac{\exp\left(-2\epsilon^2n\right)}{n}
+    \end{aligned}
+\end{equation}
+where $D_{S}^{\{l_1, l_2, \ldots, l_k\}}$ stands for sampling deviation. Thus, for any $\epsilon > 0$, the probability of one information type being not sampled being larger than $\epsilon$ decreases rapidly (since $\exp\left(-2\epsilon^2n\right)$ already decreases exponentially, and $\frac{\exp\left(-2\epsilon^2n\right)}{n} \leq \exp\left(-2\epsilon^2n\right)$ when $n \ge 1$) as the number of sampled walks $n$ increases. (As shown in Fig. \ref{coverageanaFig})
+
+The above analysis demonstrates that, although covering all information from the node's neighborhood is challenging, obtaining most information is still achievable through a limited number of samplings. Our experiments also verified this point: when the number of walks increased to a certain degree, the experimental results tended to be stable, and the model reached the fitting.
+
+
+\subsection{Analysis of tokens}\label{analysistokens}
+The proposed Tokenphormer generates multiple tokens with different granularities and learns each other's weights in a fully connected scheme through the Transformer, thus alleviating the problems of over-smoothing and over-squashing. At the same time, by generating plentiful walk-based tokens, Tokenphormer is more effective in retaining structure information than other graph Transformers.
+
+\stitle{SGPM-token} Appendix~\ref{gdAnalysis} has demonstrated that the graph document can distinguish between different graphs, showcasing its proficiency in capturing the global information of the graph. The the SGPM-token, derived through SGPM, is critical in acquiring contextual information for each node within the graph document. With the generation of numerous walks for each node, the graph document ensures comprehensive coverage for every node. Additionally, the length of the graph sentence follows a normal distribution, with a mean equal to the graph's radius. This intentional design choice aligns the receptive field of the graph sentence, starting from each node, with the global characteristics of the graph. Furthermore, the graph sentences enable the exploration of far nodes by utilizing the non-backtracking random walk. This approach effectively reduces redundancy, allowing nodes to acquire diverse contexts and enriching the semantic information they gather~\cite{NEURIPS2022_RFGNN}.
+
+
+%The SGPM-token, derived through SGPM, plays a crucial role in learning contextual information for each node within the graph document. Given that hundreds of walks are generated for each node, the graph document ensures extensive coverage for every node. Furthermore, the length of the graph sentence is designed to follow a normal distribution with a mean equal to the radius of the graph. This strategic choice ensures that the receptive field of the graph sentence, starting from each node, is closely aligned with the global characteristics of the graph. Moreover, the graph sentences are generated through the non-backtracking random walk, facilitating the exploration of unknown nodes along the walk. This approach helps mitigate redundancy in the walk, providing nodes with diverse contexts and enriching the semantic information they acquire.
+
+
+\stitle{Hop-token} \label{analysis_hop}
+The hop-token comes from the decoupled message passing layer, and its calculation is:
+\begin{equation}
+    H^k = A^k X
+\end{equation}
+where $H^k$ represents the feature matrix of $k$-hop. $H_i^k$ is node $i$'s aggregated information from $k$-th layer of MPNN. {\em hop-tokens} in Tokenphormer can be viewed as MPNN with layer-wise attention added. Since MPNN already proves its expressive power in node prediction, the hop-token has the potential to achieve equal or better performance~\cite{NAGphormer}.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.385\textwidth]{pathtokenAnalysis.png}
+\caption{hop-token vs walk-token.}
+\label{hopwalk}
+\end{figure}
+
+\stitle{Walk-token}
+Instances arise where the hop-token falls short in distinguishing between certain situations. This is exemplified in Fig. \ref{hopwalk}, where (a) and (b) represent graphs with distinct structures, and (a.1) and (b.2) illustrate the message passing trees for node 1 in their respective graphs.
+%There are some situations where hop-token fails to distinguish. As shown in Fig. \ref{hopwalk}, Panels (a) and (b) are graphs with different structures, and (a.1) and (b.2) depict the message passing trees for node 1 in the respective graphs. 
+In the depicted figure, the horizontal layers can be interpreted as hop-tokens, while the vertical paths represent walk-tokens. It is evident that when considering a 2-hop message passing scenario, hop-tokens cannot differentiate between graphs (a) and (b). However, walk-tokens, exemplified by (a.2) and (b.2), exhibit the potential to distinguish between the two graphs successfully.
+
+
+
+
+\subsection{Complexity Analysis}\label{complexityAnalysis}
+The generation of all tokens in Tokenphormer can be performed beforehand. SGPM is pre-trained, so the SGPM-token can be obtained by Tokenphormer easily in $O(1)$ complexity. Moreover, walks are generated before training, and Hop-tokens can also be computed in advance. So, we only consider the complexity of Tokenphormer without the token generation phase.
+
+\stitle{Time complexity} The time complexity of Tokenphormer primarily relies on the self-attention module of the Transformer. 
+For each node in the graph, we perform computations proportional to the square of the number of tokens $N_t$ and the dimension of the feature $d_F$, thus resulting in a time complexity of $O(|V| \cdot N_t^2 \cdot d_F)$, where $|V|$ denotes the number of nodes.
+%, $N_t$ represents the number of tokens. 
+% Note that we include node itself in the input sequence of Transformer so the actual sequence length is $N_t + 1$.
+
+\stitle{Space complexity} The space complexity is determined by the number of model parameters and the outputs of each layer. It can be broken down into two main parts: 1) The Transformer layer contributes $O(d_F^2 \cdot N_L)$, where $N_L$ is the number of Transformer layers. 2) The attention matrix and hidden node representations add $O(S_b \cdot N_t^2 + S_b \cdot N_t \cdot d_F)$, where $S_b$ denotes the batch size. Thus, the total space complexity is $O(d_F^2 \cdot N_L + S_b \cdot N_t^2 + S_b \cdot N_t \cdot d_F)$. 
+
+
+
+\section{Experiment}
+\subsection{Experiment Setup}
+\stitle{Datasets}
+To comprehensively evaluate the effectiveness of Tokenphormer, we conduct experiments on six homogeneous graph datasets with varying node numbers, ranging from 2,708 to 19,717. The datasets include small-sized datasets like Cora and Citeseer (around 3,000 nodes), medium-sized datasets like Flickr and Amazon Photo (around 7,500 nodes), and large-sized datasets like DBLP and Pubmed (around 18,000 nodes). We apply a 60\%/20\%/20\% train/val/test split (consistent with Gophormer~\cite{Gophormer} and NAGphormer~\cite{NAGphormer}) for these benchmark datasets. 
+% Specifically, Cora, Citeseer, Pubmed, and DBLP~\cite{Pubmed} are citation networks in which nodes correspond to articles, and undirected edges correspond to citation links between articles. Photo~\cite{Photo} is a co-purchase network, where nodes indicate goods and edges indicate that the two connected goods are frequently bought together. Flickr~\cite{Flickr} is an image and video hosting website where users interact with each other via photo sharing. The following relationships among users can be formed a network. Each user can specify a list of tags of interest, which are considered as her attribute information. 
+The detailed dataset information is presented in Table \ref{tab1}. 
+
+\begin{table}[!hbt]
+\centering
+\small
+% \resizebox{\columnwidth}{!}
+\setlength{\tabcolsep}{1mm}{%
+\begin{tabular}{lccccc}
+\hline
+\textbf{Dataset}  & \textbf{Nodes} & \textbf{Edges} & \textbf{Classes} & \textbf{Features} & \textbf{Diameter} \\
+\hline
+Cora        & 2,708    & 5,278    & 7         & 1,433      & 19      \\
+Citeseer    & 3,327    & 4,522    & 6         & 3,703      & 28      \\
+Flickr      & 7,575    & 239,738  & 9         & 12,047     & 4      \\
+Photo       & 7,650    & 238,163  & 8         & 745        & 11      \\
+DBLP        & 17,716   & 52,864   & 4         & 1,639      & 34      \\
+Pubmed      & 19,717   & 44,324   & 3         & 500        & 18      \\
+\hline
+\end{tabular}
+}
+\caption{Statistics on datasets. Graph diameter is calculated using the method described in~\cite{graphDiameter}.}
+\label{tab1}
+\end{table}
+
+
+\stitle{Baselines} To comprehensively assess the effectiveness of Tokenphormer in the context of node classification tasks, a comparative analysis is conducted against a diverse set of 16 advanced baseline models. The evaluated models encompass eight prominent MPNN methods, including GCN~\cite{GCN_kipf2017semi}, GAT~\cite{GAT_veličković2018graph}, GraphSage~\cite{GraphSAGE_Hamilton2017InductiveRL}, APPNP~\cite{Klicpera_Bojchevski_Günnemann_2018}, JKNet~\cite{MPNN1_pmlr-v80-xu18c}, GPR-GNN~\cite{GPR-GNN}, GRAND+~\cite{GRAND+}, GATv2~\cite{GATv2} and eight innovative graph Transformer models, including GT~\cite{GT}, Graphormer~\cite{Graphormer}, SAN~\cite{Kreuzer_Beaini_Hamilton_Létourneau_Tossou_2021}, Gophormer~\cite{Gophormer}, ANS-GT~\cite{ANS-GT}, GraphGPS~\cite{rampasek2022GPS}, Exphormer~\cite{Exphormer}, Gapformer~\cite{gapformer}, and NAGphormer ~\cite{NAGphormer}. 
+
+\begin{table*}[htb!]
+    \begin{center}
+    \small
+    % \begin{tabular*}{1\textwidth}{@{}@{\extracolsep{\fill}}lcccccc@{}}
+    % \resizebox{0.8\textwidth}{!}
+    \setlength{\tabcolsep}{1mm}{%
+    \begin{tabular}{lcccccc}
+    \hline
+    \textbf{Method} &\textbf{Cora} &\textbf{Citeseer} &\textbf{Flickr} &\textbf{Photo} &\textbf{DBLP} &\textbf{Pubmed}\\
+    \hline
+    Tokenphormer&  \textbf{91.20$\pm$0.47} &  \textbf{81.04$\pm$0.24} &  \textbf{92.44$\pm$0.35} &  \textbf{96.14$\pm$0.14} &  \textbf{85.13$\pm$0.10} &  \textbf{89.94$\pm$0.20}\\
+    \hline
+    w/o SGPM-token & 90.33$\pm$0.30 & 79.85$\pm$1.00 & 91.75$\pm$0.50 & 95.61$\pm$0.47 & 84.42$\pm$0.41 & 89.38$\pm$0.46\\
+    w/o walk-token & 88.37$\pm$1.23 & 79.70$\pm$0.71 & 92.24$\pm$0.35 & 94.81$\pm$0.44 & 83.93$\pm$0.16 & 89.60$\pm$0.35\\
+    w/o hop-token& 90.73$\pm$0.34 & 80.19$\pm$2.32 & 91.97$\pm$0.71 & 95.80$\pm$0.30 & 85.01$\pm$0.16 & 89.35$\pm$0.36\\
+    \hline
+    only URW & 90.41$\pm$0.56 & 80.69$\pm$0.49 & 92.07$\pm$0.77 & 95.83$\pm$0.32 & 84.90$\pm$0.39 & 89.33$\pm$0.39\\
+    only NBRW & 89.72$\pm$0.36 & 80.03$\pm$0.90 & 92.27$\pm$0.53 & 95.74$\pm$0.41 & 84.86$\pm$0.25 & 89.26$\pm$0.45\\
+    only NJW & 90.80$\pm$0.66 & 80.92$\pm$0.50 & 92.38$\pm$0.70 & 95.61$\pm$0.38 & 84.70$\pm$0.44 & 89.50$\pm$0.36\\
+    only NBNJW & 89.63$\pm$0.64 & 80.56$\pm$0.74 & 92.09$\pm$0.39 & 96.00$\pm$0.31 & 84.71$\pm$0.35 & 89.36$\pm$0.35\\
+    \hline
+    \end{tabular}
+    }
+    \end{center}
+    \caption{Ablation Experiment. Best results are in \textbf{bold}. URW, NBRW, NJW, and NBNJW represent uniform random walk, non-backtracking random walk, neighborhood jump walk, and non-backtracking neighborhood jump walk. 
+    %The first part compares Tokenphormer with the situation of {\em SGPM-token}, {\em walk-token} or {\em hop-token} withdrawn; The second part compares Tokenphormer with the situation of only single walk type left.
+    }
+    \label{tab:abla}
+\end{table*}
+
+\subsection{Experiment Details}
+
+For the model configuration of Tokenphormer, in SGPM, we generate 100 non-backtracking random walks for each node on the graph as the training dataset, where the walk lengths follow a normal distribution $\mathcal{N}(\mu= $ graph radius or 10$, \sigma^2=1)$, and 20 walks are generated as the validate dataset. In the {\em walk-token} part, we generate 100 walks with lengths starting from 4 and a ratio of mixed walk types starting from $25\%:25\%:25\%:25\%$ and tune these hyper-parameters to the best. For {\em hop-token}, we fixed the hop number to 3 for all datasets. In model training, we adopt the AdamW optimizer~\cite{AdamW} and set the learning rate to $1e^{-2}$ for Flickr and Photo and $5e^{-3}$ for other datasets and weight decay to $1e^{-5}$. The dropout rate is set to $0.1$, and the Transformer head is set to 1. The batch size is set to 2000. For SGPM, as a pre-train phase, we conducted it on a Linux server with DGX-H800 (4 $\times$ NVIDIA H800 80 GB) GPU. Tokenphormer was conducted on a Linux server with 1 R9-5950X CPU and an NVIDIA RTX 3090TI (24GB) GPU.
+
+
+
+\subsection{Ablation Study}\label{app:ablationStudy}
+To analyze the effectiveness of {\em SGPM-token}, {\em walk-token}, and {\em hop-token}, ablation experiments are carried out on all datasets, as shown in Table \ref{tab:abla}. It can be seen that with any token dropped, the accuracy decreases to some extent.
+
+\stitle{SGPM-token} {\em SGPM-token} captures contextual and global information of the selected node. Without {\em SGPM-token}, the accuracy of Tokenphormer drops in all six datasets.
+% The experiment result proves its expressive power in node classification. 
+
+\stitle{Walk-token} Tokenphormer's accuracy decreases the most when {\em walk-token} are omitted. This is because {\em walk-tokens} are able to capture fine-grained information from a large neighborhood.
+
+\stitle{Hop-token} {\em Hop-token} ensures coverage in $k$-hop neighborhoods. However, for most datasets, large number of {\em walk-tokens} already cover all nodes in $k$-hop neighborhoods, resulting in a smaller accuracy decrease when {\em hop-token} is withdrawn.
+
+\subsection{Walk Comparison}\label{app:walkComparison}
+We compare mixed walks (uniform random walks, non-backtracking random walks, neighborhood jump walks, and non-backtracking neighborhood jump walks) with four single walks. Table \ref{tab:abla} shows that different walks vary in effectiveness across datasets, but mixed walks consistently achieve higher accuracy. For example, for citation networks like Cora and Citeseer, where information from near neighbors is crucial, walks without non-backtracking property can perform better than non-backtracking ones. For datasets like Photo, the situation changes. The non-backtracking neighborhood jump walk performs the best among all types of walks. These results indicate that mixed walks leverage the strengths of all types to enhance overall accuracy.
+
+\end{document}

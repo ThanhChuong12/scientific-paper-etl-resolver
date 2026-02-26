@@ -1,0 +1,14 @@
+The starting point of our analysis is the model proposed in Ref.~\cite{Zoller_model}, the ground state of which is the target state of our present preparation protocol. It is given by a free Hamiltonian $H_0$ consisting of two quantum chains with a nearest-neighbor hopping $t$ and a pair hopping term $H_W$, which read
+\begin{align}
+H_0 &= -t\sum_{\gamma = \mathrm{a,b}}\sum_{j = 1}^{L-1} \left[(c_{\gamma,j}^\dagger c_{\gamma,j+1} + c_{\gamma,j+1}^\dagger c_{\gamma,j}) \right], \nonumber \\ 
+H_W &= W \sum_{j = 1}^{L-1} \left[c_{\mathrm{a},j}^\dagger c_{\mathrm{a},j+1}^\dagger c_{\mathrm{b},j} c_{\mathrm{b},j+1} + \text{H.c.} \right], \label{Eqn:Zoller_model}
+\end{align}
+where $c_{\gamma,j}$ annihilates a fermion at site $j$ of wire $\gamma = \mathrm{a,b}$.
+An experimental implementation with ultracold atoms in optical lattices is discussed in detail in the original publication \cite{Zoller_model}. Energy is measured in units of the hopping amplitude such that $t = 1$. Unless stated otherwise, we set $W = -1.8$, use \gls{obc}, and work at a fixed (even) particle number $N_\mathrm{tot} = N_\mathrm{a} + N_\mathrm{b}$ such that the filling fraction is $\nu = \frac{1}{3}$. For these parameters, a Majorana phase protected by the wire parity $P_\mathrm{a} = (-1)^{N_\mathrm{a}}$ emerges \cite{Tu_et_al, Fidkowski_et_al, Halperin_Sarma, Zoller_model}, see also Fig.~\ref{Fig:illustration_c}.
+
+To facilitate the adiabatic transition between the Mott state and the Majorana phase, we introduce two perturbations in the form of an interchain tunneling $H_\phi$ and a staggered chemical potential $H_\mu$, reading
+\begin{align}
+H_\phi &= r \sum_{j = 1}^L  \left[ e^{2 \pi i \phi j}c_{\mathrm{a},j}^\dagger c_{\mathrm{b},j} + e^{-2 \pi i \phi j}c_{\mathrm{b},j}^\dagger c_{\mathrm{a},j} \right], \label{Eqn:H_phi} \\
+H_\mu &= \mu \sum_{\gamma = \mathrm{a, b}} \sum_{j = 1}^L \left[n_{\gamma, 3j -2}  - n_{\gamma, 3j}\right ], \label{Eqn:H_mu}
+\end{align}
+where all parameters are real. $H_\phi$ threads an artificial magnetic flux $\phi$ through each plaquette of the ladder and breaks the protecting $\mathbb Z_2$ symmetry for any value of $\phi$. However, as we derive later on from the bosonization picture (see Sec.~\ref{Sec:Bosonization}), interchain \gls{bs} is necessary to drive the system away from the critical point and induce a stable topologically trivial phase. This requires a flux $\phi$ that is commensurate with the filling fraction, hence we choose $\phi = \nu = \frac{1}{3}$ in the following unless stated otherwise. The role of the staggered chemical potential $H_\mu$ will be to introduce a single particle gap at filling $\nu = \frac{1}{3}$ and stabilize the Mott state (cf. Fig.~\ref{Fig:illustration_a}). Both perturbation terms are well within reach of current experimental techniques \cite{Ultracold_atoms_1, Ultracold_atoms_2, Hall_Ribbons}.	

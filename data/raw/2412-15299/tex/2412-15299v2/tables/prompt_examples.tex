@@ -1,0 +1,15 @@
+\begin{table*}[h!]
+\centering
+\small
+\begin{tabular}{l||l}
+\toprule
+\textbf{Zero-Shot}                                                                  & Transcribe following Romanized sentence into a \{lang\} sentence: \{roman\}.                                                                                                                                                                                                 \\ \midrule
+\textbf{Few-Shot}                                                                   & \begin{tabular}[l]{@{}l@{}}Here are some examples of transcribing a Romanized sentence into a \{lang\} sentence: \{shots\}.\\Considering the examples above, transcribe the following Romanized sentence into a \{lang\} sentence: \{roman\}.\end{tabular}                     \\ \midrule
+\textbf{Zero-Shot CoT}                                                              & Transcribe the following Romanized sentence into a \{lang\} sentence. Think step by step: \{roman\}.                                                                                                                                                                            \\ \midrule
+\textbf{\begin{tabular}[l]{@{}l@{}}Few-Shot +\\ Zero-Shot CoT\end{tabular} }        & \begin{tabular}[l]{@{}l@{}}Here are some examples of transcribing a Romanized sentence into a \{lang\} sentence: \{shots\}.\\Considering the examples above, transcribe the following Romanized sentence into a \{lang\} sentence. \\Think step by step: \{roman\}.\end{tabular} \\ \midrule
+
+\textbf{\multirow{2}{*}{\begin{tabular}[l]{@{}l@{}}Prompt\\Chaining\end{tabular}}} & \begin{tabular}[l]{@{}l@{}}Transcribe the following Romanized sentence into a \{lang\} sentence, based on its pronunciation: \{roman\}.\end{tabular}\\ \cmidrule{2-2} & \begin{tabular}[l]{@{}l@{}}Correct the typographical and spacing errors in the following \{lang\} sentence: \{pred\}.\end{tabular}     \\ \bottomrule                                 
+\end{tabular}%
+\caption{Specific format of the prompt. \textit{roman} refers to the predicted Romanized transcription, \textit{shots} indicates generated examples sampled from the training data, \textit{pred} denotes output from first prompt and \textit{lang} indicates the name of the language.}
+\label{prompt_example_tab}
+\end{table*}

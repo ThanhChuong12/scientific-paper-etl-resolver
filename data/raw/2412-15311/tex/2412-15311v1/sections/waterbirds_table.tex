@@ -1,0 +1,128 @@
+ % !TEX root = ../main.tex
+ 
+
+ 
+ 
+ \iffalse
+\begin{table*}[t]
+\begin{center}
+%\caption{Experimental results of robust scaling (RS) on the Waterbirds dataset using ResNet-50 with the average of three runs (standard deviations in parenthesis).
+%\textit{Gain} indicates the average (standard deviations) of performance improvement of RS for each run.
+\caption{Experimental results of RS and IRS on the Waterbirds dataset using ResNet-50 with the average and standard deviation of three runs, where RS and IRS are applied to maximize each target metric independently.
+{RS and IRS improve both robust and average accuracies consistently.}
+}
+%\vspace{0.2cm}
+\label{tab:waterbirds}
+%\vspace{-2mm}
+\scalebox{0.8}{
+\hspace{-0.3cm}
+\setlength\tabcolsep{8pt} 
+\begin{tabular}{l|cc|cccccc}
+\toprule
+& \multicolumn{2}{c|}{Robust Coverage}  & \multicolumn{6}{c}{Accuracy (\%)}\\
+Method & Worst-group & Unbiased &  Worst-group & (Gain) & Unbiased & (Gain) &  Average  & (Gain) \\
+\hline
+ERM   & - & - &76.3 (0.8) & - &89.4 (0.6) & - &{97.2 (0.2)} & - \\
+ERM + RS  &{76.1 (1.4)} & {82.6 (1.3)}  &{81.6 (1.9)} &+5.3 (1.3)  &{89.8 (0.5)} &+0.4 (0.4)  
+&{97.5 (0.1)} & +0.4 (0.2) \\
+ERM + IRS  &\textbf{83.4 (1.1)} &\textbf{86.9 (0.4)} &\textbf{89.3 (0.5)} & +13.0 (0.9) &\textbf{92.7 (0.4)} &+3.3 (0.7) &\textbf{97.5 (0.3)} &+0.3 (0.4)\\
+\hline
+CR   & - & - &76.1 (0.7) & - &89.1 (0.7) & - &{97.1 (0.3)} & - \\
+CR + RS  & {73.6 (2.3)}&{82.0 (1.5)} &{79.4 (2.4)} &+3.4 (1.8)  &{89.4 (1.0)}  &+0.3 (0.4)  &\textbf{97.5 (0.3)} & +0.4 (0.1) \\
+CR + IRS  & \textbf{84.2 (2.5)} & \textbf{88.3 (1.0)} & \textbf{88.2 (2.7)} & +12.2 (2.1) & \textbf{92.1 (0.7)} & +3.1 (0.1) & 97.4 (0.2) & +0.3 (0.2)\\
+\hline
+SUBY  & - & - &72.8 (4.1) & - &84.9 (0.4) & -  &{93.8 (1.5)} & - \\
+SUBY + RS  & {72.5 (1.0)}&{81.2 (1.4)} &{75.9 (4.4)} &+3.4 (1.8)  &{86.3 (0.9)}  &+2.3 (0.9)  &{95.5 (0.2)} & +1.7 (1.1)\\
+SUBY + IRS  & \textbf{78.8 (2.7)} & \textbf{85.9 (1.0)}  & \textbf{82.1 (4.0)} & +9.3 (1.1) & \textbf{89.1 (0.9)} & +4.2 (1.0)& \textbf{96.2 (0.6)} &+2.4 (1.4) \\
+%\hline
+%LfF~\cite{LfF} & &-  & -&77.0(2.7) & - &87.1(1.9) & - & {93.4(1.8)} & -  \\
+%%LfF + RS  &\textbf{78.1(2.2)} & \textbf{87.7(1.3)} &89.7(2.1) \\
+%LfF + RS  & &75.7(2.7) & {80.9(0.4)}&\textbf{79.5(2.5)} &+2.6(2.1) & \textbf{88.2(1.1)}  &+1.1(0.9)  &\textbf{94.8(1.9)} & +1.4(1.2)\\
+%\hline
+%%JTT~\cite{JTT}  & &- & -&81.5(2.5) &88.0(1.8) & {88.6(2.8)}  \\
+%%JTT + RS  & &{74.9(3.0)}  & {81.7(1.7)}&\textbf{82.5(2.6)} & \textbf{88.1(1.8)} & \textbf{88.8(2.0)} \\
+%JTT~\cite{JTT}  & &- & -& 86.7(0.3) & - & 90.2(0.2) & - & {92.6(0.3)} & - \\
+%JTT + RS  & &{83.0(0.5)}  & {84.6(0.6)}&\textbf{88.2(0.7)} &+1.4(0.7)  & \textbf{90.3(0.2)} &+0.1(0.1) & \textbf{92.9(0.4)} & +0.4(0.2)\\
+\hline
+%& \multirow{3}{*}{\checkmark} 
+GR$^\ast$    &- & -&86.1 (1.3) & - &89.3 (0.9) & - &{95.1 (1.3)} & -  \\
+GR$^\ast$ + RS     &{83.7 (0.3)} & {86.8 (0.7)}&\textbf{89.3 (1.3)} &+3.2 (2.0)  &{92.0 (0.7)} &+2.7 (1.3)  & {95.4 (1.3)} & +0.4 (0.2)\\
+GR$^\ast$ + IRS   & \textbf{84.8 (1.7)} &\textbf{87.4 (0.4)} &89.1 (0.8) & +3.0 (1.6)  & \textbf{92.2 (1.0)} & +2.9 (1.6) & \textbf{95.6 (0.8)} &+0.6 (0.3) \\
+\hline
+SUBG$^\ast$ & - & -  & 86.5 (0.9) & - & 88.2 (1.2) & - & 87.3 (1.1) & - \\
+SUBG$^\ast$ + RS & 80.6 (2.0) & 82.3 (2.0) & {87.1 (0.7)} &+0.6 (0.5)  & \textbf{88.5 (1.2)} & +0.3 (0.3)  & {91.3 (0.4)} & +4.0 (0.9)\\
+SUBG$^\ast$ + IRS & \textbf{82.2 (0.8)} & \textbf{84.1 (0.8)} & \textbf{87.3 (1.3)} & +0.8 (0.6) & 88.2 (1.2) & +0.0 (0.2) & \textbf{93.5 (0.4)} &+6.2 (1.5)\\
+\hline
+Group DRO$^\ast$   & - & -&88.0 (1.0) & - &92.5 (0.9) & - &{95.8 (1.8)} & - \\
+Group DRO$^\ast$ + RS   & {83.4 (1.1)}&{87.4 (1.4)} &{89.1 (1.7)} &+1.1 (0.8)  &{92.7 (0.8)}  &+0.2 (0.1)  & {96.4 (1.5)} & +0.5 (0.5)\\
+Group DRO$^\ast$ + IRS   & \textbf{86.3 (2.3)} & \textbf{90.1 (2.6)} & \textbf{90.8 (1.3)} & +2.8 (1.5) & \textbf{93.9 (0.2)} & +1.4 (0.9) & \textbf{97.1 (0.4)} & +1.2 (0.8) \\
+\bottomrule
+\end{tabular}
+ }
+\end{center}
+%  \vspace{-0.2cm}
+\end{table*}
+\fi
+
+
+
+
+
+
+
+
+\begin{table*}[t]
+\begin{center}
+%\caption{Experimental results of robust scaling (RS) on the Waterbirds dataset using ResNet-50 with the average of three runs (standard deviations in parenthesis).
+%\textit{Gain} indicates the average (standard deviations) of performance improvement of RS for each run.
+\caption{Experimental results of RS and IRS on the Waterbirds dataset using ResNet-50 with the average of three runs (standard deviations in parenthesis), where RS and IRS are applied to maximize each target metric independently.
+}
+%\vspace{0.2cm}
+\label{tab:waterbirds}
+ \scalebox{0.8}{
+ \hspace{-0.3cm}
+\setlength\tabcolsep{6pt} 
+\begin{tabular}{lc|cc|cccccc}
+\toprule
+& Group  & \multicolumn{2}{c|}{Robust Coverage}  & \multicolumn{6}{c}{Accuracy (\%)}\\
+Method & Supervision & Worst-group & Unbiased &  Worst-group & (Gain) & Unbiased & (Gain) &  Average  & (Gain) \\
+\hline
+ERM   & & - & - &76.3 (0.8) & - &89.4 (0.6) & - &{97.2 (0.2)} & - \\
+ERM + RS  & &{76.1 (1.4)} & {82.6 (1.3)}  &{81.6 (1.9)} &+5.3 (1.3)  &{89.8 (0.5)} &+0.4 (0.4)  
+&{97.5 (0.1)} & +0.4 (0.2) \\
+ERM + IRS  & &\textbf{83.4 (1.1)} &\textbf{86.9 (0.4)} &\textbf{89.3 (0.5)} & +13.0 (0.9) &\textbf{92.7 (0.4)} &+3.3 (0.7) &\textbf{97.5 (0.3)} &+0.3 (0.4)\\
+\hline
+CR   & & - & - &76.1 (0.7) & - &89.1 (0.7) & - &{97.1 (0.3)} & - \\
+CR + RS  & & {73.6 (2.3)}&{82.0 (1.5)} &{79.4 (2.4)} &+3.4 (1.8)  &{89.4 (1.0)}  &+0.3 (0.4)  &\textbf{97.5 (0.3)} & +0.4 (0.1) \\
+CR + IRS  & & \textbf{84.2 (2.5)} & \textbf{88.3 (1.0)} & \textbf{88.2 (2.7)} & +12.2 (2.1) & \textbf{92.1 (0.7)} & +3.1 (0.1) & 97.4 (0.2) & +0.3 (0.2)\\
+\hline
+SUBY~\cite{idrissi2022simple}   & & - & - &72.8 (4.1) & - &84.9 (0.4) & -  &{93.8 (1.5)} & - \\
+SUBY + RS  & & {72.5 (1.0)}&{81.2 (1.4)} &{75.9 (4.4)} &+3.4 (1.8)  &{86.3 (0.9)}  &+2.3 (0.9)  &{95.5 (0.2)} & +1.7 (1.1)\\
+SUBY + IRS  & & \textbf{78.8 (2.7)} & \textbf{85.9 (1.0)}  & \textbf{82.1 (4.0)} & +9.3 (1.1) & \textbf{89.1 (0.9)} & +4.2 (1.0)& \textbf{96.2 (0.6)} &+2.4 (1.4) \\
+%\hline
+%LfF~\cite{LfF} & &-  & -&77.0(2.7) & - &87.1(1.9) & - & {93.4(1.8)} & -  \\
+%%LfF + RS  &\textbf{78.1(2.2)} & \textbf{87.7(1.3)} &89.7(2.1) \\
+%LfF + RS  & &75.7(2.7) & {80.9(0.4)}&\textbf{79.5(2.5)} &+2.6(2.1) & \textbf{88.2(1.1)}  &+1.1(0.9)  &\textbf{94.8(1.9)} & +1.4(1.2)\\
+%\hline
+%%JTT~\cite{JTT}  & &- & -&81.5(2.5) &88.0(1.8) & {88.6(2.8)}  \\
+%%JTT + RS  & &{74.9(3.0)}  & {81.7(1.7)}&\textbf{82.5(2.6)} & \textbf{88.1(1.8)} & \textbf{88.8(2.0)} \\
+%JTT~\cite{JTT}  & &- & -& 86.7(0.3) & - & 90.2(0.2) & - & {92.6(0.3)} & - \\
+%JTT + RS  & &{83.0(0.5)}  & {84.6(0.6)}&\textbf{88.2(0.7)} &+1.4(0.7)  & \textbf{90.3(0.2)} &+0.1(0.1) & \textbf{92.9(0.4)} & +0.4(0.2)\\
+\hline
+GR    & \multirow{3}{*}{\checkmark} &- & -&86.1 (1.3) & - &89.3 (0.9) & - &{95.1 (1.3)} & -  \\
+GR + RS     & &{83.7 (0.3)} & {86.8 (0.7)}&\textbf{89.3 (1.3)} &+3.2 (2.0)  &{92.0 (0.7)} &+2.7 (1.3)  & {95.4 (1.3)} & +0.4 (0.2)\\
+GR + IRS     & & \textbf{84.8 (1.7)} &\textbf{87.4 (0.4)} &89.1 (0.8) & +3.0 (1.6)  & \textbf{92.2 (1.0)} & +2.9 (1.6) & \textbf{95.6 (0.8)} &+0.6 (0.3) \\
+\hline
+SUBG~\cite{idrissi2022simple}  & \multirow{3}{*}{\checkmark} & - & -  & 86.5 (0.9) & - & 88.2 (1.2) & - & 87.3 (1.1) & - \\
+SUBG + RS & & 80.6 (2.0) & 82.3 (2.0) & {87.1 (0.7)} &+0.6 (0.5)  & \textbf{88.5 (1.2)} & +0.3 (0.3)  & {91.3 (0.4)} & +4.0 (0.9)\\
+SUBG + IRS & & \textbf{82.2 (0.8)} & \textbf{84.1 (0.8)} & \textbf{87.3 (1.3)} & +0.8 (0.6) & 88.2 (1.2) & +0.0 (0.2) & \textbf{93.5 (0.4)} &+6.2 (1.5)\\
+\hline
+Group DRO~\cite{GroupDRO}   & \multirow{3}{*}{\checkmark} & - & -&88.0 (1.0) & - &92.5 (0.9) & - &{95.8 (1.8)} & - \\
+Group DRO + RS   & & {83.4 (1.1)}&{87.4 (1.4)} &{89.1 (1.7)} &+1.1 (0.8)  &{92.7 (0.8)}  &+0.2 (0.1)  & {96.4 (1.5)} & +0.5 (0.5)\\
+Group DRO + IRS   & & \textbf{86.3 (2.3)} & \textbf{90.1 (2.6)} & \textbf{90.8 (1.3)} & +2.8 (1.5) & \textbf{93.9 (0.2)} & +1.4 (0.9) & \textbf{97.1 (0.4)} & +1.2 (0.8) \\
+\bottomrule
+\end{tabular}
+ }
+\end{center}
+  \vspace{-3mm}
+\end{table*}

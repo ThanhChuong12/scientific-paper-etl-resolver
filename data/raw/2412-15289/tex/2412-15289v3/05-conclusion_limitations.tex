@@ -1,0 +1,43 @@
+\secvspace
+\section{Conclusion} % 不能到 page 9
+We present a LLM jailbreak paradigm called simple assistive task linkage. We employ Mask Language Model and Element Lookup by Position as assistive tasks in the paradigm, and introduce SATA-MLM and SATA-ELP jailbreak attack, respectively. 
+We show that SATA achieves superior performance compared to strong baselines across latest closed-source, open-sourced and reasoning models (\eg GPT-4o, Deepseek-R1) on AdvBench and/or JBB-Behaviors datasets, demonstrating the effectiveness of the paradigm. % address limitation 2 % , with assistive tasks,
+Furthermore, SATA is cost-efficient for its average input token usage when performing jailbreak. % address limitation 1
+% robust to defense
+% can jailbreak reasoning LLMs to a certain degree
+We hope our study can contribute to building safer LLMs in collaboration with the entire community.
+
+
+
+\section{Limitations}
+First, in our exploration of assistive tasks, we have found that the Masked Language Model (MLM) variant is particularly effective for executing jailbreak attacks. However, there may exist more effective assistive tasks for this purpose, which we leave for future investigation.
+
+Moreover, we hypothesize that SATA can be adapted for multi-modal LLM jailbreaks. However, due to budget constraints and the substantial computational cost, we have not empirically tested its effectiveness in multi-modal scenarios.
+
+% Finally, this study remains largely empirical and lacks interpretability. It would be interesting to analyze how the internal representations~\cite{arditi2024refusal} of LLM shift with SATA and we leave it for future work.
+
+
+
+% While our jailbreak paradigm is effective, we conjecture that they could be mitigated through the chain-of-thought (CoT)~\cite{weiChainofThoughtPromptingElicits} generation process (\eg OpenAI o1). The reason is that the CoT may evaluate the intent of a query in a holistic manner after completing the assistive task, potentially exposing the malicious intent of the harmful instruction during the intermediate steps and causing the LLM to refuse to respond to the jailbreak query. However, due to the API access restriction, we cannot evaluate the jailbreak attacks on OpenAI o1.
+
+% Furthermore, this study remains largely empirical and lacks interpretability. It would be interesting to analyze how the internal representations~\cite{arditi2024refusal} of LLM shift with SATA and we leave it to future work. % It would be interesting to analyze how SATA influences the internal representations of LLMs~\cite{arditi2024refusal}.
+
+% 极少数情况下(比如儿童色情)，因为安全原因，LLM会拒绝创建关于masked contents的wiki词条。（but so what, 此时还可以使用retrieved wiki entry...retrieve和synthesize对性能影响不大，主要影响的是cost
+
+
+
+\section{Ethical Consideration}
+This work presents a paradigm for automatically generating jailbreak prompts to elicit harmful content from closed-source and open-source LLMs. The aim of our work is to strengthen LLM safety as well as highlight the importance of continuously improving the safety alignment of LLMs. However, the techniques presented in this work can be exploited by any dedicated team that attempts to utilize LLMs for harmful purposes. 
+
+Despite the risks involved, we believe it is important to fully disclose our study to foster discussions on the vulnerabilities of LLMs revealed through our jailbreaks and to encourage collaboration across the AI community to develop more countermeasures and safety protocols that can prevent the exploitation of LLMs for malicious activities. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+% We conclude two main limitations of this paper: 
+
+% 资源有限，只选了representative victim modlels，没有跑更多victim models
+% (1) Due to budget constraints, we primarily evaluate SATL paradigm on prevalent state-of-the-art LLMs, and we focus on single-turn jailbreak prompt generation in generation.
+
+% 防御方面不能抵抗CoT范式的生成方式
+% (2) We conjecture that BAZINGA jailbreak can fail if the generation of LLM response is performed in a chain-of-thought (CoT) manner (\eg gpt4-o1). For example, we adapt AdaShield-S\footnote{AdaShield is a reminder-based multimodal LLM jailbreak defense method, which simplify and simulate the CoT process by firstly evaluating the whole semantic / intention of the adversarial prompt, and then deciding whether to respond the query.} to defend against BAZINGA as well as baselines, and we find all these method become invalid (see the detailed evaluation results in Appendix YYYY). In future work, we will extend the idea to jailbreak such CoT paradigm.

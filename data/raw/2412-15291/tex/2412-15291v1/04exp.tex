@@ -1,0 +1,142 @@
+
+
+
+\section{Beyond Accuracy: Insights and Future Directions Beneath Results}
+\label{Beyond}
+
+In \S \ref{sec:pipeline}, we proposed a voting prediction pipeline (\S \ref{subsec:v3}) that demonstrated high accuracy using the ratio metric Eq. (\ref{eq:prob}). This section delves deeper by introducing additional evaluation metrics and analyzing the broader implications of the results.
+
+Using these metrics, we revisit the 2020 and 2024 state-level predictions to evaluate pipelines' overall accuracy and examine systematical biases toward political parties (\S \ref{subsec:study1}). Finally, we analyze how LLM simulations align with real-world demographic trends and discuss strategies for mitigating bias and enhancing the robustness of future LLM-based election forecasting methods (\S \ref{subsec:study2}).
+
+
+
+\np{Additional Evaluation Metrics}
+We consider additional three evaluation metrics to assess our predictions against actual election results: \textbf{Weighted Absolute Error (WAE)} (Eq. (\ref{WAE})), \textbf{Weighted Mean Squared Error (WMSE)} (Eq. (\ref{WMSE})), and \textbf{Bias Metric (BM)} (Eq. (\ref{BM})). These metrics provide a comprehensive evaluation of model performance. WAE and WMSE measure the degree of alignment between predicted proportions and actual outcomes, with WMSE placing greater emphasis on larger errors due to its squared formulation. BM quantifies systematic biases, indicating whether the predictions consistently favor one party over the other. Together, these metrics offer a nuanced understanding of both the magnitude of prediction errors and the potential biases within the pipelines.
+See Appx. \ref{appx.metrics} for details.
+
+
+
+\subsection{Result Analysis on Systematical Accuracy and Bias}
+\label{subsec:study1}
+To align our evaluation of the 2020 and 2024 pipelines with other studies, we selected 11 swing and tipping-point states as the scope for analysis.
+\begin{table}[!ht]
+\centering
+\scalebox{0.7}{
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Metric}              & \textbf{Vanilla (\%)} & \textbf{V2 (\%)} & \textbf{V3 (\%)} \\ \hline
+Weighted Absolute Error      & 22.78                & 14.97             & \textbf{5.24}    \\ \hline
+Weighted Mean Squared Error  & 5.46                 & 2.34              & \textbf{0.37}    \\ \hline
+Bias Metric (BM)             & -22.78               & -14.97            & \textbf{0.34}    \\ \hline
+\end{tabular}
+}
+% \caption{Evaluation results across three pipelines for the selected states 2020}
+\caption{
+Evaluation metrics for the 2020 election simulation across three pipelines (Vanilla, V2, and V3). 
+% Lower Weighted Absolute Error (WAE) and Weighted Mean Squared Error (WMSE) indicate more accurate predictions. The Bias Metric (BM) measures directional bias (positive: Republican bias; negative: Democratic bias). 
+V3 achieves the lowest errors and minimal bias, showing substantial improvement over the simpler approaches.
+}
+\vspace{-0.1in}
+\label{tab:evaluation_results_2020}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\scalebox{0.63}{
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Metric}              & \textbf{Vanilla (\%)} & \textbf{V2 (\%)} & \textbf{V3 (\%)} & \textbf{C (\%)} \\ \hline
+Weighted Absolute Error      & 21.35                & 25.96             & \textbf{3.49}     & 4.70             \\ \hline
+Weighted Mean Squared Error  & 4.83                 & 6.89              & \textbf{0.22}     & 0.30             \\ \hline
+Bias Metric (BM)             & -21.35               & -25.96            & -2.95             & 1.26             \\ \hline
+\end{tabular}}
+% \caption{Evaluation results for the 2024 election across three stages and one comparison group (TSP need cite here) for the selected states}
+\caption{
+Evaluation metrics for the 2024 election simulation comparing three pipeline versions (Vanilla, V2, V3) and one external comparison model (C, from \cite{zhang2024electionsimmassivepopulationelection}). 
+As with 2020, V3 achieves the most accurate results (lowest WAE and WMSE). Although BM remains slightly negative for V3, it is greatly reduced compared to the Vanilla and V2 pipelines, indicating a less biased prediction. 
+The comparison model (C) performs competitively, but does not surpass V3.
+}
+\vspace{-0.1in}
+\label{tab:evaluation_results_2024}
+\end{table}
+
+\np{Results Analysis of 2020}
+We begin our extended analysis by examining the model performances on the 2020 election. Table~\ref{tab:evaluation_results_2020} presents the results for three pipelines: Vanilla (V1), V2, and V3. 
+Here, WAE and WMSE serve as measures of how closely predicted vote proportions match the actual results, while the BM indicates the presence and direction of any systematic lean.
+For the 2020 simulation, the Vanilla pipeline shows substantial bias towards Democratic Party, as evidenced by its large negative BM value and correspondingly high error rates. 
+Incorporating time-dependent information in V2 reduces both WAE and WMSE compared to Vanilla, but still a notable Democratic skew persists, indicated by a still-negative BM. 
+In contrast, V3 significantly lowers both absolute and squared errors and nearly eliminates bias, achieving a BM close to zero. This improvement confirms that the multi-step reasoning approach employed by V3—incorporating ideological placement and time-sensitive data—effectively counters the model’s initial skew and enhances overall accuracy.
+
+\np{Results Analysis of 2024}
+We next turn to the 2024 predictions. Table~\ref{tab:evaluation_results_2024} compares the same three pipelines with an additional external comparison model (C) from \cite{zhang2024electionsimmassivepopulationelection}. The pattern observed in 2020 holds true in 2024: Vanilla and V2 again exhibit marked bias toward the Democratic Party, reflected in large negative BM values. 
+Although V3 still shows a slight Democratic lean (BM = -2.95), it is significantly less than in the simpler pipelines. V3 also attains the lowest WAE and WMSE, outperforming both the earlier pipelines and the comparison model C. 
+Not only does this suggest that the design principles in V3 generalize well across different election years, but it also demonstrates that structured reasoning, richer contextual inputs, 
+and ideological self-placement can improve forecasting accuracy and reduce skew even when compared to other leading approaches.
+
+
+\noindent
+\textbf{\textit{Future Direction 1: Addressing Embedded Political Skewness in Pretrained Corpora}.}  
+The persistent Democratic skew in simpler pipelines and the residual bias in V3 hint at deeper sources of imbalance in the pretrained corpus. 
+These biases could arise from uneven coverage of political perspectives or disproportionate representation of certain ideologies in the training data \cite{jenny2024exploringjunglebiaspolitical}. 
+Addressing this challenge involves examining the corpus composition, adopting balanced data selection strategies, and exploring model-level techniques—such as adversarial debiasing or targeted prompt engineering—to mitigate inherent skew. 
+By addressing these root causes, future election forecasting models can achieve more balanced and trustworthy predictions, ultimately providing a more reliable tool for political analysis and decision-making \cite{li2024politicalllmlargelanguagemodels}.%cite the political-llm survey haha~
+\vspace{-0.1in}
+
+
+
+\subsection{Result Analysis on LLM-Simulated Voting Patterns}
+\label{subsec:study2}
+
+Beyond examining aggregated errors and directional biases, it is important to determine whether the LLM’s predictions capture the demographic patterns observed in real-world voting behavior. 
+We focus on four demographic dimensions—gender, ethnicity, age, and education—identified by Pew Research Center’s 2020 study, \textit{Behind Biden’s 2020 Victory} \cite{pew2021biden}, as pivotal factors influencing voter preferences.
+To facilitate this comparison, we aggregated over 200,000 simulated personas across all selected states in 2020, categorizing each persona as either Republican or Democratic based on their predicted votes (excluding non-preference votes). 
+We then examined how these personas’ preferences aligned with the demographic patterns reported by Pew. %Since V3 exhibited the lowest 
+
+
+\begin{figure}[!t]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/race_gender_margin_plot-cropped-6.pdf}
+        \caption{Gender and Race Gap: LLM Simulated vs. Pew Report}
+        \label{fig:race_gender_gap}
+    \end{subfigure}
+    \vspace{-0.1in}
+
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/age_margin_plot-cropped-3.pdf}
+        \caption{The Age Gap: LLM Simulated vs. Pew Report}
+        \label{fig:age_gap}
+    \end{subfigure}
+    \vspace{-0.1in}
+
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/education_margin_plot_with_gap-cropped-2.pdf}
+        \caption{The Education Gap: LLM Simulated vs. Pew Report}
+        \label{fig:education_gap}
+    \end{subfigure}
+    \vspace{-0.2in}
+    \caption{LLM-simulated voting gaps across various demographic dimensions: race and gender (a), age (b), and education (c). Each subfigure shows how the LLM’s predictions vary across key demographic factors.
+    %\yz{the font is still too small ~} -- Hope this is okay ~
+    }
+    \vspace{-0.3in}
+    \label{fig:demographic_gaps}
+\end{figure}
+
+
+
+Figure~\ref{fig:demographic_gaps} illustrates these comparisons.
+Directionally, the LLM aligns with Pew’s observations: men, white voters, older adults, and those with lower educational attainment lean more Republican, mirroring established voting patterns. 
+However, the magnitude of these differences is substantially overstated. 
+For instance, while Pew’s data suggest that males only had about a 4\% margin in favor of Trump and females about an 11\% margin in favor of Biden, the LLM’s simulations inflate these margins to 47.6\% among males and 45.6\% among females. 
+Similarly, Pew’s data show more modest differences across racial and educational groups, whereas the LLM produces far larger gaps, implying a tendency to reinforce stereotypes rather than reflect real-world proportions.
+
+
+\noindent
+\textbf{\textit{Future Direction 2: Mitigating the Exacerbation of Stereotypical Biases}.}  
+While the LLM’s ability to replicate the directional trends found in real-world data is encouraging, the large overemphasis on these demographic distinctions raises concerns\cite{chang2024llmsgeneratestructurallyrealistic}. 
+Such exaggerations risk reinforcing harmful stereotypes and potentially misrepresenting demographic groups. 
+Moving forward, research should concentrate on developing techniques to calibrate LLM outputs, refine prompt designs, or incorporate counterbalancing information, all aimed at producing simulations that are both directionally accurate and proportionally realistic\cite{park2024generativeagentsimulations1000}. Ensuring that LLM-based electoral forecasts maintain fairness, rather than amplifying stereotypes, is a critical step toward building more ethical and reliable computational social science tools.
+\vspace{-0.1in}

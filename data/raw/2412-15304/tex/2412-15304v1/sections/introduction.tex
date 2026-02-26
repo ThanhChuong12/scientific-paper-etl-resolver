@@ -1,0 +1,88 @@
+\section{Introduction}
+We have seen considerable interest in machine learning models based on transformer architecture~\cite{vaswani2023attention}. They are trained across modalities: Models trained on textual data have given rise to large language models~(LLMs)~\cite{devlin2018bert, llm_gpt2, llm_gpt3, llm_gpt4, llm_gemini}, which are now widely used for interaction with computers through chatbots. Similarly, models that are trained on images~\cite{rombach2022high} can now generate photorealistic visuals.  Models that can generate music are also trained on analog information like acoustic data~\cite{huang2018musictransformer}. Nonetheless, we find that a common thread across these models is the scaling of the training data size. This follows the observation that larger training datasets result in models that can provide more accurate responses while demonstrating general-purpose capabilities~\cite{emergent_abilities, scaling_laws, agi_gpt4}.
+
+At a high level, a machine-learning model is defined by its parameters—weights that the model learns during training. The larger the model, the more parameters it has, and the more data it requires to effectively learn from training~\cite{scaling_laws, compute_optimal_LLM}. State-of-the-art (SoTA) models now reach hundreds of billions of parameters~\cite{llm_llama3, llm_gpt3}, posing significant challenges due to elevated computational demands. 
+
+As parameter size grows, so do the memory and processing requirements for training and inference, limiting the feasibility of training and using these models on commodity computing systems. Typically, a model of tens to hundreds of billions of parameters requires clusters of expensive graphical processing units~(GPU) running for a prolonged period~\cite{carbon_emissions}, making this task highly challenging and infeasible for most people and organizations. For example, the Llama 3.1 70B variant required approximately 7 million GPU hours on Nvidia H100-80GB hardware, while the 405B variant required over 31 million GPU hours~\cite{llm_llama3}. Using 16,000 GPUs for pre-training, this translates to around 20 days of training for the 70B model and 78 days for the 405B model.
+
+
+\begin{figure}[t!]
+      \includegraphics[width=1\columnwidth]{figures/overview_v1.pdf}
+  \vspace{-4mm}
+  \caption{\emph{An embedded application often involves sensors that collect environmental data, which is then communicated to an edge device. \system\space provides a framework for training foundational models tailored for edge deployment, enabling these models to support a variety of tasks. This work explores training custom foundational models to enhance sensor data analysis. Our approach demonstrates a significantly smaller parameter-sized model than state-of-the-art language models, facilitating high-accuracy sensor data analysis while enabling rapid, local inference on even a constrained edge platform.}}
+  \vspace{-4mm}
+  \label{fig:overview}
+\end{figure}
+
+Beyond training, a larger parameter size model also negatively impacts the inference process. This is a step where the weights are loaded into memory and then used to answer queries through prompts provided by the user. As parameter size grows, so do the memory and processing requirements for inference, limiting the feasibility of using these models on commodity systems~\cite{llm_inferencing,memory_constraint, energy_llms}. For instance, loading a 70B parameter model in half-precision (FP16) would require at least 140GB of memory, exceeding the capacity of most GPUs. Today, even high-specification workstations struggle with memory bandwidth limitations, leading to the rise of alternative strategies to tackle model scaling~\cite{llm_llama3, squeeze_llm, smoothquant}. Consequently, the dominant mode of accessing models from mobile and edge devices has become function calls over a network to remotely hosted models. However, this approach introduces several challenges, including latency issues, unpredictable network conditions, and privacy concerns related to sharing sensitive information.
+
+
+
+% Even with sufficient resources to load a model, inference time—the time needed for the model to generate a response—becomes a bottleneck. Today, even high-specification workstations face difficulties performing inference efficiently on SoTA models.
+
+\begin{figure}[t!]
+  \includegraphics[width=\linewidth]{figures/training_v2.pdf}
+  \vspace{-4mm}
+  \caption{\emph{\system\space trains a custom foundational model for deployment at the edge device following a series of steps. It begins by appending a curated dataset with general conversational data. After pre-processing, the dataset is tokenized to pre-train a small model~(30-120M parameter). The pre-trained model undergoes fine-tuning with the custom dataset before deployment on the edge device to support embedded applications.}}
+    \vspace{-4mm}
+  \label{fig:training}
+\end{figure}
+
+A promising approach to tackle this challenge is explicitly trading off parameter size. A smaller parameter-sized model requires proportionally smaller memory and computing resources and can also perform inference faster, even on devices with constrained processing capabilities such as edge computers. \system\space framework builds on this approach.
+
+%However, even these smaller models remain too large for embedded sensing platforms, as they often require a few gigabytes of RAM and consist of billions of parameters. This includes recent state-of-the-art models like Llama 3.2-1B and others. Today, a high-end platform in embedded sensing applications may only support tens to hundreds of megabytes of memory, such as single-board computers like Raspberry Pi.
+
+\fakepar{\system\space Framework Overview}  We systematically study various trade-offs, models, and architectures and design a framework to pre-train foundational models from scratch. This framework is tailored to deploy such models at the edge. We prototype it for a challenging case related to embedded sensing, finding that much smaller models, with only tens of millions of parameters—orders of magnitude smaller than SoTA models—are sufficient for sensor data inference. We consolidate these insights into a framework called \system, meaning “more” in Swedish and “own” in Hindi. Pre-trained on carefully curated data, these smaller models offer significant benefits for embedded sensing applications. They can run locally on constrained edge platforms and perform rapid inference on modestly configured edge and mobile devices.
+
+\fakepar{\system\space Design} \system\space simplifies the process for end-users to train custom foundational models for deployment at the edge. Users only need to provide a suitable training or fine-tuning dataset, and the framework manages the remaining steps to create a tailored foundational model. Performing this process involves following steps, as illustrated in Figure~\ref{fig:training}.
+
+The first step involves preparing the dataset as the foundation for pre-training a model. Users can provide their dataset; however, even for smaller custom models, large amounts of data are typically required. It may be necessary to augment this data with relevant datasets related to language and conversation. \system\space facilitates this process by preparing the dataset for pre-training and offering a pre-curated collection that users can use to complement their datasets, ensuring an effective pre-training process.
+
+The next step in the framework involves processing the data, which is crucial due to the diverse application scenarios requiring custom foundational models. For instance, in embedded sensing applications, even a simple sensor like an accelerometer may record motion across different axes. However, variations in resolution, sampling modes (analog vs. digital), and other intricacies can introduce inconsistencies. This step ensures data consistency by separating individual sensor readings by timestamp and organizing them into rows and columns. Additionally, it performs basic preprocessing tasks, such as removing unnecessary characters or spaces to fit the data within the model’s context window. Tokenization is the final step in the processing of the data.
+
+Next, the framework involves training the foundational models. The framework adopts an architecture similar to existing models like GPT-2, which has proven effective for creating smaller models. Our results show that this approach achieves high accuracy for sensor data analysis. Additionally, the architecture allows flexibility in configuring parameter sizes as low as 30 million. While training these smaller foundational models still requires a GPU, the overall computing resources are minimal. For instance, we completed training on a single  Nvidia H100 in just a few hours.
+
+After pre-training the model, we found that through extensive experiments, despite careful curation of the dataset, smaller models may still struggle to achieve high accuracy for specific applications. Therefore, fine-tuning becomes crucial to enhance their performance. The framework efficiently manages this step, requiring only a small set of examples for fine-tuning. Specifically, we employed the LoRa method for fine-tuning, significantly reducing the number of samples needed compared to traditional machine learning methods. For instance, in hand gesture sensing one of the use cases presented in the work. We only required 440 examples for the model to achieve high accuracy in detecting future events.
+
+%Using a dataset involving YYY, we successfully fine-tuned the custom model with only YYY examples, ensuring optimal performance for the target application.
+
+Once the custom model is trained and fine-tuned, it can be deployed on an edge device to support embedded sensing applications. While smaller models are generally expected to struggle with tasks involving mathematical operations and reasoning—key elements in many sensor data analysis tasks—we intentionally used these as a challenging test case for our system. Surprisingly, we found that smaller models can be highly effective for embedded sensing analysis and, in some cases, even outperform much larger models with significantly greater parameter sizes.
+
+\fakepar{Summary of Results} The key results are:
+
+\begin{itemize}
+  \item We present a framework that supports two primary tasks: (1) training smaller models for edge deployment on user-defined datasets and (2) fine-tuning these models or off-the-shelf LLMs on domain-specific datasets. We demonstrate this by training five smaller models, ranging from 30M to 124M parameters, following the GPT-2 architecture. We also fine-tuned other models, such as Phi 2, Phi 3, and Llama 2, Llama 3.
+  \item We compare the accuracy of smaller custom models trained through our framework, with fewer than 125M parameters, against larger models with billions of parameters across different IoT sensor datasets, including our collected and external datasets. Our results demonstrate that these smaller models perform comparably to larger ones while requiring significantly fewer GPU resources and less training time. 
+  
+  \item We investigate the suitability for deployment of smaller models on resource-constrained edge platforms and demonstrate that they lead to significantly faster inference or token generation rates.
+\end{itemize}
+
+
+%One solution that this work focuses on is using smaller models that can run locally within the limited constraints of edge devices.  trading parameter size for reduced accuracy, these models can enable local inference to edge devices at a reasonable token generation rate. Today, models with a few billion parameters already demonstrate capabilities to perform specialized tasks and can run locally on mobile devices. However, these models typically train on general data with little control over the source, remaining general-purpose for tasks. Consequently, they may not suit numerous applications without appropriate fine-tuning, and even then, they may be too large or insufficiently capable for specific applications.
+
+
+
+
+
+
+
+%Today, we find that even the highest configuration workstation str
+
+%Even high-end workstations struggle to perform inference on some of the largest language models, like Llama 3-405B. 
+
+%Consequently, due to the computational requirements, today, applications relying on these models often make calls to a LLM hosted remotely. 
+
+
+
+
+
+
+
+
+
+%Indeed, moderately sized LLMs find it challenging to perform inference in a reasonable time on edge devices.
+
+
+
+
+

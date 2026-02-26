@@ -1,0 +1,184 @@
+\section{APPENDIX FOR REPRODUCIBILITY}
+\subsection{Related Work}
+\subsubsection{Diffusion Models}\label{sec::diffusion}
+The diffusion model is a probabilistic generative model first introduced by Sohl-Dickstein et al.~\cite{sohl2015deep} and further improved by Ho et al. ~\cite{ho2020denoising} and Song et al. ~\cite{song2020score}. As a novel generative model, diffusion models have rapidly advanced in time series and spatio-temporal modeling. 
+Research on time series modeling based on diffusion models is widely applied, such as time series imputation ~\cite{alcaraz2022diffusion,liu2023pristi}, time series generation~\cite{lim2023regular,lin2023diffusion}, and time series forecasting~\cite{li2022generative,bilovs2022modeling}. 
+DiffSTG~\cite{wen2023diffstg} is the first attempt to generalize the widespread denoising diffusion probabilistic models to spatiotemporal graphs (STGs), leading to a novel non-autoregressive framework. 
+KSTDiff~\cite{zhou2023towards} designed a knowledge-enhanced denoising network to capture the spatiotemporal dependencies of urban flows and the influence of the urban environment in the denoising process.
+DiffTraj~\cite{zhou2023towards} is a spatiotemporal diffusion probabilistic model for trajectory generation. This model effectively combines the generative capabilities of diffusion models with spatiotemporal features derived from real trajectories.
+In this work, we introduce the diffusion model for unified mobility prediction adapted to different data types.
+
+\subsection{Datasets Details}\label{sec::datasets_info}
+We conducted extensive experiments on three real-world mobility datasets: Shanghai, Senegal, and Xinjiang. The details of datasets are summarized in Table~\ref{table:datasets}. We preprocess the trajectory data for three datasets, filtering out users with fewer than five records per day. For location preprocessing, we map GPS points to predefined grid IDs of a specific granularity. For temporal preprocessing, we organize the time data into fixed intervals, such as hourly or half-hourly segments. Finally, we divide the data into training, validation, and testing sets in a 7:1:2 ratio in chronological order. 
+
+% dataset table
+\begin{table}[h]
+\setlength{\abovecaptionskip}{0.cm}
+\setlength{\belowcaptionskip}{-0.cm}
+\caption{Basic statistics of mobility datasets.}
+\label{table:datasets}
+\begin{center}
+\scalebox{0.9}{
+\begin{tabular}{ >{\centering\arraybackslash}m{1cm} 
+>{\centering\arraybackslash}m{1cm} 
+>{\centering\arraybackslash}m{1.2cm} 
+>{\centering\arraybackslash}m{1cm}
+>{\centering\arraybackslash}m{1cm}
+>{\centering\arraybackslash}m{1cm}}
+ \hline
+City  & Duration & Users & Location \\ 
+ \hline
+Shanghai & 7 days & 700000 & 4096 \\ 
+Senegal & 14 days & 8000 & 1666 \\ 
+Xinjiang & 28 days & 1200000 & 4096\\ 
+\hline
+\end{tabular}}
+\end{center}
+\vspace{-0.3cm}
+%\vspace{-20px}
+\end{table}
+
+\subsection{Baselines}\label{sec::baselines}
+To evaluate the performance of our proposed model, we compared it with state-of-the-art models. Previous methods could only accomplish one type of mobility data prediction task, so the baseline methods are divided into trajectory and flow prediction. 
+
+\paragraph{Flow Prediction} The baselines for flow prediction are as follows:
+\begin{itemize}[leftmargin=*]
+\item \textbf{HA}~\cite{sun2020predicting}: It considers the inflow and outflow to be seasonal processes and employs the average of the previous seasons as the prediction for a week-long period. 
+\item \textbf{VAR}~\cite{lu2016integrating}: This method is vector autoregressive single-step predictor.
+\item \textbf{ST-ResNet}~\cite{zhang2017deep}: ST-ResNet employs the residual neural network framework to model the temporal closeness, period, and trend properties of crowd flow.
+\item \textbf{MSDR}~\cite{liu2022msdr}: Multi-Step Dependency Relationship (MSDR) is a brand new variant of recurrent neural networks. Instead of only looking at the hidden state from the latest time step, MSDR explicitly takes those from multiple historical time steps as the input of each time unit.
+\item \textbf{STID}~\cite{shao2022spatial}: A simple multi-layer perceptron addresses the indistinguishability of time series samples in spatial and temporal dimensions.
+\item \textbf{PriSTI}~\cite{liu2023pristi}: This method extracts coarse but effective spatiotemporal dependencies from conditional information using a diffusion model, serving as a global context prior.
+\end{itemize}
+
+
+
+\paragraph{Trajectory Prediction} The baselines for trajectory prediction are as follows:
+\begin{itemize}[leftmargin=*]
+\item \textbf{Markov Model}~\cite{gambs2012next}: The Markov model is a statistical model used to describe the change of states over time. It uses historical trajectory data for location prediction by calculating the transition probabilities between these locations.
+\item \textbf{LSTM}~\cite{Kong2018HST}: The LSTM network is good at handling sequential data and has the advantage of encoding long-term dependencies, which can naturally be applied to location prediction.
+\item \textbf{DeepMove}~\cite{feng2018deepmove}: The method designs a multimodal embedding recurrent neural network to capture complex sequential transitions by jointly embedding multiple factors that control human mobility.
+\item \textbf{STAN}~\cite{luo2021stan}: This model associates non-contiguous but functionally similar visited points that are not adjacent to each other to predict the next location.
+\item \textbf{SNPM}~\cite{yin2023next}: The method constructs a Sequence-based, Dynamic Neighbor Graph (SDNG) to find the similarity neighborhood and develop a Multi-Step Dependency Prediction model.
+\item \textbf{TrajGDM}~\cite{chu2024simulating}: The method utilizes diffusion models to capture the universal mobility pattern in a trajectory dataset for trajectory prediction.
+\item \textbf{GETNext}~\cite{yang2022getnext}: The method employs a global trajectory flow map and a novel Graph Enhanced Transformer model to leverage collaborative signals for more accurate trajectory prediction.
+\end{itemize}
+
+\begin{table}[h]
+\small
+\centering
+\caption{Overall Performance on Xinjiang datasets.}
+\vspace{-0.3cm}
+\scalebox{0.9}{
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Flow Prediction}} & \multicolumn{3}{c}{\textbf{Trajectory Prediction}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+& \textbf{MAE} & \textbf{MAPE(\%)} & \textbf{RMSE}
+& \textbf{Acc@1} & \textbf{Acc@3} & \textbf{Acc@5}\\
+\midrule
+HA & 33.16 & 30.54 & 44.28 & - & - & - \\
+VAR & 23.90 & 22.15 & 36.63 & - & - & - \\
+ST-ResNet & 19.72 & 17.36 & 31.56 & - & - & - \\
+MSDR & 17.95 & 16.53 & 29.60 & - & - & - \\
+STID & 17.01 & 15.70 & 27.36 & - & - & - \\
+PriSTI & \underline{16.80} & \underline{15.37} & \underline{26.47} & - & - & - \\
+Markov & - & - & - & 0.3156 & 0.3924 & 0.4571 \\
+LSTM & - & - & - & 0.3847 & 0.4519 & 0.5450 \\
+DeepMove & - & - & - & 0.4261 & 0.5143 & 0.6318 \\
+STAN & - & - & - & 0.4432 & 0.5307 & 0.6609 \\
+SNPM & - & - & - & 0.4618 & 0.5574 & 0.6926 \\
+GETNext & - & - & - & 0.4650 & 0.5598 & 0.6975 \\
+TrajGDM & - & - & - & \underline{0.4673} & \underline{0.5632} & \underline{0.7054} \\
+UniMob-v1 & 16.31 & 14.91 & 25.98 & 0.4768 & 0.5795 & 0.7217 \\
+UniMob-v2 & 15.96 & 14.72 & 25.54 & 0.4815 & 0.5853 & 0.7286 \\
+UniMob-v3 & 16.12 & 14.84 & 25.70 & 0.4791 & 0.5830 & 0.7253 \\
+UniMob-v4 & \bf{15.87} & \bf{14.50} & \bf{25.19} & \bf{0.4841} & \bf{0.5897} & \bf{0.7336} \\
+%Improvement & 5.54\%  &	5.66\%	& 4.84\% &	3.60\% &	4.71\%	& 4.00\% \\
+\bottomrule
+\end{tabular}
+}
+%\vspace{-0.3cm}
+\label{tab:Xinjiang}
+\end{table}
+
+
+\begin{table*}[t]
+\small
+\centering
+\caption{Ablation study on Xinjiang datasets.}
+\vspace{-0.3cm}
+\scalebox{1.}{
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Trajectory Prediction}} & \multicolumn{3}{c}{\textbf{Flow Prediction}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+& \textbf{Acc@1} & \textbf{Acc@3} & \textbf{Acc@5}
+& \textbf{MAE} & \textbf{MAPE(\%)} & \textbf{RMSE}\\
+\midrule
+Ours & 0.4768 & 0.5795 &  0.7217 & 16.31 & 14.91 & 25.98 \\
+w/o I2C loss & 0.4736 (-0.67\%) & 0.5730 (-1.12\%) &  0.7125 (-1.28\%)
+ & 16.78 (-2.88\%) & 15.43 (-3.49\%) & 27.02 (-4.00\%) \\
+w/o C2I loss & 0.4689 (-1.66\%) & 0.5671 (-2.14\%) &  0.7064 (-2.12\%)
+ & 16.46 (-0.92\%) & 15.08 (-1.14\%) & 26.90 (-3.54\%) \\
+w/o shared transformer & 0.4702 (-1.39\%) & 0.5693 (-1.76\%)
+ & 0.7091 (-1.75\%) & 16.67 (-2.21\%) & 15.29 (-2.55\%)
+ & 26.97 (-3.81\%)
+ \\
+w/o flow data & 0.4639(-2.71\%) & 0.5620(-3.02\%)
+ & 0.6998(-3.03\%) & - & - & - \\
+w/o trajectory data & - & - & - & 16.87(-3.43\%)
+ & 15.56(-4.36\%) & 27.20(-4.70\%) \\
+\bottomrule
+\end{tabular}
+}
+%\vspace{-0.3cm}
+\label{tab:Ablation2}
+\end{table*}
+
+
+
+\section{Experimental Performance}\label{sec::Results}
+\subsection{Overall Performance}\label{sec::Overall Performance}
+Table~\ref{tab:Xinjiang} shows the performance of our universal mobility prediction model on the Xinjiang dataset. UniMob not only accomplishes both trajectory and flow predictions simultaneously but also surpasses current advanced baseline models in all evaluation metrics. Specifically, it achieves 5.34\% performance improvement in flow prediction and more than 4\% enhancement in trajectory prediction. These results fully demonstrate the generality and reliability of our model.
+
+
+
+
+
+\subsection{Ablation study}\label{sec::ablation}
+We conducted ablation experiments on two aspects: model design and data utilization. By sequentially removing components of the model design, we identified three design elements that align with different data formats and distributions, each impacting performance, thus validating their effectiveness. Regarding data utilization, by replacing multi-type data with single-type data, we visually demonstrated the performance enhancement brought by using multi-type mobility data in human mobility prediction through our universal model.
+
+
+
+
+
+
+\subsection{Noise Perturbation}\label{sec::noise}
+
+\begin{figure}[t]
+\centering
+\subfigure[Flow prediction]{\includegraphics[width=.23\textwidth]{figure/xinjiang_noisy_flow.pdf}}
+\vspace{-0.5cm}
+\subfigure[Trajectory prediction]{\includegraphics[width=.23\textwidth]{figure/xinjiang_noisy_trajectory.pdf}}
+\caption{Flow and trajectory prediction with noisy data on Xinjiang dataset.} 
+%\vspace{-0.3cm}
+\label{fig:noisy}
+\end{figure}
+
+Due to biases from sensor collection and artificial noise added for privacy protection, the data used for mobility prediction often contains noise. To verify whether our model can still maintain good predictive capabilities in noisy conditions, we added noise to both the flow and trajectory data. Figure~\ref{fig:noisy} shows that as noise levels increase, our model continues to outperform the best baseline model, and our performance advantage becomes even more pronounced relative to the baseline with increasing noise. This effectively demonstrates the high robustness of our UniMob model.
+
+
+
+\subsection{Few-shot Performance}\label{sec::few-shot}
+Similarly, due to data collection and privacy protection limitations, the amount of mobility data we acquire is often limited. Therefore, we tested the few-shot learning capabilities of our UniMob model. As shown in Figure~\ref{fig:low}, our model still performs excellently even in a data-constrained environment.
+
+\begin{figure}[t]
+\centering
+\subfigure[Flow prediction]{\includegraphics[width=.23\textwidth]{figure/xinjiang_low_flow.pdf}}
+\vspace{-0.5cm}
+\subfigure[Trajectory prediction]{\includegraphics[width=.23\textwidth]{figure/xinjiang_low_trajectory.pdf}}
+\caption{Flow and trajectory prediction with scarce data on Xinjiang dataset.} 
+%\vspace{-0.3cm}
+\label{fig:low}
+\end{figure}

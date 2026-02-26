@@ -1,0 +1,131 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[preprint]{acl}
+
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{xspace}
+\usepackage{subcaption}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{xcolor}
+% \newcommand{\ours}{{LLM4Elect}\xspace}
+% \usepackage{draftwatermark}
+\definecolor{darkred}{rgb}{0.55, 0.0, 0.0}
+\input{dfn}
+
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
+
+% \title{Who Will Win 2024 US Election? A Prediction Result Based on Large Language Models}
+
+% \title{Towards More Accurate US Presidential Election via Multi-step Reasoning with Large Language Models}
+
+% \title{\ours: A Large-scale Empirical Study on Large Language Models for Election Prediction}
+
+
+\title{A Large-scale Empirical Study on Large Language Models for Election Prediction}
+
+
+\author{
+  \textbf{Chenxiao Yu\textsuperscript{1}}, 
+  \textbf{Zhaotian Weng\textsuperscript{1}}, 
+  \textbf{Yuangang Li\textsuperscript{1}}, 
+  Zheng Li\textsuperscript{2}, 
+  Xiyang Hu\textsuperscript{3\textsuperscript{†}}, 
+  Yue Zhao\textsuperscript{1\textsuperscript{†}} \\
+  \textsuperscript{1}University of Southern California \quad
+  \textsuperscript{2}Arima \quad
+  \textsuperscript{3}Carnegie Mellon University \\
+  \texttt{\{cyu96374, wengzhao, 
+yuangang, yzhao010\}@usc.edu}, \\\texttt{winston@arimadata.com}, \texttt{xiyanghu@cmu.edu} \\
+  \textsuperscript{†}Corresponding authors
+}
+
+
+
+\begin{document}
+\maketitle
+
+% \SetWatermarkText{Ongoing Work -- \today}
+% \SetWatermarkScale{0.1}
+% \SetWatermarkColor[gray]{0.7}
+
+% \twocolumn[
+% \vspace{-5mm} % Adjust spacing
+% \begin{center}
+%     \noindent\rule{0.75\textwidth}{0.4pt}  % Horizontal line, 75% of page width
+%     \vspace{1mm}  % Add space below the line if needed
+%     \textbf{Ongoing Work -- \today}  % Centered text
+% \end{center}
+% \vspace{3mm} % Optional: Add space below the announcement
+% ]
+
+
+
+\begin{abstract}
+\input{00abstract}
+\end{abstract}
+
+
+
+\input{01intro}
+\input{03method}
+\input{04exp}
+\input{02related}
+\input{05conclusion}
+
+
+% Bibliography entries for the entire Anthology, followed by custom entries
+%\bibliography{anthology,custom}
+% Custom bibliography entries only
+\bibliography{references}
+
+\clearpage
+\newpage
+
+\appendix
+
+\input{06_appendix}
+
+
+% This is an appendix.
+
+\end{document}

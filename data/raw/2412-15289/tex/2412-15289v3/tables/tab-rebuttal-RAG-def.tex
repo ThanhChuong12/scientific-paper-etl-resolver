@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+  \centering
+  \resizebox{0.49\textwidth}{!}{
+    \begin{tabular}{lcc}
+    \toprule
+     & \textbf{claude-v2} & \textbf{gpt-4o-mini} \\
+    \midrule
+    SATA-MLM & \pt{68} & \pt{94} \\
+    \textit{with} RAG (2 chunks) & 48\% (\textcolor{red}{\pt{20}$\downarrow$}) & 84\% (\textcolor{red}{\pt{10}$\downarrow$})\\
+    \textit{with} RAG (4 chunks) & 48\% (\textcolor{red}{\pt{20}$\downarrow$}) & 82\% (\textcolor{red}{\pt{12}$\downarrow$})\\
+    \bottomrule
+    \end{tabular}%
+    }
+    \caption{ASR of SATA-MLM under the RAG defense, using two or four retrieved chunks as context for the victim LLMs. Results are reported on the AdvBench dataset with the \texttt{ensemble} configuration.}
+  \label{tab:rebuttal-rag-defense}%
+\end{table}%

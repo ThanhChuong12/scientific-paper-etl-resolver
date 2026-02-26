@@ -1,0 +1,270 @@
+\section*{Supplementary Material}
+\setcounter{section}{0}
+\setcounter{figure}{0}
+\setcounter{table}{0}
+\makeatletter 
+\renewcommand{\thesection}{\Alph{section}}
+\renewcommand{\theHsection}{\Alph{section}}
+\renewcommand{\thefigure}{A\arabic{figure}} % Figure counter representation
+\renewcommand{\theHfigure}{A\arabic{figure}} % Hyperref figure hyperlink hook
+% \renewcommand{\thefigure}{A\@arabic\c@figure}
+\renewcommand{\thetable}{A\arabic{table}}
+\renewcommand{\theHtable}{A\arabic{table}}
+\makeatother
+
+\renewcommand{\thetable}{A\arabic{table}}
+\setcounter{equation}{0}
+\renewcommand{\theequation}{A\arabic{equation}}
+
+
+
+\section{Details of Multi-Step LLM
+Pipeline}
+
+\subsection{Dataset Details}
+\label{appx:datasets}
+
+\subsubsection{Real-world Data by American National Election Studies (ANES)}
+
+For evaluation, we use data from the ANES 2016 and 2020 Time Series Studies \cite{ANES2016, ANES2020}, which provide 4,270 and 8,280 real-world samples, respectively, from individuals who participated in the 2016 and 2020 elections. 
+The dataset includes a wide range of variables: (1) racial/ethnic self-identification, (2) gender, (3) age, (4) ideological self-placement on a conservative-liberal scale, (5) party identification, (6) political interest, (7) church attendance, (8) frequency of discussing politics with family and friends, (9) patriotic feelings associated with the American flag (unavailable in 2020), and (10) state of residence (unavailable in 2020). Additionally, the dataset records how individuals voted in both the 2016 and 2020 elections.
+Previous studies, such as \citet{Argyle_Busby_Fulda_Gubler_Rytting_Wingate_2023}, have evaluated GPT-3 using this dataset. We apply our method directly to this established benchmark to assess its effectiveness and performance.
+
+\subsubsection{Synthetic Personas for the U.S. Population}
+
+In addition to the medium-sized benchmark dataset, we utilize synthetic demographic data derived from a 1:1 synthetic population dataset of the United States \cite{li2020sync}. 
+Synthetic data plays a crucial role in social and applied sciences, with recent applications in water quality estimation \cite{chia2023artificial}, financial modeling \cite{potluru2023synthetic}, tourist profiling \cite{merinov2023behaviour}, and measuring the social impact of engineered products \cite{stevenson2023creating}. 
+High-quality synthetic datasets provide researchers with large-scale data at a lower cost while maintaining privacy, making them a reliable resource.
+
+For our purposes, the synthetic data enables the creation of a cost-effective, large-scale virtual panel of respondents that is both ``wide" (each respondent has over 50k modeled features) and ``long" (enough samples to reflect a national dataset). However, running LLM inference on the entire U.S. population would be prohibitively expensive, so we employ a sampling strategy. Given the pivotal role of swing states in determining election outcomes, we focus on simulating voter behavior in these states while including representative samples from red and blue states for comparison.
+
+\noindent \textbf{Synthetic Data Generation:}  
+The synthetic data used here is generated using the \texttt{SynC} framework \cite{li2020sync}, which reconstructs individual-level data from aggregated sources where collecting real-world individual data is impractical due to privacy, time, or financial constraints. 
+\texttt{SynC} is widely recognized and applied across multiple fields to support research and overcome data limitations. For instance, it has been used in outlier detection \cite{Li2020COPOD}, finance \cite{Potluru2023SyntheticFinance}, tabular data modeling \cite{Borisov2022DeepTabularSurvey}, healthcare \cite{Sichani2024SyntheticHealth}, and tourism \cite{merinov2023behaviour}, demonstrating its effectiveness and importance in various domains.
+
+\texttt{SynC} leverages publicly available data, such as the 2023 American Community Survey (ACS), which provides data on 242,338 census block groups, including population statistics and response proportions for each block. 
+Using \textit{Data Downscaling}, \texttt{SynC} probabilistically recreates the 340 million residents represented in the aggregated census data.
+For our simulation, the synthetic population includes variables relevant to election predictions: (1) age, (2) gender, (3) ethnicity, (4) marital status, (5) household size, (6) presence of children, (7) education level, (8) occupation, (9) individual income, (10) family income, and (11) place of residence.
+
+
+\texttt{SynC} addresses the challenge of reconstructing individual data $\{x_{m,1}^d, \ldots, x_{m,n_m}^d\}$ from aggregated observations $X_m^d = \sum_{k=1}^{n_m} x_{m,k}^d / n_m$, where $X^d$ is the $d$-th survey question of interest, $m$ is the census block id and $n$ is the number of individuals in $m$. A \textit{Gaussian copula} is employed to model dependencies between survey questions. Given a $d \times d$ covariance matrix $\Sigma$ of the $d$ sruvey questions, the synthetic individuals are drawn as:
+
+\begin{small}
+    \begin{equation}
+        Z_m^d \sim N(0, \Sigma), \quad u_m^d = \Phi(Z_m^d), \quad X_m^{d} = F^{-1}_d(u_m^d),
+    \end{equation}
+\end{small}
+
+where $Z_m^d \sim N(0, \Sigma)$ denotes a random seed from a multivariate normal distribution, $\Phi$ is the cumulative distribution function (CDF) of the standard normal distribution, and $F^{-1}_d$ is the inverse CDF of the marginal distribution for feature $d$, which is estimated based on census block level data.
+To maintain alignment with aggregated data, SynC uses \textit{marginal scaling}. For categorical variables, it applies a multinomial distribution:
+
+\begin{equation}
+    X^d \sim \text{Multi}(1, c^d, p_{m,k}^d),
+\end{equation}
+
+where $p_{m,k}^d$ is the probability distribution over $c^d$ categories for question $d$ and individual $k$. Marginal constraints are adjusted iteratively if discrepancies arise between sampled and target proportions.
+
+The multi-phase \texttt{SynC} framework ensures that: (1) marginal distributions of individual features align with real-world expectations, (2) feature correlations are consistent with aggregated data, and (3) aggregated results match the input data. For further details on \texttt{SynC}’s methodology and algorithms, please see the original paper \cite{li2020sync}.
+
+\noindent \textbf{Partition Design and State Categorization:}  
+The synthetic dataset evaluation will operate at the state level, where we sample synthetic individuals from each state to simulate voter behavior and aggregate their votes to compare the simulated outcomes with actual election results. 
+Given the critical role of swing states and tipping-point states in determining election outcomes, our primary focus is on these states, which include Florida (FL), Wisconsin (WI), Michigan (MI), Nevada (NV), North Carolina (NC), Pennsylvania (PA), Georgia (GA), Texas (TX), Minnesota (MN), Arizona (AZ), and New Hampshire (NH). 
+For broader comparison in the following evaluations, we also sample from several reliably ``red states,'' such as Alabama (AL), Arkansas (AR), Idaho (ID), Ohio (OH), and South Carolina (SC), as well as from ``blue states,'' such as California (CA), Illinois (IL), New York (NY), New Jersey (NJ), and Washington (WA). 
+These classifications are based on the 2020 election results as described by Wikipedia \cite{wikipedia_swing_state}.
+
+
+\noindent \textbf{Sampling Method:}  
+Running LLM inference on the entire synthetic population is computationally prohibitive, so we adopt a random sampling approach. Each state serves as a sampling unit, with sample sizes ranging between 1/100 and 1/2000 of the synthetic population, depending on the state’s population size. For example, a 1/2000 sampling ratio is applied to highly populated states like California, while a 1/100 ratio is used for smaller states such as New Hampshire. This approach ensures a minimum sample size of $4269$ individuals per state, corresponding to a 1.5\% margin of error at a 95\% confidence level, to maintain sufficient representation. Although our primary focus is on swing states due to their critical influence on election outcomes, we apply the same sampling method to red and blue states included in our simulations to ensure consistency across the analysis.
+
+\subsection{Detailed Evaluation Metrics}
+\label{appx.metrics}
+
+To comprehensively evaluate our proposed approaches, we employ multiple metrics for both benchmark datasets (ANES 2016 and 2020 \cite{ANES2016, ANES2020}) and state-level simulations. For the ANES benchmarks, we follow the methodology of \citet{Argyle_Busby_Fulda_Gubler_Rytting_Wingate_2023}, comparing the average voting probabilities:
+
+\paragraph{1. Predicted Proportion ($P(s)$)}
+\begin{small}
+    \begin{equation}
+    \text{Probability} = \frac{\text{Republican Votes}}{\text{Republican Votes} + \text{Democratic Votes}}
+    \label{eq:prob_appx}
+    \end{equation}
+\end{small}
+
+For state-level comparisons, we introduce the following additional metrics:
+
+\paragraph{2. Weighted Absolute Error (WAE)}
+\begin{equation}
+\label{WAE}
+\text{WAE} = \frac{\sum_{s \in S} E(s) \cdot |P(s) - R(s)|}{\sum_{s \in S} E(s)}
+\end{equation}
+where:
+\begin{itemize}
+    \item $P(s)$: The simulated proportion, calculated as the ratio of Republican votes to total votes (Republican + Democrat) for each state (\ref{eq:prob_appx}).
+    \item $R(s)$: The actual proportion of votes in state $s$.
+    \item $E(s)$: The electoral votes assigned to state $s$, serving as weights.
+    \item $S$: The set of all selected states.
+\end{itemize}
+
+\paragraph{3. Weighted Mean Squared Error (WMSE)}
+\begin{equation}
+\label{WMSE}
+\text{WMSE} = \frac{\sum_{s \in S} E(s) \cdot (P(s) - R(s))^2}{\sum_{s \in S} E(s)}
+\end{equation}
+where:
+\begin{itemize}
+    \item $(P(s) - R(s))^2$: The squared error between the simulated and actual proportions for each state.
+\end{itemize}
+
+\paragraph{4. Bias Metric (BM)}
+\begin{equation}
+\label{BM}
+\text{BM} = \frac{\sum_{s \in S} E(s) \cdot (P(s) - R(s))}{\sum_{s \in S} E(s)}
+\end{equation}
+where:
+\begin{itemize}
+    \item \textbf{Positive Value}: Reflects a systematic overestimation of $P(s)$, indicating a bias toward the Republican Party.
+    \item \textbf{Negative Value}: Reflects a systematic underestimation of $P(s)$, indicating a bias toward the Democratic Party.
+\end{itemize}
+
+These metrics are calculated across the entire sample to evaluate both the magnitude and direction of errors. Accuracy is further assessed by comparing the predicted winning party with the actual election outcome.
+
+For the synthetic dataset, we treat each state as an independent validation unit. The simulated results—both in terms of the winning candidate and vote share percentages—are compared against the actual 2020 election results for each state. Accuracy is evaluated based on:
+\begin{enumerate}
+    \item Agreement between the predicted and actual winning candidate for each state.
+    \item Aggregate performance across all states, ensuring the model captures overall election trends.
+\end{enumerate}
+
+This state-level evaluation leverages voter-level information processed through LLMs to generate accurate simulations, providing a robust assessment of model performance across diverse electoral scenarios.
+
+
+
+
+
+\section{Evaluations on Synthetic Personas for the 2020 U.S. Population} 
+
+\label{appx:validation}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=\linewidth]{figs/SL_samples-cropped.pdf}  
+    \caption{LLM’s simulations for four states in the 2020 election compared with Ground Truth results. The figure presents results for one red state (Ohio, OH), one blue state (Illinois, IL), one swing state (Wisconsin, WI), and one tipping-point state (Florida, FL). 
+    V1 and V2 pipelines tend to underestimate Republican support, while V3 (Multi-step Reasoning) provides the closest alignment with actual outcomes, especially in swing and tipping-point states.
+    % The complete set of simulation results can be found in the Appendix.
+    }
+    \label{fig:2020example}  
+    \vspace{-1em}  
+\end{figure}
+
+
+In addition to the nationwide evaluation on the ANES datasets, we conducted state-level simulations using synthetic data to compare it with actual 2020 election outcomes. 
+For each state, we performed random sampling based on population size to ensure a statistically meaningful number of personas. The simulation outcomes were then benchmarked against official 2020 Presidential General Election Results from the Federal Election Commission (FEC). As in the benchmark evaluations, we calculated the average voting probabilities to assess the alignment of predictions with real-world outcomes.
+We evaluated five red states, five blue states, and 11 swing and tipping-point states. Figure~\ref{fig:2020example} highlights representative results from these categories, providing insights into the model’s performance in different electoral contexts.
+
+
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\linewidth]{figs/confusion_matrices-cropped.pdf}  
+    \caption{
+    Aggregated results of the three pipelines (V1, V2, V3) on state-level simulations. Each confusion matrix presents the number of states where predictions align with or deviate from actual outcomes. V1 (AUC = 0.69) and V2 (AUC = 0.62) show lower accuracy, while V3 (AUC = 0.90) performs best, effectively capturing Republican victories without compromising Democratic predictions. It is worth noting that, so far, we have only tested the pipelines in 21 states. If the scope is expanded to include all states, the AUC of V3 is expected to improve further, while the AUC of V1 and V2 are expected to decline.
+    }
+    \vspace{-0.2in}
+    \label{fig:2020aggregate}  
+\end{figure}
+
+
+Consistent with the ANES dataset evaluations, the V1 pipeline (Demographic-only Prompt) exhibited a skew toward the Democratic Party, even in traditionally Republican-leaning states like South Carolina (SC), Alabama (AL), and Ohio (OH), with predictions diverging significantly from actual results. This illustrates the limitations of using demographic data alone without time-sensitive context.
+The V2 pipeline (Time-dependent Prompt) introduced election-year-specific information, which partially reduced the skew in the state-level simulations. However, the model still struggled to eliminate prediction biases, particularly in polarized states. Interestingly, this differed from the ANES evaluations, where including time-dependent information amplified the bias.
+The V3 pipeline (Multi-step Reasoning) demonstrated the most accurate performance, effectively mitigating skewness across deep red and blue states. In these polarized states, the predictions closely mirrored the actual voting outcomes, reflecting the model’s improved ability to incorporate ideological alignment through multi-step reasoning.
+
+For swing and tipping-point states, the V3 pipeline achieved robust results, correctly simulating the outcomes in 9 out of 11 states. Minor deviations were observed in North Carolina (NC) and Arizona (AZ), where the predictions were slightly misaligned with the real results. Nonetheless, the V3 pipeline provided balanced predictions that accurately captured the competitive dynamics typical of swing states, further validating its effectiveness.
+
+
+In summary, the comparative performance of the three pipelines across different state categories is shown in Figure~\ref{fig:2020example}. The V3 pipeline consistently outperformed the other two, delivering more stable and accurate predictions. Aggregate results for all pipelines on all 21 chosen states is shown in the below figure ~\ref{fig:2020aggregate}.
+
+
+\section{Additional Results on 2024 Prediction}
+\label{appx:2024results}
+
+The 2024 state-level Simulations offer deeper insights into the performance of the proposed pipelines across diverse electoral contexts. As discussed in \S \ref{subsec:study1}, simulations for the 2024 election indicate a systematic bias toward the Democratic Party across the 11 swing and tipping-point states. This bias may reflect the LLM’s sensitivity to candidate-specific factors in the 2024 context. Specifically, prior to the election, V3 (\S \ref{subsec:v3}) was evaluated across all 50 states, while V1 (\S \ref{subsec:v1}) and V2 (\S \ref{subsec:v2}) were tested on selected swing states and traditional red and blue states. The comparative performance of these pipelines is presented in Figure~\ref{fig:2024results}.
+
+At the state level, several notable shifts are observed compared to 2020 predictions. For instance, Wisconsin (WI) demonstrates a significant change, with Trump projected to win 54.90\% of the vote. Gains are also observed in Pennsylvania (PA) 47.85\%, Michigan (MI) 48.87\%, and New Hampshire (NH) 49.49\%, though these states remain highly competitive. 
+
+In other key battleground states, Arizona (AZ) is forecasted to return to the Republicans with 51.09\%, while Florida (FL) and Texas (TX) continue to show strong Republican support at 53.62\% and 56.36\%, respectively. Conversely, in contrast to the actual results, Nevada (NV) at 34.77\%, Georgia (GA) at 44.36\%, and Minnesota (MN) at 42.95\% are predicted to lean more toward the Democratic Party, highlighting the complex dynamics of these closely contested regions.
+
+In traditional strongholds, the predictions align with historical trends. Republican-dominated states like Arkansas (AR) and Alabama (AL) continue to show robust GOP support, while Democratic bastions such as California (CA), New York (NY), and Illinois (IL) remain reliably blue. An exception is Alaska (AK) 49.39\%, where the model predicts a closer contest compared to prior elections.
+
+These state-level results, summarized in Figure~\ref{fig:2024results}, highlight the nuanced performance of the pipelines. The varying prediction patterns underscore both the strengths and limitations of the models, emphasizing opportunities for further refinement to better capture the complexities of voter behavior and electoral dynamics.
+
+\section{Beyond Accuracy}
+\label{E}
+\begin{figure}[!h]
+    \centering
+        \centering
+        \includegraphics[width=\linewidth]{figs/age_margin_plot-cropped.pdf}
+        \caption{Demographic (Age) voting pattern: comparing LLM Simulations with real human data (Pew Report)}
+        \label{fig:age_gap}
+    \vspace{-0.1in}
+\end{figure}
+
+\begin{figure}[!ht]
+    \centering
+        \centering
+        \includegraphics[width=\linewidth]{figs/education_margin_plot_with_gap-cropped.pdf}
+        \caption{Demographic (Education) voting pattern: comparing LLM Simulations with real human data (Pew Report)}
+        \label{fig:education_gap}
+    \vspace{-0.1in}
+\end{figure}
+
+\section{Extended Related Work}
+\label{appx:related}
+
+% \vspace{-0.1in}
+\subsection{LLMs in Political Science: A New and Emerging Field}
+% \vspace{-0.1in}
+
+The application of LLMs in political science represents a new and rapidly evolving field, with a limited but growing body of research. While LLMs have revolutionized natural language processing and various other domains, their potential in political science remains largely untapped. Initial studies have demonstrated promising results in areas such as election forecasting, policy analysis, and public opinion simulation \cite{smith2023llms, johnson2024political}. However, political science often involves complex social dynamics and multi-layered causal relationships, posing significant challenges for effectively utilizing LLMs in this context \cite{brown2023challenges}.
+
+Recent work by \citet{chen2024decoding} highlights the potential of LLMs in decoding political speeches and policy documents, emphasizing the need for domain-specific fine-tuning to capture the subtleties of political language. Future research is likely to focus on designing models that can handle the intricacies of political discourse while ensuring robustness against biases and misleading inferences \cite{wilson2024robust, thompson2023ethical}.
+
+The latest work by \citet{li2024politicalllmlargelanguagemodels} presents the first systematic framework for integrating LLMs into computational political science. 
+The authors propose a novel taxonomy that categorizes existing work into two main perspectives: political science applications and computational methodologies. From the political science perspective, they highlight LLMs' capabilities in automating predictive and generative tasks, simulating behavior dynamics, and enhancing causal inference. From the computational perspective, they detail advances in data preparation, fine-tuning approaches, and evaluation methods specifically tailored for political contexts. The paper identifies critical challenges, including the need for domain-specific datasets, addressing bias and fairness issues, incorporating human expertise effectively, and developing evaluation criteria that are aligned with political science requirements.
+Our work differs from Political-LLM by giving more in-depth analysis on the Decision-Making
+simulation in Political Science.
+
+% \subsection{Political Election Research: Classical and Latest Approaches}
+% % \vspace{-0.1in}
+
+% Traditional political science literature has long relied on survey data and statistical models to analyze voter behavior and predict election outcomes. Classical models like the Downsian spatial model and the Median Voter Theorem explain election results by assuming voters' positions in policy space \cite{downs1957economic, black1948rationale}. Time-series regression models also play a key role in long-term election forecasting, analyzing the relationships between economic indicators, political events, and voter sentiment \cite{lewis1992forecasting, erikson2016forecasting}.
+
+% In recent years, Agent-Based Models (ABMs) have gained traction in election research. These bottom-up approaches simulate individual voter decisions and social interactions, providing a more granular view of electoral dynamics. For instance, \citet{gao2022agent} introduced an agent-based election prediction model that captures social networks and voter-candidate interactions to offer more accurate election forecasts. This approach builds upon earlier work by \citet{lemos2019agent}, who demonstrated the effectiveness of ABMs in modeling voter turnout and preference formation.
+
+% ABMs excel at modeling heterogeneity and dynamic processes in real-world voting scenarios, offering greater flexibility and granularity than traditional statistical models. The work of \citet{collins2023media} further illustrates how ABMs can incorporate complex factors such as media influence and peer effects in voter decision-making processes. As the field evolves, future election studies may integrate ABMs with LLMs to balance large-scale data analysis with individual voter behavior modeling, as proposed by \citet{zhang2024hybrid} in their hybrid forecasting framework.
+% \vspace{-0.1in}
+
+
+Although LLMs have seen rapid advancements, their application in political science remains limited. Only a small number of studies have explored how LLMs can be used for tasks like election prediction, policy analysis, and public opinion tracking. Political text analysis is an important area, and some early benchmark datasets are starting to emerge. However, political language is often complex, with nuanced meanings and context, which presents a significant challenge for LLMs \cite{anderson2023nuances, williams2024challenges}.
+
+One notable example is the ``Political Campus'' project by \citet{roberts2023political}, which developed a benchmark dataset specifically for election prediction and evaluated LLM performance on various election-related questions. This work has been instrumental in highlighting both the potential and limitations of LLMs in political forecasting. Similarly, the research by \citet{kim2024sentiment} on using LLMs for policy sentiment analysis demonstrates the models' capacity to process large volumes of public opinion data, while also underscoring the need for careful interpretation of results.
+
+\section{Broader Impact Statement}
+\vspace{-0.5ex}
+This work explores the application of LLMs to simulate voter behaviour through enhanced reasoning and data synthesis, which may inform policymakers, researchers, and journalists, aiding them in understanding voter behavior and electoral outcomes. 
+By offering a more transparent and adaptable approach to prediction, this research may help demystify complex political processes, reduce reliance on narrow historical data, and guide strategic resource allocation for stakeholders.
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figs/2020overall-cropped-2.pdf}  
+    \caption{
+    Overall performance of the three pipelines (V1, V2, V3) in the 2020 simulation across five red states (Arkansas (AR), South Carolina (SC), Idaho (ID), Alabama (AL), Ohio (OH)), five blue states (Illinois (IL), California (CA), New York (NY), New Jersey (NJ), Washington (WA)), 11 swing and tipping-point states (New Hampshire (NH), Arizona (AZ), Pennsylvania (PA), Georgia (GA), Minnesota (MN), North Carolina (NC), Wisconsin (WI), Florida (FL), Michigan (MI), Nevada (NV), Texas (TX)), and an additional red state (Alaska (AK)). The red reference line corresponds to the 2020 election results \cite{federal2020elections}, while the black reference line represents an equal vote share (0.5) between the two parties.}
+    \label{fig:2020results}  
+    \vspace{1em}  
+\end{figure*}
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figs/state_predictions_2024-cropped-1.pdf}  
+    \caption{
+    Overall performance of the three pipelines (V1, V2, V3) in the 2024 simulation across five red states (Arkansas (AR), South Carolina (SC), Idaho (ID), Alabama (AL), Ohio (OH)), five blue states (Illinois (IL), California (CA), New York (NY), New Jersey (NJ), Washington (WA)), 11 swing and tipping-point states (New Hampshire (NH), Arizona (AZ), Pennsylvania (PA), Georgia (GA), Minnesota (MN), North Carolina (NC), Wisconsin (WI), Florida (FL), Michigan (MI), Nevada (NV), Texas (TX)), and an additional red state (Alaska (AK)). The red reference line corresponds to the 2024 election results reported by the NBC News \cite{nbc2024election}, while the black reference line represents an equal vote share (0.5) between the two parties.}
+    \label{fig:2024results}  
+    \vspace{1em}  
+\end{figure*}

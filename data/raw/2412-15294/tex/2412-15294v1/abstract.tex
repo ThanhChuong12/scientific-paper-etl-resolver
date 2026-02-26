@@ -1,0 +1,10 @@
+\begin{abstract}
+%无论是细粒度的个体移动性预测还是粗粒度的群体移动性预测，它们都依托于共同的底层时空模式，例如时间周期性和空间邻近性。现有的人类移动性预测方法通常是针对特定任务的，它们的适用场景十分局限。因此，我们试图统一人类移动预测模型，旨在突破任务专用模型的局限性，实现可扩展性和泛化性。
+
+Predicting human mobility is crucial for urban planning, traffic control, and emergency response. Mobility behaviors can be categorized into individual and collective, and these behaviors are recorded by diverse mobility data, such as individual trajectory and crowd flow. As different modalities of mobility data, individual trajectory and crowd flow have a close coupling relationship. Crowd flows originate from the bottom-up aggregation of individual trajectories, while the constraints imposed by crowd flows shape these individual trajectories.
+Existing mobility prediction methods are limited to single tasks due to modal gaps between individual trajectory and crowd flow.
+In this work, we aim to unify mobility prediction to break through the limitations of task-specific models. 
+We propose a universal human mobility prediction model (named \textbf{UniMob}), which can be applied to both individual trajectory and crowd flow.
+UniMob leverages a multi-view mobility tokenizer that transforms both trajectory and flow data into spatiotemporal tokens, facilitating unified sequential modeling through a diffusion transformer architecture. To bridge the gap between the different characteristics of these two data modalities, we implement a novel bidirectional individual and collective alignment mechanism. This mechanism enables learning common spatiotemporal patterns from different mobility data, facilitating mutual enhancement of both trajectory and flow predictions.
+Extensive experiments on real-world datasets validate the superiority of our model over state-of-the-art baselines in trajectory and flow prediction. Especially in noisy and scarce data scenarios, our model achieves the highest performance improvement of more than 14\% and 25\% in MAPE and Accuracy@5. 
+\end{abstract}

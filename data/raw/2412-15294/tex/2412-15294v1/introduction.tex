@@ -1,0 +1,47 @@
+\section{Introduction}
+Human mobility data records the movement of human beings in space over time~\cite{barbosa2018human, long2023practical, yuan2022activity}. It supports various activities~\cite{yuan2024generating, yuan2023learning} and reflects the spatiotemporal dynamics of the city~\cite{rong2024learning, yuan2023spatio}. Consequently, predicting human mobility has significant practical implications, such as urban planning~\cite{zheng2023spatial,zheng2023road}, traffic control~\cite{pappalardo2023future, zeng2024citylight}, and emergency response~\cite{yuan2022activity}. 
+Individual trajectory and crowd flow can be treated as two observations of human mobility that represent two different modalities of mobility data. Individual trajectories describe human mobility behavior from a micro perspective, highlighting personal preferences~\cite{zhou2021self}. Conversely, crowd flows encapsulate human movements from a macro perspective, reflecting collective trends~\cite{chang2012dynamic}.
+Crowd flows originate from the bottom-up aggregation of individual trajectories, while individual trajectories are influenced by the constraints imposed by crowd flows. This bidirectional influence between individual and collective contributes to the complexity of human mobility.
+
+Many years ago, various models were proposed to model and predict human mobility, such as Lévy flight~\cite{mandelbrot1983fractal}, random walk models~\cite{gonzalez2008understanding}, radiation model~\cite{simini2012universal}, and gravity models~\cite{zipf1946p}. 
+Later, trajectory prediction models have been developed to capture individual mobility preferences, such as EPR~\cite{brockmann2006scaling}, MPRW~\cite{yan2017universal}, MobTCast~\cite{xue2021mobtcast} and DeepMove~\cite{feng2018deepmove}. At the same time, flow prediction models like ST-ResNet~\cite{zhang2017deep}, TODE~\cite{zhou2021urban}, DeepCrowd~\cite{jiang2021deepcrowd} and CrowdNet~\cite{cardia2022enhancing} were created to capture the collective movement trends. 
+Some research has started integrating trajectory and flow data. For example, GETNext incorporates collective mobility patterns into trajectory prediction~\cite{yang2022getnext}, while TrGNN uses individual mobility data to aid non-recurring flow prediction~\cite{li2021traffic}. 
+%These studies demonstrate the potential for combining individual and collective behaviors to enhance human mobility prediction. 
+Although these works have made initial attempts and progress in fusing trajectory and flow data, they remain limited to using other modality data as features. As a result, only a single modality can be predicted, failing to realize the unification of different mobility data modalities.
+
+% 示意图
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.47\textwidth]{figure/UniMob.pdf}
+\vspace{-0.5cm}
+\caption{The transition from single model to universal model.}
+%\vspace{-20px}
+\label{fig:UniMob}
+\vspace{-0.5cm}
+\end{figure}
+
+As shown in Figure~\ref{fig:UniMob}, %inspired by the AI foundation models, 
+we are exploring a natural research question: can we unify human mobility prediction in one universal model? The benefits of such unification are evident: The universal model that learns the common spatiotemporal patterns of two different mobility data in one model can achieve mutual enhancement in trajectory and flow prediction.
+However, achieving unified human mobility prediction faces the following critical challenges:
+\begin{itemize}[leftmargin=*]
+\item \textbf{Diverse data formats of two different mobility data.} The data collection methods for individual trajectories and crowd flows are different, resulting in distinct forms of representation for them. For example, trajectory data records the movement of individuals across different locations over time, while flow data represents the number of people in a specific location that changes over time. These diverse data formats of trajectory and flow make it difficult to represent these data in a unified manner. 
+
+\item \textbf{Significant characteristic differences in two modalities of mobility data.} Trajectory data details individual preferences from a micro perspective, whereas flow data reveals collective trends from a macro perspective. Thus, incorporating these two types of data into a unified training framework and extracting common spatiotemporal patterns from their distinct characteristics is a challenging task.
+\end{itemize}
+
+To address these challenges, we propose a universal mobility prediction model, UniMob, that can be applied to both trajectory and flow data.
+Firstly, we design a multi-view mobility tokenizer to utilize multiple perspectives of mobility behavior for unified tokenization. Based on sequentially organized trajectory tokens and flow tokens, we implement a diffusion transformer architecture to capture spatiotemporal dynamics inherent in different modalities of mobility data.
+Secondly, to address significant characteristic differences in these two modalities, we introduced an innovative bidirectional alignment mechanism that facilitates interaction between trajectories and flows. This mechanism enables the extraction of common spatiotemporal patterns from individual and collective mobility behaviors.
+Specifically, the alignment from individual to collective is achieved by aligning aggregated trajectories with flow data, which aids in modeling collective movement trends. 
+Conversely, the alignment from collective to individual employs contrastive learning to identify semantically similar flows and trajectories, capturing consistent spatiotemporal patterns at both macro and micro levels.
+
+In this way, UniMob advances towards developing a universal model. UniMob achieves mutual enhancement in trajectory and flow prediction by learning common spatiotemporal patterns from different mobility data. 
+Moreover, UniMob has excellent scalability and can flexibly derive into multiple variants according to different requirements, thus adapting to diverse application scenarios. 
+Our contributions can be summarized as follows:
+\begin{itemize}[leftmargin=*]
+\item To our knowledge, we are the first to unify human mobility prediction, exploring the one-for-all model's potential in individual trajectory and crowd flow.
+
+\item We propose a universal mobility prediction model. Multi-view tokenization harmonizes diverse data formats of individual trajectory and crowd flow. Then, the model utilizes bidirectional alignment mechanisms for individual and collective to address the characteristic differences caused by caused by data modalities.
+
+\item Extensive experiments on real-world datasets have validated that UniMob achieves superior performance in trajectory and flow predictions. Further in-depth analysis confirms UniMob's robustness, particularly in handling noisy and scarce data, achieving improvements of over 14\% in MAPE and over 25\% in Accuracy@5. 
+\end{itemize}

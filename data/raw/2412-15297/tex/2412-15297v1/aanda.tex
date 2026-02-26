@@ -1,0 +1,912 @@
+%                                                                 aa.dem
+% AA vers. 9.1, LaTeX class for Astronomy & Astrophysics
+% demonstration file
+%                                                       (c) EDP Sciences
+%-----------------------------------------------------------------------
+%
+%\documentclass[referee]{aa} % for a referee version
+%\documentclass[onecolumn]{aa} % for a paper on 1 column  
+%\documentclass[longauth]{aa} % for the long lists of affiliations 
+%\documentclass[letter]{aa} % for the letters 
+%\documentclass[bibyear]{aa} % if the references are not structured 
+%                              according to the author-year natbib style
+
+%
+\documentclass{aa}  
+%\documentclass[bibyear]{aa}  
+%\documentclass[referee]{aa}
+\newcommand\floor[1]{\lfloor#1\rfloor}
+%
+\usepackage{natbib}
+\bibpunct{(}{)}{;}{a}{}{,} % to follow the A&A style
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage[normalem]{ulem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{txfonts}
+\usepackage{amsmath}
+\usepackage{svg}
+\usepackage{longtable}
+\usepackage{multicol}
+\usepackage{afterpage}  % For precise placement of floats
+\usepackage{placeins}
+\usepackage[all]{nowidow}
+\usepackage[colorlinks=true, linkcolor=black, urlcolor=black, citecolor=blue]{hyperref}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage[options]{hyperref}
+% To add links in your PDF file, use the package "hyperref"
+% with options according to your LaTeX or PDFLaTeX drivers.
+%
+\begin{document} 
+
+   \title{Enhancing the detection of low-energy M dwarf flares: wavelet-based denoising of CHEOPS data}
+
+   \subtitle{}
+
+   \author{J. Poyatos
+          \inst{1,2} \href{https://orcid.org/0000-0003-4064-4268}{\protect\includegraphics[height=0.25cm]{Fig/orcid.pdf}}
+          \and
+          O. Fors\inst{1,2} \href{https://orcid.org/0000-0002-4227-9308}{\protect\includegraphics[height=0.25cm]{Fig/orcid.pdf}}
+          \and
+          J.M. Gómez Cama\inst{3,2} \href{https://orcid.org/0000-0003-0173-5888}{\protect\includegraphics[height=0.25cm]{Fig/orcid.pdf}}
+          \and
+          I. Ribas\inst{2,4} \href{https://orcid.org/0000-0002-6689-0312}{\protect\includegraphics[height=0.25cm]{Fig/orcid.pdf}}
+          }
+
+   \institute{Departament de Física Quàntica i Astrofísica, Institut de Ciències del Cosmos (ICCUB), Universitat de Barcelona (IEEC-UB),
+Martí i Franquès 1, E-08028 Barcelona, Spain\\
+\email{julienpoyatos@icc.ub.edu}
+        \and
+            Institut d'Estudis Espacials de Catalunya (IEEC), 08860 Castelldefels (Barcelona), Spain
+         \and
+             Departament d’Enginyeria Electrònica i Biom{\`e}dica, Institut de Ciències del Cosmos (ICCUB), Universitat de Barcelona, IEEC-UB, Martí i Franquès 1,
+E-08028 Barcelona, Spain
+        \and
+            Institut de Ci{\`e}ncies de l’Espai (ICE, CSIC), Campus UAB, c/de Can Magrans s/n, E-08193 Bellaterra, Barcelona, Spain
+             }
+
+   \date{Received XX YY, ZZ; accepted XX YY, ZZ}
+
+% \abstract{}{}{}{}{} 
+% 5 {} token are mandatory
+ 
+ \abstract
+  % context heading (optional)
+  % {} leave it empty if necessary  
+   {Stellar flares are powerful bursts of electromagnetic radiation triggered by magnetic reconnection in the chromosphere of stars, occurring frequently and intensely on active M dwarfs. While missions like TESS and Kepler have studied regular and super-flares, their detection of flares with energies below $10^{30}$ erg remains incomplete. Extending flare studies to include these low-energy events could enhance flare formation models and provide insight into their potential impacts on exoplanetary atmospheres.}
+  % aims heading (mandatory)
+   {This study investigates the capacity of CHEOPS to detect low-energy flares in M dwarf light curves. Leveraging CHEOPS’s high photometric precision and observing cadence, along with a tailored wavelet-based denoising algorithm, we aim to improve detection completeness and refine flare statistics for low-energy events.}
+  % methods heading (mandatory)
+   {We conducted a flare injection and recovery process to optimise denoising parameters, applied it to CHEOPS light curves to maximise flare detection rates, and used a flare breakdown algorithm to analyse complex flare structures.}
+  % results heading (mandatory)
+   {Our analysis recovered 349 flares with energies ranging from $2.2 \times 10^{26}$ to $8.1 \times 10^{30}$ erg across 63 M dwarfs, with $\sim$40\% exhibiting complex, multi-peaked structures. The denoising algorithm improved the overall flare recovery by $\sim$34\%, although it only marginally extended the lower boundary of detectable energies. For the full sample, the power-law index $\alpha$ was $1.92 \pm 0.07$, but a log-normal distribution provided a slightly better fit, suggesting multiple possible flare formation scenarios.}
+  % conclusions heading (optional), leave it empty if necessary 
+   {Observing low-energy flares requires high photometric precision and fast observing cadence. Although CHEOPS’s on-target observing mode is not optimal for large-scale flare surveys, it can capture weaker flares than TESS and Kepler, extending the observed energy range. Wavelet-based denoising further improves low-energy event recovery, enabling exploration of the upper end of the micro-flaring regime. Expanding low-energy flare observations could refine flare generation models and improve our understanding of their role in star-planet interactions.}
+   \keywords{Magnetic reconnection, Instrumentation: detectors, Methods: data analysis, Stars: activity, Stars: flare, Stars: low-mass}
+
+   \maketitle
+%
+%-------------------------------------------------------------------
+
+\section{Introduction}
+
+%\the\columnwidth
+
+%\the\textwidth
+
+%\the\textheight
+
+%stellar flares
+Stellar flares are stochastic and intense bursts of electromagnetic radiation and charged particles triggered by magnetic reconnection in the chromosphere of stars. This phenomenon occurs when magnetic field lines in the chromosphere realign, releasing energy across the electromagnetic spectrum. This can generate flares of varying intensity and duration, significantly increasing stellar luminosity \citep{Benz_2010}. 
+The star's magnetic activity significantly influences the frequency and energy of stellar flares. M dwarfs are known for their high levels of magnetic activity and for flaring more frequently than earlier-type stars. This is due to their more vigorous dynamo processes yielding a higher incidence of magnetic reconnection events \citep{Kowalski_2024}. Such stars can experience more frequent and energetic flares, sometimes reaching energy levels that are several orders of magnitude more intense than solar flares \citep{Bruevich_2001, Howard_2018}.
+The effects of stellar flares on planetary habitability are various. On the one hand, stellar flares can damage planetary atmospheres: X-ray and ultraviolet radiation, along with charged particles emitted during flares, can deplete atmospheric layers, especially on planets with weak magnetic fields or near their host star. This atmospheric erosion can compromise the potential for habitability by reducing the protection against harmful radiation and altering the planetary climate \citep{Ribas_2016, Airapetian_217}. On the other hand, the energy radiated during stellar flares may play a role in triggering prebiotic chemical processes: the increased ultraviolet radiation during flares can trigger chemical reactions that are crucial for the emergence of life, suggesting that flares may be necessary for prebiotic chemistry to happen on planets orbiting M dwarfs \citep{Scalo_2007, Rimmer_2018}.
+
+%nanoflares
+Understanding the formation mechanisms, frequency, and energy distribution of stellar flares is essential for several reasons. It provides insights into stellar magnetic activity and its variations across spectral types, especially in comparison to our Sun. Additionally, by investigating the flare activity of various stellar types, it is possible to refine models of stellar and planetary evolution \citep{Gudel_2007, Lammer_2012}. TESS and Kepler have provided valuable data on flare occurrences, from cadences of minutes to a few tens of seconds. The 20-second cadence of TESS revealed that complex flare structures are frequent, including multi-peak profiles and quasi-periodic pulsations (QPPs). These complex structures suggest that such non-classical flare shapes may result from emission cascades within a single active region or sympathetic flares from neighboring regions \citep{Davenport_2016, Howard_2022}. In this context, the study of smaller-scale flare events becomes increasingly important to better characterise stellar variability and the formation mechanisms of flares. Extending photometric precision and observing cadence down to a few seconds could greatly improve the understanding of these phenomena, potentially revealing even finer flare structures. This increased sensitivity may enable the detection of micro- and nano-flares, small-scale flaring events with energies ranging from $10^{22}$ to $10^{27}$ erg that are believed to play a crucial role in coronal heating \citep{Parker_1988}. However, no concluding evidence supports micro- and nano-flares against other possible explanations, mainly due to the difficulty of gathering precise statistics about these flares since they are hidden in the instrumental noise. As such, it is still unclear if micro- and nano-flares follow the same trends as more powerful flaring events. Furthermore, flare formation scenarios diverging from self-organised criticality propose that flares could consist of an avalanche of several combined micro- and nano-flares, which would have implications on the current understanding of the impact of flares on exoplanetary atmospheres \citep{Audard2000, Sheikh_2016, Aschwanden_2019}.
+
+%CHEOPS
+The CHaracterising ExOPlanet Satellite (CHEOPS) is a space telescope primarily designed to measure exoplanet transits, offering exceptional photometric precision. With a precision of approximately 20 ppm over a 6-hour integration period for a V$\sim$9 star, and down to 150 ppm for shorter timescales, CHEOPS surpasses other photometric instruments in the visible spectrum, such as TESS and current ground-based telescopes \citep{Benz_2021, Oddo_2023}. CHEOPS's observing cadence can also reach 0.001 seconds for very bright stars (V$\sim$6), several orders of magnitude faster than those of TESS and Kepler \citep{Borucki_2010, Ricker_2015}. Although CHEOPS is limited to on-target observations, it provides high photometric precision and accessible observing cadence, which are crucial for capturing the short and stochastic nature of low-energy flares.
+
+%Wavelet
+To enhance the detection of flares in CHEOPS light curves, denoising techniques based on the wavelet transform can filter out noise from the signal. The wavelet transform decomposes time series data into different frequency components, facilitating the isolation and reduction of noise. Unlike the Fourier transform, which only provides frequency characteristics of the signal, the wavelet transform recovers both temporal and frequency information, making it more efficient in analysing transient signals like stellar flares. The Discrete Wavelet Transform (DWT) is commonly used as a base for time series denoising algorithms, with many applications outside of astronomy \citep{Pasti_1999, Polat_2018, Jang_2021}. The main downside of the DWT is that it introduces by definition a downsampling of the input signal, which can lead to a loss of details due to its non-redundant nature \citep{Dohono_1994}. In contrast, the Stationary Wavelet Transform (SWT) avoids this by upsampling the wavelet coefficients at each decomposition level. Although it involves a higher computational cost, the SWT provides the advantage of maintaining the original length of the signal at each decomposition level and providing a redundant, shift-invariant representation of the data \citep{Rhif_2019, Kumar_2021}. In the context of astronomy, techniques based on the SWT have been developed for noise filtering and demonstrated significant improvements in signal-to-noise ratios (SNR) and the ability to recover faint astrophysical signals \citep{Strack_2006}. These methods emphasise the importance of adapting the current wavelet-based denoising techniques to the specific characteristics of astronomical time series and show that such denoising algorithms could enhance the detection of faint transient phenomena like low-energy flares. 
+
+%plan
+An efficient wavelet-based denoising algorithm is crucial for optimising the extraction of meaningful flare statistics in our analysis pipeline using CHEOPS data. In this study, we explore the performance of the combination of CHEOPS's photometric precision and a SWT-based denoising algorithm in enhancing flare detection in M dwarf light curves. In Section \ref{section:methods}, we describe the target selection, the data reduction, the SWT parameter exploration, the flare detection, and flare breakdown algorithms. In Section \ref{section:results}, we quantify the improvement in flare recovery achieved by denoising, analyse the obtained flare catalogs, and compare our results to the literature. In Section \ref{section:discussion}, we discuss the limitations of this study and suggest several avenues for improvement. Finally, we conclude in Section \ref{section:conclusion}.
+ 
+%--------------------------------------------------------------------
+\section{Methods}
+\label{section:methods}
+
+\subsection{Target selection and data reduction}
+\label{section:target_selection}
+
+%data from cheops database
+Among the data gathered by CHEOPS since the start of its operations, several observational programs have targeted late-type stars. CH\_PR100018 (PI I. Pagano) is a prominent program that has been actively investigating the variability of late-K and M dwarf stars since the beginning of scientific observations in April 2020. This program is particularly focused on characterising the photometric variability of these stars, including flares and star spots.
+CH\_PR100010 (PI. G Szabó) operated from July 2020 to December 2023. While its primary aim was to study the debris disks around various spectral types, this program included observations of several late-type stars to explore the interaction between stellar activity and circumstellar dust. 
+CH\_PR130057 (PI G. Szabó) was another significant program, running from August 2022 to September 2023, and specifically targeted the young M dwarf star AU Mic. Known for its strong stellar activity and prominent debris disk, AU Mic is an ideal subject for examining the correlation between stellar flares and its surrounding environment. 
+
+%imagettes 
+The nominal observation mode of CHEOPS produces subarrays every few tens of seconds, which results from the coaddition of multiple shorter exposures on board the spacecraft. These intermediate images, called \textit{imagettes}, are retained and can be used to construct light curves with a significantly higher cadence. The observer can adjust the \textit{imagettes} exposure time based on the target's brightness, with exposure times reaching as short as 0.001 seconds for the brightest targets. All the programs previously mentioned, however, chose to observe their respective targets at a minimum cadence of 3 seconds to optimise the actual on-target time, the telescope duty cycle and to find a compromise between SNR and saturation \citep{Boldog_2023, Bruno_2024}. This cadence is still advantageous for detecting and analysing rapid, transient events like stellar flares, and provides a higher cadence than the 20-second cadence of TESS. 
+To take advantage of the high precision and fast observing cadence provided by CHEOPS, we retrieved all publicly available \textit{imagettes} data on main sequence M dwarfs from the CHEOPS archive\footnote{\url{https://cheops-archive.astro.unige.ch/archive_browser/}}. Due to the proprietary period associated with CHEOPS programs, \textit{imagettes} data are not yet available for all observations. Therefore, we completed our sample with the raw light curves provided in \cite{Bruno_2024}. In total, we obtained 66.65 days of on-target time from the three programs, comprising observations of 110 different M dwarfs. For each target, we retrieved the Gaia \textit{G} band magnitude ($G_{\mathrm{mag}}$) and effective temperature ($T_{\mathrm{eff}}$) from the CHEOPS file metadata. We searched for $H_{\alpha}$ equivalent width values from \cite{Schofer_2019}, as well as log $R'_{HK}$ values from \cite{Astudillo_2017} and \cite{Boro_2018}, but found $H_{\alpha}$ EW values for only 64 of the 110 stars and log $R'_{HK}$ values for 71 stars. This limited availability prevented us from providing a comprehensive activity indicator distribution for the entire sample. Instead, we used the mean rotational velocity ($V$\,sin\,$i$) values from Table A.1 of \cite{Bruno_2024} as an alternative indicator of stellar activity. We calculated the distance to each target using its parallax from Gaia DR3, or Gaia DR2 if not available. We obtained the radius of each star from the TESS Input Catalog. The parameter distributions in our sample are shown in Figure \ref{fig:star_description}, and the full list is available in Table~\ref{target_list}. As expected from the focus of the three observing programs, our sample is heavily biased towards AU Mic, with more than 340 orbits observed, while all other stars have been observed for fewer than 70 orbits each. 
+
+\begin{figure}
+\centering
+\includegraphics{Fig/star_description.pdf}
+\caption{Parameters of our stellar sample. From top to bottom: histograms for the Gaia magnitude, $T_{\mathrm{eff}}$, log($v$\,sin\,$i$), radius and distance.}
+\label{fig:star_description}
+\end{figure}
+
+%data reduction and detrending 
+The CHEOPS Data Reduction Pipeline (\texttt{DRP}) does not automatically process \textit{imagettes} data sets \citep{Hoyer_2020}. We hence relied on \texttt{PIPE}\footnote{\url{https://github.com/alphapsa/PIPE}}, a photometric extraction package developed by the CHEOPS consortium to complement the official \texttt{DRP}, to reduce \textit{imagettes} and extract Point Spread Function (PSF) photometry \citep{Brandeker_2024}. We optimised the PSF parameters for each target by allowing the software to freely explore the impact of the radius of the fitting region, the number of components for the fit, a simultaneous fit for the background, dark current correction, and static image removal through a gradient-like search algorithm. In the case of the light curves recovered by \cite{Bruno_2024}, this \textit{imagettes} reduction was already performed using an ad hoc tool, the Data Reduction Tool (\texttt{DRT}), described in \cite{Morgado_2022} and \cite{Fortier_2024}. We consistently found marginal differences of less than 50 ppm when comparing raw light curves extracted through both \texttt{PIPE} and the \texttt{DRT}.
+We then employed the package \texttt{PyCHEOPS}\footnote{\url{https://github.com/pmaxted/pycheops}} \citep{Maxted_2022, Maxted_2023}, a tool designed by the CHEOPS consortium, to detrend CHEOPS photometric data. We detrended all light curves by removing linear, quadratic, and cubic flux correlations against time, centroid position, sine and cosine of the roll angle, background flux, contamination, and smear. 
+Finally, we normalised the light curves with a 2-degree polynomial to eliminate any long-term trends that could be attributed to stellar activity cycles. After visual inspection, we removed light curves that exhibited excessively high RMS values higher than 10,000 ppm, likely resulting from a failed photometric extraction and/or detrending, which corresponded to $\sim$6\% of the sample. 84\% of the resulting light curves were observed at a cadence of 3 seconds, 14\% between 5 and 7 seconds, and the remaining 2\% at a cadence higher than 12 seconds. Since the next steps of the analysis imply a denoising process, we refer in the rest of the paper to the detrended and normalised CHEOPS light curves as 'original' (as opposed to 'denoised').
+
+%orbit separation
+CHEOPS observations are composed of multiple orbits, each lasting approximately 99 minutes. The science time per orbit, however, is reduced and varies due to interruptions from the South Atlantic Anomaly or Earth occultations. As a result, the number of usable data points can be reduced if the target is in a region difficult to observe by CHEOPS, while targets located near the ecliptic plane can benefit from longer uninterrupted observations \citep{Benz_2021}. To indicate the actual science time composing our sample, we compile in Table \ref{tab:stars_distrib} the number of stars for each spectral subtype, the corresponding number of orbits, and the total on-target time.
+
+A flare candidate cannot be considered as such if it spans two separate orbits because data points belonging to the flare profile would be missing from the resulting light curve. Recovering only part of a flare would lead to underestimating the flare energy and biasing the derived flare statistics. Therefore, our flare detection algorithm will only consider flares whose start and stop times occurred within the same orbit. Figure \ref{fig:orbit_durations} shows the distribution of the duration of the orbits constituting our sample. Although most of the expected orbits are shorter than 99 minutes, we found a few orbits with longer durations of up to 5 hours corresponding to targets easily observable by CHEOPS. Since M dwarf flares can have durations of up to $\sim$10 hours \citep{Davenport_2016, Pietras_2022}, conducting flare detection with CHEOPS implies that the population of long-duration flares will not be recovered in this study. 
+
+\begin{table}[h]
+\caption{Distribution of stars, orbits, and on-target time within our sample according to spectral subtype.}
+\centering
+\begin{tabular}{cccc}
+\hline
+Spectral type & \# stars & \# orbits & On-target time [d] \\ \hline
+M0V           & 33       & 669              & 17.37       \\
+M1V           & 27       & 976             & 27.23       \\
+M2V           & 17       & 287              & 6.72       \\
+M3V           & 13        & 292              & 7.52       \\
+M4V           & 15       & 169              & 4.46       \\
+M5V           & 4        & 70              & 1.93        \\
+M6V           & 1        & 33              & 1.42        \\       
+\hline
+\end{tabular}
+\label{tab:stars_distrib}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics{Fig/orbit_durations.pdf}
+\caption{Distribution of the duration of the orbits in our sample.}
+\label{fig:orbit_durations}
+\end{figure}
+
+%flare detection
+\subsection{Flare detection}
+\label{subsection:flare_detection}
+The photometric signature of flares is typically characterised by a sharp rise (usually associated with bremsstrahlung radiation) followed by an exponential decay (which corresponds to radiative cooling) \citep{Kowalski_2013, Davenport_2014}. An effective way to detect flares is by monitoring the increase in flux they produce in the star's light curve. \texttt{AltaiPony}\footnote{\url{https://altaipony.readthedocs.io/en/latest/}} is a software developed to automate the detection of flares in Kepler, K2, and TESS light curves by using a classical sigma-clipping algorithm \citep{Davenport_2016, Ilin_2022}. It follows the flare detection algorithm defined by \cite{Chang_2015} by using three detection criteria: $N_1$, the minimum positive flux deviation from the median normalised by local scatter; $N_2$, accounting for photometric errors; and $N_3$, the minimum number of consecutive data points meeting these conditions. Typically, $N_1 = 3$, $N_2 = N_1 - 1$, and $N_3 = 3$ are used, corresponding to flare durations of 3 minutes for Kepler and 1 minute for TESS \citep{Davenport_2016, Ilin_2021}. For CHEOPS, we adjusted the criteria to $N_1 = 3$, $N_2 = 2$, and $N_3 = 5$, requiring a minimum of 5 consecutive points above the $3\sigma$ threshold. While this allows us to reduce the number of false positive detections, it also excludes flares shorter than 15 seconds, limiting the detection of the most rapid events.
+
+%detection limit and use of denoising 
+A consequence of using a sigma-clipping method for flare detection is that the noise profile of the CHEOPS instrument sets the threshold for the minimum amplitude of flares that can be detected above the noise floor. By denoising the CHEOPS light curves with a wavelet-based algorithm, we aim to lower this noise floor while preserving the amplitude of flare events, thereby enhancing the SNR of low-energy flares. This approach is expected to increase the recovery rate of flares that previously fell just below the detection threshold, thus allowing them to meet the detection criteria more consistently. Following this idea, the specific workflow of this study is the following: 
+\begin{enumerate}
+    \item Determine the noise profile of a 'prototypical' M dwarf light curve observed by CHEOPS.
+    \item Generate a corresponding synthetic light curve in which to inject flares of different energies, durations, and amplitudes. 
+    \item Determine the denoising parameters that optimise the recovery of the injected flares. 
+    \item Apply the wavelet-based denoising algorithm with the optimal parameters on the original CHEOPS light curves. 
+    \item Conduct flare detection on the original and denoised CHEOPS light curves. 
+\end{enumerate}
+A flow diagram of the entire procedure followed in this study is presented in Figure \ref{fig:procedure}.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=0.75\textwidth]{Fig/procedure.pdf}
+\caption{Flow diagram of the procedure followed in this paper.}
+\label{fig:procedure}
+\end{figure*}
+
+\subsection{Noise profiles estimation}
+\label{subsect:noiseprofile}
+%Noise profile 
+To determine the typical noise profile of a CHEOPS light curve, we computed the average noise profile for each spectral subtype by averaging the photometric fluctuations from the median value of each light curve in our sample, following the method of \cite{Jess_2019, Dillon_2020} and \cite{Grant_2023}. We chose to discard the M6V subtype since only one star was included in this group (see Table \ref{tab:stars_distrib}). Therefore this study comprises targets of spectral type ranging from M0V to M5V. We display in Figure \ref{fig:noises} the fluctuations for each spectral subtype and compare them against a normal distribution. 
+The resulting noise distributions for each spectral subtype are noticeably thinner and higher than a normal distribution and have more pronounced tails, indicating a leptokurtic nature. This is confirmed by the Q-Q plots for each spectral subtype on the second row of Figure \ref{fig:noises}, where the noise distributions exhibit heavier tails than the normal distribution (see Figure 3 of~\cite{Jess_2019} for a collection of different distribution types). A leptokurtic noise distribution has several implications for the light curves and the flare detection. First, the presence of heavier tails means that there are more extreme fluctuations than expected in a normal distribution, which could mimic or obscure low-amplitude flare events, complicating their detection. This distribution shape suggests that the photometric precision of the CHEOPS instrument is not purely Gaussian and contains elements that contribute to a higher frequency of outliers.
+Consequently, the denoising process must account accurately for these leptokurtic features to efficiently distinguish between data points caused by flares and those caused by noise artifacts. We compile in Table \ref{Table:noise_parameters} the mean value, standard deviation, skewness, and Fisher kurtosis of the noise distribution corresponding to each spectral subtype. By understanding the specific noise characteristics, we can refine the denoising and flare detection algorithm to reduce the number of false positives and improve the reliability of flare detection.
+
+\begin{figure*}
+\centering
+\includegraphics{Fig/bell+qqplots.jpg}
+\caption{Noise representation for each spectral type. On the top row, the red dashed curves correspond to a normal distribution, while the black histograms correspond to the noise distribution histograms in the CHEOPS light curves. On the bottom row, the red dashed lines correspond to the quantiles of a normal distribution, while the black curves correspond to the quantiles of the noise distribution in the CHEOPS light curves.}
+\label{fig:noises}
+\end{figure*}
+
+\begin{table}
+\caption{Mean, standard deviation, skewness, and Fisher kurtosis values of the noise profile of an average CHEOPS light curve corresponding to each spectral subtype.}
+\begin{tabular}{ccccc}
+\hline
+Spectral type & Mean  & St. dev & Skewness & Kurtosis \\ \hline
+M0V           & 0.000 & 0.002   & 0.013    & 1.186    \\
+M1V           & 0.000 & 0.001   & 0.009    & 1.331    \\
+M2V           & 0.000 & 0.001   & 0.025    & 1.595    \\
+M3V           & 0.000 & 0.001   & 0.024    & 1.172    \\
+M4V           & 0.000 & 0.002   & 0.076    & 1.383    \\
+M5V           & 0.000 & 0.002   & 0.002    & 0.050    \\ \hline
+\end{tabular}
+\label{Table:noise_parameters}
+\end{table}
+
+\subsection{Synthetic flare injection}
+\label{subsection:injection_and_recovery}
+%generated flare parameters 
+To create synthetic light curves for each spectral subtype, we first injected into empty light curves the noise distribution corresponding to each spectral subtype using the parameters compiled in Table \ref{Table:noise_parameters}. We then injected flares of known energies, amplitudes, and durations in the light curves corresponding to each spectral subtype. For this, we started by determining the stellar parameters of a 'prototypical star' from M0V to M5V. The effective temperatures were determined by calculating the average temperature of the stars in our sample within each spectral subtype. The radius values for each spectral subtype were sourced from \cite{Pecaut_2013}. The quiescent luminosities were calculated using the Stefan-Boltzmann law with the obtained effective temperatures and radii. We compile the average effective temperature, radius, and luminosity for each spectral subtype in Table \ref{Table:average_stellar_params}. 
+\begin{table}
+\caption{Average effective temperature, radius, and luminosity for each spectral type.}
+\centering
+\begin{tabular}{cccc}
+\hline
+Spectral type & $T_{\mathrm{eff}}$ {[}K{]} & Radius {[{$R_{\odot}$}]} & Luminosity {[{$L_{\odot}$}]}\\ \hline
+M0V           & 3850                & 0.588  & 0.068      \\
+M1V           & 3680                & 0.501  & 0.041      \\
+M2V           & 3550                & 0.446  & 0.028      \\
+M3V           & 3400                & 0.361  & 0.016      \\
+M4V           & 3200                & 0.274  & 0.007      \\
+M5V           & 3050                & 0.196  & 0.003      \\ \hline
+\end{tabular}
+\label{Table:average_stellar_params}
+\end{table}
+
+\begin{figure*}
+\centering
+\includegraphics{Fig/flare_energy.pdf}
+\caption{Injected flare energy matrix as a function of the injected flare amplitude, FWHM, and spectral subtype.}
+\label{fig:flare_energies}
+\end{figure*}
+
+Flares were simulated using the package \texttt{Llamaradas Estelares}\footnote{\url{https://github.com/lupitatovar/Llamaradas-Estelares}} \citep{Mendoza_2022}. This package simulates the morphology of white-light flares with a template derived from a set of flares observed in GJ 1243 based on two parameters: relative amplitude and FWHM (Full Width at Half Maximum, serving as a proxy for flare duration). We could simulate flares with different energies by using a known range of parameters for the amplitude and the FWHM. Following \cite{Davenport_2016}, flare energies were calculated by multiplying the Equivalent Duration (ED) by the star's quiescent luminosity. \cite{Bruno_2024} found that the sensitivity of CHEOPS could detect flares with energies down to $\sim$$10^{27}$ erg. We determined that relative flare amplitudes ranging between [$10^{-4} - 10^{-2}$] and FWHM between [0 - 60] seconds could simulate flares of energies within [$10^{24} - 10^{30}$] erg, depending on the quiescent luminosity of the star. Simulating flares within this energy range would enable us to test the impact of denoising on the recovery rate around this detection threshold. Figure \ref{fig:flare_energies} displays the injected flare energy as a function of the flare amplitude, FWHM, and spectral subtype of the star. 
+
+\subsection{Optimal denoising parameters determination}
+\label{subsection:denoising}
+%DWT vs SWT
+The Discrete Wavelet Transform (DWT) is commonly used to decompose and denoise time series data. This is done by scaling and translating a mother wavelet across the data, resulting in a decomposition into different frequency bands through low-pass and high-pass filtering, followed by a downsampling. Stochastic noise, typically in high-frequency components, is thresholded and removed before reconstructing the data by using the inverse transform. Unlike other denoising methods based on the Fourier Transform, the DWT retains both temporal and frequency information, which is beneficial for recovering non-stationary signals \citep{Mallat_2009}. However, the Stationary Wavelet Transform (SWT) is often preferred for denoising as it avoids downsampling, maintaining the signal length at each decomposition level through an \textit{à trous} algorithm. This approach offers a redundant, shift-invariant representation that enhances noise reduction accuracy and effectively preserves signal features, resulting in more consistent and reliable denoising results \citep{Percival_2000, Fors_2006}. 
+
+%threshold
+The threshold value in wavelet-based denoising is key to distinguish between noise and signal by determining which wavelet coefficients to suppress or retain. A well-chosen threshold effectively reduces noise while preserving essential signal features. However, an overly high threshold can erase important details, while a low threshold may fail to remove enough noise.
+Determining the threshold value typically involves statistical methods, such as the universal threshold proposed by \cite{Dohono_1994}. Its logarithmic scaling with data length ensures effective noise filtering for larger time series while preserving signal features \citep{Abramovich_1995, Percival_2000}. We adapted this universal threshold by replacing its dependence on the signal's standard deviation by the median absolute deviation, which is more robust to outliers. This adjustment effectively balances noise reduction and signal preservation, especially in the presence of non-Gaussian noise \citep{DelSer_2018}. 
+
+%Decomposition level
+The decomposition level determines the number of times the data is iteratively decomposed into wavelet components, with higher levels providing finer resolution of the signal and stronger denoising. Each decomposition level corresponds to different frequency scales in the data, enabling multi-resolution analysis that typically separates noise from significant signal features. As such, the decomposition level is generally chosen based on the number of data points in the input data. An appropriate decomposition level allows to effectively separate noise from the signal while preserving key signal characteristics. A level too low may fail to remove enough noise, while a level too high may suppress important signal details and introduce artifacts from the mother wavelet function \citep{Yang_2016}.
+Since each decomposition level halves the data frequency, consequently capturing more detail at lower frequencies, wavelet decomposition follows a binary scaling \citep{Mallat_1989}. Therefore, the maximum number of useful decomposition levels $J$ scales logarithmically with the number of data points $N$, such that $2^J \leq N$. This ensures effective noise isolation while preserving the signal's integrity \citep{Daubechies_1992}. 
+CHEOPS orbits vary in the number of data points based on orbit duration and observing cadence. The decomposition level is tailored to the number of data points in each orbit, ensuring shorter orbits are decomposed at a lower level than longer ones. This optimisation improves the denoising process and ensures effective use of the SWT across the different orbit sizes in our sample.
+
+%Mother wavelet
+\begin{figure*}
+\centering
+\includegraphics[width=0.90\textwidth]{Fig/injections.jpg}
+\caption{Step-by-step representation of the flare injection, noise injection, wavelet denoising, and flare recovery process. Only 20 flares are shown to better visualise the flux variations in the light curve. In this example, the wavelet-based denoising has been conducted with the Haar wavelet and a decomposition level of 2. Only 17 flares out of 20 are recovered in this portion of the light curve. The recovered and lost flare candidates are highlighted with a green and red background, respectively.}
+\label{fig:injections}
+\end{figure*}
+
+The choice of the mother wavelet is crucial in wavelet-based denoising, as it affects the accuracy of noise separation from the signal. Wavelets with short support, such as the \textit{Haar} wavelet, are efficient at detecting sharp discontinuities but may introduce high-frequency noise, whereas wavelets with longer supports, like the \textit{Daubechies} and \textit{Symlets}, are better at capturing smooth variations but may blur sharp features \citep{Haar_1910, Mallat_1989, Daubechies_1992}. Vanishing moments refer to a wavelet's ability to represent polynomials up to a certain degree. Wavelets with higher vanishing moments are more effective at filtering noise but are computationally demanding and may lead to overfitting \citep{Dohono_1994}. For the SWT, discrete and biorthogonal wavelets are used to ensure accurate data reconstruction, non-redundancy, and minimal introduction of artifacts \citep{Chui_1992}.
+To identify the optimal parameters for denoising CHEOPS light curves, we followed a systematic approach, illustrated in Figure \ref{fig:injections}:
+\begin{enumerate}
+    \item We created synthetic light curves for each spectral subtype and injected flares with energies from $10^{24}$ to $10^{30}$ erg, simulating various flare profiles. For each energy bin, spanning $10^{25}$ erg, we simulated 1,000 flares using the amplitude-FWHM parameters described in Figure \ref{fig:flare_energies}. We separated flare peaks by 45 minutes to ensure that the flux had returned to a quiescent level before the beginning of the next flare.
+    \item We injected a noise profile corresponding to each spectral subtype according to the distribution parameters compiled in Table \ref{Table:noise_parameters}.
+    \item We conducted a SWT-based denoising using the previously mentioned threshold for each discrete and biorthogonal mother wavelet included in the package \texttt{PyWavelets} \citep{Lee_2019}. This included wavelets from the \textit{Haar} (haar), \textit{Daubechies} (db), \textit{Symlets} (sym), \textit{Coiflets} (coif), and \textit{Biorthogonal} (bior) families, with decomposition levels from 1 to 8. Detailed properties of all the considered wavelets are compiled in Table~\ref{wavelet_list}.
+    \item We detected flares in the resulting light curves using the flare detection algorithm described in Section \ref{subsection:flare_detection}.
+\end{enumerate}
+
+\begin{figure*}
+\centering
+\includegraphics{Fig/recovery.pdf}
+\caption{Flare recovery rate as a function of the injected flare amplitude, FWHM, and spectral subtype after denoising with the haar mother wavelet and a decomposition level of 2. The top row corresponds to the recovery rates before denoising and the bottom row to the recovery rates after denoising.}
+\label{fig:recovery}
+\end{figure*}
+
+\begin{figure*}
+\centering
+\includegraphics{Fig/heatmap.pdf}
+\caption{Flare recovery rate, averaged across all spectral subtypes, as a function of the selected mother wavelet and decomposition level.}
+\label{fig:heatmap}
+\end{figure*}
+
+As an example of the output of this process, Figure \ref{fig:recovery} presents the improvement in flare recovery rate across all spectral subtypes after denoising with the Haar wavelet at a decomposition level of 2. The primary limitation for flare recovery is the amplitude, with a sharp decline in recovery rates for very low amplitude flares. This behavior is expected, as even after denoising, low amplitude flares are unlikely to exceed the $3\sigma$ detection threshold above the noise floor and fulfill the $N_1$ criterion. In addition, recovery rates also drop for very low FWHM, likely due to the flares not satisfying the $N_3$ criterion due to insufficient consecutive data points above the detection threshold. This suggests that even though flares of different impulses can have the same energy (see Figure \ref{fig:flare_energies}), high-impulse flares generally have a higher recovery rate compared to low-impulse ones, provided they have durations longer than $N_3$ data points. Overall, the denoising process improves recovery rates across all spectral subtypes, enabling the detection of flares with amplitudes approximately half an order of magnitude smaller than those identified in the original light curves. 
+
+To compare the gain in recovery rate obtained after denoising with different sets of parameters, we averaged the recovery rate across spectral type for each wavelet and decomposition level. Figure \ref{fig:heatmap} displays the average flare recovery rate obtained for all flares between $10^{24}$ and $10^{30}$ erg after denoising with different wavelets and decomposition levels. Recovery rates corresponding to each spectral subtype can be found in Figure~\ref{annex:recovery_rates}. Although a single wavelet did not produce a significant improvement in recovery rate compared to others, \textit{Coiflets} and \textit{Daubechies} wavelets consistently provided the highest recovery rate across several vanishing moments. Given their frequent use in analysing astrophysical datasets, we selected \textit{Daubechies} wavelets for denoising the CHEOPS light curves \citep{Ojeda_2014, Souza_2018, Bolzan_2020}. Specifically, we selected the db18, which provides a balance between a high and low number of vanishing moments. 
+
+%soft vs hard thresholding
+\begin{figure}
+\centering
+\includegraphics{Fig/softVShard.pdf}
+\caption{Flare recovery rate as a function of the injected flare energy. Black lines correspond to the recovery rates in the original light curves. Blue and red lines correspond to the recovery rates after denoising the light curves with soft and hard thresholding, respectively. Shaded lines correspond to recovery rate values for individual spectral subtypes, while bold lines correspond to the values averaged over all spectral subtypes.}
+\label{fig:percentages}
+\end{figure}
+
+%soft vs hard$
+An important parameter of the SWT is the coefficient thresholding method. Hard thresholding sets coefficients below the threshold to zero, preserving signal features but potentially introducing discontinuities and artifacts in the reconstructed signal. Soft thresholding, on the other hand, not only sets coefficients below the threshold to zero but also shrinks the remaining coefficients towards zero, resulting in smoother data with fewer artifacts. However, it can slightly attenuate preserved features. Generally, hard thresholding is better for retaining sharp features, while soft thresholding improves signal smoothness and continuity. 
+To evaluate the impact of these thresholding methods, we used the db18 wavelet and a decomposition level of 2 to denoise the synthetic light curves with injected flares for each spectral subtype. Hard and soft thresholding methods were applied, and the resulting recovery rates as a function of injected flare energy are displayed in Figure \ref{fig:percentages}. The two methods allow to increase the detection completeness of low-energy flares, with only marginal differences in recovery rate between them. Despite this, we chose to use a hard thresholding for denoising the CHEOPS light curves for several reasons. The signal of low-amplitude flares could be affected by the shrinkage introduced by soft thresholding, which would lead to the non-detection of the flares reaching just above the detection threshold. Additionally, the shrinkage could potentially lead to inaccurate energy estimations for detected flares. Finally, hard thresholding is less computationally intensive than soft thresholding, as it requires one less operation on each coefficient value, making it a more efficient method when applied to large datasets. 
+
+Our flare detection algorithm essentially functions as a binary classifier, distinguishing between 'flaring' and 'non-flaring' states. To evaluate its performance, we generated 1000 flare-free light curves for each $10^{25}$ erg energy bin and applied the detection algorithm to measure its classification efficiency. Specifically, we constructed confusion matrices for each injected flare energy bin, defining four possible outcomes: true positives (TP), where a flare was injected and correctly retrieved; false positives (FP), where no flare was injected but one was erroneously retrieved; false negative (FN), where a flare was injected but not retrieved; and true negatives (TN), where no flare was injected and none was retrieved. 
+
+\begin{figure}[b]
+\centering
+\includegraphics{Fig/confusion_matrices_energy.pdf}
+\caption{Evolution of confusion matrix metrics as a function of the injected flare energy. The true positive rate (TPR) is shown in blue, the false positive rate (FPR) in orange, the true negative rate (TNR) in green, and the false negative rate (FNR) in red. Metrics for the original light curves are represented by dashed lines, while those for the denoised light curves are shown as solid lines. The vertical black dotted lines indicate four detection thresholds: $t_1$, where the TPR for denoised light curves exceeds 10\% ($1.1\times10^{27}$ erg); $t_2$, where the TPR for original light curves exceeds 10\% ($3.5\times10^{27}$ erg); $t_3$, where the TPR for denoised light curves reaches 90\% ($1.1\times10^{28}$ erg); and $t_4$, where the TPR for original light curves reaches 90\% ($4.4\times10^{28}$ erg).}
+\label{fig:confusion_matrices_evolution2}
+\end{figure}
+
+In Figure \ref{fig:confusion_matrices_evolution2}, we present the evolution of the confusion matrix metrics as a function of the injected flare energy, averaged across all spectral types, for both the original and denoised light curves. We observed that the false positive rate (FPR) remained independent of the injected flare energy but instead depended on the noise level in the light curves. Notably, the FPR remained consistently low across the entire energy range: below 0.025 for non-denoised light curves and below 0.010 for denoised light curves. 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.95\columnwidth]{Fig/confusion_matrices.pdf}
+\caption{Confusion matrices obtained from the flare injection and recovery process for both the original (left) and denoised (right) light curves. The matrices are shown at the four detection thresholds, corresponding to TPR rises above 10\% ($t_1$ and $t_2$) and achieving 90\% ($t_3$ and $t_4$), as defined in the text.}
+\label{fig:confusion_matrices_tresholds}
+\end{figure}
+
+The denoising process significantly enhanced the true positive rate (TPR), effectively shifting the detection threshold towards lower injected flare energies by nearly half an order of magnitude. To quantify these improvements, we identified four key thresholds: 
+\begin{itemize}
+    \item $t_1$: where the TPR for denoised light curves exceeds 10\% ($1.1\times10^{27}$ erg),
+    \item $t_2$: where the TPR for original light curves exceeds 10\% ($3.5\times10^{27}$ erg),
+    \item $t_3$: where the TPR for denoised light curves reaches 90\% ($1.1\times10^{28}$ erg),
+    \item $t_4$: where the TPR for original light curves reaches 90\% ($4.4\times10^{28}$ erg).
+\end{itemize}
+Figure \ref{fig:confusion_matrices_tresholds} illustrates the confusion matrices at these thresholds. Consistent with the trend shown in Figure \ref{fig:percentages}, the denoising process significantly improves the TPR between $t_1$ and $t_4$, enabling a more complete detection of flares at lower energies compared to the original light curves.
+
+\subsection{Flare detection in denoised light curves}
+We then denoised all CHEOPS light curves (further referred to as 'denoised'), separated by orbits and performed the flare detection described in Section \ref{subsection:flare_detection}. Following the methodology of \citet{Raetz_2020,Bruno_2024} and \citet{Fortier_2024}, we determined the quiescent luminosity of each star in the sample by adopting the CHEOPS zero-point and effective wavelengths available on the filter profile service of the Spanish Virtual Observatory \citep{Rodrigo_2012} as follows: 
+\begin{equation}
+    L_0 = 4 \pi d^2 \times Q_{cheops} (F_{vega} \times 10^{-0.4 \times G})
+\end{equation}
+where $d$ is the distance of the star, $Q_{cheops}$ is the quantum efficiency of the CHEOPS sensor integrated over the 330-1100nm wavelength range, $F_{vega}$ is the CHEOPS flux of Vega (CHEOPS zero-point), and $G$ is the Gaia $G$ band magnitude of the star. We also derived several flare parameters, such as the flare duration and FWHM, flare impulse (amplitude / duration), and flare peak luminosity (amplitude $\times$ quiescent luminosity).
+
+\subsection{Complex flare breakdown}
+To break down complex flares displaying several visible peaks, we consider that such events can be described as a superposition of several simple flares, which can be modeled by the empirical flare template of \texttt{Llamaradas Estelares}. For a given complex flare event, the objective is therefore to automatically determine the number of flares and their parameters (namely $t_{peak}$, amplitude, and FWHM) that best describe it. For this, we developed an algorithm to iteratively fit up to 5 flares for every flaring event detected using \texttt{AltaiPony}. The flare region to fit for each event included 15 seconds before the start time and 45 seconds after the stop time of the flare to ensure the flux fully returned to the quiescent level within the fitting window. Following the procedure of \cite{Davenport_2014}, we imposed a first guess and boundaries for the fitted flare parameters. We seeded the parameters of the fitting by using the peak flux amplitude and time and 15\% of the flare full duration for the FWHM. Each component's relative amplitude was required to be larger than $10^{-4}$, being the flare amplitude after which the recovery rate dropped to 0\% across all spectral types (see Figure \ref{fig:recovery}). We also required $t_{peak}$ to occur within the boundaries of the flare window, and FWHM to be larger than the observing cadence of the light curve and smaller than 50\% of the flare total duration. No priors on the relationships between flare amplitude, FWHM and $t_{peak}$ were included. Following \cite{Bruno_2024}, we used the Akaike Information Criterion (AIC) to determine the best fit, which took the form: 
+\begin{equation}
+    AIC_n = M \times ln(\frac{\chi^2}{M}) + 2k_n
+\end{equation}
+where M is the number of data points that fell within the flare window, and $k_n$ is the number of degrees of freedom of the $n$-th model. This statistic determines the improvement of the fit (decreased $\chi^2$) while penalising the increasing number of free parameters used in the model. 
+We chose to use the AIC instead of the BIC like \cite{Davenport_2014} because the AIC penalises less the number of components. As such, the AIC tends to favour more complex models with a higher number of parameters, which would enable further breakdown. Finally, the best solution fit was selected as the $n$-th model with the smallest AIC to have decreased by at least 6 units from the previous $(n - 1)$th model. The choice of a 6-unit improvement threshold was determined in \cite{Bruno_2024} by visual inspection of complex flare events to ensure the algorithm did not overfit them. 
+
+\section{Results}
+\label{section:results}
+
+%individual flares
+We began our analysis by applying the flare detection algorithm to the detrended CHEOPS light curves, initially identifying 260 flares with energies ranging from $4.3 \times 10^{26}$ erg to $8.1 \times 10^{30}$ erg. To optimise the detection process, we employed a SWT-based denoising algorithm using the db18 wavelet base, as detailed in Section \ref{subsection:denoising}, to reduce noise within each CHEOPS orbit. We then reran the flare detection algorithm on the denoised light curves and detected a total of 349 flares with energies ranging between $2.2 \times 10^{26}$ erg and $8.1 \times 10^{30}$ erg. After running the flare breakdown algorithm, 142 individual components were recovered from 61 complex events in the original light curves, with energies ranging from $1.7 \times 10^{27}$ erg to $4.5 \times 10^{30}$ erg. 298 individual flare components were recovered in the denoised light curves from 123 complex events, with energies ranging from $1.8 \times 10^{26}$ erg to $4.1 \times 10^{30}$ erg. The denoising process resulted in a significant increase in the overall flare recovery of $\sim$34\% and improved the recovery of individual components of complex flares by $\sim$110\%. Nine events (less than 2\% of the denoised flare sample) had recovered energies lower than $10^{27}$ erg, therefore belonging to the upper end of the micro-flare energy range.
+
+\begin{figure*}
+\centering
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare0.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare1.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare2.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare3.pdf}
+\end{subfigure}
+\caption{Comparison of the flare recovery before (left) and after (right) denoising. In each panel, the original light curve (black data points) is compared to the denoised light curve (red data points). The star on which each event was detected is mentioned in the corresponding subplot title. The green-shaded areas correspond to the data points flagged as belonging to a flare candidate by the flare detection algorithm, and the red-shaded areas correspond to a non-detection on the same light curve portion. The solid lines represent the fitted flare components. Under each light curve, the residuals after subtracting the best-fit flare model are shown. In the top-right corner of each subplot, the $\tilde{\chi}^2$ calculated on the portion of the light curve shown is given as indication. Each subplot group corresponds to a specific case: a) Simple flare detected in both the original and denoised light curves. b) Simple flare detected only after denoising. c) Complex flare with all components recovered in both original and denoised light curves. d) Complex flare with an extra component recovered after denoising.}
+\label{fig:grid}
+\end{figure*}
+
+In Figure \ref{fig:grid}, we present examples of the improved flare recovery enabled by wavelet-based denoising. As shown in subpanel b), the denoising allowed the recovery of a low-amplitude flare from EV Lac by smoothing out the local scatter caused by the light curve noise, which had previously prevented the flare from meeting the $N_3$ criterion. As such, flares slightly below the detection limit become detectable as they fulfill the $N_{1,2,3}$ criteria. As shown in subpanel d), the denoising also allowed for the identification of an additional flare component in a complex flare from AD Leo, which had been merged into a single one due to the light curve noise. This increased sensitivity might allow us to recover a larger population of complex flares, with much lower amplitudes and durations than those detected before applying the denoising.
+
+We also observed several events with well-known flare morphologies. Subpanel a) of Figure~\ref{fig:grid} shows a pre-flare dip from AU Mic, with an amplitude comparable to the one of the subsequent flare, while subpanel c) presents a QPP candidate with a sub-minute period from V1054 Oph. Such pre-flare dips and QPPs in flaring light curves have been extensively discussed in~\cite{Bruno_2024}. We present more pre-flare dip detections and QPP candidates from GJ 317, GJ 3323, AU Mic, and AD Leo in Figure~\ref{annex:dip+qpp}. Furthermore, we detected many flare candidates with the typical 'peak-bump' morphology, which were broken down by our algorithm into two distinct components. While some of these events are explicable as a random superposition of two sympathetic flares, \cite{Tovmassian_2003} claims that most peak-bump events are caused by a single flare described by a two-phase underlying emission mechanism, as energy is re-radiated by the stellar photosphere after the peak phase. However, the complete profile should only be observable when the emission site is close to the center of the visible stellar disc. Yet, we also found a few occurrences where the 'bump' occurs before the 'peak', which seems to contradict this hypothesis. Finally, a few cases of 'flat-top' structures were also found, although this could be due to a typical 'peak-bump' shape with a lower contrast between the 'peak' and the 'bump' phases. Examples of such flare morphologies from Gl 841 A, V1054 Oph, and Ross 733 are provided in Figure~\ref{annex:morphologies}.  
+
+Figure \ref{fig:peaks} displays the number of peaks observed per flaring event. We find that $\sim$40\% of flares have complex structures composed of multiple peaks, in agreement with previous studies on M stars \citep{Davenport_2014, Howard_2022, Bruno_2024}. We compare the percentage of peaks per flaring event with those obtained by \cite{Bruno_2024}, who conducted a similar analysis on CHEOPS light curves from the same programs. We find that our method retrieved slightly more simple and 2-peak flares, whereas the method employed in \cite{Bruno_2024} identified more 3- to 5-peak flares. This discrepancy can be attributed to two factors. First, a minor difference in determining the 'best-fit' within the breakdown algorithm: we required each $(n-1)$th model to improve the AIC by at least 6 units before exploring the $n$-th model, similar to the overfitting prevention approach used by \cite{Davenport_2014}. Second, if denoising increases the proportion of low-amplitude flares, these may be more difficult to break down into multi-component events, potentially leading to a higher proportion of simple and 2-peak flares.
+
+\begin{figure}[h]
+\centering
+\includegraphics{Fig/peak_numbers.pdf}
+\caption{Percentages of peaks observed per flaring event. Black and red bars correspond to flares recovered in original and denoised light curves, respectively. We compare our obtained percentages to the ones of \cite{Bruno_2024}, displayed as blue dashed bars.}
+\label{fig:peaks}
+\end{figure}
+
+\begin{figure*}
+\centering
+\includegraphics{Fig/corner-normalVSdenoised.pdf}
+\caption{Corner plot of the different flare properties, namely relative amplitude, duration, measured energy, FWHM, impulse, and peak luminosity. Black data points represent metrics of individual flare components detected before denoising, while red data points correspond to those detected after denoising. A linear fit is provided for reference in each distribution. The discrete bins for flare duration and FWHM are due to the observational cadence equal to 3 seconds.}
+\label{fig:corner}
+\end{figure*}
+
+\begin{figure}
+\centering
+\includegraphics{Fig/flaring_stars_parameters.pdf}
+\caption{Comparison of Gmag, $T_{eff}$, radius, log $v$sin$i$, distance and spectral type for flaring stars (red bars) against the entire stellar sample (white bars).}
+\label{fig:flaring_stars_parameters}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{Fig/flares_parameters.pdf}
+\caption{Flare statistics by spectral subtype for the stars in our sample. The top panel shows the mean number of flares per star, the middle panel displays the mean flare energy, and the bottom panel presents the mean flare equivalent duration. Vertical bars represent the interquartile range (1st to 3rd quartiles), while horizontal bars indicate the median values. In the M5V bin of the top panel, only one star is included, resulting in equal values for the 1st quartile, median, and 3rd quartile.}
+\label{fig:flaring_stars_parameters_per_sptype}
+\end{figure}
+
+In Figure \ref{fig:corner}, we present a corner plot of the parameters of the recovered flares before and after denoising. In both cases, the energy of recovered flares spans from $\sim$$10^{26}$ erg to $\sim$$10^{31}$ erg. Most flares exhibit relative amplitudes between $10^{-3}$ and $10^{-1}$. Flare durations range between 10 seconds and 15 minutes. Most flares display impulses between 1 and 100 $s^{-1}$, though a small subset reaches down to 0.1 $s^{-1}$. The distributions of flare energy, duration, amplitude, and impulse are notably similar between flares detected in the original and denoised CHEOPS light curves, suggesting that the population of recovered flares remains consistent across both datasets. However, we notice a small secondary peak in the flare peak luminosity distribution after denoising, resembling a bimodal pattern that was absent before denoising, which we attribute to the small sample size.
+
+The denoising process led to a higher recovery rate across the entire energy range, with the most significant improvements observed for flares weaker than $10^{29}$ erg. This is consistent with the results of the injection-recovery test, which suggested that the flare recovery rate started to drop at this energy (see Figure \ref{fig:percentages}). As can be seen from the amplitude and duration histograms, the denoising allows us to recover an increased proportion of low amplitude and short duration flares, while those with relative amplitudes higher than $10^{-2}$ and durations longer than $\sim$4 minutes are recovered equally well. This confirms that observing cadence and photometric precision is the main bottleneck for low-energy flare detection. By optimising the SNR of weak flares, the denoising improves one of these factors and facilitates the recovery of a greater proportion of low-amplitude flares. Consequently, the denoising permits a higher recovery of flare with high impulse but does not improve it for impulses lower than 1$s^{-1}$. Contrarily to \cite{Hawley_2014}, we did not find that individual components of complex flares have longer durations than simple flares.
+
+We provide a tentative linear fit to evaluate correlations between components. A power-law relationship is visible between the flare duration and recovered energy, with longer flares generally releasing more energy. Similarly, the recovered energy logically scales with amplitude. On the other hand, the recovered energy does not seem to be correlated to the flare's impulse, implying that the flare detection and breakdown algorithm efficiently recovers flares of various impulsiveness. A slight trend is visible between the flare amplitude and duration, where the flare duration appears to scale inversely with the amplitude. This might be due to a detection bias and implies that within this energy range, the detection of flares of low amplitude and short durations (i.e. the flares at the lower end of the energy range) is incomplete. This is expected considering the results of the injection-recovery process (see again Figure \ref{fig:percentages}). Finally, as expected, flare peak luminosities scale with flare amplitudes, and FWHMs scale with durations, as these properties act as proxies for each other.
+
+Considering the denoised light curves, flares were detected on 63 out of the 110 stars in our sample. In Figure \ref{fig:flaring_stars_parameters}, we compare the stellar parameters of the flaring stars to the ones of the entire stellar sample. No clear trends are evident in $G_{\mathrm{mag}}$, $T_{\mathrm{eff}}$, radius,  $v$\,sin\,$i$, distance or spectral type. Previous studies have attributed a higher proportion of flaring stars to fast-rotating stars, which are generally younger and possess more active magnetic dynamos than their slower-rotating counterparts \citep{Howard_2020}. However, this trend has been observed to decline significantly in ultra-fast rotators ($P_{rot} < 0.2$ days), possibly due to the high rotation speed constraining the magnetic field lines in the stellar chromosphere, thereby inhibiting magnetic reconnection \citep{Gunther_2020, Doyle_2022, Ramsay_2022}. Previous large-scale studies have also attributed a higher rate of flaring stars on late Ms compared to their earlier counterparts \citep{Gunther_2020, Pietras_2022}. Our results do not provide sufficient evidence to support any of these hypotheses, likely due to the limited sample size.
+
+Figure \ref{fig:flaring_stars_parameters_per_sptype} shows statistics on the flares separated by spectral subtype. The mean number of flares per star is relatively uniform across spectral types, with a slight increase observed in the M1V bin, probably due to the important flaring activity recorded on AU Mic (as seen by the mean value surpassing the 3rd quartile). The M5V group shows the highest average number of flares per star, although this may be influenced by the small number of flaring stars in this bin. The mean flare energy is also consistent across spectral types but slightly decreases towards late-type stars. This effect is expected as the average quiescent luminosity decreases with spectral type (a similar trend is visible in Figure \ref{fig:flare_energies}). However, these mean flare energies remain more than an order of magnitude lower than the mean flare energy recovered by \cite{Bruno_2024} using combined TESS and CHEOPS data, and orders of magnitude lower than the flare samples observed by TESS \citep{Gunther_2020, Pietras_2022}, Kepler \citep{Davenport_2016, Yang_2017}, and Evryscope \citep{Howard_2019}. When comparing the mean equivalent duration, we find that it tends to increase with later spectral types, suggesting that late M dwarfs produce flares that are more energetic relative to their quiescent luminosities. This trend could be attributed to enhanced magnetic activity in fully convective stars. 
+
+\begin{figure}
+\centering
+\includegraphics{Fig/histograms.pdf}
+\caption{Histograms of the number of flares observed per energy bin. The grey-shaded histogram represent simple flares in denoised light curves, while the red-shaded histogram represent individual components of complex flares. Black and red dashed histograms correspond to the same, respectively, in the original light curves.}
+\label{fig:tess_comparison}
+\end{figure}
+
+To better compare the energy range of our flare sample with that of \cite{Bruno_2024}, we display in Figure \ref{fig:tess_comparison} the histogram of the energy distribution of our original and denoised flares, separated into simple flares and individual components of complex flares. First, denoising allows us to recover a significant portion of low-energy simple flares, while part of the high-energy simple flares were found to be complex and broken down into several components. A similar effect is observed for complex flares, which are further broken down into individual components after denoising. When comparing the probability density of the flare energies to the ones of Figure 13 of \cite{Bruno_2024}, the mean flare energy recovered in this study is more than one order of magnitude lower for both simple and complex flares, which is likely due to the contribution of flares detected by TESS composing the majority of their sample.
+
+To explore potential relationships between flare parameters and the host star properties, we analysed correlations between flare parameters and those of the corresponding star. We show some of these correlations in Figure \ref{fig:correlations}. A slight exponential trend is observed between the targets' $G$ band magnitude and the relative amplitude of the recovered flares. This trend may be attributed to low-amplitude flares being more easily detectable on brighter stars and suggests that a portion of such flares remain undetected in the noise floor of the light curves of dimmer stars. \citet{Jackman_2021} and \citet{Pietras_2022} found a correlation between the flare amplitude and the effective temperature of the star, with flares detected on cool stars having, on average, higher amplitudes because of the greater contrast between the flaring and quiescent emission. We find a similar trend, although less pronounced, for our simple flares but not for the complex flares. 
+Moreover, a power-law trend is visible between the flare duration and the star's rotational velocity, indicating that longer flare durations are usually associated with faster-rotating stars. This may be related to fast-rotating stars often having stronger magnetic fields generated by the dynamo effect, which can lead to more intense reconnection events. 
+Finally, an exponential trend is observed between the flare energy and the star's distance. This is likely due to a detection bias, where low energy flares become increasingly difficult to detect as the distance to the star increases. 
+We present all remaining correlations, classified as simple versus complex flares, in Figure~\ref{annex:simpleVScomplex}, and provide the same correlations categorised as flares detected in the original versus denoised light curves in Figure~\ref{annex:originalVSdenoised}. 
+
+\begin{figure}
+\centering
+\includegraphics{Fig/correlations_subset.pdf}
+\caption{Correlations between flare parameters and stellar parameters. Blue and orange data points correspond to simple flares and individual components of complex flares, respectively. Each subplot includes a linear fit for reference.}
+\label{fig:correlations}
+\end{figure}
+
+\begin{figure*}
+\centering
+\includegraphics{Fig/ffds.pdf}
+\caption{Flare Frequency Distributions (FFDs) for the flares recovered in our original (black) and denoised (red) samples. We separate FFDs into simple flares (top left), individual components of complex flares (bottom left), flares recovered on partially convective stars (top middle), flares recovered on fully convective stars (bottom middle), and the entire flare samples (top right). We also provide a comparison between the simple flares (blue) and individual components of complex flares (orange) recovered in the denoised light curves (bottom right). Solid lines indicate linear fits to the double-logarithmic FFD, extrapolating into regimes not directly observed.}
+\label{fig:all_ffds}
+\end{figure*}
+
+%FFDs
+The relationship between flare energy and frequency of occurrence is generally assumed to be characterised by a power law described as $dN / dE \sim E^{-\alpha}$, where $\alpha$ is the power-law index governing the frequency $dN/dE$ of flaring events with energy $E$. To compare the impact of denoising on our recovered flare samples, we constructed Flare Frequency Distributions (FFDs) for our flare catalogs recovered in original and denoised light curves. The FFDs represent the cumulative rate of flares per day, indicating the frequency of detecting a flare of a given energy or higher. This approach excludes inactive stars from the analysis. In Figure \ref{fig:all_ffds}, we compare the FFDs of flares recovered in original and denoised light curves. For the denoised sample, we also compare FFDs of simple flares and individual components of complex flares.
+Following \cite{Yang_2023}, we also separate flares from fully and partially convective stars by setting the separation threshold at M3V. We observe that simple flares are more frequent before denoising, as are individual components of complex flares with energies above $10^{29}$ erg. This likely results from the denoising facilitating the identification of complex flare components, as shown by the increased percentages in Figure~\ref{fig:peaks}. Thus, some simple flares may be broken down into multiple components, and high-energy components may split into smaller ones after denoising, explaining the increase in observed frequency. When comparing the full sample of original versus denoised flares, we see that the frequency of recovered flares is higher after denoising across the entire energy range. Even so, the denoising process only marginally extends the lower limit of the detected energy range. 
+Similarly when comparing flares from fully and partially convective stars, the denoising process generally allows to recover an increased frequency of flares across the entire energy range. This is particularly visible in partially convective stars, although this might be attributed to the larger sample size compared to fully convective stars (see the comparison of the number of flaring stars per spectral type in the last panel of Figure \ref{fig:flaring_stars_parameters}). Finally, in the denoised light curves, individual components of complex flares appear more frequently at the same energy compared to simple flares. This suggests that highly energetic flares are more likely the result of multiple weaker, sympathetic flares originating from neighboring active regions, rather than single, powerful events. Consequently, within this energy range, flares appear to occur more frequently in groups rather than as isolated occurrences. 
+
+For each obtained FFD, we determined the corresponding power-law index $\alpha$ by using an MCMC fit based on the Bayesian flare frequency predictor outlined in \cite{Wheatland_2004} and \cite{Ilin_2021}. The fit range began at $1.4 \times 10^{29}$ erg for the original light curves and $3.3 \times 10^{28}$ erg for the denoised light curves, corresponding to the energy from which all flares are expected to be fully recovered (see Figure \ref{fig:percentages}). 
+We performed a Kolmogorov-Smirnov test on each fit to assess whether the power-law assumption should be rejected, using a significance level of 0.05 \citep{Weidner_2009}. In all cases, the power-law assumption was accepted with p-values below 0.05. We compile the obtained $\alpha$ values in Table \ref{tab:alphas}. The obtained values correspond to the higher end of the general $\alpha$ range reported in the literature \citep{Gunther_2020, Pietras_2022, Yang_2023}. Specifically, we find an $\alpha$ value of $1.92 \pm 0.07$ for the entire flare population recovered in the denoised light curves. The slightly lower values of $\alpha$ for denoised groups compared to original groups could be explained by the larger fitting range, with flares with measured energy between the $3.3 \times 10^{28}$ erg and $1.4 \times 10^{29}$ erg contributing to 'flatten' the FFD and reduce the $\alpha$ index. 
+In all cases, caution is advised when interpreting the obtained $\alpha$ indices due to the limited portion of the energy range used for the fit, representing only a small subset of events. For the flares detected in the original light curves, only about 14\% had energies above $1.4 \times 10^{29}$ erg and could be included in the power-law fit. Similarly, for the denoised light curves, just 8\% of flares had energies above $3.3 \times 10^{28}$ erg and were used in the fit. This highlights that extending the detection limit would allow to improve the detection completeness and obtain a more accurate extension of the FFDs towards lower energies.
+
+\begin{table}
+\centering
+\caption{Power-law indexes $\alpha$ obtained in Figure~\ref{fig:all_ffds}}
+\begin{tabular}{cc}
+\hline
+Category                                   & $\alpha$        \\ \hline
+Simple flares (original)                   & 2.63 $\pm$ 0.56 \\
+Simple flares (denoised)                   & 1.99 $\pm$ 0.12 \\
+Complex flares (original)                  & 1.98 $\pm$ 0.21 \\
+Complex flares (denoised)                  & 1.90 $\pm$ 0.08 \\
+< M3V (original)    & 2.13 $\pm$ 0.25 \\
+< M3V (denoised)    & 1.92 $\pm$ 0.07 \\
+> M3V (original) & 2.06 $\pm$ 0.43 \\
+> M3V (denoised) & 1.98 $\pm$ 0.16 \\
+All flares (original)                      & 2.09 $\pm$ 0.18 \\
+All flares (denoised)                      & 1.92 $\pm$ 0.07 \\ \hline
+\end{tabular}
+\label{tab:alphas}
+\end{table}
+
+A power-law distribution is generally assumed when fitting FFDs in order to determine an $\alpha$ index. A power-law implies that flares are governed by a scale-free process, where flares arise from self-organised criticality. This is the current understanding of magnetic reconnection events, where magnetic loops can accumulate energy and release it in a scale-invariant manner, with a size distribution following a power-law. However, \cite{Verbeeck_2019} and \cite{Sakurai_2022} suggest that a preliminary step should be to verify that the FFD indeed follows a power-law and could not be better described by an alternative distribution. A log-normal distribution would indicate that high-energy flares result from several smaller independent events combining multiplicatively, rather than from a critical buildup and sudden release of energy. This could happen if flares resulted from many independent magnetic reconnection sites or gradual energy accumulation processes. If flares followed a log-normal distribution, it would suggest that the processes driving flare energy release operate within a characteristic energy range, with fewer instances of extreme events, which could explain the 'truncated power-law' distribution observed by \cite{Howard_2019} at high flare energies.
+
+To test this, we followed the procedure of \cite{Verbeeck_2019} and \cite{Bruno_2024} and compared our obtained FFDs to both a power-law and a log-normal distribution. Figure \ref{fig:lognormal} displays the Complementary Cumulative Distribution Functions (CCDFs) of the flare energies recovered in our denoised light curves, and compares the fitted power-law obtained in Figure \ref{fig:all_ffds} to a log-normal distribution. Again, the fitting range started at the energy of recovery completeness ($3.3 \times 10^{28}$ erg). For each denoised category, we identified the best-fitting distribution by calculating the log-likelihood ratio $R$ between the power-law and log-normal fits. A positive $R$ indicates a preference for the power-law, while a negative $R$ favours the log-normal. Our results show that a log-normal distribution better fits the data in all cases, though with p-values above 0.05, the statistical significance is insufficient for a confident conclusion. This again emphasises that extending flare observations to lower energies could help clarify the best-fitting distribution for FFDs, which may have important implications for understanding the mechanisms driving stellar flares.
+\enlargethispage{\baselineskip}
+
+\begin{figure}
+\centering
+\includegraphics{Fig/ccdf.pdf}
+\caption{Complementary Cumulative Distribution Functions (CCDFs) for recovered flare energies in denoised light curves. We separate flares into simple events (blue) and individual components of complex flares (orange), as well as flares from partially (green) and fully convective stars (purple). The full flare sample is displayed in black. Observed distributions, power-law fits, and log-normal fits are displayed with solid lines, dashed lines, and dotted lines, respectively. The grey dashed vertical lines indicate the energy of full recovery ($3.3 \times 10^{28}$ erg) and the beginning of the energy range used for fitting. In each panel, the legend indicates the log-likelihood ratio $R$ between the power-law and log-normal fits and its associated p-value.}
+\label{fig:lognormal}
+\end{figure}
+
+\section{Discussion}
+\label{section:discussion}
+
+%amplitude limitation
+The use of CHEOPS allowed us to study an unexplored region of the white-light flare energy range in main sequence M dwarf stars. Moreover, we employed a tailored denoising algorithm based on the SWT to optimise the detection rate of low-energy flares. However, several potential improvements could extend this work. 
+
+The primary limitation encountered in the flare observation stems from the constraints of the detection algorithm employed. The algorithm used in this work was initially developed for standard flare detection and optimised for TESS and Kepler light curves. Since low-energy flares are generally detected just above the $3\sigma$ threshold, many flares with variations below this level are missed. Lowering the $N_1$ criterion could help capture more low-energy flares, but would significantly increase the false positive rate, thereby affecting the overall flare statistics. As such, this study highlights the limitations of a classical sigma-clipping detection method when applied to low-energy flares. Emerging detection algorithms, such as those based on hidden Markov models, use non-stationary time series and have shown improved efficiency in detecting low-energy flares and accurately measuring their energy \citep{Esquivel_2024, Zimmerman_2024}. Flare detection algorithms employing deep neural networks and random forest classifiers have also demonstrated improved recovery rates and increased sensitivity to low-energy events in Kepler and TESS data, outperforming classical detection techniques \citep{Vida_2021, Lin_2024}. Integrating such algorithms could improve the sensitivity to low-energy flares and increase the confidence in the derived flare statistics.
+
+%cadence limitation
+Another limitation of the flare detection algorithm is the required number of consecutive data points for identifying a flare candidate. To minimise false positives, we set the minimum consecutive data points for detection to $N_3$ = 5. Given that the observing cadence for most light curves in this study is 3 seconds (see Figure \ref{fig:orbit_durations}), this results in a minimum detectable flare duration of 15 seconds. However, several studies using observing cadence of 1 second or faster have shown that flares can have durations as brief as a few seconds \citep{Schmitt_2016, Aizawa_2022}. As illustrated in Figure \ref{fig:corner}, flare energy typically scales with duration, which is supported by extensive statistical analyses conducted by TESS and Kepler \citep{Davenport_2016, Howard_2019, Pietras_2022}. Enhancing the observing cadence while conserving the same photometric precision could enable the detection of these shorter-duration, less energetic flares and potentially extend the flare detection toward the lower end of the energy range. CHEOPS can achieve a cadence as fast as 0.001 seconds for very bright stars (V<6) \citep{Broeg_2013, Benz_2021}. Conducting a dedicated observing program targeting such bright stars could provide high-cadence light curves of active stars, thus decreasing the minimum detectable flare duration. 
+
+%denoising flattens the peak value
+An increased cadence would capture more data points, allowing for more precise energy estimates \citep{Clarke_2024}. Denoising low-cadence time series can cause flare peaks to be treated as outliers and pulled toward the quiescent level, particularly for very short flares with limited data points. This effect leads to a higher proportion of lost energy and increased relative error in energy calculations, as the flare equivalent duration is determined from the area under the curve. Accelerating the observing cadence could help alleviate this issue by providing more data points and minimising the impact of denoising on flare peak values.
+
+%flare profile for injection and recovery is too long
+Moreover, the flare profile used for the injection and recovery process in Section \ref{subsection:injection_and_recovery} is based on GJ 1243 flare data observed by Kepler \citep{Davenport_2014, Mendoza_2022}. However, \cite{Seli_2024} identified a correlation between the average flare shape and the spectral type, which this profile does not account for. Furthermore, \cite{Pietras_2022} demonstrated that this profile is too long to accurately model the decay phase of short-duration flares. Likewise, \cite{Dillon_2020} and \cite{Grant_2023} noted that low-energy flares tend to have shorter, more symmetrical profiles, with a more balanced rise and decay compared to regular flares. This suggests that the profile used here may not be ideal for modelling low-energy flares, potentially leading to the selection of suboptimal denoising parameters. This limitation may also bias the choice of the mother wavelet, which might be more suited to identify longer, high-energy flares but less effective for shorter, low-energy ones. To improve the determination of optimal denoising parameters, adopting a flare profile that better represents low-energy flares in the injection and recovery process could be beneficial. Developing such a model would involve quantifying the key morphological differences between flares across different energy levels.
+
+%nanoflares can have complex morphologiesross
+Furthermore, the injection and recovery process in Section~\ref{subsection:injection_and_recovery} focused solely on simple flaring events. Yet, when cadence is sufficiently high, a flare breakdown reveals that flares can occur as stacked events, adding complexity to the light curve profiles \citep{Davenport_2014, Bruno_2024}. Even low-energy flares may exhibit varied morphologies, underlining the need to differentiate individual events through enhanced photometric sensitivity and observing cadence. Improving amplitude detection and cadence could better separate complex flares into distinct events, leading to more accurate energy estimates. Additionally, performing injection and recovery tests with both simple and complex flares would ensure that the chosen denoising parameters effectively capture both types. Extending the empirical flare model of \cite{Mendoza_2022} to incorporate flares with well-known morphologies (e.g., 'peak-bump,' 'flat-top') could also refine the breakdown algorithm, helping to prevent misclassification of such flares as complex events.
+
+%wavelet combination could improve the denoising (polyharmonic wavelets)
+Additionally, several approaches are exploring the extension of wavelet transform applications for time series denoising by developing new functions with enhanced properties. For example, polyharmonic wavelets, which use functions characterised by their ability to represent multiple harmonics, offer potential advantages such as improved signal decomposition across multiple scales, better frequency localisation, and reduced artifacts in the resulting signal \citep{Kouchev_2010}. Although their applications are still emerging, other studies investigate the benefits of combining different wavelets and transformation methods for time series denoising \citep{Ji_2016, Alvarado_2023}. Evaluating the impact of these methods on flare recovery rates compared to traditional SWT denoising could offer valuable insights and help fine-tune denoising parameters for optimal performance.
+
+Most importantly, the main limitation of this study is the relatively small sample size, with only 63 flaring stars identified and less than a thousand flaring events catalogued. This constraint arises from the limited data gathered by CHEOPS due to its on-target observing mode. While precise for focused targets, this mode is less effective at quickly monitoring a large number of targets than survey-operating missions like TESS and Kepler. As a result, flare statistics derived from CHEOPS data carry more uncertainty than those from TESS and Kepler, which observed thousands of stars \citep{Davenport_2016, Pietras_2022}. FFDs are generally constructed using hundreds or thousands of flaring events. In our study, however, the average number of flares per star was around 10 for each spectral subtype (see the top panel of Figure \ref{fig:flaring_stars_parameters_per_sptype}). This small sample size likely impacts the reliability of the derived FFDs, leading to substantial uncertainties in the calculated $\alpha$ values and possibly explaining the better performance of log-normal fits over power-law fits. This limitation emphasises that, while CHEOPS provides the photometric precision and observing cadence needed for low-energy flare observations, its on-target mode makes it less suited for large-scale flare studies. Future missions combining high photometric precision, fast cadence, and survey-mode capabilities will be crucial for advancing our understanding of low-energy flare statistics.
+
+PLATO, scheduled for launch at the end of 2026, stands out as the most promising candidate for this matter. Although its primary objective is to observe transits of Earth-like exoplanets around Sun-like stars, the satellite will also collect photometric data on active late-type stars as part of its stellar variability program. PLATO is anticipated to achieve a photometric precision comparable to CHEOPS, with a fast observing cadence of up to 2 seconds in its high-cadence mode. It will monitor two $49^{\circ} \times 49^{\circ}$ regions of the sky for two continuous years each \citep{Rauer_2024}. The combination of observational capabilities and a survey-mode strategy can significantly increase the detection of low-energy flares and improve the precision of their statistics for late-type stars.
+
+Additionally, the recently announced TESS Extended Mission 3 presents great capabilities for low-energy flare studies. TESS has been of prime importance in gathering flare statistics in recent years and is set to extend its observing cadence to 2 seconds from 2025 to 2028. While its photometric precision remains lower than those of CHEOPS and PLATO, the enhanced cadence will improve the detection of lower-energy flares compared to previous TESS surveys. This would help bridge the gap between large-scale studies of regular flares and studies of low-energy flares, which remain limited by small sample sizes \citep{Gunther_2020, Pietras_2022, Feinstein_2024}.
+
+Finally, the type of denoising algorithm presented in this work could improve the recovery of low-energy flares in JWST exoplanet spectra and facilitate the understanding of the impact of flares on exoplanetary atmospheric retrievals \citep{Howard_2023}. During occultations, certain atmospheric elements (e.g. CO$_2$) can produce spectral profiles similar to flare activity, potentially biasing the measurements of emission features of planetary atmospheres \citep{Lustig_2019}. Likewise, flares themselves can mimic the appearance of emission lines from various atmospheric elements, complicating the accurate identification of chemical signatures \citep{Lin_2023}. Applying a similar denoising algorithm could help differentiate between genuine atmospheric features and transient flare signals, thereby reducing the likelihood of such confusion.
+
+\section{Conclusion}
+\label{section:conclusion}
+This work made use of CHEOPS to study white-light flares in an unexplored region of the energy range. We employed a denoising algorithm based on the SWT to enhance the detection of low-energy flares in the light curves of a sample of M dwarfs. We optimised the denoising parameters by performing a flare injection and recovery in synthetic light curves that replicated the noise profile of the CHEOPS instrument. The CHEOPS light curves were then denoised using a db18 wavelet and a decomposition level tailored to the number of data points in each orbit. Each flare was analysed by a breakdown algorithm to identify substructures. We finally compared the flare populations detected in the original and denoised light curves. 
+
+After denoising, our sample was composed of 349 flaring events with energies ranging between $2.2 \times 10^{26}$ erg and $8.1 \times 10^{30}$ erg. We identified a portion of $\sim$40\% of flares with a complex structure. 123 complex flares were divided into individual components by using the flare breakdown algorithm. The denoising process significantly improved flare detection, increasing the overall recovery rate by $\sim$34\% and the identification of individual components of complex flares by $\sim$110\%. An improvement in recovery was observed across the entire energy range, but the highest gain was obtained for flares with energies inferior to $10^{29}$ erg. We identified several trends between flare parameters likely due to a detection bias, suggesting that the studied flare population is still not entirely recovered at low energies.
+
+The limited sample size prevented us from establishing any clear relationship between flaring frequency and spectral type, or between the proportion of flaring stars and spectral type. However, we observed a trend where the mean flare energy decreased from early to late M stars, while the mean equivalent duration increased. We constructed FFDs and applied power-law fits within the full recovery regime to determine the $\alpha$ indices. For the complete flare sample, we obtained $\alpha$ = 1.92 $\pm$ 0.07, which is at the higher end of the values typically reported in the literature. We found no statistically significant differences in the $\alpha$ indices between the distributions of simple and complex flares or between flares from partially and fully convective stars.
+
+We also explored an alternative scenario to describe the observed flare distribution by fitting a log-normal distribution and comparing it to the traditional power-law. The log-likelihood-ratio tests consistently favored the log-normal fit over the power-law. However, the results lacked statistical confidence, as the p-value was consistently above 0.05. If flares were indeed better represented by a log-normal distribution, it could indicate that high-energy flares arise from the superposition of multiple weaker sympathetic flares erupting from nearby active regions. This shift could have strong implications for understanding the flare formation mechanisms, the impact of flares on exoplanetary atmospheres, and assessing long-term stellar activity.
+
+Finally, we reviewed the main limitations of this study. First, the small sample size introduces considerable uncertainty in the derived flare statistics, leading to low confidence in the $\alpha$ indices extracted from the FFDs. Second, both the flare detection algorithm and the model used for flare injection and recovery were designed for regular flare studies and may bias denoising parameter selection, potentially favouring the recovery of regular flares over low-energy ones. Third, although CHEOPS outperforms most other instruments in photometric precision and observing cadence, allowing it to detect flares with energies corresponding to the upper end of micro-flares, it still cannot capture all low-energy flares, creating a detection bias in the flare catalog due to detection incompleteness. We propose several methods to mitigate these limitations and comment that upcoming missions, such as PLATO and the third mission extension of TESS, could significantly enhance low-energy flare statistics.
+
+\begin{acknowledgements}
+
+This work was (partially) supported by the Spanish programme MICIN/AEI/10.13039/501100011033 and by the “European Union Next Generation EU/PRTR” through grant PCI2022-135049-2 and by the “ERDF A way of making Europe” by the European Union through grant PID2021-125627OB-C31, by the programme Unidad de Excelencia María de Maeztu CEX2019-000918-M to the ICCUB and CEX2020-001058-M to the ICE-CSIC, and by the Generalitat de Catalunya/CERCA programme. I.R. acknowledges financial support from the European Research Council (ERC) under the European Union’s Horizon Europe programme (ERC Advanced Grant SPOTLESS; no. 101140786). 
+This research used the new computing cluster Nyx of the ICCUB. 
+CHEOPS is an ESA mission in partnership with Switzerland with important contributions to the payload and the ground segment from Austria, Belgium, France, Germany, Hungary, Italy, Portugal, Spain, Sweden, and the United Kingdom. CHEOPS public data analysed in this article are available in the CHEOPS mission archive.
+We also used the Data Analysis Center for Exoplanets (DACE), dedicated to extrasolar planets data visualisation, exchange, and analysis. DACE is a platform of the Swiss National Centre of Competence in Research (NCCR) PlanetS, federating the Swiss expertise in Exoplanet research. 
+Additional resources include the SIMBAD database and VizieR catalog access tool from CDS, Strasbourg Astronomical Observatory, France \citep{Wenger_2000, Ochsenbein_2000}.
+The following Python packages were used: \texttt{Python} \citep{VanRossum_2009}, \texttt{AltaiPony} \citep{Ilin_2022}, \texttt{AstroPy} \citep{Astropy_2022}, \texttt{AstroQuery} \citep{Ginsburg_2019}, \texttt{Matplotlib} \citep{Hunter_2007}, \texttt{NumPy} \citep{Harris_2020}, \texttt{Pandas} \citep{McKinney_2010}, \texttt{PIPE} \citep{Brandeker_2024}, \texttt{Powerlaw} \citep{Alstott_2014}, \texttt{PyCHEOPS} \citep{Maxted_2023}, \texttt{PyWavelets} \citep{Lee_2019}, and \texttt{SciPy} \citep{Virtanen_2020}.
+
+\end{acknowledgements}
+
+\bibliographystyle{aa}
+\bibliography{aanda}
+
+\onecolumn
+\begin{appendix}
+\section*{Appendix A: Target list.}
+\renewcommand{\thetable}{A.\arabic{table}}
+\begin{longtable}{lccccccc}
+\caption{\label{targetlist} List of targets and associated parameters.}\\
+\hline
+Name & Spectral type & Gmag & $\mathrm{T}_{\mathrm{eff}}$ [K] & $\mathrm{Vsini}$ [km.s$^{-1}$] & Distance [pc] & $\mathrm{Radius}$ [$\mathrm{R}_\odot$] & \# orbits \\
+\hline
+\endfirsthead
+\caption{continued.}\\
+\hline
+Name & Spectral type & Gmag & $\mathrm{T}_{\mathrm{eff}}$ [K] & $\mathrm{Vsini}$ [km.s$^{-1}$] & Distance [pc] & $\mathrm{Radius}$ [$\mathrm{R}_\odot$] & \# orbits \\
+\hline
+\endhead
+\hline
+\endfoot
+2MASS J03413724+5513068 & M2V           & 10.55 & 4050.00      & 4.5                  & 35.85 & 0.663  & 2         \\
+2MASS J06144242+4727346 & M0V           & 10.81 & 3739.48      & 7.3                  & 37.35 & 0.619  & 6         \\
+2MASS J06192947+1357031 & M0V           & 10.01 & 3739.48      & 1.0                  & 25.08 & 0.610  & 7         \\
+2MASS J09304457+0019214 & M3V           & 10.49 & 3275.05      & 1.6                  & 9.90  & 0.323  & 7         \\
+2MASS J11421839+2301365 & M0V           & 10.83 & 3739.48      & 1.0                  & 30.71 & 0.546  & 4         \\
+2MASS J11474440+0048164 & M3V           & 9.59  & 3122.25      & 3.7                  & 3.37  & 0.210  & 4         \\
+2MASS J13314666+2916368 & M4V           & 10.61 & 3122.25      & 55.8                 & 18.29 & 0.539  & 16        \\
+2MASS J20103444+0632140 & M4V           & 10.92 & 3122.25      & 1.0                  & 16.03 & 0.421  & 8         \\
+2MASS J21462206+3813047 & M5V           & 10.82 & 2971.27      & 1.4                  & 7.04  & 0.214  & 3         \\
+2MASS J22232904+3227334 & M0V           & 10.37 & 3350.00      & 8.5                  & 15.23 & 0.593  & 24        \\
+2MASS J23415498+4410407 & M5V           & 10.37 & 2971.27      & 2.5                  & 3.16  & 0.178  & 5         \\
+AD Leo                  & M3V           & 8.21  & 4363.00      & 3.5                  & 4.97  & 0.422  & 36        \\
+AU Mic                  & M1V           & 7.84  & 3642.00      & 8.5                  & 9.72  & 0.698  & 340       \\
+BD+33 1505              & M0V           & 9.35  & 3619.00      & 3.7                  & 18.22 & 0.598  & 10        \\
+BD-02 2198              & M1V           & 9.12  & 3866.00      & 3.2                  & 14.07 & 0.577  & 13        \\
+BX Cet                  & M2V           & 10.32 & 3275.05      & 3.0                  & 7.22  & 0.279  & 2         \\
+CE Boo                  & M0V           & 9.13  & 3780.00      & 4.3                  & 9.93  & 0.477  & 7         \\
+EE Leo                  & M4V           & 10.28 & 3122.25      & 2.6                  & 6.97  & 0.293  & 8         \\
+EG Cam                  & M0V           & 9.41  & 3739.48      & 2.3                  & 13.49 & 0.513  & 2         \\
+EQ Peg                  & M4V           & 9.04  & 3630.00      & 16.0                 & 6.26  & 0.513  & 4         \\
+EV Lac                  & M4V           & 9.00  & 3122.25      & 5.1                  & 5.05  & 0.337  & 13        \\
+G 168-31                & M3V           & 10.98 & 3429.20      & 1.1                  & 36.91 & 0.655  & 7         \\
+G 214-14                & M0V           & 10.38 & 3739.48      & 1.7                  & 23.71 & 0.513  & 8         \\
+G 234-57                & M1V           & 10.46 & 3429.20      & 2.0                  & 21.05 & 0.400  & 5         \\
+G 32-5                  & M4V           & 11.40 & 3122.25      & 5.5                  & 12.21 & 0.269  & 7         \\
+G 99-49                 & M3V           & 9.90  & 3275.05      & 5.7                  & 5.21  & 0.261  & 42        \\
+GJ 1                    & M2V           & 7.68  & 3429.20      & 2.8                  & 4.35  & 0.396  & 17        \\
+GJ 1074                 & M0V           & 10.15 & 3584.18      & 4.0                  & 21.11 & 0.537  & 11        \\
+GJ 1105                 & M4V           & 10.67 & 3275.05      & 1.9                  & 8.84  & 0.294  & 4         \\
+GJ 15 A                 & M2V           & 7.22  & 3605.50      & 3.7                  & 3.56  & 0.406  & 26        \\
+GJ 176                  & M2V           & 9.00  & 3679.00      & 12.6                 & 9.47  & 0.487  & 20        \\
+GJ 180                  & M2V           & 9.93  & 3275.05      & 1.7                  & 11.94 & 0.413  & 25        \\
+GJ 184                  & M0V           & 9.21  & 3739.48      & 3.5                  & 13.86 & 0.530  & 8         \\
+GJ 2                    & M2V           & 9.08  & 3875.00      & 1.8                  & 11.50 & 0.515  & 7         \\
+GJ 205                  & M1V           & 7.10  & 3731.20      & 3.3                  & 5.70  & 0.561  & 40        \\
+GJ 2066                 & M0V           & 9.12  & 3429.20      & 1.9                  & 8.94  & 0.443  & 7         \\
+GJ 229                  & M1V           & 7.31  & 3814.00      & 3.1                  & 5.76  & 0.549  & 68        \\
+GJ 26                   & M1V           & 10.05 & 3429.20      & 2.2                  & 12.67 & 0.430  & 5         \\
+GJ 273                  & M4V           & 8.59  & 3275.05      & 2.2                  & 3.79  & 0.316  & 37        \\
+GJ 317                  & M4V           & 10.75 & 3275.05      & 2.8                  & 15.20 & 0.427  & 11        \\
+GJ 328                  & M0V           & 9.29  & 3739.48      & 3.4                  & 20.54 & 0.651  & 16        \\
+GJ 3323                 & M4V           & 10.65 & 3122.25      & 2.3                  & 5.38  & 0.186  & 24        \\
+GJ 358                  & M0V           & 9.63  & 3275.05      & 1.6                  & 9.60  & 0.423  & 8         \\
+GJ 3649                 & M1V           & 9.88  & 3584.18      & 1.9                  & 16.68 & 0.529  & 1         \\
+GJ 382                  & M0V           & 8.33  & 3429.20      & 2.2                  & 7.70  & 0.510  & 50        \\
+GJ 3822                 & M1V           & 9.83  & 3584.18      & 3.5                  & 20.34 & 0.581  & 5         \\
+GJ 399                  & M1V           & 10.26 & 3429.20      & 1.7                  & 15.58 & 0.466  & 11        \\
+GJ 3997                 & M1V           & 9.64  & 3739.48      & 2.7                  & 13.63 & 0.480  & 28        \\
+GJ 408                  & M2V           & 8.97  & 3122.25      & 2.1                  & 6.75  & 0.390  & 15        \\
+GJ 4092                 & M0V           & 10.12 & 3739.48      & 2.7                  & 28.23 & 0.630  & 22        \\
+GJ 422                  & M4V           & 10.48 & 3275.05      & 1.2                  & 12.67 & 0.370  & 11        \\
+GJ 433                  & M0V           & 8.89  & 3616.00      & 1.3                  & 9.07  & 0.469  & 28        \\
+GJ 436                  & M1V           & 9.57  & 3416.00      & 1.7                  & 9.76  & 0.425  & 5         \\
+GJ 450                  & M1V           & 8.85  & 3584.18      & 5.8                  & 8.76  & 0.460  & 31        \\
+GJ 47                   & M2V           & 9.84  & 4104.00      & 2.0                  & 10.52 & 0.390  & 3         \\
+GJ 49                   & M2V           & 8.66  & 4055.50      & 2.9                  & 9.86  & 0.540  & 16        \\
+GJ 494                  & M0V           & 8.91  & 3899.50      & 9.1                  & 11.51 & 0.563  & 32        \\
+GJ 514                  & M1V           & 8.21  & 3727.00      & 1.9                  & 7.62  & 0.503  & 27        \\
+GJ 521                  & M2V           & 9.40  & 3584.18      & 2.9                  & 13.37 & 0.498  & 2         \\
+GJ 526                  & M2V           & 7.61  & 3634.00      & 2.4                  & 5.44  & 0.482  & 25        \\
+GJ 536                  & M0V           & 8.86  & 4067.00      & 1.7                  & 10.41 & 0.508  & 12        \\
+GJ 552                  & M1V           & 9.72  & 3429.20      & 2.6                  & 14.25 & 0.503  & 6         \\
+GJ 581                  & M1V           & 9.41  & 3442.00      & 1.8                  & 6.30  & 0.330  & 13        \\
+GJ 588                  & M3V           & 8.27  & 3429.20      & 1.8                  & 5.92  & 0.460  & 19        \\
+GJ 606                  & M0V           & 9.59  & 3584.18      & 2.0                  & 13.29 & 0.487  & 15        \\
+GJ 628                  & M3V           & 8.79  & 3570.00      & 1.5                  & 4.31  & 0.322  & 19        \\
+GJ 649                  & M2V           & 8.82  & 3696.33      & 2.1                  & 10.38 & 0.517  & 25        \\
+GJ 65                   & M6V           & 10.51 & 2971.27      & 26.4                 & 2.72  & 0.165  & 33        \\
+GJ 674                  & M3V           & 8.33  & 3275.05      & 1.8                  & 4.55  & 0.365  & 27        \\
+GJ 676 A                & M0V           & 8.87  & 3739.48      & 2.6                  & 16.03 & 0.649  & 17        \\
+GJ 686                  & M1V           & 8.74  & 3584.18      & 2.9                  & 8.16  & 0.442  & 37        \\
+GJ 699                  & M1V           & 8.20  & 3244.67      & 2.5                  & 1.83  & 0.194  & 56        \\
+GJ 70                   & M1V           & 9.90  & 3429.20      & 2.0                  & 11.32 & 0.408  & 10        \\
+GJ 701                  & M0V           & 8.52  & 3630.00      & 1.9                  & 7.73  & 0.465  & 60        \\
+GJ 731                  & M0V           & 9.38  & 3739.48      & 2.7                  & 15.21 & 0.539  & 34        \\
+GJ 740                  & M1V           & 8.46  & 3584.18      & 2.3                  & 11.11 & 0.588  & 50        \\
+GJ 752 A                & M3V           & 8.10  & 3275.05      & 2.7                  & 5.91  & 0.473  & 51        \\
+GJ 83.1                 & M5V           & 10.67 & 3122.25      & 2.6                  & 4.47  & 0.180  & 18        \\
+GJ 832                  & M2V           & 7.74  & 3707.00      & 2.0                  & 4.97  & 0.442  & 25        \\
+GJ 846                  & M0V           & 8.40  & 3580.00      & 3.1                  & 10.55 & 0.574  & 57        \\
+GJ 849                  & M0V           & 9.22  & 3275.05      & 1.7                  & 8.80  & 0.464  & 13        \\
+GJ 876                  & M3V           & 8.88  & 3532.00      & 2.5                  & 4.68  & 0.352  & 27        \\
+GJ 880                  & M1V           & 7.79  & 3750.00      & 2.4                  & 6.87  & 0.550  & 25        \\
+GJ 908                  & M1V           & 8.15  & 3646.00      & 2.6                  & 5.90  & 0.417  & 20        \\
+GJ 9122 B               & M0V           & 9.92  & 3739.48      & 3.6                  & 17.24 & 0.523  & 5         \\
+GJ 9404                 & M0V           & 9.87  & 3739.48      & 2.6                  & 23.90 & 0.626  & 2         \\
+GJ 9793                 & M0V           & 10.04 & 3739.48      & 1.0                  & 31.40 & 0.692  & 16        \\
+Gl 799B                 & M4V           & 9.59  & 3123.00      & 10.2                 & 9.83  & 0.692  & 4         \\
+Gl 841 A                & M2V           & 9.40  & 3429.20      & 4.2                  & 14.86 & 0.608  & 27        \\
+HD 154363B              & M1V           & 9.17  & 3584.18      & 2.7                  & 10.46 & 0.463  & 18        \\
+HD 233153               & M1V           & 8.91  & 5125.96      & 2.7                  & 12.28 & 0.555  & 38        \\
+HD 265866               & M1V           & 8.86  & 3275.05      & 1.7                  & 5.58  & 0.368  & 21        \\
+HD 50281B               & M0V           & 9.09  & 4763.86      & 3.9                  & 8.74  & 0.442  & 13        \\
+HD 79211                & M0V           & 7.05  & 3870.00      & 2.9                  & 6.33  & 0.586  & 52        \\
+HD 95735                & M2V           & 6.55  & 3563.50      & 7.3                  & 2.55  & 0.389  & 19        \\
+HIP 57050               & M4V           & 10.58 & 3122.25      & 1.8                  & 11.02 & 0.359  & 5         \\
+HIP 79431               & M1V           & 10.24 & 3275.05      & 1.0                  & 14.54 & 0.479  & 10        \\
+LHS 3432                & M0V           & 9.80  & 3429.20      & 4.3                  & 8.82  & 0.336  & 12        \\
+LP 609-71               & M1V           & 9.61  & 3429.20      & 2.7                  & 11.54 & 0.485  & 11        \\
+LP 672-42               & M3V           & 10.81 & 3275.05      & 1.5                  & 13.44 & 0.372  & 2         \\
+MCC 549                 & M0V           & 10.28 & 3739.48      & 19.1                 & 38.80 & 0.815  & 24        \\
+Proxima Centauri        & M4V           & 8.95  & 2990.50      & 2.6                  & 1.30  & 0.154  & 13        \\
+Ross 733                & M4V           & 10.37 & 3122.25      & 14.0                 & 18.10 & 0.519  & 4         \\
+TYC 1313-1482-1         & M0V           & 10.27 & 3739.48      & 1.0                  & 46.23 & 0.870  & 7         \\
+TYC 4902-210-1          & M0V           & 10.01 & 3739.48      & 1.6                  & 30.67 & 0.706  & 10        \\
+V 1054 Oph              & M3V           & 7.91  & 3200.00      & 2.1                  & 6.20  & 0.533  & 41        \\
+V1352 Ori               & M3V           & 10.10 & 3122.25      & 4.7                  & 5.79  & 0.249  & 4         \\
+VV Lyn                  & M2V           & 10.47 & 3429.20      & 4.6                  & 11.87 & 0.518  & 31        \\
+Wolf 906                & M1V           & 10.17 & 3429.20      & 1.7                  & 14.46 & 0.461  & 7         \\
+YZ Ceti                 & M5V           & 10.43 & 3122.25      & 2.2                  & 3.71  & 0.168  & 44    
+\label{target_list}
+\end{longtable}
+
+\newpage
+
+\section*{Appendix B: Wavelet list.}
+\setcounter{table}{0} % Reset table counter
+\renewcommand{\thetable}{B.\arabic{table}}
+\begin{longtable}{llccccc}
+\caption{\label{wavelet_info} Properties of the wavelets used in Section \ref{subsection:denoising}.}\\
+\hline
+Family name          & Wavelet name & Vanishing moments & Filters length & Orthogonal & Biorthogonal & Symmetry       \\ \hline
+\endfirsthead
+\caption{continued.}\\
+\hline
+Family name          & Wavelet name & Vanishing moments & Filters length & Orthogonal & Biorthogonal & Symmetry       \\ \hline
+\endhead
+\endfoot
+Biorthogonal         & bior1.1      & 1                 & 2              & False      & True         & symmetric      \\
+                     & bior1.3      & 1                 & 6              & False      & True         & symmetric      \\
+                     & bior1.5      & 1                 & 10             & False      & True         & symmetric      \\
+                     & bior2.2      & 2                 & 6              & False      & True         & symmetric      \\
+                     & bior2.4      & 2                 & 10             & False      & True         & symmetric      \\
+                     & bior2.6      & 2                 & 14             & False      & True         & symmetric      \\
+                     & bior2.8      & 2                 & 18             & False      & True         & symmetric      \\
+                     & bior3.1      & 3                 & 4              & False      & True         & symmetric      \\
+                     & bior3.3      & 3                 & 8              & False      & True         & symmetric      \\
+                     & bior3.5      & 3                 & 12             & False      & True         & symmetric      \\
+                     & bior3.7      & 3                 & 16             & False      & True         & symmetric      \\
+                     & bior3.9      & 3                 & 20             & False      & True         & symmetric      \\
+                     & bior4.4      & 4                 & 10             & False      & True         & symmetric      \\
+                     & bior5.5      & 5                 & 12             & False      & True         & symmetric      \\
+                     & bior6.8      & 6                 & 18             & False      & True         & symmetric      \\
+Coiflets             & coif1        & 2                 & 6              & True       & True         & near symmetric \\
+                     & coif2        & 4                 & 12             & True       & True         & near symmetric \\
+                     & coif3        & 6                 & 18             & True       & True         & near symmetric \\
+                     & coif4        & 8                 & 24             & True       & True         & near symmetric \\
+                     & coif5        & 10                & 30             & True       & True         & near symmetric \\
+                     & coif6        & 12                & 36             & True       & True         & near symmetric \\
+                     & coif7        & 14                & 42             & True       & True         & near symmetric \\
+                     & coif8        & 16                & 48             & True       & True         & near symmetric \\
+                     & coif9        & 18                & 54             & True       & True         & near symmetric \\
+                     & coif10       & 20                & 60             & True       & True         & near symmetric \\
+                     & coif11       & 22                & 66             & True       & True         & near symmetric \\
+                     & coif12       & 24                & 72             & True       & True         & near symmetric \\
+                     & coif13       & 26                & 78             & True       & True         & near symmetric \\
+                     & coif14       & 28                & 84             & True       & True         & near symmetric \\
+                     & coif15       & 30                & 90             & True       & True         & near symmetric \\
+                     & coif16       & 32                & 96             & True       & True         & near symmetric \\
+                     & coif17       & 34                & 102            & True       & True         & near symmetric \\
+Daubechies           & db1          & 1                 & 2              & True       & True         & asymmetric     \\
+                     & db2          & 2                 & 4              & True       & True         & asymmetric     \\
+                     & db3          & 3                 & 6              & True       & True         & asymmetric     \\
+                     & db4          & 4                 & 8              & True       & True         & asymmetric     \\
+                     & db5          & 5                 & 10             & True       & True         & asymmetric     \\
+                     & db6          & 6                 & 12             & True       & True         & asymmetric     \\
+                     & db7          & 7                 & 14             & True       & True         & asymmetric     \\
+                     & db8          & 8                 & 16             & True       & True         & asymmetric     \\
+                     & db9          & 9                 & 18             & True       & True         & asymmetric     \\
+                     & db10         & 10                & 20             & True       & True         & asymmetric     \\
+                     & db11         & 11                & 22             & True       & True         & asymmetric     \\
+                     & db12         & 12                & 24             & True       & True         & asymmetric     \\
+                     & db13         & 13                & 26             & True       & True         & asymmetric     \\
+                     & db14         & 14                & 28             & True       & True         & asymmetric     \\
+                     & db15         & 15                & 30             & True       & True         & asymmetric     \\
+                     & db16         & 16                & 32             & True       & True         & asymmetric     \\
+                     & db17         & 17                & 34             & True       & True         & asymmetric     \\
+                     & db18         & 18                & 36             & True       & True         & asymmetric     \\
+                     & db19         & 19                & 38             & True       & True         & asymmetric     \\
+                     & db20         & 20                & 40             & True       & True         & asymmetric     \\
+                     & db21         & 21                & 42             & True       & True         & asymmetric     \\
+                     & db22         & 22                & 44             & True       & True         & asymmetric     \\
+                     & db23         & 23                & 46             & True       & True         & asymmetric     \\
+                     & db24         & 24                & 48             & True       & True         & asymmetric     \\
+                     & db25         & 25                & 50             & True       & True         & asymmetric     \\
+                     & db26         & 26                & 52             & True       & True         & asymmetric     \\
+                     & db27         & 27                & 54             & True       & True         & asymmetric     \\
+                     & db28         & 28                & 56             & True       & True         & asymmetric     \\
+                     & db29         & 29                & 58             & True       & True         & asymmetric     \\
+                     & db30         & 30                & 60             & True       & True         & asymmetric     \\
+                     & db31         & 31                & 62             & True       & True         & asymmetric     \\
+                     & db32         & 32                & 64             & True       & True         & asymmetric     \\
+                     & db33         & 33                & 66             & True       & True         & asymmetric     \\
+                     & db34         & 34                & 68             & True       & True         & asymmetric     \\
+                     & db35         & 35                & 70             & True       & True         & asymmetric     \\
+                     & db36         & 36                & 72             & True       & True         & asymmetric     \\
+                     & db37         & 37                & 74             & True       & True         & asymmetric     \\
+                     & db38         & 38                & 76             & True       & True         & asymmetric     \\
+Discrete Meyer       & dmey         &         1          & 62             & True       & True         & symmetric      \\
+Haar                 & haar         & 1                 & 2              & True       & True         & asymmetric     \\
+Reverse biorthogonal & rbio1.1      & 1                 & 2              & False      & True         & symmetric      \\
+                     & rbio1.3      & 1                 & 6              & False      & True         & symmetric      \\
+                     & rbio1.5      & 1                 & 10             & False      & True         & symmetric      \\
+                     & rbio2.2      & 2                 & 6              & False      & True         & symmetric      \\
+                     & rbio2.4      & 2                 & 10             & False      & True         & symmetric      \\
+                     & rbio2.6      & 2                 & 14             & False      & True         & symmetric      \\
+                     & rbio2.8      & 2                 & 18             & False      & True         & symmetric      \\
+                     & rbio3.1      & 3                 & 4              & False      & True         & symmetric      \\
+                     & rbio3.3      & 3                 & 8              & False      & True         & symmetric      \\
+                     & rbio3.5      & 3                 & 12             & False      & True         & symmetric      \\
+                     & rbio3.7      & 3                 & 16             & False      & True         & symmetric      \\
+                     & rbio3.9      & 3                 & 20             & False      & True         & symmetric      \\
+                     & rbio4.4      & 4                 & 10             & False      & True         & symmetric      \\
+                     & rbio5.5      & 5                 & 12             & False      & True         & symmetric      \\
+                     & rbio6.8      & 6                 & 18             & False      & True         & symmetric      \\
+Symlets              & sym2         & 2                 & 4              & True       & True         & near symmetric \\
+                     & sym3         & 3                 & 6              & True       & True         & near symmetric \\
+                     & sym4         & 4                 & 8              & True       & True         & near symmetric \\
+                     & sym5         & 5                 & 10             & True       & True         & near symmetric \\
+                     & sym6         & 6                 & 12             & True       & True         & near symmetric \\
+                     & sym7         & 7                 & 14             & True       & True         & near symmetric \\
+                     & sym8         & 8                 & 16             & True       & True         & near symmetric \\
+                     & sym9         & 9                 & 18             & True       & True         & near symmetric \\
+                     & sym10        & 10                & 20             & True       & True         & near symmetric \\
+                     & sym11        & 11                & 22             & True       & True         & near symmetric \\
+                     & sym12        & 12                & 24             & True       & True         & near symmetric \\
+                     & sym13        & 13                & 26             & True       & True         & near symmetric \\
+                     & sym14        & 14                & 28             & True       & True         & near symmetric \\
+                     & sym15        & 15                & 30             & True       & True         & near symmetric \\
+                     & sym16        & 16                & 32             & True       & True         & near symmetric \\
+                     & sym17        & 17                & 34             & True       & True         & near symmetric \\
+                     & sym18        & 18                & 36             & True       & True         & near symmetric \\
+                     & sym19        & 19                & 38             & True       & True         & near symmetric \\
+                     & sym20        & 20                & 40             & True       & True         & near symmetric \\ \hline
+\label{wavelet_list}
+\end{longtable}
+
+\newpage
+\section*{Appendix C: Flare recovery heatmaps.}
+\renewcommand{\thefigure}{C.\arabic{figure}}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{Fig/heatmap_all_sptypes.pdf}
+\caption{Flare recovery rate as a function of the selected mother wavelet and decomposition
+level, separated per spectral subtype.}
+\label{annex:recovery_rates}
+\end{figure*}
+
+\newpage
+\section*{Appendix D: Additional flare detections.}
+\setcounter{figure}{0} % Reset figure counter
+\renewcommand{\thefigure}{D.\arabic{figure}}
+
+\begin{figure*}[h!]
+\centering
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare4.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare5.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare6.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare7.pdf}
+\end{subfigure}
+
+\caption{Additional flare detections similar to Figure \ref{fig:grid}. This figure shows two pre-dip flares (subplots a and b) and two QPP candidates (subplots c and d).}
+\label{annex:dip+qpp}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[h!]
+\centering
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare8.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare9.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare10.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics{Fig/individual_flares/flare11.pdf}
+\end{subfigure}
+
+\caption{Additional flare detections similar to Figure \ref{fig:grid}. Subplot a) shows a flare with a 'peak-bump' profile, subplots b) and c) show flares with a 'bump-peak' profile, and subplot d) shows a flare with a 'flat-top' profile.}
+\label{annex:morphologies}
+\end{figure*}
+
+\newpage
+
+\section*{Appendix E: Flare-star parameters correlations.}
+\setcounter{figure}{0} % Reset figure counter
+\renewcommand{\thefigure}{E.\arabic{figure}}
+
+
+\begin{figure*}[h]
+\centering
+\includegraphics{Fig/correlations.pdf}
+\caption{Correlations between the flare parameters and the ones of its star, for simple flares (blue) and individual components of complex flares (orange). Linear fits are shown for indication.}
+\label{annex:simpleVScomplex}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics{Fig/correlations_normalVSdenoised.pdf}
+\caption{Correlations between the flare parameters and the ones of its star, for flares recovered in original (black) and denoised (red) light curves. Linear fits are shown for indication.}
+\label{annex:originalVSdenoised}
+\end{figure*}
+
+\end{appendix}
+
+\end{document}

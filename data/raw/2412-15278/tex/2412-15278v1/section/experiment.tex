@@ -1,0 +1,218 @@
+\section{Experiment}
+
+%AUC plot
+%visual result after attack
+
+% 比较message length
+% trade-off between quality and acc
+% robustness comparison
+% performance under trigger size variation
+% model-level robustness
+
+
+
+
+% This section shows the generation quality, robustness, and capacity of \tool. We also compare \tool with post-generation watermarking algorithms: CopyRNeRF \cite{luo2023copyrnerf} and WateRF \cite{jang2024waterf}.
+
+
+
+\subsection{Experiment Setup}
+
+
+
+\begin{figure}[b]
+    \centering
+    \includegraphics[width=\linewidth]{figures/trigger_size.pdf}
+    \caption{Effect under varied trigger size. Bit accuracy is not significantly affected by trigger size.}
+    \label{fig:trigger-size}
+\end{figure}
+
+We select 16-bit secret messages and $N=1000$ trigger viewports in our experiment unless explicitly mentioned. To evaluate \tool, we use 100 different prompts to generate 100 watermarked scenes. Note that the scale of our experiment far exceeds that of prior works where they only evaluate Blender \cite{mildenhall2021nerf} and LLFF \cite{mildenhall2019local} dataset, with each dataset only containing eight scenes. All our experiments are conducted on Ubuntu 22.04 with an Intel Xeon Gold 5318Y CPU and an NVIDIA A100.
+
+
+
+\textbf{Evaluation Metrics.} Two key evaluations for watermarking algorithms are invisibility and robustness. We evaluate robustness using bit accuracy under various image distortions such as Gaussian Noise, Rotation, Scaling, Gaussian Blur, Crop, and Brightness. For invisibility evaluation, different from the previous \textit{post-generation} watermarking algorithm, there is no such the ``original NeRF". Hence, the typical evaluation metric, the Peak-Signal-to-Noise Ratio (PSNR), is not applicable to evaluate our method. We follow prior 2D \textit{during-generation} watermarking algorithm \cite{yang2024gaussian, wen2024tree} where they use CLIP-Score \cite{radford2021clip} to evaluate the bias introduced by the watermarking algorithm.
+
+\textbf{Baselines.} Since \tool is the first \textit{during-generation} watermarking method to watermark the generated NeRF, and existing NeRF watermarking CopyRNeRF \cite{luo2023copyrnerf} and WateNeRF \cite{jang2024waterf} can only embed watermark after NeRF generation. We select CopyRNeRF and WateNeRF as two \textit{post-generation} baselines, \ie we first generate NeRF with SDS only, then watermark the generated NeRF with CopyRNeRF and WateNeRF.
+
+\begin{table}[tb]
+    \centering
+    \begin{tabular}{l|cccc}
+    \toprule
+         \multirow{2}{*}{Method} & \multicolumn{4}{c}{Bit Accuracy (\%)}\\
+         & 8 bits & 16 bits & 32 bits & 48 bits\\
+    \midrule
+    \textit{Post Generation} &  &  &  & \\
+    SDS+CopyRNeRF & 100\% & 91.16\% & 78.08\% & 60.06\%\\
+    SDS+WateRF & 100\% & 94.24\% & 86.81\% & 70.43\%\\
+    \midrule
+    \textit{During Generation} &  &  &  & \\
+    \tool & 100\% & 98.93\% & 82.59\% & 71.91\%\\
+    \bottomrule
+    \end{tabular}
+    \caption{Bit accuracy under different bit length settings.}
+    \label{tab:capacity}
+\end{table}
+
+\begin{table}[tb]
+    \centering
+    \begin{tabular}{l|ccc}
+    \toprule
+         Method & Bit Accuracy & CLIP/16 & CLIP/32\\
+    \midrule
+    None & N/A & 0.3156 & 0.2859\\
+    \midrule
+    \textit{Post Generation} &  &  & \\
+    SDS+CopyRNeRF & 91.16\% & 0.3152 & 0.2831\\
+    SDS+WateRF & 94.24\% & 0.3164 & 0.2823\\
+    \midrule
+    \textit{During Generation} &  &  & \\
+    \tool & 98.93\% & 0.3218 & 0.2943\\
+    \bottomrule
+    \end{tabular}
+    \caption{Bit accuracy and CLIP Score comparison with post-generation methods. ``None" reports the performance when no watermark is applied, so bit accuracy is not applicable.}
+    \label{tab:acc}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \begin{tabular}{lcccc}
+    \toprule
+        & GN. & Rot. & Sca. & Crop\\
+    \midrule
+       Without $T$ & 0.64 & 0.57 & 0.56 & 0.89\\
+       With $T$ & 0.93 & 0.84 & 0.92 & 0.91\\
+    \bottomrule
+    \end{tabular}
+    \caption{Bit accuracy by removing transformation layer $T$.}
+    \label{tab:transform_layer}
+\end{table}
+\begin{table}[t]
+    \centering
+    \begin{tabular}{cccc}
+    \toprule
+         &  CLIP/16 & CLIP/32 & Bit Acc\\
+    \midrule
+        Both $f_\mathbf{c}$ and $f_\sigma$ & 0.2308 & 0.2241 & 60.43\%\\
+        $f_\mathbf{c}$ only & 0.3218 & 0.2943 & 98.93\%\\
+    \bottomrule
+    \end{tabular}
+    \caption{Watermark by optimizing both $f_\mathbf{c}$ and $f_\sigma$ or $f_\mathbf{c}$ only.}
+    \label{tab:geometric_color}
+\end{table}
+
+% \begin{figure*}[t]
+%     \centering
+%     \includegraphics[width=\linewidth]{figures/visual_attack.pdf}
+%     \caption{Visualize image-level and model-level attacks. For image-level attacks, we use Gaussian Noise (v=0.1), 40\% center
+% cropping and brightness (factor=2.0). For model-level attacks, we prune the smallest 12\% of the network parameters, which is
+% evaluated on their $\ell_1$ norms, and perform fine-tuning attacks for 500 epochs.}
+%     \label{fig:visual-attack}
+% \end{figure*}
+
+
+
+
+\subsection{Performance of Dreamark}
+
+\textbf{Capacity.} We evaluate bit accuracy across 8, 16, 32, and 48-bit secret messages. Table \ref{tab:capacity} shows that all watermarking methods have a trade-off between bit accuracy and capacity. As a during-generation watermarking method, \tool shows relatively high accuracy on 8, 16, and 48-bit settings compared to post-generation watermarking methods, such as SDS+CopyRNeRF and SDS+WateRF. For example, in 16-bit settings \tool achieves 98.93\% accuracy while SDS+CopyRNeRF and SDS+WateRF achieve 91.16\% and 94.24\% accuracy, respectively.
+
+\textbf{Generation quality.} We report CLIP/16 evaluated by \textit{clip-ViT-B-16} and CLIP/32 evaluated by \textit{clip-ViT-B-32} to indicate the generation quality of the watermarked images. For each scene, its CLIP-Score is averaged among all viewports $\mathbf{p}$, and bit accuracy is averaged among all $N$ trigger viewport $\{\mathbf{p}_T^i\}_{i=1}^N$. All prior watermarking works \cite{jang2024waterf, luo2023copyrnerf, zhu2024rethinking, zhu2018hidden} show a trade-off between bit accuracy and watermarked content quality. However, Table \ref{tab:acc} shows \tool achieves superior performance in both bit accuracy and generation quality when compared to post-generation methods. Notably, the CLIP Score is 0.3156/0.2859 when no watermark is applied, while \tool achieves 0.3218/0.2943 CLIP Score. This indicates that during-generation watermark embedding of \tool does not harm the generation quality. We also provide visual results of generated NeRF in Figure \ref{fig:visual-results}.
+
+\begin{figure}[!hb]
+    \centering
+    \includegraphics[width=\linewidth]{figures/pruning.pdf}
+    \caption{Robustness against model-level attacks. $x_w,x_a$ are images rendered from watermarked and attacked NeRF.}
+    \label{fig:model-level-attack}
+\end{figure}
+
+\textbf{Size of trigger viewports.} We evaluate bit accuracy under different numbers of trigger sizes $N$. As is shown in Figure \ref{fig:trigger-size}, we surprisingly find that bit accuracy is not significantly affected by trigger size. For example, bit accuracy reaches 99.88\% when $N=50$ and only drops to 96.27\% when $N$ increases to $20000$.
+
+
+% \textbf{Trade-off between generation quality and robustness.} We try to maximize the generation quality or the robustness of the watermark by varying the weight $\lambda$ in Equation \ref{eq:comb}. A higher $\lambda$ leads to a decoded message closer to the target secret message. 
+
+% \begin{table}[t]
+%     \centering
+%     \begin{tabular}{lccccc}
+%     \toprule
+%         $\lambda$ & 0.1 & 1 & 5 & 10 & 100\\
+%     \midrule
+%         CLIP/16 & 0.3211 & 0.3218 & 0.3377 &  & \\
+%         CLIP/32 & 0.2877 & 0.2943 & 0.3064 &  & \\
+%         Bit Acc. & 58.40\% & 98.93\% & 99.96\% &  & \\
+%     \bottomrule
+%     \end{tabular}
+%     \caption{Performance under varied $\lambda$.}
+%     \label{tab:trade-off}
+% \end{table}
+
+\subsection{Ablation Study}
+
+Can we remove the transformation layer $T$ during watermark decoder $W_D$ pre-training? Table \ref{tab:transform_layer} shows that the robustness significantly drops when the transformation layer is removed.
+
+Can we hide watermarks by jointly optimizing color mapping $f_\mathbf{c}$ and geometric mapping $f_\sigma$? Table \ref{tab:geometric_color} shows that watermark, by optimizing both color mapping and geometric mapping, has lower performance on both bit accuracy and CLIP Score. This may be because, within one iteration, only one single direction of point color is supervised, while changing its point density will affect its color in all directions, significantly increasing the difficulty of convergence.
+
+
+\section{Attacks on Dreamark's Watermarks}
+\begin{table*}[htb]
+    \centering
+    \begin{tabular}{l|ccccccc}
+    \toprule
+         \multirow{2}{*}{} & \multicolumn{7}{c}{Bit Accuracy (\%)}\\
+         & No Distortion & \makecell{Gaussian Noise\\(v=0.1)} & \makecell{Rotation\\($\pm \pi/6$)} & \makecell{Scaling\\(25\%)} & \makecell{Gaussian Blur\\(deviation=0.1)} & \makecell{Crop\\(40\%)} & \makecell{Brightness\\(2.0)}\\
+    \midrule
+    \textit{Post Generation} &  &  &  &  &  &  & \\
+    SDS+CopyRNeRF & 91.16\% & 90.04\% & 88.13\% & 89.33\% & 90.06\% & N/A & N/A\\
+    SDS+WateRF & 94.24\% & 94.06\% & 85.02\% & 91.35\% & 94.12\% & 95.40\% & 90.91\%\\
+    \midrule
+    \textit{During Generation} &  &  &  &  &  &  & \\
+    \tool & 98.93\% & 93.75\% & 84.51\% & 92.40\% & 98.93\% & 91.49\% & 91.23\%\\
+    \bottomrule
+    \end{tabular}
+    \caption{Robustness under multiple image transformations compared with post-generation-based methods.}
+    \label{tab:rob}
+\end{table*}
+
+% \begin{table*}[htb]
+%     \centering
+%     \begin{tabular}{l|cccccc}
+%     \toprule
+%          \multirow{2}{*}{} & \multicolumn{6}{c}{Bit Accuracy (\%)}\\
+%          & No Distortion & \makecell{Gaussian Noise\\(v=0.1)} &  \makecell{Scaling\\(25\%)} & \makecell{Gaussian Blur\\(deviation=0.1)} & \makecell{Crop\\(40\%)} & \makecell{Brightness\\(2.0)}\\
+%     \midrule
+%     \textit{Post Generation} &  &  &  &  &  & \\
+%     SDS+CopyRNeRF & 91.16\% & 90.04\% & 89.33\% & 90.06\% & N/A & N/A\\
+%     SDS+WateRF & 94.24\% & 94.06\% & 91.35\% & 94.12\% & 95.40\% & 90.91\%\\
+%     \midrule
+%     \textit{During Generation} &   &  &  &  &  & \\
+%     \tool & 98.93\% & 93.75\% & 92.40\% & 98.93\% & 91.49\% & 91.23\%\\
+%     \bottomrule
+%     \end{tabular}
+%     \caption{Robustness under multiple image transformations compared with post-generation-based methods.}
+%     \label{tab:rob}
+% \end{table*}
+
+This section aims to examine the robustness of the watermark against various attacks. We first consider image-level attack, which performs arbitrary image transformations and is typical for many NeRF watermarking methods \cite{luo2023copyrnerf, jang2024waterf}. We then consider model-level attacks such as fine-tuning and pruning since the generated NeRF could be made public; in this case, the attacker will have white-box access to the generated NeRF. Besides, model-level attacks are commonly evaluated in model watermarking methods \cite{adi2018turning, zhang2018protecting, jia2021entangled, le2020adversarial, chen2019blackmarks, szyller2021dawn}.
+
+\subsection{Robustness against image-level attacks}
+
+
+
+We evaluate the robustness of the watermark against different image transformations before rendered images are fed into the watermark decoder. We consider Gaussian Noise (v=0.1), rotation ($\pm \pi/6$), Scaling ($25\%$), Gaussian Blur (deviation=0.1), Crop (40\%) and Brightness (2.0). Bit accuracy is averaged on all transformed images rendered from trigger viewports. Table \ref{tab:rob} shows \tool is robust against previously mentioned image-level attacks. The bit accuracy is always above 90\% except for rotation. Note that the robustness is achieved without the need for transformations during the \tool optimization phase: it is attributed to the watermark decoder. If the watermark decoder is trained to withstand arbitrary transformation, the generated NeRF subsequently learns to contain watermarks that maintain robustness throughout the \tool optimization.
+
+\subsection{Robustness against model-level attacks}
+
+This subsection considers the scenario when an attacker gets full access to the generated NeRF model and aims to remove the embedded watermark without degrading its visual quality. We denote $x_w$ as images rendered from watermarked NeRF and $x_a$ as images rendered from attacked NeRF. We use $\mathrm{PSNR}(x_w,x_a)=-10\cdot\log_{10}(\mathrm{MSE}(x_w,x_a))$, for $x_a,x_w\in [0,1]^{c\times h\times w}$ to evaluate distortion made by attacks.
+
+\textbf{Model Fine-tuning.} Since our method uses a unified watermark decoder $W_D$ to decode the secret message, we consider two scenarios of fine-tuning attack. One assumes that the attacker has full access to the watermark decoder $W_D$, and the other assumes that the attacker has no access to $W_D$. Besides, we assume the attacker has no prior knowledge of the secret message $m$. In this case, the attacker cannot reproduce trigger viewports since trigger viewports are only related to $m$. For the first scenario, when the attacker has full access to $W_D$, the attacker can use an adversarial attack to partially remove the watermark by minimizing the $\mathrm{BCE}$ loss between the extracted message and a random binary message sampled beforehand:
+\begin{equation}
+    \begin{aligned}
+        &\mathcal{L}_{\text{fine-tune}}(\theta')=\\
+        &\mathbb{E}_{\mathbf{p}}[\rVert\mathbf{g}(\theta',\mathbf{p})-\mathbf{g}(\theta, \mathbf{p})\lVert_2^2
+        +\mathrm{BCE}(W_D(\mathbf{g}(\theta',\mathbf{p})),m')],
+    \end{aligned}
+\end{equation}
+where $\theta$ is the fixed parameter of watermarked NeRF, $\theta'$ is the parameter of NeRF to be fine-tuned, $m'$ is a random binary message different from $m$. As shown in Fig. \ref{fig:model-level-attack}, even if PSNR drops below 26dB, bit accuracy is still above 90\%. For the second scenario, when the attacker has no access to $W_D$, the attacker cannot produce the adversarial attack to remove the watermark.
+
+
+\textbf{Model Pruning.} Model pruning is widely used in model compression since it can reduce the storage and computation cost of DNNs. However, pruning will affect not only the size and operation speed of the model but also the accuracy of the watermark and the visual quality of NeRF. A higher pruning rate gives lower watermark accuracy and lower visual quality. In practice, we vary the pruning rate and, at the same time, evaluate $\mathrm{PSNR}(x_a, x_w)$ and bit accuracy on $x_a$. The pruning attack with pruning rate $a$\% means setting the smallest $a$\% of network parameters to zero, where the size of the network parameter is evaluated by its $\ell_1$ norm. Fig. \ref{fig:model-level-attack} shows that our method is robust against pruning attack since we still have $\sim$88\% accuracy when PSNR is below 27dB, while 27dB PSNR means relatively high distortion has been made in image watermarking context \cite{zhu2018hidden}.
