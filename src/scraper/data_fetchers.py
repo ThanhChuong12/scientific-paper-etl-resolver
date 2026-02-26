@@ -1,13 +1,15 @@
 import re
 import time
 import json
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
+from pathlib import Path
 
 from http_client import session, enforce_rate_limit
 from config import ARXIV_EPRINT_HEADERS, SEMANTIC_SCHOLAR_HEADERS
 from utils import log
+import requests
 
 # Version discovery
 def discover_versions_via_abs(arxiv_base_id: str, timeout: int = 20) -> List[str]:
@@ -30,7 +32,7 @@ def discover_versions_via_abs(arxiv_base_id: str, timeout: int = 20) -> List[str
         return ["v1"]
 
 # Download source
-def download_eprint(arxiv_id_with_version: str, dest_path: "Path", timeout: int = 60) -> "Optional[Path]":
+def download_eprint(arxiv_id_with_version: str, dest_path: Path, timeout: int = 60) -> Optional[Path]:
     url = f"https://arxiv.org/e-print/{arxiv_id_with_version}"
     try:
         enforce_rate_limit()
@@ -57,7 +59,7 @@ def download_eprint(arxiv_id_with_version: str, dest_path: "Path", timeout: int 
         return None
 
 # Semantic Scholar Data: retrieve venue and reference metadata
-def get_semantic_data(arxiv_base_id: str) -> Tuple[str, Dict[str, dict]]:
+def get_semantic_data(arxiv_base_id: str, max_retries: int = 5) -> Tuple[str, Dict[str, dict]]:
     api = f"https://api.semanticscholar.org/graph/v1/paper/arXiv:{arxiv_base_id}"
     params = {
         "fields": ("venue,"
@@ -67,29 +69,42 @@ def get_semantic_data(arxiv_base_id: str) -> Tuple[str, Dict[str, dict]]:
             "references.year,"
             "references.paperId")
     }
-    while True:
+    
+    attempts = 0
+    while attempts < max_retries:
         try:
+            attempts += 1
             enforce_rate_limit() # Control request frequency (thread-safe)
-            r = session.get(api, params = params, headers=SEMANTIC_SCHOLAR_HEADERS, timeout = 25)
+            
+            headers = SEMANTIC_SCHOLAR_HEADERS.copy()
+            if headers.get("x-api-key") is None or headers.get("x-api-key") == "":
+                headers.pop("x-api-key", None)
+                
+            r = session.get(api, params=params, headers=headers, timeout=25)
 
             if r.status_code == 200:
                 log(f"Semantic Scholar (200) OK for {arxiv_base_id}")
                 break
             elif r.status_code == 429:
-                log(f"Semantic Scholar rate limited (429) for {arxiv_base_id}. Sleeping 10s and retrying...")
+                log(f"Semantic Scholar rate limited (429) for {arxiv_base_id}. Attempt {attempts}/{max_retries}. Sleeping 10s...")
                 time.sleep(10)
                 continue
             elif r.status_code == 404:
                 log(f"Semantic Scholar (404) Not Found for {arxiv_base_id}. Skipping references & venue.")
                 return "", {}
             else:
-                log(f"Semantic Scholar error {r.status_code} for {arxiv_base_id}. Retrying in 5s...")
+                log(f"Semantic Scholar error {r.status_code} for {arxiv_base_id}. Attempt {attempts}/{max_retries}. Retrying in 5s...")
                 time.sleep(5)
                 continue
         except requests.RequestException as e:
-            log(f"Semantic Scholar request exception for {arxiv_base_id}: {e}. Retrying in 15s...")
+            log(f"Semantic Scholar request exception for {arxiv_base_id}: {e}. Attempt {attempts}/{max_retries}. Retrying in 15s...")
             time.sleep(15)
             continue
+            
+    if attempts >= max_retries and ('r' not in locals() or r.status_code != 200):
+        log(f"[WARN] Semantic Scholar failed after {max_retries} attempts for {arxiv_base_id}. Giving up.")
+        return "", {}
+
     try:
         j = r.json() or {}
         venue = j.get('venue') or ""
@@ -125,12 +140,12 @@ def get_semantic_data(arxiv_base_id: str) -> Tuple[str, Dict[str, dict]]:
         log(f"Error parsing Semantic Scholar JSON for {arxiv_base_id}: {e}")
         return "", {}
 
-# Metadata extraction:  Scrape metadata from arXiv /abs page
+# Metadata extraction: Scrape metadata from arXiv /abs page
 def get_metadata(arxiv_base_id: str):
     url = f"https://arxiv.org/abs/{arxiv_base_id}"
     try:
         enforce_rate_limit()
-        r = session.get(url, headers = ARXIV_EPRINT_HEADERS, timeout = 20)
+        r = session.get(url, headers=ARXIV_EPRINT_HEADERS, timeout=20)
         if r.status_code != 200:
             log(f"abs page error {r.status_code} for {arxiv_base_id}")
             return {
@@ -141,26 +156,26 @@ def get_metadata(arxiv_base_id: str):
         soup = BeautifulSoup(r.text, 'html.parser')
 
         # Title
-        title_tag = soup.find('h1', class_ = 'title')
-        title = title_tag.get_text(strip = True).replace('Title:', '').strip() if title_tag else ""
+        title_tag = soup.find('h1', class_='title')
+        title = title_tag.get_text(strip=True).replace('Title:', '').strip() if title_tag else ""
 
         # Authors
-        authors_tag = soup.find('div', class_ = 'authors')
+        authors_tag = soup.find('div', class_='authors')
         authors = []
         if authors_tag:
             links = authors_tag.find_all('a')
             if links:
                 authors = [a.text.strip() for a in links if a.text.strip()]
             else:
-                text = authors_tag.get_text(separator = ',').replace('Authors:', '')
+                text = authors_tag.get_text(separator=',').replace('Authors:', '')
                 authors = [s.strip() for s in text.split(',') if s.strip()]
 
         # Submission history
         revised_dates = []
         submission_block = None
-        hist_div = soup.find('div', class_ = 'submission-history')
+        hist_div = soup.find('div', class_='submission-history')
         if hist_div:
-            submission_block = hist_div.get_text("\n", strip = True)
+            submission_block = hist_div.get_text("\n", strip=True)
         else:
             m = re.search(r'Submission history(.*)', r.text, re.S | re.I)
             if m:
@@ -171,7 +186,7 @@ def get_metadata(arxiv_base_id: str):
                 r'\[v(\d+)\]\s+([A-Za-z]{3},\s+\d{1,2}\s+[A-Za-z]{3}\s+\d{4})'
             )
             versions = pattern.findall(submission_block)
-            versions = sorted(versions, key = lambda x: int(x[0]))
+            versions = sorted(versions, key=lambda x: int(x[0]))
             for vnum, date_str in versions:
                 try:
                     dt = datetime.strptime(date_str.strip(), "%a, %d %b %Y")
@@ -186,9 +201,9 @@ def get_metadata(arxiv_base_id: str):
         submission_date = revised_dates[0] if revised_dates else ""
         
         publication_venue = ""
-        cat_tag = soup.find('span', class_ = 'primary-subject')
+        cat_tag = soup.find('span', class_='primary-subject')
         if cat_tag:
-            publication_venue = cat_tag.get_text(strip = True)
+            publication_venue = cat_tag.get_text(strip=True)
 
         return {
             "paper_title": title,
@@ -203,4 +218,3 @@ def get_metadata(arxiv_base_id: str):
             "paper_title": "", "authors": [], "submission_date": "",
             "revised_dates": [], "publication_venue": ""
         }
-    
