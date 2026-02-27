@@ -1,28 +1,22 @@
-import os
 import re
-import json
 import hashlib
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple, Optional
 
 # ==========================================
-# 1. DATA STRUCTURES
+# DATA STRUCTURES
 # ==========================================
 
 @dataclass
 class HierarchyNode:
-    """
-    Represents a node in the hierarchical tree structure of the LaTeX document.
-    """
-    level_name: str  # e.g., 'document', 'section', 'subsection', 'itemize', 'leaf'
+    level_name: str
     level_weight: int
     title: str = ""
     content: str = ""
-    node_id: str = "" # Used for full-text deduplication
+    node_id: str = ""
     children: List['HierarchyNode'] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        """Serializes the node and its children to a dictionary format."""
         return {
             "level": self.level_name,
             "title": self.title,
@@ -31,134 +25,144 @@ class HierarchyNode:
             "children": [child.to_dict() for child in self.children]
         }
 
-# Defines the hierarchical order. Lower weight means higher level in the tree.
+@dataclass
+class BibEntry:
+    """Unified representation for both .bib files and \bibitem entries."""
+    key: str
+    entry_type: str
+    raw_content: str
+    fields: dict = field(default_factory=dict)
+
 LEVEL_WEIGHTS = {
     'document': 0, 'chapter': 1, 'section': 2, 'subsection': 3, 
     'subsubsection': 4, 'paragraph': 5, 'itemize': 6, 'item': 7, 'leaf': 8
 }
 
 # ==========================================
-# 2. MULTI-FILE GATHERING (Section 2.1.1)
+# 1. LATEX CLEANER
 # ==========================================
 
-class MultiFileGatherer:
-    """Handles the identification and aggregation of multiple LaTeX source files."""
+class LatexCleaner:
+    """
+    Performs LaTeX cleanup and normalization prior to structural parsing.
+
+    This class is responsible for:
+    - Removing comments and layout-only commands
+    - Simplifying text formatting while preserving content
+    - Normalizing inline and block math expressions
+    - Cleaning environment options (e.g., figure placement)
+    - Normalizing whitespace for downstream tokenization
+    """
     
-    @staticmethod
-    def find_main_tex(directory: str) -> Optional[str]:
-        """
-        Scans the directory to find the main TeX file containing the \documentclass declaration.
+    def clean(self, text: str) -> str:
+        # 1. Remove comments (ignores \% which is an escaped percent sign)
+        text = re.sub(r'(?<!\\)%.*$', '', text, flags=re.MULTILINE)
         
-        Args:
-            directory (str): The path to the directory containing TeX files.
-            
-        Returns:
-            Optional[str]: The absolute path to the main TeX file, or None if not found.
-        """
-        for root, _, files in os.walk(directory):
-            for file in files:
-                if file.endswith('.tex'):
-                    filepath = os.path.join(root, file)
-                    with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
-                        if '\\documentclass' in f.read():
-                            return filepath
-        return None
-
-    @staticmethod
-    def gather_all_inputs(main_filepath: str, base_dir: str) -> str:
-        """
-        Recursively reads and concatenates content from \input and \include commands,
-        ignoring unused or redundant files in the source directory.
-        
-        Args:
-            main_filepath (str): Path to the current TeX file being processed.
-            base_dir (str): The base directory for resolving relative file paths.
-            
-        Returns:
-            str: The consolidated LaTeX content.
-        """
-        with open(main_filepath, 'r', encoding='utf-8', errors='ignore') as f:
-            content = f.read()
-
-        # Regex to match \input{filename} or \include{filename}
-        pattern = r'\\(?:input|include)\{([^}]+)\}'
-        
-        def replacer(match) -> str:
-            inc_file = match.group(1)
-            if not inc_file.endswith('.tex'):
-                inc_file += '.tex'
-            inc_path = os.path.join(base_dir, inc_file)
-            
-            if os.path.exists(inc_path):
-                return MultiFileGatherer.gather_all_inputs(inc_path, base_dir)
-            return "" # Silently ignore if the referenced file is missing
-
-        return re.sub(pattern, replacer, content)
-
-# ==========================================
-# 3. STANDARDIZATION & CLEANUP (Section 2.1.3)
-# ==========================================
-
-class LatexStandardizer:
-    """Handles the cleanup of formatting commands and normalization of math environments."""
-    
-    @staticmethod
-    def normalize_math(text: str) -> str:
-        """
-        Converts all math environments to a unified format:
-        - Inline math: \(...\) -> $...$
-        - Block math: $$...$$ or \[...\] -> \begin{equation}...\end{equation}
-        """
-        # Normalize block math: $$ ... $$ -> \begin{equation} ... \end{equation}
+        # 2. Normalize math expressions
+        # Block math
         text = re.sub(r'\$\$(.*?)\$\$', r'\\begin{equation}\1\\end{equation}', text, flags=re.DOTALL)
-        # Normalize block math: \[ ... \] -> \begin{equation} ... \end{equation}
         text = re.sub(r'\\\[(.*?)\\\]', r'\\begin{equation}\1\\end{equation}', text, flags=re.DOTALL)
-        # Normalize inline math: \( ... \) -> $ ... $
+        # Inline math
         text = re.sub(r'\\\((.*?)\\\)', r'$\1$', text)
-        return text
-
-    @staticmethod
-    def cleanup_formatting(text: str) -> str:
-        """Removes non-semantic formatting commands (e.g., \centering, \midrule)."""
-        formatting_cmds = [r'\\centering', r'\\midrule', r'\\toprule', r'\\bottomrule', r'\\newpage', r'\\clearpage']
-        for cmd in formatting_cmds:
+        
+        # 3. Clean environment options (e.g., \begin{figure}[htpb] -> \begin{figure})
+        text = re.sub(r'\\begin\{(figure|figure\*|table|table\*)\}\[.*?\]', r'\\begin{\1}', text)
+        
+        # 4. Remove layout-only formatting commands
+        layout_cmds = [r'\\centering', r'\\midrule', r'\\toprule', r'\\bottomrule', r'\\newpage', r'\\clearpage', r'\\noindent']
+        for cmd in layout_cmds:
             text = re.sub(cmd, '', text)
             
-        # Remove optional placement arguments from figures and tables (e.g., [htpb])
-        text = re.sub(r'\\begin\{(figure|table)\}\[.*?\]', r'\\begin{\1}', text)
-        return text
-
-    @staticmethod
-    def extract_and_convert_bibtems(text: str) -> Tuple[str, Dict[str, dict]]:
-        """
-        Extracts \bibitem entries from the text, converts them into pseudo-BibTeX format,
-        and removes the bibliography section from the main text hierarchy.
-        """
-        bib_pattern = r'\\bibitem(?:\[.*?\])?\{([^}]+)\}(.*?)(?=\\bibitem|\\end\{thebibliography\})'
-        bib_items = {}
+        # 5. Simplify text formatting (e.g., remove \textbf{} but keep inner text)
+        # Using a simple regex for basic bold/italic removal (assuming no deep nesting for simplicity)
+        text = re.sub(r'\\(?:textbf|textit|emph)\{([^{}]+)\}', r'\1', text)
         
-        matches = list(re.finditer(bib_pattern, text, flags=re.DOTALL))
-        for match in matches:
+        # 6. Normalize whitespace (Convert multiple spaces to one, keep max 2 newlines for paragraph separation)
+        text = re.sub(r'[ \t]+', ' ', text)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text.strip()
+
+# ==========================================
+# 2. BIBLIOGRAPHY PROCESSOR
+# ==========================================
+
+class BibProcessor:
+    """
+    Handles bibliography extraction, normalization, and deduplication.
+
+    Responsibilities:
+    - Parse BibTeX (.bib) files (Simplified representation)
+    - Extract \bibitem entries from LaTeX sources
+    - Normalize references into a unified BibEntry representation
+    - Deduplicate references across document versions using content hashing
+    - Normalize citation keys in LaTeX content
+    """
+    
+    def hash_content(self, content: str) -> str:
+        """Creates a hash from normalized content to detect duplicates."""
+        normalized = re.sub(r'\s+', ' ', content).strip().lower()
+        return hashlib.md5(normalized.encode('utf-8')).hexdigest()
+
+    def extract_bibitems(self, text: str) -> Tuple[str, Dict[str, BibEntry]]:
+        """Extracts \bibitem entries and removes the bibliography block from text."""
+        bib_pattern = r'\\bibitem(?:\[.*?\])?\{([^}]+)\}(.*?)(?=\\bibitem|\\end\{thebibliography\})'
+        entries = {}
+        
+        for match in re.finditer(bib_pattern, text, flags=re.DOTALL):
             key, content = match.group(1), match.group(2).strip()
-            bib_items[key] = {
-                "ENTRYTYPE": "misc",
-                "ID": key,
-                "raw_content": content
-            }
+            entries[key] = BibEntry(key=key, entry_type="misc", raw_content=content)
             
-        # Remove the entire bibliography environment from the main content
-        text = re.sub(r'\\begin\{thebibliography\}.*?\\end\{thebibliography\}', '', text, flags=re.DOTALL)
-        return text, bib_items
+        # Remove the bibliography section to prevent it from entering the AST
+        clean_text = re.sub(r'\\begin\{thebibliography\}.*?\\end\{thebibliography\}', '', text, flags=re.DOTALL)
+        return clean_text, entries
+
+    def deduplicate(self, entries: Dict[str, BibEntry], tex_content: str) -> Tuple[Dict[str, BibEntry], str]:
+        """Deduplicates entries and updates \cite{} commands in the main text."""
+        hash_to_master_key: Dict[str, str] = {}
+        final_bibs: Dict[str, BibEntry] = {}
+        key_mapping: Dict[str, str] = {} # old_key -> master_key
+
+        for key, entry in entries.items():
+            content_hash = self.hash_content(entry.raw_content)
+            
+            if content_hash in hash_to_master_key:
+                # Duplicate found
+                master_key = hash_to_master_key[content_hash]
+                key_mapping[key] = master_key
+                # Here you could unionize fields if parsing structured .bib files
+                final_bibs[master_key].fields.update(entry.fields)
+            else:
+                # Unique entry
+                hash_to_master_key[content_hash] = key
+                final_bibs[key] = entry
+                key_mapping[key] = key
+
+        # Update citation keys in the text: \cite{old1, old2} -> \cite{master1, master2}
+        def cite_replacer(match) -> str:
+            keys = [k.strip() for k in match.group(1).split(',')]
+            mapped_keys = [key_mapping.get(k, k) for k in keys]
+            unique_keys = list(dict.fromkeys(mapped_keys)) # Remove duplicates within a single \cite
+            return f"\\cite{{{','.join(unique_keys)}}}"
+
+        updated_tex = re.sub(r'\\cite\{([^}]+)\}', cite_replacer, tex_content)
+        return final_bibs, updated_tex
 
 # ==========================================
-# 4. HIERARCHY CONSTRUCTION (Section 2.1.2)
+# 3. HIERARCHY BUILDER
 # ==========================================
 
-class HierarchicalParser:
-    """Constructs a hierarchical Abstract Syntax Tree (AST) from raw LaTeX content."""
+class HierarchyBuilder:
+    """
+    Build a hierarchical tree structure from LaTeX document content.
+
+    The builder parses sections, lists, figures, equations, and sentences,
+    then constructs a parent-child hierarchy suitable for downstream indexing
+    or semantic processing.
+    """
     
     def __init__(self):
-        # Regex to split text by structural components and block environments
+        # The split pattern correctly identifies structural blocks vs plain text
         self.split_pattern = re.compile(
             r'(\\section\*?\{.*?\}|\\subsection\*?\{.*?\}|\\subsubsection\*?\{.*?\}|'
             r'\\begin\{itemize\}|\\end\{itemize\}|\\item|'
@@ -167,26 +171,17 @@ class HierarchicalParser:
             flags=re.DOTALL
         )
 
-    def is_excluded(self, title: str) -> bool:
-        """Determines if a section should be excluded from the hierarchy (e.g., References)."""
+    def _is_excluded(self, title: str) -> bool:
         title_lower = title.lower()
         return 'reference' in title_lower or 'bibliography' in title_lower
 
-    def get_sentences(self, text: str) -> List[str]:
-        """Splits text into smallest leaf elements (sentences) separated by periods."""
+    def _tokenize_sentences(self, text: str) -> List[str]:
+        """Splits paragraph text into sentence-level leaf nodes."""
+        # A simple period-space split. Can be replaced with nltk.sent_tokenize if needed.
         sentences = [s.strip() + "." for s in text.split('. ') if s.strip()]
         return sentences
 
-    def build_tree(self, text: str) -> HierarchyNode:
-        """
-        Builds the hierarchical tree using a stack-based algorithm.
-        
-        Args:
-            text (str): The cleaned and normalized LaTeX content.
-            
-        Returns:
-            HierarchyNode: The root node of the parsed document.
-        """
+    def build(self, text: str) -> HierarchyNode:
         root = HierarchyNode(level_name='document', level_weight=LEVEL_WEIGHTS['document'], title="Root")
         stack = [root]
         
@@ -194,51 +189,45 @@ class HierarchicalParser:
         
         for part in parts:
             part = part.strip()
-            if not part: 
-                continue
-
+            if not part: continue
             node = None
             
-            # Process structural headings
+            # --- Structural Nodes ---
             if part.startswith(r'\section'):
                 title = re.search(r'\{([^}]+)\}', part).group(1)
-                if self.is_excluded(title): 
-                    continue
+                if self._is_excluded(title): continue
                 node = HierarchyNode('section', LEVEL_WEIGHTS['section'], title=title)
                 
             elif part.startswith(r'\subsection'):
                 title = re.search(r'\{([^}]+)\}', part).group(1)
                 node = HierarchyNode('subsection', LEVEL_WEIGHTS['subsection'], title=title)
                 
-            # Process itemized lists
             elif part.startswith(r'\begin{itemize}'):
                 node = HierarchyNode('itemize', LEVEL_WEIGHTS['itemize'])
+                
             elif part.startswith(r'\end{itemize}'):
-                # Pop out of the itemize environment safely
                 while stack[-1].level_name != 'itemize' and len(stack) > 1:
                     stack.pop()
-                if len(stack) > 1: 
-                    stack.pop()
+                if len(stack) > 1: stack.pop()
                 continue
+                
             elif part.startswith(r'\item'):
                 node = HierarchyNode('item', LEVEL_WEIGHTS['item'])
             
-            # Process block-level leaf nodes (equations, figures, tables)
+            # --- Leaf Nodes (Blocks) ---
             elif part.startswith(r'\begin{equation}') or part.startswith(r'\begin{figure}') or part.startswith(r'\begin{table}'):
                 node = HierarchyNode('leaf', LEVEL_WEIGHTS['leaf'], content=part)
             
-            # Process standard text: break down into sentences
+            # --- Leaf Nodes (Sentences) ---
             else:
-                sentences = self.get_sentences(part)
-                for sent in sentences:
+                for sent in self._tokenize_sentences(part):
                     leaf = HierarchyNode('leaf', LEVEL_WEIGHTS['leaf'], content=sent)
                     stack[-1].children.append(leaf)
                 continue
 
-            # Push the new node into the stack maintaining hierarchy rules
+            # --- Hierarchy Resolution ---
             if node:
                 if node.level_name != 'leaf':
-                    # Find the appropriate parent by comparing level weights
                     while stack and stack[-1].level_weight >= node.level_weight:
                         stack.pop()
                     stack[-1].children.append(node)
@@ -247,111 +236,15 @@ class HierarchicalParser:
                     stack[-1].children.append(node)
 
         return root
-
-# ==========================================
-# 5. DEDUPLICATION (Section 2.1.3)
-# ==========================================
-
-class Deduplicator:
-    """Handles the deduplication of full-text content and bibliography references."""
-    
-    @staticmethod
-    def hash_content(content: str) -> str:
-        """Generates a unique MD5 hash for a given string content."""
-        return hashlib.md5(content.strip().encode('utf-8')).hexdigest()
-
+        
     def deduplicate_fulltext(self, node: HierarchyNode, global_text_pool: Dict[str, str]) -> None:
-        """
-        Traverses the AST to assign unique IDs to leaf nodes based on exact text matches.
-        Populates a global text pool to ensure each unique text is stored only once.
-        """
+        """Assigns IDs to leaf nodes based on content hashing to reduce redundancy."""
         if node.level_name == 'leaf' and node.content:
-            node_id = self.hash_content(node.content)
+            # MD5 hash of the normalized content
+            node_id = hashlib.md5(node.content.encode('utf-8')).hexdigest()
             node.node_id = node_id
-            
             if node_id not in global_text_pool:
                 global_text_pool[node_id] = node.content
-            
+                
         for child in node.children:
             self.deduplicate_fulltext(child, global_text_pool)
-
-    @staticmethod
-    def deduplicate_references(bib_items: Dict[str, dict], tex_content: str) -> Tuple[Dict[str, dict], str]:
-        """
-        Identifies duplicate references across different citation keys.
-        Chooses a master key, unionizes fields, and updates \cite{} commands in the text.
-        """
-        content_to_key = {}
-        final_bib = {}
-        key_mapping = {} # Maps duplicate keys to the chosen master key
-
-        for key, item in bib_items.items():
-            # Normalize content by collapsing whitespace for robust comparison
-            normalized_content = re.sub(r'\s+', ' ', item.get('raw_content', '')).strip().lower()
-            
-            if normalized_content in content_to_key:
-                # Duplicate found: Map current key to the master key
-                master_key = content_to_key[normalized_content]
-                key_mapping[key] = master_key
-                # Unionize fields (updates existing dictionary with new fields if any)
-                final_bib[master_key].update(item) 
-            else:
-                # New unique reference
-                content_to_key[normalized_content] = key
-                final_bib[key] = item
-                key_mapping[key] = key
-
-        # Update \cite{old_key} to \cite{master_key} inside the document body
-        def cite_replacer(match) -> str:
-            keys = match.group(1).split(',')
-            new_keys = [key_mapping.get(k.strip(), k.strip()) for k in keys]
-            # Remove duplicate keys within the same \cite command
-            new_keys = list(dict.fromkeys(new_keys))
-            return f"\\cite{{{','.join(new_keys)}}}"
-
-        tex_content = re.sub(r'\\cite\{([^}]+)\}', cite_replacer, tex_content)
-        
-        return final_bib, tex_content
-
-# ==========================================
-# 6. PIPELINE EXECUTION WRAPPER
-# ==========================================
-
-def process_arxiv_folder(folder_path: str) -> Tuple[Optional[dict], Optional[dict]]:
-    """
-    Main orchestration function to run the complete parsing and standardization pipeline.
-    
-    Args:
-        folder_path (str): The root path containing the 'tex' subfolder for a specific paper.
-        
-    Returns:
-        Tuple[dict, dict]: The parsed AST dictionary and the deduplicated references.
-    """
-    tex_dir = os.path.join(folder_path, 'tex')
-    
-    # Step 1: Multi-file Gathering
-    main_tex = MultiFileGatherer.find_main_tex(tex_dir)
-    if not main_tex:
-        print(f"Warning: Main TeX file not found in {tex_dir}")
-        return None, None
-        
-    raw_content = MultiFileGatherer.gather_all_inputs(main_tex, tex_dir)
-
-    # Step 2: Cleanup & Math Normalization
-    std_content = LatexStandardizer.cleanup_formatting(raw_content)
-    std_content = LatexStandardizer.normalize_math(std_content)
-    std_content, extracted_bibs = LatexStandardizer.extract_and_convert_bibtems(std_content)
-
-    # Step 3: Reference Deduplication
-    final_bibs, text_ready_for_parsing = Deduplicator.deduplicate_references(extracted_bibs, std_content)
-
-    # Step 4: Hierarchy Construction
-    parser = HierarchicalParser()
-    ast_tree = parser.build_tree(text_ready_for_parsing)
-
-    # Step 5: Full-text Deduplication
-    global_pool = {}
-    dedup = Deduplicator()
-    dedup.deduplicate_fulltext(ast_tree, global_pool)
-
-    return ast_tree.to_dict(), final_bibs
