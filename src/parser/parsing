@@ -452,3 +452,687 @@ class LatexCleaner:
         content = re.sub(r"[ \t]+", " ", content)
         content = re.sub(r"\n\s*\n+", "\n\n", content)
         return content.strip()
+
+
+# ================ REFERENCE EXTRACTION AND PROCESSING ================
+class BibProcessor:
+    """
+    Handles bibliography extraction, normalization, and deduplication.
+
+    Responsibilities:
+    - Parse BibTeX (.bib) files
+    - Extract \\bibitem entries from LaTeX sources
+    - Normalize references into a unified BibEntry representation
+    - Deduplicate references across document versions using content hashing
+    - Normalize citation keys in LaTeX content
+    """
+    
+    def __init__(self) -> None:
+        self.entries: Dict[str, BibEntry] = {}
+        self.content_hash_map: Dict[str, str] = {}   # content_hash -> canonical_key
+        self.key_aliases: Dict[str, str] = {}        # old_key -> canonical_key
+
+    # BIB FILE PARSING    
+    def parse_bib_file(self, bib_path: Path, allowed_keys: Optional[Set[str]] = None) -> List[BibEntry]:
+        """Parse a BibTeX (.bib) file into BibEntry objects."""
+        entries: List[BibEntry] = []
+
+        if allowed_keys is not None and not allowed_keys:
+            logger.debug("Skipping %s because no cited keys target this file", bib_path)
+            return entries
+
+        selective_scan = (
+            allowed_keys is not None
+            and bib_path.exists()
+            and bib_path.stat().st_size >= LARGE_BIB_THRESHOLD_BYTES
+        )
+
+        if selective_scan:
+            return self._parse_bib_file_stream(bib_path, allowed_keys)
+
+        try:
+            content = bib_path.read_text(encoding="utf-8", errors="ignore")
+        except Exception as exc:
+            logger.warning("Cannot read bib file %s: %s", bib_path, exc)
+            return entries
+
+        entry_pattern = re.compile(
+            r"@(\w+)\s*\{\s*([^,]+)\s*,(.*?)\}\s*(?=@|$)",
+            re.DOTALL,
+        )
+
+        remaining = set(allowed_keys) if allowed_keys is not None else None
+
+        for match in entry_pattern.finditer(content):
+            entry_type = match.group(1).lower()
+            key = match.group(2).strip()
+            fields_block = match.group(3)
+
+            if remaining is not None and key not in remaining:
+                continue
+
+            entry = self._build_entry(entry_type, key, fields_block, match.group(0))
+            if entry:
+                entries.append(entry)
+
+            if remaining is not None:
+                remaining.discard(key)
+                if not remaining:
+                    break
+
+        return entries
+
+    def _parse_bib_file_stream(self, bib_path: Path, allowed_keys: Set[str]) -> List[BibEntry]:
+        """Stream a large BibTeX file and keep only the cited keys."""
+        entries: List[BibEntry] = []
+        target_keys = set(allowed_keys or [])
+        if not target_keys:
+            return entries
+
+        entry_start_pattern = re.compile(r'@\s*([A-Za-z]+)\s*\{\s*([^,]+)\s*,')
+
+        try:
+            file_obj = bib_path.open("r", encoding="utf-8", errors="ignore")
+        except Exception as exc:
+            logger.warning("Cannot read bib file %s: %s", bib_path, exc)
+            return entries
+
+        with file_obj:
+            inside_entry = False
+            capture_entry = False
+            brace_depth = 0
+            buffer: List[str] = []
+            current_type = ""
+            current_key = ""
+            resolved_keys: Set[str] = set()
+
+            for line in file_obj:
+                stripped = line.lstrip()
+
+                if not inside_entry:
+                    match = entry_start_pattern.match(stripped)
+                    if not match:
+                        continue
+
+                    inside_entry = True
+                    current_type = match.group(1).lower()
+                    current_key = match.group(2).strip()
+                    capture_entry = current_key in target_keys
+                    brace_depth = stripped.count('{') - stripped.count('}')
+
+                    if capture_entry:
+                        buffer = [line]
+                    else:
+                        buffer = []
+
+                    if brace_depth <= 0:
+                        if capture_entry:
+                            entry = self._finalize_stream_entry(buffer, current_type, current_key)
+                            if entry:
+                                entries.append(entry)
+                                resolved_keys.add(entry.key)
+                                if resolved_keys >= target_keys:
+                                    break
+                        inside_entry = False
+                        capture_entry = False
+                        buffer = []
+                    continue
+
+                brace_depth += line.count('{') - line.count('}')
+                if capture_entry:
+                    buffer.append(line)
+
+                if brace_depth <= 0:
+                    inside_entry = False
+                    if capture_entry:
+                        entry = self._finalize_stream_entry(buffer, current_type, current_key)
+                        if entry:
+                            entries.append(entry)
+                            resolved_keys.add(entry.key)
+                            if resolved_keys >= target_keys:
+                                break
+                    capture_entry = False
+                    buffer = []
+
+        return entries
+
+    def _finalize_stream_entry(
+        self,
+        buffer: List[str],
+        entry_type: str,
+        key: str
+    ) -> Optional[BibEntry]:
+        """Construct a BibEntry from streamed lines."""
+        raw_entry = ''.join(buffer)
+        fields_block = self._extract_fields_block(raw_entry)
+        return self._build_entry(entry_type, key, fields_block, raw_entry)
+
+    def _extract_fields_block(self, raw_entry: str) -> str:
+        """Return the field block substring from a full BibTeX entry."""
+        at_index = raw_entry.find('{')
+        if at_index == -1:
+            return ""
+        comma_index = raw_entry.find(',', at_index)
+        if comma_index == -1:
+            return ""
+        fields_segment = raw_entry[comma_index + 1:]
+        closing_index = fields_segment.rfind('}')
+        if closing_index != -1:
+            fields_segment = fields_segment[:closing_index]
+        return fields_segment
+
+    def _build_entry(
+        self,
+        entry_type: str,
+        key: str,
+        fields_block: str,
+        raw_content: str
+    ) -> Optional[BibEntry]:
+        if not fields_block:
+            return None
+
+        fields = self._parse_bib_fields(fields_block)
+        content_hash = self._compute_content_hash(fields)
+        return BibEntry(
+            key=key,
+            entry_type=entry_type,
+            fields=fields,
+            raw_content=raw_content,
+            content_hash=content_hash,
+        )
+
+    @staticmethod
+    def extract_citation_keys(content: str) -> Tuple[Set[str], bool]:
+        """Return cited keys and whether \nocite{*} is present."""
+        keys: Set[str] = set()
+        include_all = False
+
+        for match in CITE_COMMAND_PATTERN.finditer(content):
+            block = match.group(1)
+            for raw_key in block.split(','):
+                cleaned = raw_key.strip()
+                if not cleaned:
+                    continue
+                if cleaned == '*':
+                    include_all = True
+                else:
+                    keys.add(cleaned)
+
+        return keys, include_all
+    
+    # BIBITEM EXTRACTION FROM LATEX
+    def extract_bibitems(self, content: str) -> List[BibEntry]:
+        """
+        Extract \\bibitem entries from LaTeX content and convert them
+        into BibEntry objects.
+        """
+        entries: List[BibEntry] = []
+
+        bibitem_pattern = re.compile(
+            r"\\bibitem(?:\[([^\]]*)\])?\{([^}]+)\}(.+?)"
+            r"(?=\\bibitem|\\end\{thebibliography\}|$)",
+            re.DOTALL,
+        )
+
+        for match in bibitem_pattern.finditer(content):
+            key = match.group(2).strip()
+            raw_content = match.group(3).strip()
+
+            fields = self._parse_bibitem_content(raw_content)
+            content_hash = self._compute_content_hash(fields)
+
+            entries.append(
+                BibEntry(
+                    key=key,
+                    entry_type=fields.get("_type", "misc"),
+                    fields={k: v for k, v in fields.items() if not k.startswith("_")},
+                    raw_content=raw_content,
+                    content_hash=content_hash,
+                )
+            )
+
+        return entries
+    
+    # INTERNAL UTILITIES 
+    def _parse_bib_fields(self, fields_block: str) -> Dict[str, str]:
+        """Parse BibTeX field definitions into a dictionary."""
+        fields: Dict[str, str] = {}
+
+        field_pattern = re.compile(
+            r"(\w+)\s*=\s*(?:"
+            r"\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}"
+            r"|\"([^\"]*)\""
+            r"|(\d+))",
+            re.DOTALL,
+        )
+
+        for match in field_pattern.finditer(fields_block):
+            field_name = match.group(1).lower()
+            value = match.group(2) or match.group(3) or match.group(4) or ""
+            fields[field_name] = self._clean_bib_value(value)
+        return fields
+
+    def _clean_bib_value(self, value: str) -> str:
+        """Normalize BibTeX field values by stripping wrappers and collapsing whitespace."""
+        cleaned = value.strip()
+        # Remove leading/trailing braces or quotes (including double-braced titles)
+        while len(cleaned) > 1 and (
+            (cleaned.startswith("{") and cleaned.endswith("}")) or
+            (cleaned.startswith("\"") and cleaned.endswith("\""))
+        ):
+            cleaned = cleaned[1:-1].strip()
+        cleaned = " ".join(cleaned.split())
+        return cleaned
+    
+    def _parse_bibitem_content(self, content: str) -> Dict[str, str]:
+        """Heuristically extract structured fields from a \\bibitem entry."""
+
+        fields: Dict[str, str] = {"_type": "misc"}
+        content = content.strip()
+
+        # Preserve raw content for traceability
+        fields["note"] = content
+
+        author_match = re.match(r"^([^.]+?)\.", content)
+        if author_match:
+            fields["author"] = author_match.group(1).strip()
+
+        year_match = re.search(r"\b(19|20)\d{2}\b", content)
+        if year_match:
+            fields["year"] = year_match.group(0)
+
+        title_match = re.search(r"[\"']([^\"']+)[\"']", content)
+        if title_match:
+            fields["title"] = title_match.group(1)
+
+        return fields
+    
+    # DEDUPLICATION UTILITIES
+    def _compute_content_hash(self, fields: Dict[str, str]) -> str:
+        """
+        Compute a stable hash used for cross-version deduplication.
+        Normalization strategy:
+        - Ignore internal fields (prefixed with '_')
+        - Lowercase all values
+        - Collapse extra whitespace
+        - Sort keys for deterministic hashing
+        """
+        normalized: Dict[str, str] = {}
+
+        for key, value in fields.items():
+            if key.startswith("_"):
+                continue
+            normalized[key.lower()] = " ".join(value.lower().split())
+
+        serialized = json.dumps(normalized, sort_keys=True)
+        return hashlib.md5(serialized.encode("utf-8")).hexdigest()
+    
+    # ENTRY REGISTRATION AND MERGING
+    def add_entries(self, entries: List[BibEntry]) -> Dict[str, str]:
+        """
+        Register bibliography entries with content-based deduplication.
+
+        Strategy:
+        - Entries with identical content hashes are merged
+        - Later versions overwrite earlier field values
+        - BibTeX key collisions are resolved deterministically
+        """
+        key_mapping: Dict[str, str] = {}
+
+        for entry in entries:
+            if entry.content_hash in self.content_hash_map:
+                canonical_key = self.content_hash_map[entry.content_hash]
+                canonical_entry = self.entries[canonical_key]
+
+                for field, value in entry.fields.items():
+                    if not value:
+                        continue
+                    if field not in canonical_entry.fields:
+                        canonical_entry.fields[field] = value
+                    elif canonical_entry.fields[field] != value:
+                        canonical_entry.fields[field] = value
+
+                key_mapping[entry.key] = canonical_key
+                self.key_aliases[entry.key] = canonical_key
+
+            else:
+                if entry.key in self.entries:
+                    entry.key = f"{entry.key}_{entry.content_hash[:6]}"
+
+                self.entries[entry.key] = entry
+                self.content_hash_map[entry.content_hash] = entry.key
+                key_mapping[entry.key] = entry.key
+
+        return key_mapping
+    
+    # CITATION NORMALIZATION
+    def normalize_citations(self, content: str) -> str:
+        """Replace citation keys in LaTeX content with canonical keys."""
+        def replace_citation(match: re.Match) -> str:
+            command = match.group(1)
+            keys = [k.strip() for k in match.group(2).split(",")]
+
+            canonical_keys = []
+            seen = set()
+
+            for key in keys:
+                canonical = self.key_aliases.get(key, key)
+                if canonical not in seen:
+                    canonical_keys.append(canonical)
+                    seen.add(canonical)
+
+            return f"\\{command}{{{','.join(canonical_keys)}}}"
+
+        return re.sub(
+            r"\\(cite[a-z]*)\{([^}]+)\}",
+            replace_citation,
+            content,
+        )
+    
+    # EXPORT
+    def export_bib(self, output_path: Path) -> None:
+        """
+        Export all canonical bibliography entries to a BibTeX file.
+        """
+        with output_path.open("w", encoding="utf-8") as file:
+            for key, entry in sorted(self.entries.items()):
+                file.write(f"@{entry.entry_type}{{{key},\n")
+                for field, value in sorted(entry.fields.items()):
+                    if value:
+                        escaped_value = value.replace("\\", "\\\\")
+                        file.write(f"  {field} = {{{escaped_value}}},\n")
+                file.write("}\n\n")
+
+
+# ================ HIERARCHY CONSTRUCTION ================
+class HierarchyBuilder:
+    """
+    Build a hierarchical tree structure from LaTeX document content.
+
+    The builder parses sections, lists, figures, equations, and sentences,
+    then constructs a parent-child hierarchy suitable for downstream indexing
+    or semantic processing.
+    """
+    def __init__(self, paper_id: str, version: str):
+        self.paper_id = paper_id
+        self.version = version
+        self.elements: Dict[str, str] = {} # element_id -> raw content
+        self.hierarchy: Dict[str, str] = {} # child_id -> parent_id
+        self.content_hash_map: Dict[str, str] = {} # content_hash -> element_id 
+
+    # PUBLIC API
+    def build(self, content: str) -> Tuple[Dict[str, str], Dict[str, str]]:
+        """
+        Build hierarchy from LaTeX content.
+        """
+        document_body = self._extract_document_body(content)
+        document_body = self._remove_references_section(document_body)
+
+        root_id = f"{self.paper_id}_doc_root"
+        self.elements[root_id] = "DOCUMENT_ROOT"
+
+        self._parse_structure(document_body, root_id)
+        return self.elements, self.hierarchy
+    
+    # DOCUMENT PREPROCESS
+    def _extract_document_body(self, content: str) -> str:
+        """Extract content between \\begin{document} and \\end{document}."""
+        match = re.search(
+            r'\\begin\{document\}(.+?)\\end\{document\}',
+            content,
+            re.DOTALL
+        )
+        if match:
+            return match.group(1)
+        return content
+    
+    def _remove_references_section(self, content: str) -> str:
+        """Remove References / Bibliography sections and environments."""
+        lines = content.splitlines()
+        output_lines = []
+        in_references = False
+
+        reference_header_pattern = re.compile(
+            r'\\(section|chapter)\*?\{[^}]*(references|bibliography|references and notes)[^}]*\}',
+            re.IGNORECASE
+        )
+        section_start_pattern = re.compile(r'\\(section|chapter)\*?\{')
+
+        for line in lines:
+            if reference_header_pattern.search(line):
+                in_references = True
+                continue
+            if in_references:
+                if section_start_pattern.match(line) and not reference_header_pattern.search(line):
+                    in_references = False
+                    output_lines.append(line)
+            else:
+                output_lines.append(line)
+        cleaned_text = "\n".join(output_lines)
+
+        # Remove thebibliography environment entirely
+        cleaned_text = re.sub(
+            r'\\begin\{thebibliography\}.*?\\end\{thebibliography\}',
+            '',
+            cleaned_text,
+            flags=re.DOTALL
+        )
+        return cleaned_text
+    
+    # STRUCTURE PARSING
+    def _parse_structure(self, content: str, root_id: str) -> None:
+        """
+        Parse LaTeX content and construct the hierarchy.
+        """
+        stack = [{'id': root_id, 'level': -1, 'type': 'root'}]
+        text_buffer: List[str] = []
+        section_pattern = re.compile(
+            r'\\(part|chapter|abstract|section|subsection|subsubsection|paragraph|subparagraph)\*?'
+            r'\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}'
+        )
+
+        lines = content.splitlines()
+        i = 0
+
+        while i < len(lines):
+            line = lines[i].strip()
+            if not line:
+                i += 1
+                continue
+
+            # ---------- FIGURES / TABLES / ALGORITHMS ----------
+            fig_match = re.match(r'\\begin\{(figure|table|algorithm)\*?\}', line)
+            if fig_match:
+                self._flush_text_buffer(text_buffer, stack[-1]['id'])
+                text_buffer.clear()
+                env_type = fig_match.group(1)
+                block, end_i = self._extract_environment(lines, i, env_type)
+                elem_id = self._create_element_id('fig', block)
+                self._register_element(elem_id, block, stack[-1]['id'])
+                i = end_i + 1
+                continue
+
+            # ------------------- EQUATIONS ---------------------
+            eq_match = re.match(r'\\begin\{(equation|align|gather|multline)\*?\}', line)
+            if eq_match:
+                self._flush_text_buffer(text_buffer, stack[-1]['id'])
+                text_buffer.clear()
+                env_type = eq_match.group(1)
+                block, end_i = self._extract_environment(lines, i, env_type)
+                elem_id = self._create_element_id('eq', block)
+                self._register_element(elem_id, block, stack[-1]['id'])
+                i = end_i + 1
+                continue
+
+            # -------------------- ABSTRACT ---------------------
+            if re.match(r'\\begin\{abstract\}', line):
+                self._flush_text_buffer(text_buffer, stack[-1]['id'])
+                text_buffer.clear()
+                block, end_i = self._extract_environment(lines, i, 'abstract')
+                abstract_text = self._strip_environment_content(block, 'abstract')
+                abstract_id = self._create_element_id('abstract', 'abstract')
+                self._register_element(abstract_id, 'abstract', stack[-1]['id'])
+                self._flush_text_buffer([abstract_text], abstract_id)
+                i = end_i + 1
+                continue
+
+            # -------------------- SECTIONS ---------------------
+            sec_match = section_pattern.match(line)
+            if sec_match:
+                self._flush_text_buffer(text_buffer, stack[-1]['id'])
+                text_buffer.clear()
+                sec_type, title = sec_match.groups()
+                level = SECTION_HIERARCHY.get(sec_type, 6)
+                while len(stack) > 1 and (
+                    stack[-1]['type'] in {'item', 'itemize', 'enumerate'} or
+                    stack[-1]['level'] >= level
+                ):
+                    stack.pop()
+                sec_id = self._create_element_id(sec_type, title)
+                self._register_element(sec_id, title, stack[-1]['id'])
+                stack.append({'id': sec_id, 'level': level, 'type': sec_type})
+                i += 1
+                continue
+
+            # --------------------- LISTS -----------------------
+            if '\\begin{itemize}' in line or '\\begin{enumerate}' in line:
+                self._flush_text_buffer(text_buffer, stack[-1]['id'])
+                text_buffer.clear()
+                list_type = 'itemize' if 'itemize' in line else 'enumerate'
+                list_id = self._create_element_id(list_type, f"list_{i}")
+                self._register_element(list_id, list_type, stack[-1]['id'])
+                stack.append({
+                    'id': list_id,
+                    'level': stack[-1]['level'] + 0.5,
+                    'type': list_type
+                })
+                i += 1
+                continue
+
+            if '\\end{itemize}' in line or '\\end{enumerate}' in line:
+                self._flush_text_buffer(text_buffer, stack[-1]['id'])
+                text_buffer.clear()
+                if stack[-1]['type'] == 'item':
+                    stack.pop()
+                if stack[-1]['type'] in {'itemize', 'enumerate'}:
+                    stack.pop()
+                i += 1
+                continue
+
+            # ---------------------- ITEMS ----------------------
+            if line.startswith('\\item'):
+                self._flush_text_buffer(text_buffer, stack[-1]['id'])
+                text_buffer.clear()
+                if stack[-1]['type'] == 'item':
+                    stack.pop()
+                if stack[-1]['type'] in {'itemize', 'enumerate'}:
+                    item_text = line[5:].strip()
+                    item_id = self._create_element_id('item', f"item_{i}")
+                    self._register_element(item_id, "item", stack[-1]['id'])
+                    stack.append({
+                        'id': item_id,
+                        'level': stack[-1]['level'] + 0.5,
+                        'type': 'item'
+                    })
+                    if item_text:
+                        text_buffer.append(item_text)
+                else:
+                    text_buffer.append(line)
+                i += 1
+                continue
+
+            # ------------------ REGULAR TEXT -------------------
+            text_buffer.append(line)
+            i += 1
+        self._flush_text_buffer(text_buffer, stack[-1]['id'])
+
+    # ========================== UTILITIES ===============================
+    def _extract_environment(self, lines: List[str], start_index: int, env_type: str) -> Tuple[str, int]:
+        """Extract a full LaTeX environment block."""
+        collected = []
+        depth = 0
+        i = start_index
+        env_pattern = env_type.replace('*', r'\*?')
+
+        while i < len(lines):
+            line = lines[i]
+            if re.search(fr'\\begin\{{{env_pattern}\}}', line):
+                depth += 1
+            if re.search(fr'\\end\{{{env_pattern}\}}', line):
+                depth -= 1
+            collected.append(line)
+            if depth == 0:
+                break
+            i += 1
+        return "\n".join(collected), i
+
+    def _strip_environment_content(self, block: str, env_type: str) -> str:
+        """Remove \begin/\end wrappers from an environment block."""
+        pattern = re.compile(
+            rf"\\begin\{{{re.escape(env_type)}\}}(.*?)\\end\{{{re.escape(env_type)}\}}",
+            re.DOTALL
+        )
+        match = pattern.search(block)
+        return match.group(1).strip() if match else block
+    
+    def _flush_text_buffer(self, buffer: List[str], parent_id: str) -> None:
+        """
+        Convert accumulated text into sentence-level nodes.
+        """
+        if not buffer:
+            return
+
+        text = " ".join(buffer)
+        text = " ".join(text.split())
+        if not text:
+            return
+        for sentence in self._split_sentences(text):
+            sent_id = self._create_element_id('sent', sentence)
+            self._register_element(sent_id, sentence, parent_id)
+
+    def _split_sentences(self, text: str) -> List[str]:
+        """
+        Split text into sentences while protecting abbreviations.
+        """
+        protected_text = text
+        placeholder_map = {}
+
+        for i, abbr in enumerate(ABBREVIATIONS):
+            placeholder = f"__ABBR{i}__"
+            protected_text = re.sub(
+                abbr,
+                placeholder.replace('.', '<DOT>'),
+                protected_text
+            )
+            placeholder_map[placeholder.replace('.', '<DOT>')] = abbr.replace('\\', '')
+        chunks = re.split(r'(?<=[.!?])\s+', protected_text)
+
+        sentences = []
+        for chunk in chunks:
+            restored = chunk
+            for placeholder, original in placeholder_map.items():
+                restored = restored.replace(placeholder, original.replace('<DOT>', '.'))
+            restored = restored.replace('<DOT>', '.')
+            if restored.strip():
+                sentences.append(restored.strip())
+        return sentences
+
+    def _create_element_id(self, element_type: str, content: str) -> str:
+        """
+        Create a deterministic element ID using content hash.
+        """
+        prefix = TYPE_PREFIXES.get(element_type, element_type)
+        digest = hashlib.md5(content.strip().encode("utf-8")).hexdigest()[:8]
+        return f"{self.paper_id}_{prefix}_{digest}"
+
+    def _register_element(self, element_id: str, content: str, parent_id: str) -> None:
+        """
+        Register an element and resolve ID collisions safely.
+        """
+        final_id = element_id
+        counter = 1
+        while final_id in self.hierarchy and self.hierarchy[final_id] != parent_id:
+            final_id = f"{element_id}_{counter}"
+            counter += 1
+        self.elements[final_id] = content
+        self.hierarchy[final_id] = parent_id
