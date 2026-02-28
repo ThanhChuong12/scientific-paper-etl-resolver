@@ -1136,3 +1136,71 @@ class HierarchyBuilder:
             counter += 1
         self.elements[final_id] = content
         self.hierarchy[final_id] = parent_id
+
+# ================ CONTENT DEDUPLICATION ACROSS VERSIONS ================
+class ContentDeduplicator:
+    """
+    Deduplicate content across multiple document versions.
+
+    Identical content blocks (after normalization) are merged into a single
+    canonical element ID, while preserving version-specific hierarchies.
+    """
+
+    def __init__(self, paper_id: str):
+        self.paper_id = paper_id
+        self.global_elements: Dict[str, str] = {} # canonical_element_id -> original content
+        self.version_hierarchies: Dict[str, Dict[str, str]] = {} # version -> {child_id -> parent_id}
+        self.content_hash_to_id: Dict[str, str] = {} # content_hash -> canonical_element_id
+        self.global_parent_links: Dict[str, Set[str]] = defaultdict(set) # canonical_child_id -> set(canonical_parent_id)
+        
+    # PUBLIC API
+    def add_version(self, version: str, elements: Dict[str, str], hierarchy: Dict[str, str]) -> None:
+        """Add a document version and merge its content with global storage."""
+        id_mapping: Dict[str, str] = {}
+
+        # Deduplicate Elements
+        for original_id, content in elements.items():
+            normalized_content = self._normalize_content(content)
+            content_hash = self._hash_content(normalized_content)
+            if content_hash in self.content_hash_to_id:
+                canonical_id = self.content_hash_to_id[content_hash]
+            else:
+                canonical_id = original_id
+                self.content_hash_to_id[content_hash] = canonical_id
+                self.global_elements[canonical_id] = content
+            id_mapping[original_id] = canonical_id
+
+        # Remap Hierarchy 
+        remapped_hierarchy: Dict[str, str] = {}
+        for child_id, parent_id in hierarchy.items():
+            canonical_child = id_mapping.get(child_id, child_id)
+            canonical_parent = id_mapping.get(parent_id, parent_id)
+            remapped_hierarchy[canonical_child] = canonical_parent
+            if canonical_parent:
+                self.global_parent_links[canonical_child].add(canonical_parent)
+        self.version_hierarchies[version] = remapped_hierarchy
+    
+    def get_merged_output(self) -> Dict[str, Any]:
+        return {
+            "elements": self.global_elements,
+            "hierarchy": self.version_hierarchies,
+            "merged_parents": {
+                child_id: sorted(parent_ids)
+                for child_id, parent_ids in self.global_parent_links.items()
+            }
+        }
+    
+    # INTERNAL UTILITIES
+    def _normalize_content(self, content: str) -> str:
+        """Normalize content for semantic comparison."""
+        text = " ".join(content.split())
+        text = text.lower()
+        # Remove LaTeX commands like \textbf{...}, \emph{...}
+        text = re.sub(r'\\[a-zA-Z]+\{[^}]*\}', '', text)
+        # Remove remaining LaTeX syntax characters
+        text = re.sub(r'[{}\\]', '', text)
+        return text.strip()
+
+    def _hash_content(self, normalized_content: str) -> str:
+        return hashlib.md5(normalized_content.encode("utf-8")).hexdigest()
+
