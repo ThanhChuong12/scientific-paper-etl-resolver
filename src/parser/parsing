@@ -148,3 +148,307 @@ class BibEntry:
     fields: Dict[str, str] = field(default_factory=dict)
     raw_content: str = ""
     content_hash: str = ""
+
+
+
+# ================ MULTI-FILE GATHERING ================
+class TexFileGatherer:
+    """
+    Responsible for gathering and merging LaTeX source files within a version directory.
+
+    This class:
+    - Scans for all `.tex` files
+    - Heuristically identifies the main compilation file
+    - Recursively resolves \\input and \\include directives
+    - Tracks which files are actually used in compilation
+    """
+
+    def __init__(self, version_dir: Path) -> None:
+        self.version_dir: Path = version_dir
+        self.all_tex_files: List[Path] = []
+        self.visited_files: Set[Path] = set()
+        self.included_files: Set[Path] = set()
+        
+    # FILE DISCOVERY    
+    def find_all_tex_files(self) -> List[Path]:
+        self.all_tex_files = list(self.version_dir.rglob("*.tex"))
+        return self.all_tex_files
+    
+    # MAIN FILE IDENTIFICATION
+    def identify_main_file(self) -> Optional[Path]:
+        """
+        Identify the main LaTeX compilation file using heuristic scoring.
+
+        Heuristics include:
+        - Presence of \\documentclass and \\begin{document}
+        - Common main file names (e.g., main.tex, paper.tex)
+        - Penalization of likely sub-files (appendix, chapter, etc.)
+        """
+        if not self.all_tex_files:
+            self.find_all_tex_files()
+
+        candidates = []
+        for tex_file in self.all_tex_files:
+            try:
+                content = tex_file.read_text(encoding="utf-8", errors="ignore")
+                score = 0
+
+                # Strong indicators of a main file
+                if r"\documentclass" in content:
+                    score += 10
+                if r"\begin{document}" in content:
+                    score += 10
+                if r"\end{document}" in content:
+                    score += 5
+
+                # Secondary indicators
+                if r"\maketitle" in content:
+                    score += 3
+                if r"\tableofcontents" in content:
+                    score += 2
+                if r"\bibliography" in content or r"\printbibliography" in content:
+                    score += 2
+
+                # Penalize files that look like partials
+                filename_lower = tex_file.name.lower()
+                if tex_file.name.startswith("_"):
+                    score -= 5
+                if any(token in filename_lower for token in ("appendix", "chapter", "section")):
+                    score -= 2
+
+                # Common main file naming patterns
+                if tex_file.stem.lower() in {"main", "paper", "article", "thesis", "document"}:
+                    score += 5
+                if score > 0:
+                    candidates.append((tex_file, score))
+            except Exception as exc:
+                logger.warning("Failed to read %s: %s", tex_file, exc)
+
+        if not candidates:
+            return self.all_tex_files[0] if self.all_tex_files else None
+        candidates.sort(key=lambda item: item[1], reverse=True)
+        return candidates[0][0]
+    
+    # INCLUDE RESOLUTION    
+    def resolve_includes(self, main_file: Path) -> str:
+        """
+        Resolve all \\input and \\include directives starting from the main file.
+        """
+        self.visited_files.clear()
+        self.included_files.clear()
+        return self._read_file_recursive(main_file)
+    
+    
+    def _read_file_recursive(self, file_path: Path) -> str:
+        """Recursively read a LaTeX file and resolve its includes."""
+        if file_path in self.visited_files:
+            return ""
+            
+        self.visited_files.add(file_path)
+        self.included_files.add(file_path)
+        
+        try:
+            content = file_path.read_text(encoding='utf-8', errors='ignore')
+        except Exception as e:
+            logger.warning(f"Cannot read {file_path}: {e}")
+            return ""
+        include_pattern = re.compile(
+            r'\\(?:input|include)(?:\s*\{([^}]+)\}|\s+([^\s\\]+))',
+            re.MULTILINE
+        )
+
+        def replace_include(match):
+            """
+            Replace an include directive with the resolved file content.
+            """
+            included_name = (match.group(1) or match.group(2)).strip()
+            candidate_paths = [
+                file_path.parent / included_name,
+                file_path.parent / f"{included_name}.tex",
+                self.version_dir / included_name,
+                self.version_dir / f"{included_name}.tex",
+            ]
+
+            for candidate in candidate_paths:
+                if candidate.exists() and candidate.is_file():
+                    return self._read_file_recursive(candidate)
+            logger.debug("Included file not found: %s", included_name)
+            return ""
+
+        return include_pattern.sub(replace_include, content)
+    
+    # UNUSED FILE DETECTION
+    def get_unused_files(self) -> List[Path]:
+        """Identify LaTeX files that were not included in the final compilation."""
+        if not self.all_tex_files:
+            self.find_all_tex_files()
+        return [tex for tex in self.all_tex_files if tex not in self.included_files]
+
+# ================ LATEX CLEANUP AND NORMALIZATION ================
+class LatexCleaner:
+    """
+    Performs LaTeX cleanup and normalization prior to structural parsing.
+
+    This class is responsible for:
+    - Removing comments and layout-only commands
+    - Simplifying text formatting while preserving content
+    - Normalizing inline and block math expressions
+    - Cleaning environment options (e.g., figure placement)
+    - Normalizing whitespace for downstream tokenization
+    """
+        
+    def __init__(self) -> None:
+        self.abbreviation_placeholders: Dict[str, str] = {}
+
+    # PUBLIC API
+    def clean(self, content: str, strip_sectioning: bool = False) -> str:
+        """Apply all cleanup and normalization pipeline.
+
+        strip_sectioning: if True, remove section-like commands while preserving titles.
+        Use this only for display/inspection; the parser should keep sectioning intact.
+        """
+        content = self.remove_comments(content)
+        content = self.remove_formatting_commands(content)
+        content = self.simplify_text_formatting(content)
+        if strip_sectioning:
+            content = self.remove_sectioning_commands(content)
+        content = self.normalize_math(content)
+        content = self.clean_environment_options(content)
+        content = self.normalize_whitespace(content)
+        return content
+
+    # SECTIONING REMOVAL (TEXT-PRESERVING)
+    def remove_sectioning_commands(self, content: str) -> str:
+        """
+        Strip section-like commands (including abstract) while preserving their titles.
+
+        This prevents orphan braces (e.g., "Introduction}") in normalized text streams
+        used for comparative inspection; avoid enabling during full parse to keep
+        section markers intact for hierarchy building.
+        """
+        section_cmd = re.compile(
+            r"\\(part|chapter|section|subsection|subsubsection|paragraph|subparagraph|abstract)\*?\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}",
+            re.IGNORECASE
+        )
+        return section_cmd.sub(lambda m: m.group(2).strip() + "\n", content)
+    
+    # COMMENT REMOVAL
+    def remove_comments(self, content: str) -> str:
+        """Remove LaTeX comments while preserving document structure."""
+        cleaned_lines = []
+        for line in content.split("\n"):
+            buffer = []
+            index = 0
+            while index < len(line):
+                if line[index] == "%" and (index == 0 or line[index - 1] != "\\"):
+                    break
+                buffer.append(line[index])
+                index += 1
+            cleaned_line = "".join(buffer)
+            if cleaned_line.strip():
+                cleaned_lines.append(cleaned_line)
+            else:
+                cleaned_lines.append("")
+        return "\n".join(cleaned_lines)
+
+    # FORMATTING COMMAND REMOVAL
+    def remove_formatting_commands(self, content: str) -> str:
+        """Remove layout-only LaTeX commands with no semantic meaning."""
+        for pattern in FORMATTING_COMMANDS:
+            content = re.sub(pattern, "", content)
+        return content
+    
+    # TEXT FORMATTING SIMPLIFICATION
+    def simplify_text_formatting(self, content: str) -> str:
+        """
+        Simplify text formatting commands by stripping the command
+        and preserving inner content.
+        """
+        for _ in range(3):
+            for pattern, replacement in TEXT_FORMAT_COMMANDS:
+                content = re.sub(pattern, replacement, content)
+        return content
+        
+    # MATH NORMALIZATION
+    def normalize_math(self, content: str) -> str:
+        """
+        Normalize all math expressions into a unified representation.
+
+        Transformations:
+        - Inline math: \\( ... \\) → $ ... $
+        - Block math: \\[ ... \\], $$ ... $$ -> equation environment
+        - Multi-line math environments (align, gather, etc.) -> equation
+        """
+        # Inline math: \( ... \) → $ ... $
+        content = re.sub(
+            r"\\\((.+?)\\\)",
+            r"$\1$",
+            content,
+            flags=re.DOTALL,
+        )
+
+        def wrap_equation(match: re.Match) -> str:
+            inner_content = match.group(1).strip()
+            return (
+                "\\begin{equation}\n"
+                f"{inner_content}\n"
+                "\\end{equation}"
+            )
+
+        # Block math: \[ ... \]
+        content = re.sub(
+            r"\\\[(.+?)\\\]",
+            wrap_equation,
+            content,
+            flags=re.DOTALL,
+        )
+
+        # Block math: $$ ... $$ (excluding escaped dollars)
+        content = re.sub(
+            r"(?<!\\)\$\$(.+?)(?<!\\)\$\$",
+            wrap_equation,
+            content,
+            flags=re.DOTALL,
+        )
+
+        # Other math environments normalized to equation
+        math_environments = [
+            "align", "align\\*", "gather", "gather\\*", "multline",
+            "multline\\*", "alignat", "alignat\\*", "eqnarray", "eqnarray\\*",
+            "displaymath", "flalign", "flalign\\*",
+        ]
+
+        for env in math_environments:
+            escaped_env = env.replace("*", r"\*")
+            pattern = re.compile(
+                rf"\\begin\{{{escaped_env}\}}(.+?)\\end\{{{escaped_env}\}}",
+                re.DOTALL,
+            )
+            content = pattern.sub(wrap_equation, content)
+
+        return content
+    
+    # ENVIRONMENT CLEANUP
+    def clean_environment_options(self, content: str) -> str:
+        content = re.sub(
+            r'(\\begin\{(?:figure|table|algorithm)\*?\})\s*\[[^\]]*\]',
+            r'\1',
+            content
+        )
+        return content
+    
+    # WHITESPACE NORMALIZATION
+    def normalize_whitespace(self, content: str) -> str:
+        """
+        Normalize whitespace while preserving logical structure.
+        
+        Rules:
+        - Collapse multiple spaces and tabs into one space
+        - Limit consecutive blank lines to at most two
+        - Trim leading and trailing whitespace
+        """
+        # Drop stray brace-only lines that can appear after command stripping
+        content = re.sub(r'^\s*\}\s*$', '', content, flags=re.MULTILINE)
+        content = re.sub(r"[ \t]+", " ", content)
+        content = re.sub(r"\n\s*\n+", "\n\n", content)
+        return content.strip()
