@@ -1204,3 +1204,466 @@ class ContentDeduplicator:
     def _hash_content(self, normalized_content: str) -> str:
         return hashlib.md5(normalized_content.encode("utf-8")).hexdigest()
 
+
+# ================ PAPER PROCESSOR ================
+class PaperProcessor:
+    """
+    Main processor for a single paper.
+    Orchestrates all versions and produces the final merged output.
+    """
+    
+    def __init__(
+        self,
+        paper_dir: Path,
+        output_dir: Path,
+        skip_existing: bool = False
+    ):
+        self.paper_dir = paper_dir
+        self.paper_id = paper_dir.name
+        self.output_dir = output_dir / self.paper_id
+        self.skip_existing = skip_existing
+        self.cleaner = LatexCleaner()
+        self.bib_processor = BibProcessor()
+        self.deduplicator = ContentDeduplicator(self.paper_id)
+        self.last_status: str = "pending"
+        
+    def process(self) -> bool:
+        """Process all available versions of the paper."""
+        self.last_status = "pending"
+        tex_root = self.paper_dir / "tex"
+
+        if not tex_root.exists():
+            logger.warning(f"No 'tex' directory found for paper {self.paper_id}")
+            self.last_status = "skipped"
+            return False
+        logger.info(f"Processing paper: {self.paper_id}")
+
+        if self.skip_existing and self._outputs_exist():
+            logger.info(
+                f"  Skipping paper {self.paper_id} (existing outputs, --skip-existing)"
+            )
+            self.last_status = "skipped"
+            return True
+
+        version_dirs = self._discover_versions(tex_root)
+        if not version_dirs:
+            logger.warning(f"No version directories found in {tex_root}")
+            self.last_status = "skipped"
+            return False
+        for version_dir in version_dirs:
+            version_key = self._extract_version_key(version_dir.name)
+            logger.info(f"  Processing version: {version_dir.name}")
+            try:
+                self._process_version(version_dir, version_key)
+            except Exception as exc:
+                logger.error(f"  Failed to process version {version_dir.name}: {exc}")
+                import traceback
+                traceback.print_exc()
+        self._save_outputs()
+        self._log_statistics()
+        self.last_status = "success"
+        return True
+    
+    def _discover_versions(self, tex_root: Path) -> List[Path]:
+        """
+        Discover version directories under the tex root.
+        """
+        versions = [
+            d for d in tex_root.iterdir()
+            if d.is_dir() and re.match(rf'{re.escape(self.paper_id)}v\d+', d.name)
+        ]
+        if not versions:
+            versions = [
+                d for d in tex_root.iterdir()
+                if d.is_dir() and 'v' in d.name.lower()
+            ]
+        return sorted(versions)
+    
+    @staticmethod
+    def _extract_version_key(version_name: str) -> str:
+        """
+        Extract numeric version key from directory name.
+        """
+        match = re.search(r'v(\d+)', version_name.lower())
+        return match.group(1) if match else version_name
+
+    def _process_version(self, version_dir: Path, version_key: str):
+        """
+        Process a single paper version.
+        """
+        gatherer = TexFileGatherer(version_dir)
+        main_file = gatherer.identify_main_file()
+        if not main_file:
+            logger.warning(f"    No main TeX file found in {version_dir}")
+            return
+        logger.info(f"    Main file: {main_file.name}")
+        merged_content = gatherer.resolve_includes(main_file)
+        unused_files = gatherer.get_unused_files()
+        if unused_files:
+            logger.debug(
+                f"    Unused TeX files: {[f.name for f in unused_files]}"
+            )
+        citation_keys, include_all_refs = self.bib_processor.extract_citation_keys(merged_content)
+        self._process_bibliography(version_dir, merged_content, citation_keys, include_all_refs)
+        cleaned_content = self.cleaner.clean(merged_content)
+        cleaned_content = self.bib_processor.normalize_citations(cleaned_content)
+        builder = HierarchyBuilder(self.paper_id, version_key)
+        elements, hierarchy = builder.build(cleaned_content)
+        self.deduplicator.add_version(version_key, elements, hierarchy)
+
+    def _process_bibliography(
+        self,
+        version_dir: Path,
+        content: str,
+        citation_keys: Set[str],
+        include_all_refs: bool
+    ) -> None:
+        """
+        Process bibliography sources for a version.
+        """
+        remaining_keys = None if include_all_refs else set(citation_keys)
+
+        for bib_file in version_dir.rglob("*.bib"):
+            allowed_keys = None if remaining_keys is None else remaining_keys
+            entries = self.bib_processor.parse_bib_file(bib_file, allowed_keys)
+            if not entries:
+                continue
+            self.bib_processor.add_entries(entries)
+            if remaining_keys is not None:
+                resolved_keys = {entry.key for entry in entries}
+                remaining_keys.difference_update(resolved_keys)
+                if not remaining_keys:
+                    break
+        bibitem_entries = self.bib_processor.extract_bibitems(content)
+        self.bib_processor.add_entries(bibitem_entries)
+
+    def _outputs_exist(self) -> bool:
+        """Return True if this paper already has generated outputs."""
+        hierarchy_path = self.output_dir / "hierarchy.json"
+        return hierarchy_path.exists()
+
+    def _save_outputs(self):
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        merged_output = self.deduplicator.get_merged_output()
+        hierarchy_path = self.output_dir / "hierarchy.json"
+        with hierarchy_path.open("w", encoding="utf-8") as f:
+            json.dump(merged_output, f, indent=2, ensure_ascii=False)
+        if self.bib_processor.entries:
+            self.bib_processor.export_bib(self.output_dir / "refs.bib")
+        self._copy_optional_file("metadata.json")
+        self._copy_optional_file("references.json")
+        logger.info(f"  Outputs saved to {self.output_dir}")
+
+    def _copy_optional_file(self, filename: str):
+        """
+        Copy optional metadata/reference files if present.
+        """
+        src = self.paper_dir / filename
+        if src.exists():
+            shutil.copy2(src, self.output_dir / filename)
+
+    def _log_statistics(self):
+        unique_elements = len(self.deduplicator.global_elements)
+        raw_elements_estimate = unique_elements + sum(
+            len(h) for h in self.deduplicator.version_hierarchies.values()
+        )
+        logger.info(f"  Statistics for paper {self.paper_id}:")
+        logger.info(f"    - Raw elements (estimated): {raw_elements_estimate}")
+        logger.info(f"    - Unique elements: {unique_elements}")
+
+# ================ BATCH PROCESSOR ================
+class BatchProcessor:
+    """
+    Batch processor for multiple papers.
+    """
+
+    def __init__(
+        self,
+        base_dir: Path,
+        output_dir: Optional[Path] = None,
+        max_workers: Optional[int] = None,
+        skip_existing: bool = False
+    ):
+        self.base_dir = base_dir
+        self.output_dir = output_dir or (base_dir / "processed")
+        self.max_workers = max_workers
+        self.skip_existing = skip_existing
+
+    def run(self) -> Dict[str, List[str]]:
+        paper_dirs = self._discover_papers()
+        logger.info(f"Found {len(paper_dirs)} papers to process")
+
+        stats = {
+            "success": [],
+            "failed": [],
+            "skipped": []
+        }
+        if not paper_dirs:
+            self._save_summary(stats)
+            self._log_summary(stats)
+            return stats
+
+        worker_count = self._resolve_worker_count(len(paper_dirs))
+        if worker_count > 1 and len(paper_dirs) > 1:
+            logger.info(
+                f"Running batch in parallel with {worker_count} worker(s)"
+            )
+            self._run_parallel(paper_dirs, worker_count, stats)
+        else:
+            self._run_sequential(paper_dirs, stats)
+        self._save_summary(stats)
+        self._log_summary(stats)
+        return stats
+
+    def _discover_papers(self) -> List[Path]:
+        return sorted(
+            d for d in self.base_dir.iterdir()
+            if d.is_dir() and re.match(r'\d{4}[-.]?\d+', d.name)
+        )
+
+    def _resolve_worker_count(self, total_papers: int) -> int:
+        if total_papers <= 1:
+            return 1
+        if self.max_workers is not None:
+            return max(1, min(self.max_workers, total_papers))
+        cpu_total = os.cpu_count() or 1
+        suggested = max(1, cpu_total - 1)
+        return max(1, min(suggested, total_papers))
+
+    def _run_sequential(
+        self,
+        paper_dirs: List[Path],
+        stats: Dict[str, List[str]]
+    ) -> None:
+        for paper_dir in paper_dirs:
+            try:
+                processor = PaperProcessor(
+                    paper_dir,
+                    self.output_dir,
+                    skip_existing=self.skip_existing
+                )
+                result = processor.process()
+                status = processor.last_status
+                if status not in stats:
+                    status = "success" if result else "skipped"
+                stats[status].append(paper_dir.name)
+            except Exception as exc:
+                logger.error(f"Error processing paper {paper_dir.name}: {exc}")
+                stats["failed"].append(paper_dir.name)
+                import traceback
+                traceback.print_exc()
+
+    def _run_parallel(
+        self,
+        paper_dirs: List[Path],
+        worker_count: int,
+        stats: Dict[str, List[str]]
+    ) -> None:
+        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+            future_to_name = {}
+            for paper_dir in paper_dirs:
+                future = executor.submit(
+                    _process_paper_task,
+                    str(paper_dir),
+                    str(self.output_dir),
+                    self.skip_existing
+                )
+                future_to_name[future] = paper_dir.name
+
+            for future in as_completed(future_to_name):
+                paper_name = future_to_name[future]
+                try:
+                    status, result_name, error = future.result()
+                except Exception as exc:
+                    logger.error(
+                        f"Worker crashed while processing {paper_name}: {exc}"
+                    )
+                    stats["failed"].append(paper_name)
+                    continue
+
+                target_name = result_name or paper_name
+                if status not in stats:
+                    status = "failed" if error else "success"
+                stats[status].append(target_name)
+                if error:
+                    logger.error(
+                        f"Error processing paper {target_name}: {error}"
+                    )
+
+    def _save_summary(self, stats: Dict[str, List[str]]):
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        summary_path = self.output_dir / "processing_summary.json"
+        with summary_path.open("w", encoding="utf-8") as f:
+            json.dump(stats, f, indent=2)
+
+    @staticmethod
+    def _log_summary(stats: Dict[str, List[str]]):
+        logger.info("Batch processing complete:")
+        logger.info(f"  Success: {len(stats['success'])}")
+        logger.info(f"  Skipped: {len(stats['skipped'])}")
+        logger.info(f"  Failed: {len(stats['failed'])}")
+
+
+def _process_paper_task(
+    paper_dir_str: str,
+    output_root_str: str,
+    skip_existing: bool
+) -> Tuple[str, str, Optional[str]]:
+    """Worker entry point for parallel paper processing."""
+    paper_dir = Path(paper_dir_str)
+    output_root = Path(output_root_str)
+    processor = PaperProcessor(
+        paper_dir,
+        output_root,
+        skip_existing=skip_existing
+    )
+    try:
+        result = processor.process()
+        status = processor.last_status
+        if status not in {"success", "skipped"}:
+            status = "success" if result else "skipped"
+        return status, paper_dir.name, None
+    except Exception as exc:
+        logger.error(f"Unhandled error in worker for {paper_dir.name}: {exc}")
+        traceback.print_exc()
+        return "failed", paper_dir.name, str(exc)
+
+
+# ================ MAIN ENTRY POINT ================
+def main() -> int:
+    """
+    Main entry point for the LaTeX parser.
+    Handles CLI argument parsing and dispatches processing tasks.
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="LaTeX Parser for Scientific Publications"
+    )
+
+    parser.add_argument(
+        "--input-dir",
+        type=Path,
+        default=Path("/content/drive/MyDrive/ColabProject_5000/23120195"),
+        help="Base directory containing paper directories"
+    )
+
+    parser.add_argument(
+        "-o", "--output",
+        type=Path,
+        default=None,
+        help="Output directory (default: <input_dir>/processed)"
+    )
+
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose (DEBUG) logging"
+    )
+
+    parser.add_argument(
+        "--single",
+        type=str,
+        default=None,
+        help="Process a single paper by paper ID"
+    )
+
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=None,
+        help="Number of parallel workers (default: CPU count - 1)"
+    )
+
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip papers that already have generated outputs"
+    )
+
+    args, _ = parser.parse_known_args()
+    _configure_logging(args.verbose)
+    if not args.input_dir.exists():
+        logger.error(f"Input directory does not exist: {args.input_dir}")
+        return 1
+    output_dir = args.output or (args.input_dir / "processed")
+    if args.single:
+        return _run_single_paper(
+            args.input_dir,
+            output_dir,
+            args.single,
+            skip_existing=args.skip_existing
+        )
+    return _run_batch(
+        args.input_dir,
+        output_dir,
+        max_workers=args.workers,
+        skip_existing=args.skip_existing
+    )
+
+
+def _configure_logging(verbose: bool):
+    """
+    Configure global logging level.
+    """
+    if verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.debug("Verbose logging enabled")
+
+def _run_single_paper(
+    base_dir: Path,
+    output_dir: Path,
+    paper_id: str,
+    skip_existing: bool = False
+) -> int:
+    """
+    Process a single paper.
+    """
+    paper_dir = base_dir / paper_id
+
+    if not paper_dir.exists():
+        logger.error(f"Paper directory does not exist: {paper_dir}")
+        return 1
+
+    logger.info(f"Processing single paper: {paper_id}")
+    processor = PaperProcessor(
+        paper_dir,
+        output_dir,
+        skip_existing=skip_existing
+    )
+    if processor.process():
+        if processor.last_status == "skipped":
+            logger.info(
+                "Paper already processed; skipping per --skip-existing"
+            )
+        else:
+            logger.info("Processing completed successfully")
+        return 0
+    logger.error("Processing failed")
+    return 1
+
+def _run_batch(
+    base_dir: Path,
+    output_dir: Path,
+    max_workers: Optional[int],
+    skip_existing: bool
+) -> int:
+    logger.info("Starting batch processing")
+    batch = BatchProcessor(
+        base_dir,
+        output_dir,
+        max_workers=max_workers,
+        skip_existing=skip_existing
+    )
+    stats = batch.run()
+    if stats["failed"]:
+        logger.error(
+            f"Batch completed with failures: {len(stats['failed'])} paper(s)"
+        )
+        return 1
+    logger.info("Batch processing completed successfully")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
