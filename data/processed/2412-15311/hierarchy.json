@@ -1,0 +1,1922 @@
+{
+  "elements": {
+    "2412-15311_doc_root": "DOCUMENT_ROOT",
+    "2412-15311_sent_0c89237d": "\\title{Re-evaluating Group Robustness via Adaptive Class-Specific Scaling} \\author{ Seonguk Seo$^1$ \\qquad Bohyung Han$^{1,2}$ \\\\ $^1$ECE \\& $^{2}$IPAI, Seoul National University\\\\ {\\tt \\{seonguk, bhhan\\}@snu.ac.kr} \\maketitle",
+    "2412-15311_abstract_ce28071e": "abstract",
+    "2412-15311_sent_0170e6e8": "Group distributionally robust optimization, which aims to improve robust accuracies---worst-group and unbiased accuracies---is a prominent algorithm used to mitigate spurious correlations and address dataset bias.",
+    "2412-15311_sent_dae46eee": "Although existing approaches have reported improvements in robust accuracies, these gains often come at the cost of average accuracy due to inherent trade-offs.",
+    "2412-15311_sent_9787808e": "To control this trade-off flexibly and efficiently, we propose a simple class-specific scaling strategy, directly applicable to existing debiasing algorithms with no additional training.",
+    "2412-15311_sent_2f82f859": "We further develop an instance-wise adaptive scaling technique to alleviate this trade-off, even leading to improvements in both robust and average accuracies.",
+    "2412-15311_sent_2b2c5de9": "Our approach reveals that a na\\\"ive ERM baseline matches or even outperforms the recent debiasing methods by simply adopting the class-specific scaling technique.",
+    "2412-15311_sent_8d9e70bd": "Additionally, we introduce a novel unified metric that quantifies the trade-off between the two accuracies as a scalar value, allowing for a comprehensive evaluation of existing algorithms.",
+    "2412-15311_sent_3f8d0ef8": "By tackling the inherent trade-off and offering a performance landscape, our approach provides valuable insights into robust techniques beyond just robust accuracy.",
+    "2412-15311_sent_c6e20335": "We validate the effectiveness of our framework through experiments across datasets in computer vision and natural language processing domains.",
+    "2412-15311_section_0b79795d": "Introduction",
+    "2412-15311_fig_432982c9": "\\begin{figure}\n\n \\begin{subfigure}[m]{1\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/worst_tradeoff_new3.png}\n\n \\end{subfigure} \n\n \\caption{The scatter plots illustrate trade-offs between robust and average accuracies of existing algorithms with ResNet-18 on CelebA.\n We visualize the results from multiple runs of each algorithm and present the relationship between the two accuracies.\n The lines denote the linear regression results of individual algorithms and $r$ in the legend indicates the Pearson coefficient correlation.\n\n\\end{figure}",
+    "2412-15311_fig_b71837c1": "\\begin{figure*}",
+    "2412-15311_sent_73e72acf": "\\begin{subfigure}[m]{0.45\\linewidth} \\includegraphics[width=\\linewidth]{figures/teaser_worst_new.pdf} \\subcaption{Worst-group accuracy} \\end{subfigure} \\begin{subfigure}[m]{0.45\\linewidth} \\includegraphics[width=\\linewidth]{figures/teaser_unbias_new.pdf} \\subcaption{Unbiased accuracy} \\end{subfigure} \\caption{Comparison between the baseline ERM and existing debiasing approaches with ResNet-50 on CelebA.",
+    "2412-15311_sent_e2e253a9": "Existing works have improved robust accuracy substantially compared to ERM, but our robust scaling strategies such as RS and IRS enable ERM to catch up with or even outperform them without further training.",
+    "2412-15311_sent_2371fccd": "\\end{figure*} Machine learning models achieve remarkable performance across various tasks via empirical risk minimization (ERM).",
+    "2412-15311_sent_3599b5c9": "However, they are often vulnerable to spurious correlations and dataset biases, resulting in poor classification performance for minority groups despite high average accuracy.",
+    "2412-15311_sent_c2f2dc53": "For example, in the Colored MNIST dataset~\\cite{IRM,ReBias}, a strong correlation exists between digit labels and foreground colors.",
+    "2412-15311_sent_450d6efb": "Consequently, trained models tend to rely on these unintended patterns, resulting in significant performance degradation when classifying digits with rare color associations that are underrepresented in the training data.",
+    "2412-15311_sent_26a5a3ef": "Since spurious correlations are well-known to degrade generalization performance in minority groups, group distributionally robust optimization~\\cite{GroupDRO} has been widely adopted to address algorithmic bias.",
+    "2412-15311_sent_3b1af8ec": "Numerous approaches~\\cite{huang2016learning,GroupDRO,seo2021unsupervised,LfF,sohoni2020no,levy2020large,JTT} have achieved high robust accuracies, such as worst-group or unbiased accuracies, across various tasks and datasets.",
+    "2412-15311_sent_03a72ecf": "However, despite these improvements, they often come at the expense of average accuracy, and little effort has been made to comprehensively evaluate the robust and average accuracies together.",
+    "2412-15311_sent_b7402dca": "Figure~\\ref{fig:observation_tradeoff} demonstrates the trade-offs of existing algorithms.",
+    "2412-15311_sent_65b2022f": "This paper addresses the limitations of current research trends by introducing a simple post-processing technique, robust scaling, which efficiently performs class-specific scaling on prediction scores and conveniently controls the trade-off between robust and average accuracies at test time.",
+    "2412-15311_sent_3a58578b": "It allows us to identify any desired performance points under various metrics such as average accuracy, unbiased accuracy, worst-group accuracy, or balanced accuracy, along the accuracy trade-off curve derived from a pretrained model with negligible extra computational overhead.",
+    "2412-15311_sent_03414094": "The proposed robust-scaling method can be seamlessly plugged into various existing debiasing algorithms to improve target objectives within the trade-off.",
+    "2412-15311_sent_917a5957": "An interesting observation is that, by adopting the proposed robust scaling, even the ERM baseline accomplishes competitive performance without extra training compared to the recent group distributionally robust optimization approaches~\\cite{JTT,LfF,GroupDRO,kim2022learning,seo2021unsupervised,creager2021environment,levy2020large,kirichenko2022last,zhang2022correct}, as illustrated in Figure~\\ref{fig:teaser}.",
+    "2412-15311_sent_a7a7a9e7": "Furthermore, we propose an advanced robust scaling algorithm that adaptively applies scaling to individual examples adaptively based on their cluster membership at test time to maximize performance.",
+    "2412-15311_sent_f5f52f3f": "This instance-wise adaptive scaling strategy effectively mitigates the trade-off and delivers performance improvements in both robust and average accuracies.",
+    "2412-15311_sent_ebd64732": "By taking advantage of the robust scaling technique, we develop a novel comprehensive evaluation metric that consolidates insights into the trade-off of group robustness algorithms, providing a unique perspective on group distributionally robust optimization.",
+    "2412-15311_sent_87c47aa5": "We argue that assessing robust accuracy in isolation, without accounting for average accuracy, provides an incomplete picture and a unified evaluation of debiasing algorithms is required. For a comprehensive performance evaluation, we introduce robust coverage, a new measure that effectively captures the trade-off between average and robust accuracies from a Pareto optimal perspective, summarizing each algorithm's performance with a single scalar value.",
+    "2412-15311_sent_76209909": "\\iffalse The evaluation metric is realized by a simple post-processing technique, robust scaling, which efficiently performs class-specific scaling on prediction scores and conveniently controls the trade-off between robust and average accuracies.",
+    "2412-15311_sent_c221f023": "It allows us to identify any desired performance points, \\eg, average accuracy, unbiased accuracy, worst-group accuracy, or balanced accuracy, on the accuracy trade-off curve using a single model with marginal computational overhead.",
+    "2412-15311_sent_6de0f827": "The proposed robust-scaling method can be easily plugged into various existing debiasing algorithms to achieve improved accuracies at various target objectives within the trade-off.",
+    "2412-15311_sent_2eeaaff4": "One interesting observation is that, by adopting the proposed robust scaling, even the ERM baseline accomplishes competitive performance compared to the recent group distributionally robust optimization approaches~\\cite{JTT,LfF,GroupDRO,kim2022learning,seo2021unsupervised,creager2021environment,levy2020large,kirichenko2022last,zhang2022correct} without extra training, as illustrated in Figure~\\ref{fig:teaser}\\footnote{Group DRO achieves better results than ERM+Scaling, mainly because it utilizes the supervision of group information during training.",
+    "2412-15311_sent_5b325d02": "When we use group information for robust scaling, ERM+Scaling achieves competitive performance to Group DRO, which will be discussed later.}.",
+    "2412-15311_sent_30a6aa65": "We will present the results from other debiasing algorithms in the experiment section.",
+    "2412-15311_sent_abc98933": "\\fi",
+    "2412-15311_paragraph_3023db88": "Contribution",
+    "2412-15311_sent_8160dbf7": "We propose a simple yet effective approach for group robustness by analyzing the trade-off between robust and average accuracies.",
+    "2412-15311_sent_03040792": "Our framework captures the complete landscape of robust-average accuracy trade-offs, facilitates understanding the behavior of existing debiasing techniques, and enables optimization of arbitrary objectives along the trade-off curve without additional training.",
+    "2412-15311_sent_1044db1e": "We emphasize that our framework does not solely focus on performance improvement in robust accuracy; more importantly, our method not only highlights the inherent trade-offs in existing debiasing approaches but also facilitates the identification of desired performance points based on target objectives, paving the way for accurate, fair, and comprehensive evaluations of group robustness.",
+    "2412-15311_sent_699187fd": "Our main contributions are summarized as follows.",
+    "2412-15311_itemize_f8c83836": "itemize",
+    "2412-15311_item_795583fc": "item",
+    "2412-15311_sent_a2ffe5fe": "[$\\bullet$] We propose a training-free class-specific scaling strategy to capture and control the trade-off between robust and average accuracy with negligible computational cost.",
+    "2412-15311_sent_9c428b3c": "This approach allows us to optimize a debiasing algorithm towards arbitrary objectives within the trade-off, building on top of any existing models.",
+    "2412-15311_sent_1def8d3e": "[$\\bullet$] We develop an instance-wise robust scaling algorithm by extending the original class-specific scaling with joint consideration of feature clusters.",
+    "2412-15311_sent_3db6d66e": "This technique is effective to alleviate the trade-off and improve both robust and average accuracy.",
+    "2412-15311_sent_bd173323": "[$\\bullet$] We introduce a novel comprehensive and unified performance evaluation metric based on the robust scaling method, which summarizes the trade-off as a scalar value from the Pareto optimal perspective.",
+    "2412-15311_sent_204be7ed": "[$\\bullet$] The extensive experiments analyze the characteristics of existing methods and validate the effectiveness of our frameworks on the multiple standard benchmarks.",
+    "2412-15311_section_a7f20481": "Related Works",
+    "2412-15311_sent_29985a42": "Mitigating spurious correlation has emerged as an important problem in many areas in machine learning.",
+    "2412-15311_sent_b89c483e": "Many algorithms are based on the practical assumption that training examples are provided in groups, and that a test distribution is represented as a mixture of these groups.",
+    "2412-15311_sent_48dc1178": "Existing approaches can be categorized into the following three main groups.",
+    "2412-15311_paragraph_e7d0e1e0": "Sample reweighting",
+    "2412-15311_sent_97f0058a": "The most popular approaches involve assigning different training weights to each sample to promote minority groups, with the weights determined by either group frequency or loss.",
+    "2412-15311_sent_48f0da6c": "Group DRO~\\cite{GroupDRO} minimizes the worst-group loss by reweighting samples based on the average loss per group.",
+    "2412-15311_sent_6849d65c": "Although Group DRO achieves robust results against group distribution shifts, it requires training examples with group supervision.",
+    "2412-15311_sent_7adcabec": "To handle this limitation, several unsupervised approaches have been proposed. George~\\cite{sohoni2020no} and BPA~\\cite{seo2021unsupervised} extend Group DRO to an unsupervised setting by initially training an ERM model and subsequently inferring pseudo-groups through feature clustering.",
+    "2412-15311_sent_7271d757": "CVaR DRO~\\cite{levy2020large} minimizes the worst loss over all $\\alpha$-sized subpopulations, effectively providing an upper bound on the worst-group loss for unknown groups.",
+    "2412-15311_sent_72152c8d": "LfF~\\cite{LfF} simultaneously trains two models, one is with generalized cross-entropy and the other is with the standard cross-entropy loss, and reweights the examples based on their relative difficulty score.",
+    "2412-15311_sent_df2da53f": "JTT~\\cite{JTT} conducts a two-stage procedure, which upweights the examples that are misclassified by the first-stage model.",
+    "2412-15311_sent_d8639806": "Idrissi~\\etal~\\cite{idrissi2022simple} analyze simple data subsampling and reweighting baselines based on group or class frequency to handle dataset imbalance issues.",
+    "2412-15311_sent_701989cb": "LWBC~\\cite{kim2022learning} employs an auxiliary module to identify bias-conflicted data and assigns large weights to them.",
+    "2412-15311_paragraph_0a6b68ee": "Representation learning",
+    "2412-15311_sent_7f5062bd": "Some approaches aim to learn debiased representations to mitigate spurious correlations directly.",
+    "2412-15311_sent_374000e6": "ReBias~\\cite{ReBias} employs the Hilbert-Schmidt independence criterion~\\cite{gretton2005measuring} to ensure feature representations remain independent of predefined biased representations.",
+    "2412-15311_sent_6b4af34b": "Cobias~\\cite{seo2022information} measures bias through conditional mutual information between feature representations and group labels and incorporates this metric as a debiasing regularizer.",
+    "2412-15311_sent_74b18640": "IRM~\\cite{IRM} learns invariant representations across diverse environments, where the environment variable is treated as equivalent to the group.",
+    "2412-15311_sent_e3aa6d1f": "While IRM requires supervision for the environment variable, unsupervised alternatives such as EIIL~\\cite{creager2021environment} and PGI~\\cite{ahmed2020systematic} infer environments by assigning each training example to groups that violate the IRM objective.",
+    "2412-15311_paragraph_cfdfd7a5": "Post-processing",
+    "2412-15311_sent_6f17c890": "While most existing approaches focus on in-processing techniques, such as feature representation learning or sample reweighting during training to improve group robustness, our framework stands apart by addressing group robust optimization through a simple post-processing method based on class-specific score scaling, which requires no additional training.",
+    "2412-15311_sent_dadb7a74": "Although post-processing techniques like temperature scaling~\\cite{guo2017calibration} or Platt scaling~\\cite{john2000platt} are popular in confidence calibration, they are unsuitable for our task since they scale prediction scores uniformly across classes and do not alter label predictions.",
+    "2412-15311_sent_e23caad2": "Recently, post-hoc methods have been proposed to retrain the model?s last layer using a group-balanced dataset~\\cite{kirichenko2022last} or adjust the final logits~\\cite{liu2022avoiding}, but these approaches still involve additional training, differentiating them from our framework.",
+    "2412-15311_section_6bcec94b": "Proposed Approach",
+    "2412-15311_sent_2c352cfc": "This section first presents our class-specific scaling technique, which captures the trade-off landscape and identifies the optimal performance points for desired objectives along the trade-off curve.",
+    "2412-15311_sent_f151d996": "We also propose an instance-wise class-specific scaling approach to overcome the trade-off and further improve the performance.",
+    "2412-15311_sent_62cd251b": "Based on the proposed scaling strategy, we introduce a novel and intuitive measure for evaluating the group robustness of an algorithm with consideration of the trade-off.",
+    "2412-15311_subsection_a291a5f9": "Problem Setup",
+    "2412-15311_sent_de104589": "Consider a triplet $(x, y, a)$ with an input feature $x \\in \\mathcal{X}$, a target label $y \\in \\mathcal{Y}$, and an attribute $a \\in \\mathcal{A}$.",
+    "2412-15311_sent_a8f2e589": "We define groups based on the pair of a target label and an attribute, such that $g := (y, a) \\in \\mathcal{Y} \\times \\mathcal{A} =: \\mathcal{G}$.",
+    "2412-15311_sent_3721a33c": "Suppose that the training set consists of $n$ examples without attribute annotations, \\eg, $\\{(x_1, y_1), ..., (x_n, y_n)\\}$, while the validation set includes {$m$ examples with group annotations, \\eg, $\\{(x_1, y_1, a_1), ..., (x_m, y_m, a_m)\\}$, for selecting scaling parameters.",
+    "2412-15311_sent_da939e8d": "This assumption is known to be essential for model selection or hyperparameter tuning~\\cite{GroupDRO,JTT,LfF,idrissi2022simple} although not desirable for the practicality of algorithms.",
+    "2412-15311_sent_0e13ea60": "However, we will show that our algorithm works well with only a few examples with attribute annotations in the validation set; considering such marginal labeling cost, our approach is a meaningful step to deal with notorious bias problems in datasets and models.",
+    "2412-15311_sent_2a327a4e": "Our goal is to learn a model $f_\\theta(\\cdot): \\mathcal{X} \\rightarrow \\mathcal{Y}$ that is robust to group distribution shifts.",
+    "2412-15311_sent_2c179ae5": "To measure the group robustness, we typically refer to the robust accuracy such as unbiased accuracy (UA) and worst-group accuracy (WA).",
+    "2412-15311_sent_61c1a448": "The definitions of UA and WA require the group-wise accuracy (GA), which is formally given by",
+    "2412-15311_eq_9c77ec00": "\\begin{equation}\n\\text{GA}_{(r)} := \\frac{\\sum_{i} \\mathds{1}(f_\\theta(\\mathbf{x}_i) = y_i, g_i=r)}{\\sum_{i} \\mathds{1}(g_i=r)},\n\\end{equation}",
+    "2412-15311_sent_ff2866a6": "where $\\mathds{1}(\\cdot)$ denotes an indicator function and $\\text{GA}_{(r)}$ is the accuracy of the $r^\\text{th}$ group samples.",
+    "2412-15311_sent_2c810f14": "Then, the robust accuracies are defined by",
+    "2412-15311_eq_ee3045e9": "\\begin{equation}\n\\text{UA} := \\frac{1}{|\\mathcal{G}|}\\sum_{r\\in\\mathcal{G}}{\\text{GA}_{(r)}}~~~\\text{and}~~~ \\text{WA} := \\min_{r\\in\\mathcal{G}} \\text{GA}_{(r)}.\n\\end{equation}",
+    "2412-15311_sent_1e084c46": "The goal of the group robust optimization is to ensure robust performance in terms of UA or WA regardless of the group membership of a sample.",
+    "2412-15311_fig_1bb9970b": "\\begin{figure}\n\n \\begin{subfigure}[m]{0.85\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/worst_curve.png}\n\n \\subcaption{Worst-group accuracy}\n\n \\end{subfigure}\n\n \\begin{subfigure}[m]{0.85\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/unbias_curve.png}\n\n \\subcaption{Unbiased accuracy}\n\n \\end{subfigure} \n\n \\caption{The relation between the robust and average accuracies obtained by varying the class-specific scaling factor $\\mathbf{s}$ with ERM on CelebA.\n The black marker denotes the original point, where the uniform scaling is applied. \n\n\\end{figure}",
+    "2412-15311_subsection_cf19125d": "Class-Specific Robust Scaling",
+    "2412-15311_sent_581fd403": "As illustrated in Figure~\\ref{fig:observation_tradeoff}, all algorithms exhibit a clear trade-off between robust accuracy and average accuracy.",
+    "2412-15311_sent_85580cd6": "To analyze this behavior more closely, we propose a simple non-uniform scaling method for adjusting the scores associated with individual classes.",
+    "2412-15311_sent_84797794": "This approach can influence the final decision of the classifier: by upweighting the prediction scores for minority classes, a sample may be classified into a minority class even if its initial score is low.",
+    "2412-15311_sent_fa6cf3c6": "Consequently, this adjustment can enhance the worst-group accuracy at the cost of a slight reduction in average accuracy, yielding a favorable trade-off for achieving group robustness.",
+    "2412-15311_sent_12f4aa68": "Formally, the prediction with the class-specific scaling is given by",
+    "2412-15311_eq_66a1b5af": " \\begin{equation}\n\\argmax_c~(\\mathbf{s}\\odot \\hat{\\mathbf{y}})_c,\n\\end{equation}",
+    "2412-15311_sent_6e4612a3": "where $\\mathbf{\\hat{y}} \\in \\mathbb{R}^C$ is a prediction score vector over $C$ classes, $\\mathbf{s} \\in \\mathbb{R}^C$ is a $C$-dimensional scaling coefficient vector, and $\\odot$ denotes the element-wise product operator.",
+    "2412-15311_sent_c2025562": "Based on the ERM model, we obtain a set of the average and robust accuracy pairs using a wide range of the class-specific scaling factors and illustrate their relations in Figure~\\ref{fig:observation_curve}.",
+    "2412-15311_sent_e20105e7": "The black markers indicate the point with a uniform scaling, \\ie, $\\mathbf{s} = (1, \\dots, 1) \\in \\mathbb{R}^C$.",
+    "2412-15311_sent_96f5deed": "The graphs show that a simple class-specific scaling effectively represents the landscape of the trade-off between the two accuracies.",
+    "2412-15311_sent_71b2548f": "This validates the ability to identify the desired Pareto optimal points between the robust and average accuracies in the test set by following two simple steps: 1) finding the optimal class-specific scaling factors that maximize the target objective (UA, WA, or AA) in the validation set, and 2) apply the scaling factors to the test set\\footnote{Refer to our supplementary document for the coherency of robust scaling in the validation and test sets.}.",
+    "2412-15311_sent_4467e615": "We refer to this scaling strategy for robust prediction as robust scaling.",
+    "2412-15311_sent_be04aa2d": "To identify the optimal scaling factor $\\mathbf{s}$, we perform a greedy search, where we first identify the best scaling factor for a class and then determine the optimal factors of the remaining ones sequentially conditioned on the previously estimated scaling factors.",
+    "2412-15311_sent_d6fa7b1a": "The greedy search is sufficient for finding good scaling factors partly because there are many different near-optimal solutions.",
+    "2412-15311_sent_d7b7e2d7": "Thanks to the simplicity of the process, the entire procedure takes negligible time even in large-scale datasets with multiple classes.",
+    "2412-15311_sent_f94420fa": "It is worth noting that, as a post-processing method, robust scaling can be seamlessly applied to existing robust optimization techniques without requiring additional training.",
+    "2412-15311_sent_331035e6": "Our approach enables the identification of any desired performance point on the trade-off envelope using a pretrained model.",
+    "2412-15311_sent_649c4a09": "For example, even when dealing with multiple tasks, our robust scaling approach is flexible enough to handle the situation; we only need to apply a scaling factor optimized for each target objective, leaving the trained model unchanged. Meanwhile, existing robust optimization methods have limited flexibility and require to training separate models for each target objective.",
+    "2412-15311_sent_f29162b1": "\\iffalse",
+    "2412-15311_sent_c8966167": "\\begin{center} \\caption{Experimental results of the robust scaling (RS) and instance-wise robust scaling (IRS) on the CelebA dataset using ResNet-18 with the average of three runs (standard deviations in parentheses), where RS and IRS are applied to maximize each target metric independently.",
+    "2412-15311_sent_cb7f28c5": "Gain indicates the average and standard deviation of performance improvement.",
+    "2412-15311_sent_74f5066c": "`$\\ast$' indicates that the backbone method requires group supervision for training examples.",
+    "2412-15311_sent_afc8648b": "When combined with existing debiasing approaches, RS maximizes all target metrics consistently and IRS further boosts the performance.",
+    "2412-15311_sent_8e2610e8": "\\scalebox{0.8}{ \\setlength\\tabcolsep{8pt} \\begin{tabular}{l|cc|cccccc} & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)}\\\\ Method & Worst-group & Unbiased & Worst-group & (Gain) & Unbiased & (Gain) & Average & (Gain) \\\\ ERM & -& -& 34.5 (6.1) & - &77.7 (1.8) &- &{95.5 (0.4)} & - \\\\ ERM + RS & {83.0 (0.8)} & {88.1 (0.6)} & {82.8 (3.3)} & +47.7 (7.8)& {91.2 (0.5)} &+13.3 (2.0) & 95.8 (0.2)& +0.4 (0.2) \\\\ ERM + IRS &83.4 (0.1) & 88.4 (0.4) & 87.2 (2.0) & +52.7 (3.3) & 91.7 (0.2) &+13.8 (1.6) &95.8 (0.1) & +0.4 (0.3)\\\\ CR & - & -& 70.6 (6.0) & & 88.7 (1.2) & & {94.2 (0.7)} & \\\\ CR + RS &{82.9 (0.5)} & {88.2 (0.3)}& {82.7 (5.2)} &+12.2 (7.5)& {91.0 (1.0)} &+2.2 (1.3) & {95.4 (0.5)} & +1.3 (0.4)\\\\ CR + IRS & 83.6 (1.1) &88.6 (0.5) &84.8 (1.5) & +14.2 (5.2) & 91.3 (0.4) & +2.5 (1.4) &95.5 (0.1) & +1.3 (0.3)\\\\ SUBY & - & -&65.7 (3.9) &- &87.5 (0.9) &- &{94.5 (0.7)} &- \\\\ SUBY + RS & 81.5 (1.0) & 87.4 (0.1) & {80.8 (2.9)} &+15.1 (3.0) & {90.5 (0.8)} &+3.0 (0.9) & {95.3 (0.6)} & +0.8 (0.6)\\\\ SUBY + IRS & 82.3 (1.1) &87.8 (0.2) &82.3 (2.0) & +16.5 (4.1) & 90.8 (0.8) & +3.3 (1.1) & 95.5 (0.3) & +1.1 (0.4) \\\\ LfF &-&- & 55.6 (6.6) &- & 81.5 (2.8) &- & {92.4 (0.8)} &- \\\\ LfF + RS &{74.1 (3.5)} &{79.7 (2.6)} & {78.7 (4.1)} &+23.2 (2.5) & {85.4 (2.4)} &+4.0 (0.8) & 93.4 (0.7) & +1.0 (0.2) \\\\ LfF + IRS &74.6 (4.1) &79.8 (3.1) & 78.9 (5.3) &+23.4 (4.1) & 86.0 (2.2) &+4.6 (1.5) & {93.1 (1.5)} & +0.7 (0.5) \\\\ JTT & - & -& 75.1 (3.6) &- &85.9 (1.4) &- &{89.8 (0.8)} &- \\\\ JTT + RS &{77.3 (0.7)} &{81.9 (0.7)} & {82.9 (2.3)} &+7.8 (3.0) &{87.6 (0.5)} &+1.7 (0.4) &{90.3 (1.3)} & +0.6 (0.1) \\\\ JTT + IRS &78.9 (2.1) &82.1 (1.5) & 84.9 (4.5) &+9.8 (3.7) &88.5 (0.8) &+2.5 (0.8) &91.0 (1.8) & +1.2 (0.5) \\\\ GR$^\\ast$ & - & - & 88.6 (1.9) &- &92.0 (0.4) &- &{92.9 (0.8)} &- \\\\ GR$^\\ast$ + RS &{86.9 (0.4)} &{88.4 (0.2)} & {90.0 (1.6)} &+1.4 (1.1) & {92.4 (0.5)} &+0.5 (0.4) & {93.8 (0.4)} & +0.8 (0.5)\\\\ GR$^\\ast$ + IRS & 87.0 (0.2) & 88.6 (0.2) & 90.0 (2.3) & +1.4 (1.8) & 92.6 (0.6) & +0.6 (0.4) & 94.2 (0.3) & +1.3 (1.0) \\\\ SUBG$^\\ast$ & - & - - &87.8 (1.2) &- &90.4 (1.2) &- &{91.9 (0.3)} &- \\\\ SUBG$^\\ast$ + RS & 83.6 (1.6) & 87.5 (0.7) & {88.3 (0.7)} &+0.5 (0.4) & {90.9 (0.5)} & +0.5 (0.5) & {93.9 (0.2)} & +1.9 (0.6)\\\\ SUBG$^\\ast$ + IRS & 84.5 (0.8) &87.9 (0.1) &88.7 (0.6) & +0.8 (0.7) & 91.0 (0.3) & +0.6 (0.9) & 94.0 (0.2) & +2.1 (1.0) \\\\ Group DRO$^\\ast$ & -& - & 88.4 (2.3) &- & 92.0 (0.4) &- & {93.2 (0.8)} &- \\\\ Group DRO$^\\ast$ + RS &{87.3 (0.2)} & {88.3 (0.2)}& {89.7 (1.2)} &+1.4 (1.0) & {92.3 (0.1)} &+0.4 (0.2) & {93.9 (0.3)} & +0.7 (0.5) \\\\ Group DRO$^\\ast$ + IRS & 87.5 (0.4) & 88.4 (0.2)& 90.0 (2.3) & +2.6 (1.8) & 92.6 (0.6) & +0.6 (0.4) & 94.7 (0.3) &+1.5 (1.1) \\\\ \\end{tabular} \\end{center} \\end{table*} \\fi",
+    "2412-15311_sent_70e86fce": "\\begin{center} \\caption{Experimental results of the robust scaling (RS) and instance-wise robust scaling (IRS) on the CelebA dataset using ResNet-18 with the average of three runs (standard deviations in parenthesis), where RS and IRS are applied to maximize each target metric independently.",
+    "2412-15311_sent_d103668e": "Gain indicates the average (standard deviations) of performance improvement for each run.",
+    "2412-15311_sent_c98a84f9": "On top of all existing approaches, RS can maximize all target metrics consistently and IRS further boosts the performance.",
+    "2412-15311_sent_cd8b07e6": "\\scalebox{0.8}{ \\setlength\\tabcolsep{6pt} \\begin{tabular}{lc|cc|cccccc} & Group & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)}\\\\ Method & Supervision & Worst-group & Unbiased & Worst-group & (Gain) & Unbiased & (Gain) & Average & (Gain) \\\\ ERM & & -& -& 34.5 (6.1) & - &77.7 (1.8) &- &{95.5 (0.4)} & - \\\\ ERM + RS & & {83.0 (0.8)} & {88.1 (0.6)} & {82.8 (3.3)} & +47.7 (7.8)& {91.2 (0.5)} &+13.3 (2.0) & 95.8 (0.2)& +0.4 (0.2) \\\\ ERM + IRS & &83.4 (0.1) & 88.4 (0.4) & 87.2 (2.0) & +52.7 (3.3) & 91.7 (0.2) &+13.8 (1.6) &95.8 (0.1) & +0.4 (0.3)\\\\ CR & & - & -& 70.6 (6.0) & & 88.7 (1.2) & & {94.2 (0.7)} & \\\\ CR + RS & &{82.9 (0.5)} & {88.2 (0.3)}& {82.7 (5.2)} &+12.2 (7.5)& {91.0 (1.0)} &+2.2 (1.3) & {95.4 (0.5)} & +1.3 (0.4)\\\\ CR + IRS & & 83.6 (1.1) &88.6 (0.5) &84.8 (1.5) & +14.2 (5.2) & 91.3 (0.4) & +2.5 (1.4) &95.5 (0.1) & +1.3 (0.3)\\\\ SUBY~\\cite{idrissi2022simple} & & - & -&65.7 (3.9) &- &87.5 (0.9) &- &{94.5 (0.7)} &- \\\\ SUBY + RS & & 81.5 (1.0) & 87.4 (0.1) & {80.8 (2.9)} &+15.1 (3.0) & {90.5 (0.8)} &+3.0 (0.9) & {95.3 (0.6)} & +0.8 (0.6)\\\\ SUBY + IRS & & 82.3 (1.1) &87.8 (0.2) &82.3 (2.0) & +16.5 (4.1) & 90.8 (0.8) & +3.3 (1.1) & 95.5 (0.3) & +1.1 (0.4) \\\\ LfF~\\cite{LfF} & &-&- & 55.6 (6.6) &- & 81.5 (2.8) &- & {92.4 (0.8)} &- \\\\ LfF + RS & &{74.1 (3.5)} &{79.7 (2.6)} & {78.7 (4.1)} &+23.2 (2.5) & {85.4 (2.4)} &+4.0 (0.8) & 93.4 (0.7) & +1.0 (0.2) \\\\ LfF + IRS & &74.6 (4.1) &79.8 (3.1) & 78.9 (5.3) &+23.4 (4.1) & 86.0 (2.2) &+4.6 (1.5) & {93.1 (1.5)} & +0.7 (0.5) \\\\ JTT~\\cite{JTT} & & - & -& 75.1 (3.6) &- &85.9 (1.4) &- &{89.8 (0.8)} &- \\\\ JTT + RS & &{77.3 (0.7)} &{81.9 (0.7)} & {82.9 (2.3)} &+7.8 (3.0) &{87.6 (0.5)} &+1.7 (0.4) &{90.3 (1.3)} & +0.6 (0.1) \\\\ JTT + IRS & &78.9 (2.1) &82.1 (1.5) & 84.9 (4.5) &+9.8 (3.7) &88.5 (0.8) &+2.5 (0.8) &91.0 (1.8) & +1.2 (0.5) \\\\ GR & \\multirow{3}{*}{\\checkmark} & - & - & 88.6 (1.9) &- &92.0 (0.4) &- &{92.9 (0.8)} &- \\\\ GR + RS & &{86.9 (0.4)} &{88.4 (0.2)} & {90.0 (1.6)} &+1.4 (1.1) & {92.4 (0.5)} &+0.5 (0.4) & {93.8 (0.4)} & +0.8 (0.5)\\\\ GR + IRS & & 87.0 (0.2) & 88.6 (0.2) & 90.0 (2.3) & +1.4 (1.8) & 92.6 (0.6) & +0.6 (0.4) & 94.2 (0.3) & +1.3 (1.0) \\\\ SUBG~\\cite{idrissi2022simple} & \\multirow{3}{*}{\\checkmark} & - & - - &87.8 (1.2) &- &90.4 (1.2) &- &{91.9 (0.3)} &- \\\\ SUBG + RS & & 83.6 (1.6) & 87.5 (0.7) & {88.3 (0.7)} &+0.5 (0.4) & {90.9 (0.5)} & +0.5 (0.5) & {93.9 (0.2)} & +1.9 (0.6)\\\\ SUBG + IRS & & 84.5 (0.8) &87.9 (0.1) &88.7 (0.6) & +0.8 (0.7) & 91.0 (0.3) & +0.6 (0.9) & 94.0 (0.2) & +2.1 (1.0) \\\\ Group DRO~\\cite{GroupDRO} &\\multirow{3}{*}{\\checkmark} & -& - & 88.4 (2.3) &- & 92.0 (0.4) &- & {93.2 (0.8)} &- \\\\ Group DRO + RS & &{87.3 (0.2)} & {88.3 (0.2)}& {89.7 (1.2)} &+1.4 (1.0) & {92.3 (0.1)} &+0.4 (0.2) & {93.9 (0.3)} & +0.7 (0.5) \\\\ Group DRO + IRS & & 87.5 (0.4) & 88.4 (0.2)& 90.0 (2.3) & +2.6 (1.8) & 92.6 (0.6) & +0.6 (0.4) & 94.7 (0.3) &+1.5 (1.1) \\\\ \\end{tabular} \\end{center} \\end{table*}",
+    "2412-15311_subsection_9e76cabf": "Instance-wise Robust Scaling",
+    "2412-15311_sent_20f790e8": "The optimal scaling factor can be adaptively applied to each test example, enabling instance-specific scaling to potentially overcome the trade-off and further improve accuracy.",
+    "2412-15311_sent_489359a2": "Previous approaches~\\cite{seo2021unsupervised,sohoni2020no} have demonstrated the ability to identify hidden spurious attributes by clustering in the feature space for debiased representation learning.",
+    "2412-15311_sent_98a2b06e": "Similarly, we take advantage of feature clustering for adaptive robust scaling; we obtain the optimal class-specific scaling factors based on the cluster membership of each sample.",
+    "2412-15311_sent_e8ede3a7": "The overall algorithm of our instance-wise robust scaling (IRS) is outlined as follows.",
+    "2412-15311_enumerate_964d7516": "enumerate",
+    "2412-15311_sent_67902f08": "Perform clustering with the validation dataset on the feature space and store the cluster centroids.",
+    "2412-15311_sent_65d90eae": "Find the optimal scaling factor for each cluster.",
+    "2412-15311_sent_f8a3139d": "Apply the estimated scaling factor to each test example based on its cluster membership.",
+    "2412-15311_sent_f3a3c942": "In step 1, we use a simple K-means clustering algorithm.",
+    "2412-15311_sent_876c6e2a": "Empirically, when $K$ is sufficiently large, \\ie, $K > 10$, IRS achieves stable and superior results, compared to the original class-specific scaling.",
+    "2412-15311_subsection_ba9ab452": "Robust Coverage",
+    "2412-15311_sent_684f6cb5": "Although robust scaling identifies a desired performance point on the trade-off curve, it captures only a single point, overlooking the other Pareto-optimal solutions.",
+    "2412-15311_sent_c42ef882": "To enable a more comprehensive evaluation of an algorithm, we propose a convenient scalar measure that summarizes the robust-average accuracy trade-off.",
+    "2412-15311_sent_862ed4b6": "Formally, we define the robust coverage as",
+    "2412-15311_eq_750e286f": "\\begin{equation}\n\\text{(Robust coverage)} &:= \\int_{c=0}^1\\max_\\mathbf{s}\\big\\{\\text{RA}^\\mathbf{s}|\\text{AA}^\\mathbf{s}\\geq c\\big\\}dc \n \\nonumber \\\\\n & \\approx \\sum_{d=0}^{D-1}\\frac{1}{D}\\max_\\mathbf{s}\\big\\{\\text{RA}^\\mathbf{s}|\\text{AA}^\\mathbf{s}\\geq \\frac{d}{D}\\big\\},\n\\end{equation}",
+    "2412-15311_sent_5f5e983d": "where $\\text{RA}^\\mathbf{s}$ and $\\text{AA}^\\mathbf{s}$ denote the robust and average accuracies, respectively, and $D = 10^3$ is the number of slices used for discretization.",
+    "2412-15311_sent_defc32f2": "The robust coverage measures the area under the Pareto frontier of the robust-average accuracy trade-off curve, where the maximum operation in~(\\ref{eq:coverage}) identifies the Pareto optimum for each threshold.",
+    "2412-15311_sent_27aeb0e6": "Depending on the target objective of robust coverage in~(\\ref{eq:rs}), we use either WA or UA as the measure of RA.",
+    "2412-15311_sent_4dead7e5": "The optimal scaling factor can be applied adaptively to each test example and the instance-specific scaling has the potential to overcome the trade-off and improve accuracy even further.",
+    "2412-15311_sent_05d62555": "Previous approaches~\\cite{seo2021unsupervised,sohoni2020no} have shown the capability to identify hidden spurious attributes via clustering on the feature space for debiased representation learning.",
+    "2412-15311_sent_e96b2fa3": "Likewise, we take advantage of feature clustering for adaptive robust scaling; we obtain the optimal class-specific scaling factors based on the cluster membership for each sample.",
+    "2412-15311_sent_0b5c40b9": "The overall algorithm of instance-wise robust scaling (IRS) is described as follows.",
+    "2412-15311_sent_716dbc4a": "Perform clustering with validation data on the feature space and store the cluster centroids.",
+    "2412-15311_sent_dfebdb86": "\\item Find the optimal scaling factor for each cluster.",
+    "2412-15311_sent_8c2f9dc9": "Apply the estimated scaling factor to the test example based on its cluster membership.",
+    "2412-15311_sent_e14a64c8": "In step 1, we use a simple k-means clustering algorithm, where the number of clusters $K$ is set to the value that gives the highest robust coverage in the validation set.",
+    "2412-15311_sent_a7b5432c": "Empirically, numbers larger than 10, \\ie, $K > 10$, yield stable and superior results, compared to the original class-specific scaling.",
+    "2412-15311_sent_3c11027a": "\\let\\contextbf\\null \\definecolor{Gray}{gray}{0.9} \\newcolumntype{g}{>{\\columncolor{Gray}}c}",
+    "2412-15311_section_4829262c": "Experiments",
+    "2412-15311_sent_5dbead6d": "\\begin{center} \\caption{Experimental results of RS and IRS on the Waterbirds dataset using ResNet-50 with the average and standard deviation of three runs, where RS and IRS are applied to maximize each target metric independently.",
+    "2412-15311_sent_06e10ea2": "{RS and IRS improve both robust and average accuracies consistently.} \\scalebox{0.8}{ \\setlength\\tabcolsep{8pt} \\begin{tabular}{l|cc|cccccc} & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)}\\\\ Method & Worst-group & Unbiased & Worst-group & (Gain) & Unbiased & (Gain) & Average & (Gain) \\\\ ERM & - & - &76.3 (0.8) & - &89.4 (0.6) & - &{97.2 (0.2)} & - \\\\ ERM + RS &{76.1 (1.4)} & {82.6 (1.3)} &{81.6 (1.9)} &+5.3 (1.3) &{89.8 (0.5)} &+0.4 (0.4) &{97.5 (0.1)} & +0.4 (0.2) \\\\ ERM + IRS &83.4 (1.1) &86.9 (0.4) &89.3 (0.5) & +13.0 (0.9) &92.7 (0.4) &+3.3 (0.7) &97.5 (0.3) &+0.3 (0.4)\\\\ CR & - & - &76.1 (0.7) & - &89.1 (0.7) & - &{97.1 (0.3)} & - \\\\ CR + RS & {73.6 (2.3)}&{82.0 (1.5)} &{79.4 (2.4)} &+3.4 (1.8) &{89.4 (1.0)} &+0.3 (0.4) &97.5 (0.3) & +0.4 (0.1) \\\\ CR + IRS & 84.2 (2.5) & 88.3 (1.0) & 88.2 (2.7) & +12.2 (2.1) & 92.1 (0.7) & +3.1 (0.1) & 97.4 (0.2) & +0.3 (0.2)\\\\ SUBY & - & - &72.8 (4.1) & - &84.9 (0.4) & - &{93.8 (1.5)} & - \\\\ SUBY + RS & {72.5 (1.0)}&{81.2 (1.4)} &{75.9 (4.4)} &+3.4 (1.8) &{86.3 (0.9)} &+2.3 (0.9) &{95.5 (0.2)} & +1.7 (1.1)\\\\ SUBY + IRS & 78.8 (2.7) & 85.9 (1.0) & 82.1 (4.0) & +9.3 (1.1) & 89.1 (0.9) & +4.2 (1.0)& 96.2 (0.6) &+2.4 (1.4) \\\\ GR$^\\ast$ &- & -&86.1 (1.3) & - &89.3 (0.9) & - &{95.1 (1.3)} & - \\\\ GR$^\\ast$ + RS &{83.7 (0.3)} & {86.8 (0.7)}&89.3 (1.3) &+3.2 (2.0) &{92.0 (0.7)} &+2.7 (1.3) & {95.4 (1.3)} & +0.4 (0.2)\\\\ GR$^\\ast$ + IRS & 84.8 (1.7) &87.4 (0.4) &89.1 (0.8) & +3.0 (1.6) & 92.2 (1.0) & +2.9 (1.6) & 95.6 (0.8) &+0.6 (0.3) \\\\ SUBG$^\\ast$ & - & - & 86.5 (0.9) & - & 88.2 (1.2) & - & 87.3 (1.1) & - \\\\ SUBG$^\\ast$ + RS & 80.6 (2.0) & 82.3 (2.0) & {87.1 (0.7)} &+0.6 (0.5) & 88.5 (1.2) & +0.3 (0.3) & {91.3 (0.4)} & +4.0 (0.9)\\\\ SUBG$^\\ast$ + IRS & 82.2 (0.8) & 84.1 (0.8) & 87.3 (1.3) & +0.8 (0.6) & 88.2 (1.2) & +0.0 (0.2) & 93.5 (0.4) &+6.2 (1.5)\\\\ Group DRO$^\\ast$ & - & -&88.0 (1.0) & - &92.5 (0.9) & - &{95.8 (1.8)} & - \\\\ Group DRO$^\\ast$ + RS & {83.4 (1.1)}&{87.4 (1.4)} &{89.1 (1.7)} &+1.1 (0.8) &{92.7 (0.8)} &+0.2 (0.1) & {96.4 (1.5)} & +0.5 (0.5)\\\\ Group DRO$^\\ast$ + IRS & 86.3 (2.3) & 90.1 (2.6) & 90.8 (1.3) & +2.8 (1.5) & 93.9 (0.2) & +1.4 (0.9) & 97.1 (0.4) & +1.2 (0.8) \\\\ \\end{tabular} \\end{center} \\end{table*} \\fi",
+    "2412-15311_sent_e70b144b": "\\begin{center} \\caption{Experimental results of RS and IRS on the Waterbirds dataset using ResNet-50 with the average of three runs (standard deviations in parenthesis), where RS and IRS are applied to maximize each target metric independently.",
+    "2412-15311_sent_b6cd147e": "\\scalebox{0.8}{ \\setlength\\tabcolsep{6pt} \\begin{tabular}{lc|cc|cccccc} & Group & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)}\\\\ Method & Supervision & Worst-group & Unbiased & Worst-group & (Gain) & Unbiased & (Gain) & Average & (Gain) \\\\ ERM & & - & - &76.3 (0.8) & - &89.4 (0.6) & - &{97.2 (0.2)} & - \\\\ ERM + RS & &{76.1 (1.4)} & {82.6 (1.3)} &{81.6 (1.9)} &+5.3 (1.3) &{89.8 (0.5)} &+0.4 (0.4) &{97.5 (0.1)} & +0.4 (0.2) \\\\ ERM + IRS & &83.4 (1.1) &86.9 (0.4) &89.3 (0.5) & +13.0 (0.9) &92.7 (0.4) &+3.3 (0.7) &97.5 (0.3) &+0.3 (0.4)\\\\ CR & & - & - &76.1 (0.7) & - &89.1 (0.7) & - &{97.1 (0.3)} & - \\\\ CR + RS & & {73.6 (2.3)}&{82.0 (1.5)} &{79.4 (2.4)} &+3.4 (1.8) &{89.4 (1.0)} &+0.3 (0.4) &97.5 (0.3) & +0.4 (0.1) \\\\ CR + IRS & & 84.2 (2.5) & 88.3 (1.0) & 88.2 (2.7) & +12.2 (2.1) & 92.1 (0.7) & +3.1 (0.1) & 97.4 (0.2) & +0.3 (0.2)\\\\ SUBY~\\cite{idrissi2022simple} & & - & - &72.8 (4.1) & - &84.9 (0.4) & - &{93.8 (1.5)} & - \\\\ SUBY + RS & & {72.5 (1.0)}&{81.2 (1.4)} &{75.9 (4.4)} &+3.4 (1.8) &{86.3 (0.9)} &+2.3 (0.9) &{95.5 (0.2)} & +1.7 (1.1)\\\\ SUBY + IRS & & 78.8 (2.7) & 85.9 (1.0) & 82.1 (4.0) & +9.3 (1.1) & 89.1 (0.9) & +4.2 (1.0)& 96.2 (0.6) &+2.4 (1.4) \\\\ GR & \\multirow{3}{*}{\\checkmark} &- & -&86.1 (1.3) & - &89.3 (0.9) & - &{95.1 (1.3)} & - \\\\ GR + RS & &{83.7 (0.3)} & {86.8 (0.7)}&89.3 (1.3) &+3.2 (2.0) &{92.0 (0.7)} &+2.7 (1.3) & {95.4 (1.3)} & +0.4 (0.2)\\\\ GR + IRS & & 84.8 (1.7) &87.4 (0.4) &89.1 (0.8) & +3.0 (1.6) & 92.2 (1.0) & +2.9 (1.6) & 95.6 (0.8) &+0.6 (0.3) \\\\ SUBG~\\cite{idrissi2022simple} & \\multirow{3}{*}{\\checkmark} & - & - & 86.5 (0.9) & - & 88.2 (1.2) & - & 87.3 (1.1) & - \\\\ SUBG + RS & & 80.6 (2.0) & 82.3 (2.0) & {87.1 (0.7)} &+0.6 (0.5) & 88.5 (1.2) & +0.3 (0.3) & {91.3 (0.4)} & +4.0 (0.9)\\\\ SUBG + IRS & & 82.2 (0.8) & 84.1 (0.8) & 87.3 (1.3) & +0.8 (0.6) & 88.2 (1.2) & +0.0 (0.2) & 93.5 (0.4) &+6.2 (1.5)\\\\ Group DRO~\\cite{GroupDRO} & \\multirow{3}{*}{\\checkmark} & - & -&88.0 (1.0) & - &92.5 (0.9) & - &{95.8 (1.8)} & - \\\\ Group DRO + RS & & {83.4 (1.1)}&{87.4 (1.4)} &{89.1 (1.7)} &+1.1 (0.8) &{92.7 (0.8)} &+0.2 (0.1) & {96.4 (1.5)} & +0.5 (0.5)\\\\ Group DRO + IRS & & 86.3 (2.3) & 90.1 (2.6) & 90.8 (1.3) & +2.8 (1.5) & 93.9 (0.2) & +1.4 (0.9) & 97.1 (0.4) & +1.2 (0.8) \\\\ \\end{tabular} \\end{center} \\end{table*}",
+    "2412-15311_subsection_d575842d": "Experimental Setup",
+    "2412-15311_paragraph_7bb9fd96": "Implementation details",
+    "2412-15311_sent_834eb52a": "Following prior works, we adopt ResNet-18, ResNet-50~\\cite{he2016deep}, and DenseNet-121~\\cite{huang2017densely}, pretrained on ImageNet~\\cite{deng2009imagenet}, as our backbone networks for the CelebA, Waterbirds, and FMoW-WILDS datasets, respectively.",
+    "2412-15311_sent_8db39600": "For the text classification dataset, CivilComments-WILDS, we use DistillBert~\\cite{sanh2019distilbert}.",
+    "2412-15311_sent_421aaccc": "We employ the standard $K$-means clustering for IRS, where the number of clusters is set to 20, \\ie, $K=20$, for all experiments.",
+    "2412-15311_sent_5e2a2eea": "We select the final model with the scaling factor that gives the best unbiased coverage in the validation split.",
+    "2412-15311_sent_522d3e0b": "Our implementations are based on the Pytorch~\\cite{paszke2019pytorch} framework and all experiments are conducted on a single NVIDIA Titan XP GPU.",
+    "2412-15311_sent_941cccf8": "Please refer to our supplementary file for the details about the dataset usage.",
+    "2412-15311_paragraph_c6ef1e19": "Evaluation metrics",
+    "2412-15311_sent_87164b85": "We evaluate all algorithms in terms of the proposed unbiased and worst-group coverages for comprehensive evaluation, and additionally use the average, unbiased, and worst-group accuracies for comparisons.",
+    "2412-15311_sent_0822ba9d": "Following previous works~\\cite{GroupDRO,JTT}, we report the adjusted average accuracy instead of the na\\\"ive version for the Waterbirds dataset due to its dataset imbalance issue; we first calculate the accuracy for each group and then report the weighted average, where the weights are given by the relative portion of each group in the training set.",
+    "2412-15311_sent_836ed347": "We ran the experiments three times for each algorithm and report their average and standard deviation.",
+    "2412-15311_sent_914ae4f8": "\\begin{center} \\caption{Experimental results on CivilComments-WILDS (text classification) and FMoW-WILDS (satellite image recognition) datasets, which have multiple classes, groups, or domain shift.",
+    "2412-15311_sent_49509158": "\\scalebox{0.8}{ \\setlength\\tabcolsep{7pt} \\begin{tabular}{cl|cc|cccccc} & & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)} \\\\ Dataset & Method & Worst.",
+    "2412-15311_sent_02436092": "& Unbiased & Worst.",
+    "2412-15311_sent_b6255295": "& (Gain) & {Unbiased} & (Gain) & Average & (Gain) \\\\ \\multirow{9}{*}{CivilComments} &ERM & - & - & 54.5 (6.8) & - &75.0 (1.2) & - & 92.3 (0.4) &- \\\\ &ERM + RS & 57.2 (5.1) & 70.9 (1.5) & 65.5 (1.2) & +11.0 (2.5) & 78.6 (1.5) & +3.7 (2.4) & 92.5 (0.3) &+0.2 (0.1) \\\\ &ERM + IRS & 59.2 (5.3) & 71.2 (2.3) & 67.0 (2.3) & +12.5 (2.7) & 78.8 (1.1) & +3.8 (1.7) & 92.5 (0.3) & +0.2 (0.1) \\\\ \\cdashline{2-10} & GR$^\\ast$ & - & - & 64.7 (1.1) & - & 78.4 (0.2) & - & 87.2 (1.0) & - \\\\ & GR$^\\ast$ + RS & 59.0 (2.8) & 69.8 (1.0) & 66.0 (0.5) & +1.3 (0.6) & 78.5 (0.1) & +0.1 (0.1) & 89.3 (0.8) & +0.7 (0.3) \\\\ & GR$^\\ast$ + IRS & 59.7 (1.6) & 70.1 (0.7) & 66.2 (0.4)& +1.6 (0.7) & 78.6 (0.1)& +0.2 (0.2) & 91.0 (0.6) & +1.2 (0.6) \\\\ \\cdashline{2-10} & GroupDRO$^\\ast$ & - & - &67.7 (0.6) & - & 78.4 (0.6) & - & {90.0 (0.1)} & - \\\\ & GroupDRO$^\\ast$ + RS & 60.6 (0.6) & 71.5 (0.3) & 68.8 (0.7) & +1.1 (0.5) & 78.8 (0.4) & +0.4 (0.3) & 91.5 (0.2) & +0.5 (0.3) \\\\ & GroupDRO$^\\ast$ + IRS & 62.1 (0.7) & 71.9 (0.2) & 69.6 (0.4) & +1.9 (0.6) & 78.8 (0.5) & +0.4 (0.6) & 91.8 (0.3) & +0.8 (0.3) \\\\ \\multirow{9}{*}{FMoW} &ERM & - & - & 34.5 (1.4) & - & 51.7 (0.5) & - & 52.6 (0.8) & -\\\\ &ERM + RS & 32.9 (0.4) & 39.4 (1.3) & 35.7 (1.6) & +1.2 (0.4) & 52.3 (0.3)& +0.6 (0.3) & 53.1 (0.8) & +0.6 (0.3) \\\\ &ERM + IRS & 35.1 (0.2) & 40.2 (1.1) & 36.2 (1.4) & +1.7 (0.3) & 52.4 (0.2) & +0.7 (0.4) & 53.4 (0.9) & +0.8 (0.4) \\\\ \\cdashline{2-10} & GR$^\\ast$ & - & - & 31.4 (1.1) & - & 49.0 (0.9) & - & 50.1 (1.3)& - \\\\ & GR$^\\ast$ + RS & 30.2 (1.2) & 37.7 (0.6) & 35.5 (0.4) & +4.2 (0.7) & 49.8 (0.7) & +0.8 (0.3) & 50.7 (1.2) & +0.6 (0.1) \\\\ & GR$^\\ast$ + IRS & 31.7 (1.0) & 38.9 (2.1) & 35.7 (0.9) & +4.4 (0.4) & 50.1 (0.6) & +1.1 (0.3) & 50.8 (1.4)& +0.7 (0.1) \\\\ \\cdashline{2-10} & GroupDRO$^\\ast$ & - & - & 33.7 (2.0) & - & 50.4 (0.7) & - & 52.0 (0.4) & - \\\\ & GroupDRO$^\\ast$ + RS & 30.8 (1.8) & 38.2 (0.7) & 36.0 (2.4) & +2.3 (0.4) & 50.9 (0.6) & +0.4 (0.4) & 52.4 (0.2) & +0.5 (0.2)\\\\ & GroupDRO$^\\ast$ + IRS & 34.1 (0.8) & 40.7 (0.5) & 36.4 (2.3)& +2.7 (0.4) & 51.1 (0.3) & +0.7 (0.5) & 52.7 (0.2) & +0.7 (0.2) \\\\ \\end{tabular} \\end{center} \\end{table*} \\fi \\iffalse",
+    "2412-15311_sent_440228e8": "\\begin{center} \\caption{Experimental results on the CivilComments-WILDS dataset using DistilBert.",
+    "2412-15311_sent_64733941": "{RS and IRS achieve consistent performance gains in all settings.} \\scalebox{0.8}{ \\setlength\\tabcolsep{4.5pt} \\begin{tabular}{l|cc|cccccc} & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)}\\\\ Method & Worst-group & Unbiased & Worst-group & (Gain) & Unbiased & (Gain) & Average & (Gain) \\\\ ERM &- & - & 54.5 (6.8) & - &75.0 (1.2) & - & 92.3 (0.4) &- \\\\ ERM + RS &57.2 (5.1) & 70.9 (1.5) & 65.5 (1.2) & +11.0 (2.5) & 78.6 (1.5) & +3.7 (2.4) & 92.5 (0.3) &+0.2 (0.1) \\\\ ERM + IRS & 59.2 (5.3) & 71.2 (2.3) & 67.0 (2.3) & +12.5 (2.7) & 78.8 (1.1) & +3.8 (1.7) & 92.5 (0.3) & +0.2 (0.1) \\\\ GR$^\\ast$ & - & - & 64.7 (1.1) & - & 78.4 (0.2) & - & 87.2 (1.0) & - \\\\ GR$^\\ast$ + RS & 59.0 (2.8) & 69.8 (1.0) & 66.0 (0.5) & +1.3 (0.6) & 78.5 (0.1) & +0.1 (0.1) & 87.9 (0.8) & +0.7 (0.3) \\\\ GR$^\\ast$ + IRS & 59.7 (1.6) & 70.1 (0.7) & 66.2 (0.4)& +1.6 (0.7) & 78.6 (0.1)& +0.2 (0.2) & 88.4 (0.6) & +1.2 (0.6) \\\\ Group DRO$^\\ast$ & - & - &67.7 (0.6) & - & 78.4 (0.6) & - & {90.0 (0.1)} & - \\\\ Group DRO$^\\ast$ + RS & 60.6 (0.6) & 71.5 (0.3) & 68.8 (0.7) & +1.1 (0.5) & 78.8 (0.4) & +0.4 (0.3) & 90.5 (0.2) & +0.5 (0.3) \\\\ Group DRO$^\\ast$ + IRS & 62.1 (0.7) & 71.9 (0.2) & 69.6 (0.4) & +1.9 (0.6) & 78.8 (0.5) & +0.4 (0.6) & 90.8 (0.3) & +0.8 (0.3) \\\\ \\end{tabular} \\end{center} \\end{table*}",
+    "2412-15311_sent_a752b1f2": "\\begin{center} \\caption{Experimental results on the FMoW-WILDS dataset using DenseNet-121.",
+    "2412-15311_sent_89edf8f5": "{RS and IRS are effective even when training, validation, and test splits involve substantial domain shifts and the number of classes is large.} \\scalebox{0.8}{ \\setlength\\tabcolsep{5pt} \\begin{tabular}{l|cc|cccccc} & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)}\\\\ Method & Worst-group & Unbiased & Worst-group & (Gain) & Unbiased & (Gain) & Average & (Gain) \\\\ ERM & - & - & 34.5 (1.4) & - & 51.7 (0.5) & - & 52.6 (0.8) & -\\\\ ERM + RS & 32.9 (0.4) & 39.4 (1.3) & 35.7 (1.6) & +1.2 (0.4) & 52.3 (0.3)& +0.6 (0.3) & 53.1 (0.8) & +0.6 (0.3) \\\\ ERM + IRS & 35.1 (0.2) & 40.2 (1.1) & 36.2 (1.4) & +1.7 (0.3) & 52.4 (0.2) & +0.7 (0.4) & 53.4 (0.9) & +0.8 (0.4) \\\\ GR$^\\ast$ & - & - & 31.4 (1.1) & - & 49.0 (0.9) & - & 50.1 (1.3)& - \\\\ GR$^\\ast$ + RS & 30.2 (1.2) & 37.7 (0.6) & 35.5 (0.4) & +4.2 (0.7) & 49.8 (0.7) & +0.8 (0.3) & 50.7 (1.2) & +0.6 (0.1) \\\\ GR$^\\ast$ + IRS & 31.7 (1.0) & 38.9 (2.1) & 35.7 (0.9) & +4.4 (0.4) & 50.1 (0.6) & +1.1 (0.3) & 50.8 (1.4)& +0.7 (0.1) \\\\ Group DRO$^\\ast$ & - & - & 33.7 (2.0) & - & 50.4 (0.7) & - & 52.0 (0.4) & - \\\\ Group DRO$^\\ast$ + RS & 30.8 (1.8) & 38.2 (0.7) & 36.0 (2.4) & +2.3 (0.4) & 50.9 (0.6) & +0.4 (0.4) & 52.4 (0.2) & +0.5 (0.2)\\\\ Group DRO$^\\ast$ + IRS & 34.1 (0.8) & 40.7 (0.5) & 36.4 (2.3)& +2.7 (0.4) & 51.1 (0.3) & +0.7 (0.5) & 52.7 (0.2) & +0.7 (0.2) \\\\ \\end{tabular} \\end{center} \\end{table*} \\fi",
+    "2412-15311_sent_708deb73": "\\begin{center} \\caption{Experimental results on the CivilComments-WILDS dataset using a DistilBert architecture with the average of 3 runs.",
+    "2412-15311_sent_8ae55db8": "\\scalebox{0.8}{ \\setlength\\tabcolsep{6pt} \\begin{tabular}{lc|cc|cccccc} & Group & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)}\\\\ Method & Supervision & Worst-group & Unbiased & Worst-group & (Gain) & Unbiased & (Gain) & Average & (Gain) \\\\ ERM & & - & - & 54.5 (6.8) & - &75.0 (1.2) & - & 92.3 (0.4) &- \\\\ ERM + RS & &57.2 (5.1) & 70.9 (1.5) & 65.5 (1.2) & +11.0 (2.5) & 78.6 (1.5) & +3.7 (2.4) & 92.5 (0.3) &+0.2 (0.1) \\\\ ERM + IRS & & 59.2 (5.3) & 71.2 (2.3) & 67.0 (2.3) & +12.5 (2.7) & 78.8 (1.1) & +3.8 (1.7) & 92.5 (0.3) & +0.2 (0.1) \\\\ \\cdashline{1-10} GR & \\multirow{3}{*}{\\checkmark} & - & - & 64.7 (1.1) & - & 78.4 (0.2) & - & 87.2 (1.0) & - \\\\ GR + RS & & 59.0 (2.8) & 69.8 (1.0) & 66.0 (0.5) & +1.3 (0.6) & 78.5 (0.1) & +0.1 (0.1) & 87.9 (0.8) & +0.7 (0.3) \\\\ GR + IRS & & 59.7 (1.6) & 70.1 (0.7) & 66.2 (0.4)& +1.6 (0.7) & 78.6 (0.1)& +0.2 (0.2) & 88.4 (0.6) & +1.2 (0.6) \\\\ \\cdashline{1-10} Group DRO & \\multirow{3}{*}{\\checkmark} & - & - &67.7 (0.6) & - & 78.4 (0.6) & - & {90.0 (0.1)} & - \\\\ Group DRO + RS & & 60.6 (0.6) & 71.5 (0.3) & 68.8 (0.7) & +1.1 (0.5) & 78.8 (0.4) & +0.4 (0.3) & 90.5 (0.2) & +0.5 (0.3) \\\\ Group DRO + IRS & & 62.1 (0.7) & 71.9 (0.2) & 69.6 (0.4) & +1.9 (0.6) & 78.8 (0.5) & +0.4 (0.6) & 90.8 (0.3) & +0.8 (0.3) \\\\ \\end{tabular} \\end{center} \\end{table*}",
+    "2412-15311_sent_19ceecb2": "\\begin{center} \\caption{Experimental results on the FMoW-WILDS dataset using a DenseNet-121 architecture with the average of 3 runs.",
+    "2412-15311_sent_09ffba89": "\\scalebox{0.8}{ \\setlength\\tabcolsep{6pt} \\begin{tabular}{lc|cc|cccccc} & Group & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{6}{c}{Accuracy (\\%)}\\\\ Method & Supervision & Worst-group & Unbiased & Worst-group & (Gain) & Unbiased & (Gain) & Average & (Gain) \\\\ ERM & & - & - & 34.5 (1.4) & - & 51.7 (0.5) & - & 52.6 (0.8) & -\\\\ ERM + RS & & 32.9 (0.4) & 39.4 (1.3) & 35.7 (1.6) & +1.2 (0.4) & 52.3 (0.3)& +0.6 (0.3) & 53.1 (0.8) & +0.6 (0.3) \\\\ ERM + IRS & & 35.1 (0.2) & 40.2 (1.1) & 36.2 (1.4) & +1.7 (0.3) & 52.4 (0.2) & +0.7 (0.4) & 53.4 (0.9) & +0.8 (0.4) \\\\ \\cdashline{1-10} GR & \\multirow{3}{*}{\\checkmark} & - & - & 31.4 (1.1) & - & 49.0 (0.9) & - & 50.1 (1.3)& - \\\\ GR + RS & & 30.2 (1.2) & 37.7 (0.6) & 35.5 (0.4) & +4.2 (0.7) & 49.8 (0.7) & +0.8 (0.3) & 50.7 (1.2) & +0.6 (0.1) \\\\ GR + IRS & & 31.7 (1.0) & 38.9 (2.1) & 35.7 (0.9) & +4.4 (0.4) & 50.1 (0.6) & +1.1 (0.3) & 50.8 (1.4)& +0.7 (0.1) \\\\ \\cdashline{1-10} Group DRO & \\multirow{3}{*}{\\checkmark} & - & - & 33.7 (2.0) & - & 50.4 (0.7) & - & 52.0 (0.4) & - \\\\ Group DRO + RS & & 30.8 (1.8) & 38.2 (0.7) & 36.0 (2.4) & +2.3 (0.4) & 50.9 (0.6) & +0.4 (0.4) & 52.4 (0.2) & +0.5 (0.2)\\\\ Group DRO + IRS & & 34.1 (0.8) & 40.7 (0.5) & 36.4 (2.3)& +2.7 (0.4) & 51.1 (0.3) & +0.7 (0.5) & 52.7 (0.2) & +0.7 (0.2) \\\\ \\end{tabular} \\end{center} \\end{table*}",
+    "2412-15311_subsection_fd69c5cf": "Results",
+    "2412-15311_sent_bad93ce4": "\\paragraph {CelebA} Table~\\ref{tab:celebA} presents the experimental results of our robust scaling methods (RS and IRS) on top of the existing approaches including CR, SUBY, LfF, JTT, Group DRO$^\\ast$, GR$^\\ast$, and SUBG$^\\ast$\\footnote{A brief introduction to these methods is provided in the supplementary document.}} on the CelebA dataset, where `$\\ast$' indicates the method that requires the group supervision in training sets.",
+    "2412-15311_sent_8626da98": "In this evaluation, RS and IRS choose scaling factors to maximize individual target metrics---worst-group, unbiased, and average accuracies\\footnote{Since our robust scaling strategy is a simple post-processing method, we do not need to retrain models for each target measure and the cost is negligible, taking only a few seconds for each target metric.}.",
+    "2412-15311_sent_34c7ccd7": "As shown in the table, our robust scaling strategies consistently improve the performance for all target metrics.",
+    "2412-15311_sent_d084b12c": "In terms of the robust coverage and robust accuracy after scaling, LfF and JTT are not superior to ERM on the CelebA dataset although their robust accuracies without scaling are much higher than ERM.",
+    "2412-15311_sent_28a890a7": "The methods that leverage group supervision such as Group DRO and GR achieve better robust coverage results than the others, which verifies that group supervision helps to improve overall performance.",
+    "2412-15311_sent_c72e3f38": "For the group-supervised methods, our scaling technique achieves relatively small performance gains in robust accuracy since the gaps between robust and average accuracies are small and the original results are already close to the optimal robust accuracy.",
+    "2412-15311_sent_d1d59973": "Note that, compared to RS, IRS further boosts the robust coverage and all types of accuracies consistently in all algorithms.",
+    "2412-15311_paragraph_e439aadf": "Waterbirds",
+    "2412-15311_sent_67216d64": "Table~\\ref{tab:waterbirds} demonstrates the outstanding performance of our approaches with all baselines on the Waterbirds dataset.",
+    "2412-15311_sent_18ef42c1": "Among the compared algorithms, GR and SUBG are reweighting and subsampling methods based on group frequency, respectively.",
+    "2412-15311_sent_2525c3ed": "Although the two baseline approaches exhibit competitive robust accuracy, the average accuracy of SUBG is far below than GR (87.3\\% vs. 95.1\\%).",
+    "2412-15311_sent_a58db928": "This is mainly because SUBG drops a large portion of training samples ($95\\%$) to make all groups have the same size, resulting in the significant loss of average accuracy.",
+    "2412-15311_sent_4cb0a79c": "Subsampling generally helps to achieve high robust accuracy, but it degrades the overall trade-off as well as the average accuracy, consequently hindering the benefits of robust scaling.",
+    "2412-15311_sent_f91b2e71": "{This observation is coherent to our main claim; the optimization towards the robust accuracy is incomplete and more comprehensive evaluation criteria are required to understand the exact behavior of debiasing algorithms.} Note that GR outperforms SUBG in terms of all accuracies after adopting the proposed RS or IRS.",
+    "2412-15311_paragraph_45a744ff": "CivilComments-WILDS",
+    "2412-15311_sent_70005954": "We also validate the effectiveness of the proposed approach in a large-scale text classification dataset, CivilComments-WILDS~\\cite{koh2021wilds}, which has 8 attribute groups.",
+    "2412-15311_sent_890392a9": "As shown in Table~\\ref{tab:civilcomments}, our robust scaling strategies still achieve meaningful performance improvements for all baselines on this dataset.",
+    "2412-15311_sent_b924fa7d": "Although group-supervised baselines such as GR and Group DRO accomplish higher robust accuracies than the ERM without scaling, ERM benefits from RS and IRS greatly.",
+    "2412-15311_sent_6da2f859": "ERM+IRS outperforms both Group DRO and GR in average accuracy while achieving competitive worst-group and unbiased accuracies, even without group supervision in training samples and extra training.",
+    "2412-15311_paragraph_a53f5fad": "FMoW-WILDS",
+    "2412-15311_sent_36437e55": "FMoW-WILDS~\\cite{koh2021wilds} is a high-resolution satellite imagery dataset with 65 classes and 5 attribute groups, which involves domain shift issues as train, validation, and test splits come from different years.",
+    "2412-15311_sent_77a7b1cd": "We report the results from our experiments in Table~\\ref{tab:fmow}, which shows that GR and Group DRO have inferior performance even compared with ERM.",
+    "2412-15311_sent_ff485d40": "On the other hand, our robust scaling methods do not suffer from any performance degradation and even enhance all kinds of accuracies substantially.",
+    "2412-15311_sent_429ca263": "This fact supports the strengths and robustness of our framework in more challenging datasets with distribution shifts.",
+    "2412-15311_subsection_739e6d2a": "Analysis",
+    "2412-15311_paragraph_fdb7fcfe": "Validation set sizes",
+    "2412-15311_sent_fcda4b07": "We analyze the impact of the validation set size on the robustness of our algorithm.",
+    "2412-15311_sent_442e6d5f": "Table~\\ref{tab:val_size} presents the ERM results on the CelebA dataset by varying the validation set size to $\\{100\\%, 50\\%, 10\\%, 1\\%\\}$ of its full size.",
+    "2412-15311_sent_e40b2d22": "Note that other approaches also require validation sets with group annotations for early stopping and hyperparameter tuning, which are essential to achieve high robust accuracy.",
+    "2412-15311_sent_5d090b73": "As shown in the table, with only $10\\%$ or $50\\%$ of the validation set, both RS and IRS achieve almost equivalent performance to the versions with the entire validation set.",
+    "2412-15311_sent_3f5e4010": "Surprisingly, even only $1\\%$ of the validation set is enough for RS to gain sufficiently high robust accuracy but inevitably entails a large variance of results.",
+    "2412-15311_sent_6eeb7d23": "On the other hand, IRS suffers from performance degradation when only $1\\%$ of the validation set is available.",
+    "2412-15311_sent_70541032": "This is mainly because IRS takes advantage of feature clustering on the validation set, which would need more examples for stable results.",
+    "2412-15311_sent_80f29bb5": "In overall, our robust scaling strategies generally improve performance substantially even with a limited number of validation examples with group annotations for all cases.",
+    "2412-15311_fig_4cbea429": "\\begin{table}\n\\begin{center}\n\\caption{Ablation study on the size of validation set in our robust scaling strategies on CelebA.\n\n \\scalebox{0.8}{\n\n\\setlength\\tabcolsep{6pt} \n\\begin{tabular}{lc|cccc}\n\nMethod & Valid set size & Worst-group & Gain & Unbiased & Gain \\\\\n\nERM & - & 34.5 (6.1) &- & 77.7 (1.8) &- \\\\\n\n+ RS & 100\\% & 82.8 (3.3) & +48.3 & 91.2 (0.5) & +13.5 \\\\\n+ RS & \\ \\ 50\\% & 83.3 (3.7) & +48.8 & 91.5 (0.9) & +13.8 \\\\\n+ RS & \\ \\ 10\\% & 82.4 (4.3) & +48.0 & 91.4 (0.8) & +13.7 \\\\\n+ RS & \\ \\ \\ \\ 1\\% & 79.2 (10.3) & +44.7 & 90.8 (2.2) & +13.1 \\\\\n\n+ IRS & 100\\% & 88.7 (0.9) & +54.2 & 92.0 (0.3) & +14.3 \\\\\n+ IRS & \\ \\ 50\\% & 86.9 (2.0) & +52.4 & 91.8 (0.4) & +14.1 \\\\\n+ IRS & \\ \\ 10\\% & 84.4 (6.3) & +50.0 & 91.4 (1.0)& +13.7 \\\\\n+ IRS & \\ \\ \\ \\ 1\\% & 60.4 (14.4) & +25.9 & 85.8 (3.2) & \\ \\ +8.0 \\\\\n\n\\end{tabular}\n\n\\end{center}\n\\end{table}",
+    "2412-15311_paragraph_168a5ebc": "Accuracy trade-off",
+    "2412-15311_sent_a8495431": "Figure~\\ref{fig:robust_all_celeba} depicts the robust-average accuracy trade-offs of several existing algorithms on the CelebA dataset.",
+    "2412-15311_sent_8a76bb6f": "The black markers denote the points without scaling, implying that there is room for improvement in robust accuracy along the trade-off curve.",
+    "2412-15311_fig_2f0dfbb1": " \\begin{figure}\n\n \\begin{subfigure}[m]{0.85\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/worst_curve_all.png}\n \\subcaption{With the worst-group accuracy}\n\n \\end{subfigure} \n\n \\begin{subfigure}[m]{0.85\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/unbias_curve_all.png}\n \\subcaption{With the unbiased accuracy}\n\n \\end{subfigure}\n\n \\caption{\n The robust-average accuracy trade-off curves of various baselines on the CelebA dataset.\n The black marker denotes the original point, where the uniform scaling is applied. \n\n\\end{figure}",
+    "2412-15311_paragraph_a12597a5": "Number of clusters",
+    "2412-15311_sent_f1dd26ef": "We adjust the number of clusters for feature clustering in IRS on the Waterbirds dataset.",
+    "2412-15311_sent_b32777ff": "Figure~\\ref{fig:abl_k} illustrates that the worst-group and unbiased accuracies gradually improve as $K$ increases and are stable with a sufficiently large $K (>10)$.",
+    "2412-15311_sent_b969ac1f": "The leftmost point ($K=1$) denotes RS in each figure.",
+    "2412-15311_sent_6de0c62a": "We also plot the robust coverage results in the validation split, which are almost consistent with the robust accuracy measured in the test dataset.",
+    "2412-15311_paragraph_70bf1c44": "Comparison to reweighting or resampling techniques",
+    "2412-15311_sent_8636d625": "As mentioned in Section~\\ref{sec:related}, most existing debiasing techniques~\\cite{GroupDRO,JTT,LfF,seo2021unsupervised,idrissi2022simple,kirichenko2022last}, in principle, perform reweighting and/or resampling of training data.",
+    "2412-15311_sent_9438c2a6": "Our approach has a similar idea, but, instead of giving favor to the examples in minority groups during training and boosting their classification scores indirectly via iterative model updates, we directly adjust their classification scores by class-wise scaling after training, thus it gives similar but clearer effects on the results.",
+    "2412-15311_sent_81eb35f5": "As shown in Figure~\\ref{fig:robust_all_celeba}, although class reweighting (CR) improves the robust accuracy, this in fact identifies one of the Pareto optimal points on the trade-off curve of ERM obtained by class-specific scaling.",
+    "2412-15311_sent_26762c0e": "However, because class reweighting employs a single fixed reweighting factor during training based on class frequency, it only reflects a single point and has limited flexibility compared to our wide range of scaling search.",
+    "2412-15311_sent_ef7d39a5": "If CR employs a wide range of reweighting factors, then it can identify additional optimal points and achieve additional performance gains, but it requires training separate models for each factor, which is not realistic.",
+    "2412-15311_sent_d4f7dbc9": "Note that our method can be easily applied to CR or other methods, which allows us to identify more desirable optimal points on the trade-off curve with negligible computational overhead.",
+    "2412-15311_fig_ef338f25": "\\begin{figure}\n\n \\begin{subfigure}[m]{0.85\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/abl_k_worst.png}\n \\subcaption{With the worst-group accuracy}\n\n \\end{subfigure} \n\n \\begin{subfigure}[m]{0.85\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/abl_k_unbias.png}\n \\subcaption{With the unbiased accuracy}\n\n \\end{subfigure}\n\n \\caption{Sensitivity analysis with respect to the number of clusters in IRS on Waterbirds.\nThe tendency of the robust coverage in the validation split (orange) is similar with the robust accuracy in the test split (blue).\n\n\\end{figure}",
+    "2412-15311_section_6f8b794f": "Conclusion",
+    "2412-15311_sent_2b6aa58f": "We presented a simple but effective post-processing method that provides a novel perspective of group robustness.",
+    "2412-15311_sent_d3cf3c6e": "Our work starts from the observation that there exists a clear trade-off between robust and average accuracies in existing works.",
+    "2412-15311_sent_a413a28f": "From this observation, we first proposed the robust scaling strategy, which captures the full trade-off landscape and identifies any desired performance point on the trade-off curve with no extra training.",
+    "2412-15311_sent_2e019e35": "Moreover, we proposed an instance-wise robust scaling algorithm that is effective to enhance the trade-off itself.",
+    "2412-15311_sent_cb654c40": "Based on these strategies, we introduced a novel convenient measure that summarizes the trade-off from a Pareto optimal perspective for a comprehensive evaluation of group robustness.",
+    "2412-15311_sent_16e00f30": "We believe that our approaches are helpful for analyzing the exact behavior of existing debiasing methods and paving the way in the future research direction.",
+    "2412-15311_paragraph_0407c271": "Acknowledgements",
+    "2412-15311_sent_9ea824c1": "This work was partly supported by Samsung Advanced Institute of Technology (SAIT), and by the Institute of Information communications Technology Planning \\& Evaluation (IITP) grants [No.RS-2022-II220959 (No.2022-0-00959), No.RS-2021-II211343, No.RS-2021-II212068], and the National Research Foundation of Korea (NRF) grant [No.RS-2022-NR070855], funded by the Korean government (MSIT).",
+    "2412-15311_sent_804ca741": "\\bibliographystyle{ieee_fullname} \\bibliography{neurips_2023} \\appendix \\onecolumn \\renewcommand{\\thesection}{\\Alph{section}} \\renewcommand{\\thetable}{A\\arabic{table}} \\renewcommand{\\thefigure}{A\\arabic{figure}}",
+    "2412-15311_section_09610b65": "Comparisons",
+    "2412-15311_sent_7d4c82dc": "Below is a brief introduction of the comparisons used in our experiments.",
+    "2412-15311_paragraph_e38b875e": "ERM",
+    "2412-15311_sent_ea69449c": "Given a loss function $\\ell(\\cdot)$, the objective of empirical risk minimization is optimizing the following loss over training data:",
+    "2412-15311_eq_3102a719": " \\begin{equation}\n\\min_\\theta \\Big\\{\\frac{1}{n}\\sum_{i=1}^n \\ell(f_\\theta(x_i), y_i) \\Big\\}.\n\\end{equation}",
+    "2412-15311_paragraph_d8d21b59": "Class reweighting (CR)",
+    "2412-15311_sent_4ee3ba49": "To mitigate the class imbalance issue, we can simply reweight the samples based on the inverse of class frequency in the training split,",
+    "2412-15311_eq_d4880c9a": " \\begin{equation}\n\\min_\\theta \\Big\\{\\frac{1}{n}\\sum_{i=1}^n \\omega_i \\ell(f_\\theta(x_i), y_i) \\Big\\}~~\\text{where}~~\\omega_i = \\frac{n}{\\sum_j \\mathds{1}(y_j=y_i)}.\n\\end{equation}",
+    "2412-15311_paragraph_40fadc69": "LfF",
+    "2412-15311_sent_d5c451a7": "Motivated by the observation that bias-aligned samples are more easily learned, LfF~\\cite{LfF} simultaneously trains a pair of neural network $(f_B, f_D)$.",
+    "2412-15311_sent_24edc71b": "The biased model $f_B$ is trained with generalized cross-entropy loss which intends to amplify bias, while the debiased model $f_D$ is trained with a standard cross-entropy loss, where each sample $(x_i, y_i)$ is reweighted by the following relative difficulty score:",
+    "2412-15311_eq_bd1b2a21": "\\begin{equation}\n\\omega_i = \\frac{\\ell(f^B_\\theta(x_i), y_i)}{\\ell(f^B_\\theta(x_i), y_i) + \\ell(f^D_\\theta(x_i), y_i)}.\n\\end{equation}",
+    "2412-15311_paragraph_cbee1c51": "JTT",
+    "2412-15311_sent_30fa3664": "JTT~\\cite{JTT} consists of two-stage procedures.",
+    "2412-15311_sent_2ac5eacf": "In the first stage, JTT trains a standard ERM model $\\hat{f}(\\cdot)$ for several epochs and identifies an error set $E$ of training examples that are misclassified:",
+    "2412-15311_eq_e5003c9e": " \\begin{equation}\nE := \\{(x_i, y_i)~~\\text{s.t.}~\\hat{f}(x_i) \\neq y_i \\}.\n\\end{equation}",
+    "2412-15311_sent_f96560a2": "Next, they train a final model $f_\\theta(\\cdot)$ by upweighting the examples in the error set $E$ as",
+    "2412-15311_eq_17b324e3": " \\begin{equation}\n\\min_\\theta \\Big\\{ \\lambda_\\text{up}\\sum_{(x,y)\\in E}\\ell(f_\\theta(x), y) + \\sum_{(x,y)\\notin E}\\ell(f_\\theta(x), y) \\Big\\}.\n\\end{equation}",
+    "2412-15311_paragraph_07528206": "Group DRO",
+    "2412-15311_sent_ce027a39": "Group DRO~\\cite{GroupDRO} aims to minimize the empirical worst-group loss formulated as:",
+    "2412-15311_eq_70634499": " \\begin{equation}\n\\min_\\theta \\Big\\{\n \\max_{g\\in \\mathcal{G}} \\frac{1}{n_g} \\sum_{i|g_i=g}^{n_g} \\ell(f_\\theta(x_i), y_i) \\Big\\}\n\\end{equation}",
+    "2412-15311_sent_02bb0a52": "where $n_g$ is the number of samples assigned to $g^\\text{th}$ group.",
+    "2412-15311_sent_0a2d0df8": "Unlike previous approaches, group DRO requires group annotations $g=(y,a)$ on the training split.",
+    "2412-15311_paragraph_85c7e21b": "Group reweighting (GR)",
+    "2412-15311_sent_c88292c1": "Using group annotations, we can extend class reweighting method to group reweighting one based on the inverse of group frequency in the training split, \\ie,",
+    "2412-15311_eq_7bd3e4dd": " \\begin{equation}\n& \\min_\\theta \\Big\\{\\frac{1}{n}\\sum_{i=1}^n \\omega_i \\ell(f_\\theta(x_i), y_i) \\Big\\} \\nonumber \\\\\n &~~~~~~~~~~ \\text{where}~~ \\omega_i = \\frac{n}{\\sum_j \\mathds{1}(y_j=y_i, a_j=a_i)}\n\\end{equation}",
+    "2412-15311_paragraph_5ca765a1": "SUBY/SUBG",
+    "2412-15311_sent_e073c330": "Similarly, SUBG subsample majority groups.",
+    "2412-15311_sent_562a2a6e": "\\section {Attribute-specific Robust Scaling with Group Supervision} If the supervision of group (spurious-attribute) information can be utilized during our robust scaling, it will provide flexibility to further improve the performance.",
+    "2412-15311_sent_dc4bfcc2": "To this end, we first partition the examples based on the values of spurious attributes and find the optimal scaling factors for each partition separately.",
+    "2412-15311_sent_abadc64b": "Like as the original robust scaling procedure, we obtain the optimal scaling factors for each partition in the validation split and apply them to the test split.",
+    "2412-15311_sent_6fc5b1b2": "However, this partition-wise scaling is basically unavailable because we do not know the spurious attribute values of the examples in the test split and thus cannot partition them, In other words, we need to estimate the spurious-attribute values in the test split for partitioning.",
+    "2412-15311_sent_b9aed654": "To conduct attribute-specific robust scaling (ARS), we follow a simple algorithm described below:",
+    "2412-15311_sent_4b7b9ed3": "Partition the examples in the validation split by the values of the spurious attribute.",
+    "2412-15311_sent_42c576ca": "Find the optimal scaling factors for each partition in the validation split.",
+    "2412-15311_sent_a8e280df": "Train an independent estimator model to classify spurious attribute.",
+    "2412-15311_sent_1e7643e2": "Estimate the spurious attribute values of the examples in the test split using the estimator, and partition the test samples according to their estimated spurious attribute values.",
+    "2412-15311_sent_30f5bea2": "For each sample in the test split, apply the optimal scaling factors obtained in step 2 based on its partition.",
+    "2412-15311_sent_7f953e0f": "To find a set of scale factors corresponding to each partition, we adopt a na\\\"ive greedy algorithm that performed in one partition at a time.",
+    "2412-15311_sent_f3083251": "This attribute-specific robust scaling further increases the robust accuracy compared to the original robust scaling, and also improves the robust coverage, as shown in Table~\\ref{tab:grs_all_supple}.",
+    "2412-15311_sent_e4294b89": "Note that our attribute-specific scaling strategy allows ERM to match the supervised state-of-the-art approach, Group DRO~\\cite{GroupDRO}.",
+    "2412-15311_sent_26dacc10": "One limitation is that it requires the supervision of spurious attribute information to train the estimator model in step 3.",
+    "2412-15311_sent_78689501": "However, we notice that only a very few examples with the supervision is enough to train the spurious-attribute estimator, because it is much easier to learn as the word ``spurious correlation\" suggests.",
+    "2412-15311_sent_e04cb950": "To determine how much the group-labeled data is needed, we train several spurious-attribute estimators by varying the number of group-labeled examples, and conduct ARS using the estimators.",
+    "2412-15311_sent_c668476d": "Table~\\ref{tab:abl_groupsize} validates that, compared to the overall training dataset size, a very small amount of group-labeled examples is enough to achieve high robust accuracy.",
+    "2412-15311_sent_a0ff5565": "\\begin{center} \\caption{Results of the attribute-specific robust scaling (ARS) on the CelebA and Waterbirds datasets with the average of three runs (standard deviations in parenthesis), where ARS is applied to maximize each target metric independently.",
+    "2412-15311_sent_25e47d62": "Note that our post-processing strategy, ARS, allows ERM to achieve competitive performance to Group DRO that utilizes the group supervision during training.",
+    "2412-15311_sent_fb5dec46": "\\scalebox{0.85}{ \\setlength\\tabcolsep{8pt} \\begin{tabular}{cl|cc|ccc} & & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{3}{c}{Accuracy (\\%)} \\\\ Dataset & Method & Worst.",
+    "2412-15311_sent_eb45e74f": "& {Unbiased} & Average \\\\ \\multirow{3}{*}{CelebA} & ERM & - & - & 34.5 (6.1) &77.7 (1.8) &95.5 (0.4) \\\\ & ERM + ARS &87.6 (1.0) &89.0 (0.2)&88.5 (1.8) &{91.9 (0.3)} &95.8 (0.1) \\\\ \\cdashline{2-7} & Group DRO & 87.3 (0.2) & 88.3 (0.2) & 88.4 (2.3) & 92.0 (0.4) & 93.2 (0.8) \\\\ \\multirow{3}{*}{Waterbirds}&ERM & - & - &76.3 (0.8) &89.4 (0.6) &{97.2 (0.2)} \\\\ & ERM + ARS &84.4 (1.9) &87.8 (1.7) &89.3 (0.4) &92.5 (0.4) &97.5 (1.0) \\\\ \\cdashline{2-7} & Group DRO & {83.4 (1.1)}&{87.4 (2.3)} &88.0 (1.0) &92.5 (0.9) &{95.8 (1.8)} \\\\ \\end{tabular} \\end{center} \\end{table*}",
+    "2412-15311_fig_72dedb6d": "\\begin{table}\n\\begin{center}\n\\caption{Effects of the size of group-labeled examples on the attribute-specific robust scaling on the CelebA dataset.\nGroup-labeled size denotes a ratio of group-labeled samples among all training examples for training estimators.\nSpurious accuracy indicates the average accuracy of spurious-attribute classification using the estimators on the test split.\n\n \\scalebox{0.8}{\n\n\\setlength\\tabcolsep{7pt} \n\\begin{tabular}{c||c|ccc|cc}\n\n&Accuracy (\\%)& \\multicolumn{3}{c|}{Accuracy (\\%)} & \\multicolumn{2}{c}{Robust Coverage} \\\\\nGroup-labeled size & Spurious &Worst-group & Unbiased & Average & Worst-group & Unbiased \\\\\n\n100\\% &98.4 &{89.1 (3.0)} &{92.4 (1.1)} &{93.1 (1.2)} & {87.6 (1.0)} &{89.0 (0.5)} \\\\\n10\\% & 97.7 &88.5 (1.8) &91.9 (0.3) &92.8 (0.6) &86.8 (0.4) &89.0 (0.2) \\\\\n1\\% & 95.8 &88.5 (1.8) &91.9 (0.3) &92.9 (0.6) &87.1 (0.3) &89.0 (0.2) \\\\\n0.1\\%&92.6 &88.4 (2.1) &91.8 (0.5) &92.4 (0.8) &87.1 (0.3) &89.0 (0.2) \\\\\n\n\\end{tabular}\n\n\\end{center}\n\n\\end{table}",
+    "2412-15311_section_1c8ac169": "Experimental Details",
+    "2412-15311_subsection_f1cb45f6": "Datasets",
+    "2412-15311_sent_402c5d4e": "CelebA~\\cite{CelebA} is a large-scale dataset for face image recognition, consisting of 202,599 celebrity images, with 40 attributes labeled on each image.",
+    "2412-15311_sent_6223e497": "Among the attributes, we primarily examine hair color and gender attributes as a target and spurious attributes, respectively.",
+    "2412-15311_sent_3f6b697e": "We follow the original train-validation-test split~\\cite{CelebA} for all experiments in the paper.",
+    "2412-15311_sent_2bd148d7": "Waterbirds~\\cite{GroupDRO} is a synthesized dataset, which are created by combining bird images in the CUB dataset~\\cite{wah2011caltech} and background images from the Places dataset~\\cite{zhou2017places}, consisting of 4,795 training examples.",
+    "2412-15311_sent_ca961a9a": "The two attributes---one is the type of bird, \\{waterbird, landbird\\} and the other is background places, \\{water, land\\}, are used for the experiments with this dataset.",
+    "2412-15311_sent_afec8e66": "CivilComments-WILDS~\\cite{koh2021wilds} is a large-scale text dataset, which has 269,038 training comments, 45,180 validation comments, and 133,782 test comments.",
+    "2412-15311_sent_7262041f": "This task is to classify whether an online comment is toxic or not, which is spuriously correlated to demographic identities (male, female, White, Black, LGBTQ, Muslim, Christian, and other religion).",
+    "2412-15311_sent_af5b9d96": "FMoW-WILDS~\\cite{koh2021wilds} is based on the Functional Map of the World dataset~\\cite{christie2018functional}, comprising high-resolution satellite images from over 200 countries and over the years 2002-2018.",
+    "2412-15311_sent_4c37535d": "The label is one of 62 building or land use categories, and the attribute represents both the year and geographical regions (Africa, the Americas, Oceania, Asia, or Europe).",
+    "2412-15311_sent_04e7f01f": "It consists of 76,863 training images from the years 2002-2013, 19,915 validation images from the years 2013-2016, and 22,108 test images from the years 2016-2018.",
+    "2412-15311_subsection_3f29224b": "Class-specific Scaling",
+    "2412-15311_sent_cc90168b": "To identify the optimal points, we obtain a set of the average and robust accuracy pairs using a wide range of the class-specific scaling factors, \\ie, $\\mathbf{s}_i= (1.05)^n~\\text{for}-200 \\leq n \\leq 200$ for $i^\\text{th}$ class.",
+    "2412-15311_sent_ce35c391": "Note that we search for the scaling factor of each class in a greedy manner, as stated in Section~\\ref{sec:robust_scaling}.",
+    "2412-15311_subsection_bf66c748": "Hyperparameter Tuning",
+    "2412-15311_sent_e1308af1": "We tune the learning rate in $\\{10^{-3}, 10^{-4}, 10^{-5}, 10^{-6}\\}$ and the weight decay in $\\{1.0, 0.1, 10^{-2}, 10^{-4}\\}$ for all baselines on all datasets.",
+    "2412-15311_sent_7f07ebaf": "We used 0.5 of $q$ for LfF.",
+    "2412-15311_sent_d266b51e": "For JTT, we searched $\\lambda_\\text{up}$ in $\\{20, 50, 100\\}$ and updated the error set every epoch for CelebA dataset and every 60 epochs for Waterbirds dataset.",
+    "2412-15311_sent_5e9263bc": "For Group DRO, we tuned $C$ in $\\{0, 1, 2, 3, 4\\}$, and used 0.1 of $\\eta$.",
+    "2412-15311_paragraph_3d41c60c": "CelebA",
+    "2412-15311_sent_8d21d379": "\\revision{",
+    "2412-15311_sent_f85eeb02": "\\revision{ \\fi",
+    "2412-15311_fig_18fb0353": "\\begin{table}\n\\begin{center}\n\\caption{Realized robust coverage results on the Waterbirds and CelebA datasets with the average of three runs (standard deviations in parenthesis).\n\n \\scalebox{0.8}{\n\n\\setlength\\tabcolsep{10pt} \n\\begin{tabular}{cl|cc|cc}\n\n& & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{2}{c}{Realized Robust Coverage} \\\\\nDataset & Method & Worst-group & Unbiased & Worst-group & Unbiased \\\\\n\nWaterbirds & ERM & 70.3 (1.3) & 79.4 (0.7) & 69.0 (1.5) & 78.7 (0.8) \\\\\nWaterbirds & CR & 68.9 (1.1) & 78.5 (0.5) & 67.8 (1.2) & 77.9 (0.4) \\\\\nWaterbirds & Group DRO & 80.8 (0.6) & 85.2 (0.1) & 78.6 (1.0) & 83.8 (0.4) \\\\\nWaterbirds & GR & 78.8 (5.6) & 83.7 (0.7) & 77.9 (1.4) & 82.8 (0.8)\\\\\n\nCelebA & ERM & 78.9 (1.7) & 86.0 (0.6) & 75.9 (2.2) & 85.4 (0.7) \\\\\nCelebA & CR & 77.2 (2.8) & 85.6 (0.9) & 71.8 (1.3) & 85.0 (0.6) \\\\\nCelebA & Group DRO & 84.2 (0.6) & 86.7 (0.5) & 81.0 (1.7) & 86.1 (0.2) \\\\\nCelebA & GR & 84.2 (0.5) & 87.5 (0.3) & 81.2 (1.6) & 87.0 (0.5) \\\\\n\n\\end{tabular}\n\n\\end{center}\n\\end{table}",
+    "2412-15311_section_a5a514e8": "Additional Results",
+    "2412-15311_fig_1ab91065": " \\begin{table}\n\\begin{center}\n\\caption{Variations of robust scaling methods tested on the FairFace dataset.\n\n \\scalebox{0.8}{\n\\setlength\\tabcolsep{6pt} \n\\begin{tabular}{lc|ccc}\n\nMethod & Cost & Worst-group & Unbiased & Average \\\\\n\nERM & -- &15.8 &47.0 & 54.1\\\\\n+ RS (2 super classes) & $\\mathcal{O}(n)$ & 18.6& 51.8 & 52.9\\\\\n+ RS (greedy search) & $\\mathcal{O}(n)$ & \\bf{19.2} & 52.3 & \\bf{53.3} \\\\\n+ RS (full grid search) & $\\mathcal{O}(n^9)$ & 19.0& \\bf{52.8} & 53.1\\\\\n\n\\end{tabular}\n\n\\end{center}\n\\end{table}",
+    "2412-15311_paragraph_2d215ebf": "Scalability",
+    "2412-15311_sent_fd91f24f": "As mentioned in Section~\\ref{sec:robust_scaling}, we actually search for the scaling factor of each class in a greedy manner.",
+    "2412-15311_sent_cc312d9b": "Hence, the time complexity increases linearly with respect to the number of classes instead of the exponential growth with the full grid search; even with 1000 classes, the whole process takes less than a few minutes in practice, which is negligible compared to the model training time.",
+    "2412-15311_sent_1c41e53d": "Moreover, we can reduce the computational cost even further by introducing the superclass concept and allocating a single scaling factor for each superclass.",
+    "2412-15311_sent_d2b0acbf": "We compare three different options---greedy search, superclass-level search, and full grid search---on the FairFace dataset~\\cite{FairFace} with 9 classes.",
+    "2412-15311_sent_bbd174bc": "Table~\\ref{tab:superclass} shows that our greedy search is as competitive as the full grid search despite the time complexity gap in several orders of magnitude in computational complexity and the superclass-level search is also effective to reduce cost.",
+    "2412-15311_sent_da7d8401": "Note that the superclasses are identified by the feature similarity of class signatures.",
+    "2412-15311_fig_5cbb7a82": " \\begin{figure}\n\n \\begin{subfigure}[m]{0.4\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/worst_scale_curve.png}\n \\subcaption{Worst-group accuracy}\n\n \\end{subfigure} \n\n \\begin{subfigure}[m]{0.4\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/unbias_scale_curve.png}\n \\subcaption{Unbiased accuracy}\n\n \\end{subfigure} \n \\caption{Effects of varying the class-specific scaling factors on the robust accuracy using ERM model on the CelebA dataset.\n Since this experiment is based on the binary classifier, a single scaling factor is varied with the other fixed to one. \n\nThese results show that the optimal scaling factor identified in the validation set can be used in the test set to get the final robust prediction.\n\n\\end{figure}",
+    "2412-15311_paragraph_31b26c5f": "Feasibility",
+    "2412-15311_sent_0cda0fe4": "We visualize the relationship between scaling factors and robust accuracies in Figure~\\ref{fig:observation_scale_curve}, where the curves are constructed based on validation and test splits are sufficiently well-aligned to each other.",
+    "2412-15311_sent_b81ca54b": "This implies that the optimal scaling factor identified in the validation set can be used in the test set to get the final robust prediction.",
+    "2412-15311_paragraph_63d78e1d": "Robust coverage curve",
+    "2412-15311_sent_c4dd448f": "Figure~\\ref{fig:worst_curve_all_celeba} and~\\ref{fig:unbias_curve_all_celeba} are robust-average accuracy trade-off curves while Figure~\\ref{fig:worst_curve_all_pareto_celeba} and~\\ref{fig:unbias_curve_all_pareto_celeba} are their corresponding robust coverage curves, which represent the Pareto frontiers of Figure~\\ref{fig:worst_curve_all_celeba} and~\\ref{fig:unbias_curve_all_celeba}, respectively.",
+    "2412-15311_sent_9138163c": "The area under the curve in Figure~\\ref{fig:worst_curve_all_pareto_celeba} and~\\ref{fig:unbias_curve_all_pareto_celeba} indicates the robust coverage of each algorithm.",
+    "2412-15311_fig_29c03699": " \\begin{figure}\n\n \\begin{subfigure}[m]{0.47\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/worst_curve_all.png}\n \\subcaption{Worst-group accuracy}\n\n \\end{subfigure} \n\n \\begin{subfigure}[m]{0.47\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/unbias_curve_all.png}\n \\subcaption{Unbiased accuracy}\n\n \\end{subfigure}\n \\begin{subfigure}[m]{0.47\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/worst_curve_all_pareto}\n \\subcaption{Worst-group accuracy}\n\n \\end{subfigure} \n\n \\begin{subfigure}[m]{0.47\\linewidth}\n \\includegraphics[width=\\linewidth]{figures/unbias_curve_all_pareto}\n \\subcaption{Unbiased accuracy}\n\n \\end{subfigure}\n\n \\caption{The robust-average accuracy trade-off curves ((a), (b)) and their corresponding robust coverage curves ((c), (d)), respectively, on the CelebA dataset.\n The curves in (c) and (d) represent the Pareto frontiers of the curves in (a) and (b), respectively.\n In (c) and (d), the numbers in the legend denote the robust coverage, which measures the area under the curve.\n\n\\end{figure}",
+    "2412-15311_subsection_5877e844": "Robust coverage in the test split",
+    "2412-15311_sent_a01b03b7": "In Section 4.3 of the main paper, we defined robust coverage as",
+    "2412-15311_eq_9dc87a81": " \\begin{equation}\n\\text{Coverage} := \\int_{c=0}^1\\max_\\mathbf{s}\\big\\{\\text{WA}^\\mathbf{s}|\\text{AA}^\\mathbf{s}\\geq c\\big\\}dc \n \\approx\n \\sum_{d=0}^{D-1}\\frac{1}{D}\\max_\\mathbf{s}\\big\\{\\text{WA}^\\mathbf{s}|\\text{AA}^\\mathbf{s}\\geq \\frac{d}{D}\\big\\}.\n\\end{equation}",
+    "2412-15311_sent_a732e619": "The robust coverage can be directly calculated in the validation split, but unfortunately, it is basically unavailable in the test split.",
+    "2412-15311_sent_1a7ae447": "This is because we need to know the values of $\\text{WA}^{\\mathbf{s}}$ in advance to conduct max operation in~(\\ref{eq:coverage_main}), but we cannot use the information in the test split.",
+    "2412-15311_sent_cd55cd75": "To bypass this issue, we report the robust coverage of validation split in this paper, which tends to be similar to those of the test split.",
+    "2412-15311_sent_50cddc13": "We also validate the reliability of the robust coverage of the test split.",
+    "2412-15311_sent_e8244ef2": "We first obtain a set of optimal scaling factors for each threshold in the validation split $\\mathcal{S}_\\text{val}$ as",
+    "2412-15311_eq_56ee93c1": " \\begin{equation}\n\n \\mathcal{S}_\\text{val} := \\Big\\{ \\max_\\mathbf{s}\\big\\{\\text{WA}_{\\text{val}}^\\mathbf{s}|\\text{AA}_{\\text{val}}^\\mathbf{s}\\geq \\frac{d}{D} \\big\\}~~\\text{for}~0 \\leq d \\leq D-1\n \\Big\\},\n \\end{equation}",
+    "2412-15311_sent_dc3319d4": "then the realized robust coverage of test split is calculated by",
+    "2412-15311_eq_f8f5a078": "\\begin{equation}\n \\text{Realized Coverage} := \\frac{1}{|\\mathcal{S}_\\text{val}|} \\sum_\\mathbf{s \\in \\mathcal{S}_\\text{val}} \\text{WA}_{\\text{test}}^\\mathbf{s}.\n \\end{equation}",
+    "2412-15311_sent_00aad3d0": "Table~\\ref{tab:modified_rc} presents the original robust coverage and realized robust coverage results on the test splits of Waterbirds and CelebA datasets.",
+    "2412-15311_sent_75842a5f": "Both coverage results are almost similar, because the optimal scaling factors identified in the validation split are close to optimal in the test split as well.",
+    "2412-15311_sent_3dc90f95": "As mentioned in Section~\\ref{sec:robust_scaling}, we search for the scaling factor of each class in a greedy manner.",
+    "2412-15311_sent_68eeb0ca": "Hence, the time complexity increases linearly with respect to the number of classes instead of the exponential growth with the full grid search; even with 1,000 classes, the whole process takes less than a few minutes in practice, which is negligible compared to the model training time.",
+    "2412-15311_sent_1216cae1": "Table~\\ref{tab:superclass} shows that the greedy search is as competitive as the full grid search despite the time complexity reduction by several orders of magnitude and the superclass-level search is also effective to reduce cost with competitive accuracies.",
+    "2412-15311_sent_c2f39f98": "\\paragraph {Additional Results} Table~\\ref{tab:all_exp} presents full experimental results on the CelebA and Waterbirds datasets, which supplement Table~\\ref{tab:celebA} and~\\ref{tab:waterbirds}.",
+    "2412-15311_sent_8865b3f0": "We test our robust scaling strategies (RS, IRS) with two scenarios, each aimed at maximizing worst-group or average accuracies, respectively, where each target metric is marked in blue in the tables.",
+    "2412-15311_sent_ceae2020": "\\begin{center} \\caption{Results of our robust scaling methods on top of various baselines on the CelebA dataset, which supplement Table~\\ref{tab:celebA}.",
+    "2412-15311_sent_526ee22f": "\\textcolor{blue}{Blue} color denotes the target metric that the robust scaling aims to maximize.",
+    "2412-15311_sent_2ded8846": "Compared to RS, IRS improves the overall trade-off.",
+    "2412-15311_sent_17cffda3": "\\scalebox{0.78}{ \\setlength\\tabcolsep{6pt} \\begin{tabular}{l|cc|ccc|ccc} & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{3}{c|}{Accuracy (\\%)} & \\multicolumn{3}{c}{Accuracy (\\%)} \\\\ Method & Worst-group & Unbiased & \\textcolor{blue}{Worst-group} & {Unbiased} & Average & Worst-group & Unbiased & \\textcolor{blue}{Average} \\\\ ERM & - & - & 34.5 (6.1) &77.7 (1.8) &95.5 (0.4) & 34.5 (6.1) &77.7 (1.8) &95.5 (0.4) \\\\ ERM + RS &83.0 (0.7) &88.1 (0.5)&82.1 (3.7) &91.1 (0.6) &92.2 (1.3) &45.0 (7.4) &81.7 (1.8) &95.8 (0.2) \\\\ ERM + IRS &83.4 (0.1) & 88.4 (0.4) & 87.2 (2.0) & 91.7 (0.2) &91.5 (0.8) &44.1 (4.2) &81.3( 0.8) &95.8 (0.1) \\\\ \\cdashline{1-9} CR & - & - &70.6 (6.0) &88.7 (1.2) &94.2 (0.7) &70.6 (6.0) &88.7 (1.2) &94.2 (0.7) \\\\ CR + RS &82.9 (0.5) &88.2 (0.3) &82.7 (5.2) &91.0 (1.0) &91.7 (1.3) &48.5 (8.9) &82.5 (2.2) & 95.8 (0.1)\\\\ CR + IRS & 83.6 (1.1) &88.6 (0.5) &84.8 (1.5) & 91.3 (0.4) & 90.7 (1.3) &48.8 (9.1) &82.7 (2.4) &95.8 (0.1) \\\\ \\cdashline{1-9} SUBY & - & - &65.7 (3.9) &87.5 (0.9) &94.5 (0.7) & 65.7 (3.9) & 87.5 (0.9) &{94.5 (0.7)} \\\\ SUBY + RS & 81.5 (1.0) & 87.4 (0.1) & 80.8 (2.9) & 90.5 (0.8) & 91.1 (1.7) & 45.4 (6.7) & 81.4 (2.0) & 95.5 (0.0) \\\\ SUBY + IRS & 82.3 (1.1) &87.8 (0.2) &82.3 (2.0) & 90.8 (0.8) & 90.7 (1.9) & 46.0 (6.9) & 81.5 (2.1) & 95.5 (0.1) \\\\ \\cdashline{1-9} SUBG & - & - &87.8 (1.2) &90.4 (1.2) &91.9 (0.3) & 87.8 (1.2) &90.4 (1.2) &{91.9 (0.3)} \\\\ SUBG + RS & 83.6 (1.6) & 87.5 (0.7) & 88.3 (0.7) & 90.9 (0.5) & 90.6 (1.0) & 67.8 (6.5) & 85.2 (2.0) & {93.9 (0.2)} \\\\ SUBG + IRS & 84.5 (0.8) &87.9 (0.1) &88.7 (0.6) & 91.0 (0.3) & 90.6 (0.8) & 68.5 (6.5) & 85.5 (1.9) & 94.0 (0.2) \\\\ \\cdashline{1-9} GR & - & - & 88.6 (1.9) &92.0 (0.4) &92.9 (0.8) & 88.6 (1.9) & 92.0 (0.4) &{92.9 (0.8)} \\\\ GR + RS &{86.9 (0.4)} &{88.4 (0.2)} & 90.0 (1.6) & {92.4 (0.5)} & 92.5 (0.5) & 66.5 (0.3) & 85.4 (0.4) & {93.8 (0.4)} \\\\ GR + IRS & 87.0 (0.2) & 88.6 (0.2) & 90.0 (2.3) & 92.6 (0.6) & 92.5 (0.4) & 62.0 (5.3) & 84.5 (0.7) & 94.2 (0.3) \\\\ \\cdashline{1-9} GroupDRO & - & - & 88.4 (2.3) & 92.0 (0.4) & {93.2 (0.8)} & 88.4 (2.3) & 92.0 (0.4) & {93.2 (0.8)} \\\\ GroupDRO + RS &{87.3 (0.2)} & {88.3 (0.2)} & 89.7 (1.2) & 92.3 (0.1) &93.7 (0.5) & 64.9 (3.3) & 85.1 (0.7)& 93.9 (0.3)\\\\ GroupDRO + IRS & 87.5 (0.4) & 88.4 (0.2)& 90.0 (2.3) & 92.6 (0.6) & 93.5 (0.4) & 60.4 (5.4) & 84.4 (0.6) & 94.7 (0.3) \\\\ \\end{tabular} \\end{center} \\end{table*}",
+    "2412-15311_sent_8df1110c": "\\scalebox{0.78}{ \\setlength\\tabcolsep{6pt} \\begin{tabular}{l|cc|ccc|ccc} & \\multicolumn{2}{c|}{Robust Coverage} & \\multicolumn{3}{c|}{Accuracy (\\%)} & \\multicolumn{3}{c}{Accuracy (\\%)} \\\\ Method & Worst-group & Unbiased & \\textcolor{blue}{Worst-group} & {Unbiased} & Average & Worst-group & Unbiased & \\textcolor{blue}{Average} \\\\ ERM & - & - &76.3 (0.8) &89.4 (0.6) &97.2 (0.2) &76.3 (0.8) &89.4 (0.6) &97.2 (0.2) \\\\ ERM + RS & 76.1 (0.4) & 82.6 (0.3) &81.6 (1.9) &89.8 (0.5) &97.2 (0.2) &79.1 (2.7) & 89.7 (0.6)&{97.5 (0.1)} \\\\ ERM + IRS &83.4 (1.1) &86.9 (0.4) &89.3 (0.5) &92.7 (0.4) &{94.1 (0.3)} &{77.6 (7.0)} &{89.6 (1.1)} &97.5 (0.3) \\\\ \\cdashline{1-9} CR & - & - &76.1 (0.7) &89.1 (0.7) &97.1 (0.5) &76.1 (0.7) &89.1 (0.7) &{97.1 (0.3)} \\\\ CR + RS &73.6 (2.3) &82.0 (1.5) &79.4 (2.4) &89.4 (1.0) &96.8(0.8) & 76.4(1.5)& 89.3 (0.8)&97.5 (0.3) \\\\ CR + IRS & 84.2 (2.5) & 88.3 (1.0) & 88.2 (2.7) & 92.",
+    "2412-15311_sent_03c4dd7b": "1(0.7) & {95.7 (1.1)} &77.3 (4.7) & 88.6( 1.2)& 97.4 (0.2) \\\\ \\cdashline{1-9} SUBY & - & - & 72.8 (4.1) & 84.9 (0.4) & {93.8 (1.5)} & 72.8 (4.1) & 84.9 (0.4) & {93.8(1.5)} \\\\ SUBY + RS &72.5 (1.0) &81.2 (1.4) & 75.9 (4.4) & 86.3 (0.9) & 95.2 (1.4) & 70.7 (5.8) & 85.4 (1.6) & {95.5 (0.2)} \\\\ SUBY + IRS & 78.8 (2.7) & 85.9 (1.0) & 82.1 (4.0) & 89.1 (0.9) & 92.6 (2.2) & 74.1 (4.1) & 86.3 (0.9) & 96.2 (0.6) \\\\ \\cdashline{1-9} SUBG & - & - & 86.5 (0.9) & 88.2 (1.2) & 87.3 (1.1) & 86.5 (0.9) & 88.2 (1.2) & 87.3 (1.1) \\\\ SUBG + RS & 80.6 (2.0) & 82.3 (2.0) & 87.1 (0.7) & 88.5 (1.2) & 87.9 (1.1) & 74.0 (5.6) & 85.9 (2.8) & 91.3 (0.4) \\\\ SUBG + IRS & 82.2 (0.8) & 84.1 (0.8) & 87.3 (1.3) & 88.2 (1.2) & 87.6 (1.2) & 70.2 (1.6) & 84.5 (1.0) & 93.5 (0.4) \\\\ \\cdashline{1-9} GR & - & - &86.1 (1.3) &89.3 (0.9) &95.1 (1.3) &86.1 (1.3) &89.3 (0.9) &{95.1 (1.3)} \\\\ GR + RS &{83.7 (0.3)} & {86.8 (0.7)}&89.3 (1.3) &{92.0 (0.7)} & 93.1 (3.2) & 82.2 (1.3) & 90.8 (0.5) &{95.4 (1.3)} \\\\ GR + IRS & 84.8 (1.7) &87.4 (0.4) &89.1 (0.8) & 92.2 (1.0) & 92.9 (2.1) & 82.1 (1.4) & 90.5 (0.7) & 95.6 (0.8) \\\\ \\cdashline{1-9} GroupDRO & - & - &88.0 (1.0) &92.5 (0.9) &{95.8 (1.8)} &88.0 (1.0) &92.5 (0.9) &{95.8 (1.8)} \\\\ GroupDRO + RS & {83.4 (1.1)}&{87.4 (1.4)} &{89.1 (1.7)} &{92.7 (0.8)} & 96.4 (1.5) & 80.9 (4.4) & 91.3 (1.0) & 97.1 (0.3) \\\\ GroupDRO + IRS & 86.3 (2.3) & 90.1 (2.6) & 90.8 (1.3) & 93.9 (0.2) & {96.0 (0.6)} & 83.2 (1.7) & 91.5 (0.8) & 97.1 (0.4) \\\\ \\end{tabular} \\end{center} \\end{table*} \\iffalse",
+    "2412-15311_section_eed9474f": "Discussion",
+    "2412-15311_paragraph_b9edae7f": "Why ERM achieves competitive trade-off results to existing baselines?",
+    "2412-15311_sent_cbe16daf": "We believe this is partly because most of recent existing approaches conduct sample reweighting to focus on the minor groups (Refer to Section~\\ref{sec:related}), which may give similar effects to our class-specific scaling as a result.",
+    "2412-15311_sent_5a37e4a0": "Note that some other papers~\\cite{idrissi2022simple,kirichenko2022last} also argue that simple group reweighting or subsampling achieve competitive robust accuracy to other state-of-the-art approaches.",
+    "2412-15311_sent_c1591ebf": "However, different from these works, our framework is much more efficient in that it does not require any extra training but yet achieves meaningful performance improvement in robust accuracy.",
+    "2412-15311_paragraph_f3d9abb9": "Limitation",
+    "2412-15311_sent_e822b1eb": "Although our framework is simple yet effective for improving target metrics with no extra training, it does not learn debiased representations as it is a post-processing method.",
+    "2412-15311_sent_4c5cbdd5": "However, this suggests that existing training approaches may also not actually learn debiased representations, but rather focus on prediction adjustment for group robustness in terms of robust accuracy.",
+    "2412-15311_sent_633b6d28": "From this point of view, our comprehensive measurement enables a more accurate and fairer evaluation of base algorithms, considering the full landscape of trade-off curve.",
+    "2412-15311_sent_dfb2b62f": "\\iffalse \\section {Additional Figures}",
+    "2412-15311_sent_6156843a": "\\begin{subfigure}[m]{0.47\\linewidth} \\includegraphics[width=\\linewidth]{figures/water_worst_curve_all.png} \\subcaption{Worst-group accuracy} \\end{subfigure} \\begin{subfigure}[m]{0.47\\linewidth} \\includegraphics[width=\\linewidth]{figures/water_unbias_curve_all.png} \\subcaption{Unbiased accuracy} \\end{subfigure} \\begin{subfigure}[m]{0.47\\linewidth} \\includegraphics[width=\\linewidth]{figures/water_worst_curve_all_pareto} \\subcaption{Worst-group accuracy} \\end{subfigure} \\begin{subfigure}[m]{0.47\\linewidth} \\includegraphics[width=\\linewidth]{figures/water_unbias_curve_all_pareto} \\subcaption{Unbiased accuracy} \\end{subfigure} \\caption{The robust-average accuracy trade-off curves ((a), (b)) and the corresponding robust coverage curves ((c), (d)), respectively, on the Waterbirds dataset.",
+    "2412-15311_sent_a5c7d3c8": "In (a) and (b), the black markers indicate where the scaling factor $\\mathbf{s}=\\mathbf{1}$.",
+    "2412-15311_sent_25a4e469": "\\begin{subfigure}[m]{0.43\\linewidth} \\includegraphics[width=\\linewidth]{figures/water_worst_scale.png} \\subcaption{Worst-group accuracy} \\end{subfigure} \\begin{subfigure}[m]{0.43\\linewidth} \\includegraphics[width=\\linewidth]{figures/water_unbias_scale.png} \\subcaption{Unbiased accuracy} \\end{subfigure} \\caption{Effects of varying the class-specific scaling factors on the robust accuracy using ERM model on the Waterbirds dataset.",
+    "2412-15311_sent_65343c04": "Since this experiment is based on the binary classifier, a single scaling factor is varied with the other fixed to one.",
+    "2412-15311_sent_ddded384": "Like as other datasets, we can identify the desired performance point on the trade-off between the robust and average accuracies in the test set using the scaling factor learned from the validation set.",
+    "2412-15311_paragraph_854d7624": "Visualization of the trade-off on Waterbirds dataset ",
+    "2412-15311_sent_c2060945": "We additionally visualize the robust-average accuracy trade-off and its corresponding robust coverage curves with several existing approaches on the Waterbirds dataset in Fig.~\\ref{fig:robust_all_water}.",
+    "2412-15311_paragraph_1e5a41a4": "Effects of class-specific scaling on Waterbirds dataset",
+    "2412-15311_sent_c06a50ed": "Fig.~\\ref{fig:observation_scale_curve_water} presents the effect of the class-specific scaling on the Waterbirds dataset, which provides a consistent tendency with CelebA dataset (Fig.~\\ref{fig:observation_scale_curve}) that the curves in validation and test splits are aligned sufficiently well."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15311_sent_0c89237d": "2412-15311_doc_root",
+      "2412-15311_abstract_ce28071e": "2412-15311_doc_root",
+      "2412-15311_sent_0170e6e8": "2412-15311_abstract_ce28071e",
+      "2412-15311_sent_dae46eee": "2412-15311_abstract_ce28071e",
+      "2412-15311_sent_9787808e": "2412-15311_abstract_ce28071e",
+      "2412-15311_sent_2f82f859": "2412-15311_abstract_ce28071e",
+      "2412-15311_sent_2b2c5de9": "2412-15311_abstract_ce28071e",
+      "2412-15311_sent_8d9e70bd": "2412-15311_abstract_ce28071e",
+      "2412-15311_sent_3f8d0ef8": "2412-15311_abstract_ce28071e",
+      "2412-15311_sent_c6e20335": "2412-15311_abstract_ce28071e",
+      "2412-15311_section_0b79795d": "2412-15311_doc_root",
+      "2412-15311_fig_432982c9": "2412-15311_section_0b79795d",
+      "2412-15311_fig_b71837c1": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_73e72acf": "2412-15311_section_0b79795d",
+      "2412-15311_sent_e2e253a9": "2412-15311_section_0b79795d",
+      "2412-15311_sent_2371fccd": "2412-15311_section_0b79795d",
+      "2412-15311_sent_3599b5c9": "2412-15311_section_0b79795d",
+      "2412-15311_sent_c2f2dc53": "2412-15311_section_0b79795d",
+      "2412-15311_sent_450d6efb": "2412-15311_section_0b79795d",
+      "2412-15311_sent_26a5a3ef": "2412-15311_section_0b79795d",
+      "2412-15311_sent_3b1af8ec": "2412-15311_section_0b79795d",
+      "2412-15311_sent_03a72ecf": "2412-15311_section_0b79795d",
+      "2412-15311_sent_b7402dca": "2412-15311_section_0b79795d",
+      "2412-15311_sent_65b2022f": "2412-15311_section_0b79795d",
+      "2412-15311_sent_3a58578b": "2412-15311_section_0b79795d",
+      "2412-15311_sent_03414094": "2412-15311_section_0b79795d",
+      "2412-15311_sent_917a5957": "2412-15311_section_0b79795d",
+      "2412-15311_sent_a7a7a9e7": "2412-15311_section_0b79795d",
+      "2412-15311_sent_f5f52f3f": "2412-15311_section_0b79795d",
+      "2412-15311_sent_ebd64732": "2412-15311_section_0b79795d",
+      "2412-15311_sent_87c47aa5": "2412-15311_section_0b79795d",
+      "2412-15311_sent_76209909": "2412-15311_section_0b79795d",
+      "2412-15311_sent_c221f023": "2412-15311_section_0b79795d",
+      "2412-15311_sent_6de0f827": "2412-15311_section_0b79795d",
+      "2412-15311_sent_2eeaaff4": "2412-15311_section_0b79795d",
+      "2412-15311_sent_5b325d02": "2412-15311_section_0b79795d",
+      "2412-15311_sent_30a6aa65": "2412-15311_section_0b79795d",
+      "2412-15311_sent_abc98933": "2412-15311_paragraph_1e5a41a4",
+      "2412-15311_paragraph_3023db88": "2412-15311_section_0b79795d",
+      "2412-15311_sent_8160dbf7": "2412-15311_paragraph_3023db88",
+      "2412-15311_sent_03040792": "2412-15311_paragraph_3023db88",
+      "2412-15311_sent_1044db1e": "2412-15311_paragraph_3023db88",
+      "2412-15311_sent_699187fd": "2412-15311_paragraph_3023db88",
+      "2412-15311_itemize_f8c83836": "2412-15311_paragraph_3023db88",
+      "2412-15311_item_795583fc": "2412-15311_enumerate_964d7516",
+      "2412-15311_sent_a2ffe5fe": "2412-15311_item_795583fc",
+      "2412-15311_sent_9c428b3c": "2412-15311_item_795583fc",
+      "2412-15311_sent_1def8d3e": "2412-15311_item_795583fc",
+      "2412-15311_sent_3db6d66e": "2412-15311_item_795583fc",
+      "2412-15311_sent_bd173323": "2412-15311_item_795583fc",
+      "2412-15311_sent_204be7ed": "2412-15311_item_795583fc",
+      "2412-15311_section_a7f20481": "2412-15311_doc_root",
+      "2412-15311_sent_29985a42": "2412-15311_section_a7f20481",
+      "2412-15311_sent_b89c483e": "2412-15311_section_a7f20481",
+      "2412-15311_sent_48dc1178": "2412-15311_section_a7f20481",
+      "2412-15311_paragraph_e7d0e1e0": "2412-15311_section_a7f20481",
+      "2412-15311_sent_97f0058a": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_sent_48f0da6c": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_sent_6849d65c": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_sent_7adcabec": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_sent_7271d757": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_sent_72152c8d": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_sent_df2da53f": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_sent_d8639806": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_sent_701989cb": "2412-15311_paragraph_e7d0e1e0",
+      "2412-15311_paragraph_0a6b68ee": "2412-15311_section_a7f20481",
+      "2412-15311_sent_7f5062bd": "2412-15311_paragraph_0a6b68ee",
+      "2412-15311_sent_374000e6": "2412-15311_paragraph_0a6b68ee",
+      "2412-15311_sent_6b4af34b": "2412-15311_paragraph_0a6b68ee",
+      "2412-15311_sent_74b18640": "2412-15311_paragraph_0a6b68ee",
+      "2412-15311_sent_e3aa6d1f": "2412-15311_paragraph_0a6b68ee",
+      "2412-15311_paragraph_cfdfd7a5": "2412-15311_section_a7f20481",
+      "2412-15311_sent_6f17c890": "2412-15311_paragraph_cfdfd7a5",
+      "2412-15311_sent_dadb7a74": "2412-15311_paragraph_cfdfd7a5",
+      "2412-15311_sent_e23caad2": "2412-15311_paragraph_cfdfd7a5",
+      "2412-15311_section_6bcec94b": "2412-15311_doc_root",
+      "2412-15311_sent_2c352cfc": "2412-15311_section_6bcec94b",
+      "2412-15311_sent_f151d996": "2412-15311_section_6bcec94b",
+      "2412-15311_sent_62cd251b": "2412-15311_section_6bcec94b",
+      "2412-15311_subsection_a291a5f9": "2412-15311_section_6bcec94b",
+      "2412-15311_sent_de104589": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_a8f2e589": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_3721a33c": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_da939e8d": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_0e13ea60": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_2a327a4e": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_2c179ae5": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_61c1a448": "2412-15311_subsection_a291a5f9",
+      "2412-15311_eq_9c77ec00": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_ff2866a6": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_2c810f14": "2412-15311_subsection_a291a5f9",
+      "2412-15311_eq_ee3045e9": "2412-15311_subsection_a291a5f9",
+      "2412-15311_sent_1e084c46": "2412-15311_subsection_a291a5f9",
+      "2412-15311_fig_1bb9970b": "2412-15311_subsection_a291a5f9",
+      "2412-15311_subsection_cf19125d": "2412-15311_section_6bcec94b",
+      "2412-15311_sent_581fd403": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_85580cd6": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_84797794": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_fa6cf3c6": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_12f4aa68": "2412-15311_subsection_cf19125d",
+      "2412-15311_eq_66a1b5af": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_6e4612a3": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_c2025562": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_e20105e7": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_96f5deed": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_71b2548f": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_4467e615": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_be04aa2d": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_d6fa7b1a": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_d7b7e2d7": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_f94420fa": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_331035e6": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_649c4a09": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_f29162b1": "2412-15311_paragraph_63d78e1d",
+      "2412-15311_sent_c8966167": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_cb7f28c5": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_74f5066c": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_afc8648b": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_8e2610e8": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_70e86fce": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_d103668e": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_c98a84f9": "2412-15311_subsection_cf19125d",
+      "2412-15311_sent_cd8b07e6": "2412-15311_subsection_cf19125d",
+      "2412-15311_subsection_9e76cabf": "2412-15311_section_6bcec94b",
+      "2412-15311_sent_20f790e8": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_489359a2": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_98a2b06e": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_e8ede3a7": "2412-15311_subsection_9e76cabf",
+      "2412-15311_enumerate_964d7516": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_67902f08": "2412-15311_item_795583fc",
+      "2412-15311_sent_65d90eae": "2412-15311_item_795583fc",
+      "2412-15311_sent_f8a3139d": "2412-15311_item_795583fc",
+      "2412-15311_sent_f3a3c942": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_876c6e2a": "2412-15311_subsection_9e76cabf",
+      "2412-15311_subsection_ba9ab452": "2412-15311_section_6bcec94b",
+      "2412-15311_sent_684f6cb5": "2412-15311_subsection_ba9ab452",
+      "2412-15311_sent_c42ef882": "2412-15311_subsection_ba9ab452",
+      "2412-15311_sent_862ed4b6": "2412-15311_subsection_ba9ab452",
+      "2412-15311_eq_750e286f": "2412-15311_subsection_ba9ab452",
+      "2412-15311_sent_5f5e983d": "2412-15311_subsection_ba9ab452",
+      "2412-15311_sent_defc32f2": "2412-15311_subsection_ba9ab452",
+      "2412-15311_sent_27aeb0e6": "2412-15311_subsection_ba9ab452",
+      "2412-15311_sent_4dead7e5": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_05d62555": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_e96b2fa3": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_0b5c40b9": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_716dbc4a": "2412-15311_item_795583fc",
+      "2412-15311_sent_dfebdb86": "2412-15311_item_795583fc",
+      "2412-15311_sent_8c2f9dc9": "2412-15311_item_795583fc",
+      "2412-15311_sent_e14a64c8": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_a7b5432c": "2412-15311_subsection_9e76cabf",
+      "2412-15311_sent_3c11027a": "2412-15311_subsection_9e76cabf",
+      "2412-15311_section_4829262c": "2412-15311_doc_root",
+      "2412-15311_sent_5dbead6d": "2412-15311_section_4829262c",
+      "2412-15311_sent_06e10ea2": "2412-15311_section_4829262c",
+      "2412-15311_sent_e70b144b": "2412-15311_section_4829262c",
+      "2412-15311_sent_b6cd147e": "2412-15311_section_4829262c",
+      "2412-15311_subsection_d575842d": "2412-15311_section_4829262c",
+      "2412-15311_paragraph_7bb9fd96": "2412-15311_subsection_d575842d",
+      "2412-15311_sent_834eb52a": "2412-15311_paragraph_7bb9fd96",
+      "2412-15311_sent_8db39600": "2412-15311_paragraph_7bb9fd96",
+      "2412-15311_sent_421aaccc": "2412-15311_paragraph_7bb9fd96",
+      "2412-15311_sent_5e2a2eea": "2412-15311_paragraph_7bb9fd96",
+      "2412-15311_sent_522d3e0b": "2412-15311_paragraph_7bb9fd96",
+      "2412-15311_sent_941cccf8": "2412-15311_paragraph_7bb9fd96",
+      "2412-15311_paragraph_c6ef1e19": "2412-15311_subsection_d575842d",
+      "2412-15311_sent_87164b85": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_0822ba9d": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_836ed347": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_914ae4f8": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_49509158": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_02436092": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_b6255295": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_440228e8": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_64733941": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_a752b1f2": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_89edf8f5": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_708deb73": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_8ae55db8": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_19ceecb2": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_sent_09ffba89": "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_subsection_fd69c5cf": "2412-15311_section_4829262c",
+      "2412-15311_sent_bad93ce4": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_sent_8626da98": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_sent_34c7ccd7": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_sent_d084b12c": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_sent_28a890a7": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_sent_c72e3f38": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_sent_d1d59973": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_paragraph_e439aadf": "2412-15311_subsection_bf66c748",
+      "2412-15311_sent_67216d64": "2412-15311_paragraph_e439aadf",
+      "2412-15311_sent_18ef42c1": "2412-15311_paragraph_e439aadf",
+      "2412-15311_sent_2525c3ed": "2412-15311_paragraph_e439aadf",
+      "2412-15311_sent_a58db928": "2412-15311_paragraph_e439aadf",
+      "2412-15311_sent_4cb0a79c": "2412-15311_paragraph_e439aadf",
+      "2412-15311_sent_f91b2e71": "2412-15311_paragraph_e439aadf",
+      "2412-15311_paragraph_45a744ff": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_sent_70005954": "2412-15311_paragraph_45a744ff",
+      "2412-15311_sent_890392a9": "2412-15311_paragraph_45a744ff",
+      "2412-15311_sent_b924fa7d": "2412-15311_paragraph_45a744ff",
+      "2412-15311_sent_6da2f859": "2412-15311_paragraph_45a744ff",
+      "2412-15311_paragraph_a53f5fad": "2412-15311_subsection_fd69c5cf",
+      "2412-15311_sent_36437e55": "2412-15311_paragraph_a53f5fad",
+      "2412-15311_sent_77a7b1cd": "2412-15311_paragraph_a53f5fad",
+      "2412-15311_sent_ff485d40": "2412-15311_paragraph_a53f5fad",
+      "2412-15311_sent_429ca263": "2412-15311_paragraph_a53f5fad",
+      "2412-15311_subsection_739e6d2a": "2412-15311_section_4829262c",
+      "2412-15311_paragraph_fdb7fcfe": "2412-15311_subsection_739e6d2a",
+      "2412-15311_sent_fcda4b07": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_sent_442e6d5f": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_sent_e40b2d22": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_sent_5d090b73": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_sent_3f5e4010": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_sent_6eeb7d23": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_sent_70541032": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_sent_80f29bb5": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_fig_4cbea429": "2412-15311_paragraph_fdb7fcfe",
+      "2412-15311_paragraph_168a5ebc": "2412-15311_subsection_739e6d2a",
+      "2412-15311_sent_a8495431": "2412-15311_paragraph_168a5ebc",
+      "2412-15311_sent_8a76bb6f": "2412-15311_paragraph_168a5ebc",
+      "2412-15311_fig_2f0dfbb1": "2412-15311_paragraph_168a5ebc",
+      "2412-15311_paragraph_a12597a5": "2412-15311_subsection_739e6d2a",
+      "2412-15311_sent_f1dd26ef": "2412-15311_paragraph_a12597a5",
+      "2412-15311_sent_b32777ff": "2412-15311_paragraph_a12597a5",
+      "2412-15311_sent_b969ac1f": "2412-15311_paragraph_a12597a5",
+      "2412-15311_sent_6de0c62a": "2412-15311_paragraph_a12597a5",
+      "2412-15311_paragraph_70bf1c44": "2412-15311_subsection_739e6d2a",
+      "2412-15311_sent_8636d625": "2412-15311_paragraph_70bf1c44",
+      "2412-15311_sent_9438c2a6": "2412-15311_paragraph_70bf1c44",
+      "2412-15311_sent_81eb35f5": "2412-15311_paragraph_70bf1c44",
+      "2412-15311_sent_26762c0e": "2412-15311_paragraph_70bf1c44",
+      "2412-15311_sent_ef7d39a5": "2412-15311_paragraph_70bf1c44",
+      "2412-15311_sent_d4f7dbc9": "2412-15311_paragraph_70bf1c44",
+      "2412-15311_fig_ef338f25": "2412-15311_paragraph_70bf1c44",
+      "2412-15311_section_6f8b794f": "2412-15311_doc_root",
+      "2412-15311_sent_2b6aa58f": "2412-15311_section_6f8b794f",
+      "2412-15311_sent_d3cf3c6e": "2412-15311_section_6f8b794f",
+      "2412-15311_sent_a413a28f": "2412-15311_section_6f8b794f",
+      "2412-15311_sent_2e019e35": "2412-15311_section_6f8b794f",
+      "2412-15311_sent_cb654c40": "2412-15311_section_6f8b794f",
+      "2412-15311_sent_16e00f30": "2412-15311_section_6f8b794f",
+      "2412-15311_paragraph_0407c271": "2412-15311_section_6f8b794f",
+      "2412-15311_sent_9ea824c1": "2412-15311_paragraph_0407c271",
+      "2412-15311_sent_804ca741": "2412-15311_paragraph_0407c271",
+      "2412-15311_section_09610b65": "2412-15311_doc_root",
+      "2412-15311_sent_7d4c82dc": "2412-15311_section_09610b65",
+      "2412-15311_paragraph_e38b875e": "2412-15311_section_09610b65",
+      "2412-15311_sent_ea69449c": "2412-15311_paragraph_e38b875e",
+      "2412-15311_eq_3102a719": "2412-15311_paragraph_e38b875e",
+      "2412-15311_paragraph_d8d21b59": "2412-15311_section_09610b65",
+      "2412-15311_sent_4ee3ba49": "2412-15311_paragraph_d8d21b59",
+      "2412-15311_eq_d4880c9a": "2412-15311_paragraph_d8d21b59",
+      "2412-15311_paragraph_40fadc69": "2412-15311_section_09610b65",
+      "2412-15311_sent_d5c451a7": "2412-15311_paragraph_40fadc69",
+      "2412-15311_sent_24edc71b": "2412-15311_paragraph_40fadc69",
+      "2412-15311_eq_bd1b2a21": "2412-15311_paragraph_40fadc69",
+      "2412-15311_paragraph_cbee1c51": "2412-15311_section_09610b65",
+      "2412-15311_sent_30fa3664": "2412-15311_paragraph_cbee1c51",
+      "2412-15311_sent_2ac5eacf": "2412-15311_paragraph_cbee1c51",
+      "2412-15311_eq_e5003c9e": "2412-15311_paragraph_cbee1c51",
+      "2412-15311_sent_f96560a2": "2412-15311_paragraph_cbee1c51",
+      "2412-15311_eq_17b324e3": "2412-15311_paragraph_cbee1c51",
+      "2412-15311_paragraph_07528206": "2412-15311_section_09610b65",
+      "2412-15311_sent_ce027a39": "2412-15311_paragraph_07528206",
+      "2412-15311_eq_70634499": "2412-15311_paragraph_07528206",
+      "2412-15311_sent_02bb0a52": "2412-15311_paragraph_07528206",
+      "2412-15311_sent_0a2d0df8": "2412-15311_paragraph_07528206",
+      "2412-15311_paragraph_85c7e21b": "2412-15311_section_09610b65",
+      "2412-15311_sent_c88292c1": "2412-15311_paragraph_85c7e21b",
+      "2412-15311_eq_7bd3e4dd": "2412-15311_paragraph_85c7e21b",
+      "2412-15311_paragraph_5ca765a1": "2412-15311_section_09610b65",
+      "2412-15311_sent_e073c330": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_562a2a6e": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_dc4bfcc2": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_abadc64b": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_6fc5b1b2": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_b9aed654": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_4b7b9ed3": "2412-15311_item_795583fc",
+      "2412-15311_sent_42c576ca": "2412-15311_item_795583fc",
+      "2412-15311_sent_a8e280df": "2412-15311_item_795583fc",
+      "2412-15311_sent_1e7643e2": "2412-15311_item_795583fc",
+      "2412-15311_sent_30f5bea2": "2412-15311_item_795583fc",
+      "2412-15311_sent_7f953e0f": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_f3083251": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_e4294b89": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_26dacc10": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_78689501": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_e04cb950": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_c668476d": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_a0ff5565": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_25e47d62": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_fb5dec46": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_sent_eb45e74f": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_fig_72dedb6d": "2412-15311_paragraph_5ca765a1",
+      "2412-15311_section_1c8ac169": "2412-15311_doc_root",
+      "2412-15311_subsection_f1cb45f6": "2412-15311_section_1c8ac169",
+      "2412-15311_sent_402c5d4e": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_6223e497": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_3f6b697e": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_2bd148d7": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_ca961a9a": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_afec8e66": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_7262041f": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_af5b9d96": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_4c37535d": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_sent_04e7f01f": "2412-15311_subsection_f1cb45f6",
+      "2412-15311_subsection_3f29224b": "2412-15311_section_1c8ac169",
+      "2412-15311_sent_cc90168b": "2412-15311_subsection_3f29224b",
+      "2412-15311_sent_ce35c391": "2412-15311_subsection_3f29224b",
+      "2412-15311_subsection_bf66c748": "2412-15311_section_1c8ac169",
+      "2412-15311_sent_e1308af1": "2412-15311_subsection_bf66c748",
+      "2412-15311_sent_7f07ebaf": "2412-15311_subsection_bf66c748",
+      "2412-15311_sent_d266b51e": "2412-15311_subsection_bf66c748",
+      "2412-15311_sent_5e9263bc": "2412-15311_subsection_bf66c748",
+      "2412-15311_paragraph_3d41c60c": "2412-15311_subsection_bf66c748",
+      "2412-15311_sent_8d21d379": "2412-15311_paragraph_3d41c60c",
+      "2412-15311_sent_f85eeb02": "2412-15311_paragraph_e439aadf",
+      "2412-15311_fig_18fb0353": "2412-15311_paragraph_e439aadf",
+      "2412-15311_section_a5a514e8": "2412-15311_doc_root",
+      "2412-15311_fig_1ab91065": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_paragraph_2d215ebf": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_fd91f24f": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_cc312d9b": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_1c41e53d": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_d2b0acbf": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_bbd174bc": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_da7d8401": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_fig_5cbb7a82": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_paragraph_31b26c5f": "2412-15311_section_a5a514e8",
+      "2412-15311_sent_0cda0fe4": "2412-15311_paragraph_31b26c5f",
+      "2412-15311_sent_b81ca54b": "2412-15311_paragraph_31b26c5f",
+      "2412-15311_paragraph_63d78e1d": "2412-15311_section_a5a514e8",
+      "2412-15311_sent_c4dd448f": "2412-15311_paragraph_63d78e1d",
+      "2412-15311_sent_9138163c": "2412-15311_paragraph_63d78e1d",
+      "2412-15311_fig_29c03699": "2412-15311_paragraph_63d78e1d",
+      "2412-15311_subsection_5877e844": "2412-15311_section_a5a514e8",
+      "2412-15311_sent_a01b03b7": "2412-15311_subsection_5877e844",
+      "2412-15311_eq_9dc87a81": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_a732e619": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_1a7ae447": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_cd55cd75": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_50cddc13": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_e8244ef2": "2412-15311_subsection_5877e844",
+      "2412-15311_eq_56ee93c1": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_dc3319d4": "2412-15311_subsection_5877e844",
+      "2412-15311_eq_f8f5a078": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_00aad3d0": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_75842a5f": "2412-15311_subsection_5877e844",
+      "2412-15311_sent_3dc90f95": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_68eeb0ca": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_1216cae1": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_c2f39f98": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_8865b3f0": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_ceae2020": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_526ee22f": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_2ded8846": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_17cffda3": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_8df1110c": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_sent_03c4dd7b": "2412-15311_paragraph_2d215ebf",
+      "2412-15311_section_eed9474f": "2412-15311_doc_root",
+      "2412-15311_paragraph_b9edae7f": "2412-15311_section_eed9474f",
+      "2412-15311_sent_cbe16daf": "2412-15311_paragraph_b9edae7f",
+      "2412-15311_sent_5a37e4a0": "2412-15311_paragraph_b9edae7f",
+      "2412-15311_sent_c1591ebf": "2412-15311_paragraph_b9edae7f",
+      "2412-15311_paragraph_f3d9abb9": "2412-15311_section_eed9474f",
+      "2412-15311_sent_e822b1eb": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_4c5cbdd5": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_633b6d28": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_dfb2b62f": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_6156843a": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_a5c7d3c8": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_25a4e469": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_65343c04": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_sent_ddded384": "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_paragraph_854d7624": "2412-15311_section_eed9474f",
+      "2412-15311_sent_c2060945": "2412-15311_paragraph_854d7624",
+      "2412-15311_paragraph_1e5a41a4": "2412-15311_section_eed9474f",
+      "2412-15311_sent_c06a50ed": "2412-15311_paragraph_1e5a41a4"
+    }
+  },
+  "merged_parents": {
+    "2412-15311_sent_0c89237d": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_abstract_ce28071e": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_sent_0170e6e8": [
+      "2412-15311_abstract_ce28071e"
+    ],
+    "2412-15311_sent_dae46eee": [
+      "2412-15311_abstract_ce28071e"
+    ],
+    "2412-15311_sent_9787808e": [
+      "2412-15311_abstract_ce28071e"
+    ],
+    "2412-15311_sent_2f82f859": [
+      "2412-15311_abstract_ce28071e"
+    ],
+    "2412-15311_sent_2b2c5de9": [
+      "2412-15311_abstract_ce28071e"
+    ],
+    "2412-15311_sent_8d9e70bd": [
+      "2412-15311_abstract_ce28071e"
+    ],
+    "2412-15311_sent_3f8d0ef8": [
+      "2412-15311_abstract_ce28071e"
+    ],
+    "2412-15311_sent_c6e20335": [
+      "2412-15311_abstract_ce28071e"
+    ],
+    "2412-15311_section_0b79795d": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_fig_432982c9": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_fig_b71837c1": [
+      "2412-15311_paragraph_2d215ebf",
+      "2412-15311_paragraph_5ca765a1",
+      "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_paragraph_f3d9abb9",
+      "2412-15311_section_0b79795d",
+      "2412-15311_section_4829262c",
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_73e72acf": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_e2e253a9": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_2371fccd": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_3599b5c9": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_c2f2dc53": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_450d6efb": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_26a5a3ef": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_3b1af8ec": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_03a72ecf": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_b7402dca": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_65b2022f": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_3a58578b": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_03414094": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_917a5957": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_a7a7a9e7": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_f5f52f3f": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_ebd64732": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_87c47aa5": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_76209909": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_c221f023": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_6de0f827": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_2eeaaff4": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_5b325d02": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_30a6aa65": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_abc98933": [
+      "2412-15311_paragraph_1e5a41a4",
+      "2412-15311_paragraph_2d215ebf",
+      "2412-15311_paragraph_b9edae7f",
+      "2412-15311_section_0b79795d",
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_paragraph_3023db88": [
+      "2412-15311_section_0b79795d"
+    ],
+    "2412-15311_sent_8160dbf7": [
+      "2412-15311_paragraph_3023db88"
+    ],
+    "2412-15311_sent_03040792": [
+      "2412-15311_paragraph_3023db88"
+    ],
+    "2412-15311_sent_1044db1e": [
+      "2412-15311_paragraph_3023db88"
+    ],
+    "2412-15311_sent_699187fd": [
+      "2412-15311_paragraph_3023db88"
+    ],
+    "2412-15311_itemize_f8c83836": [
+      "2412-15311_paragraph_3023db88"
+    ],
+    "2412-15311_item_795583fc": [
+      "2412-15311_enumerate_964d7516",
+      "2412-15311_itemize_f8c83836"
+    ],
+    "2412-15311_sent_a2ffe5fe": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_9c428b3c": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_1def8d3e": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_3db6d66e": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_bd173323": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_204be7ed": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_section_a7f20481": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_sent_29985a42": [
+      "2412-15311_section_a7f20481"
+    ],
+    "2412-15311_sent_b89c483e": [
+      "2412-15311_section_a7f20481"
+    ],
+    "2412-15311_sent_48dc1178": [
+      "2412-15311_section_a7f20481"
+    ],
+    "2412-15311_paragraph_e7d0e1e0": [
+      "2412-15311_section_a7f20481"
+    ],
+    "2412-15311_sent_97f0058a": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_sent_48f0da6c": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_sent_6849d65c": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_sent_7adcabec": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_sent_7271d757": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_sent_72152c8d": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_sent_df2da53f": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_sent_d8639806": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_sent_701989cb": [
+      "2412-15311_paragraph_e7d0e1e0"
+    ],
+    "2412-15311_paragraph_0a6b68ee": [
+      "2412-15311_section_a7f20481"
+    ],
+    "2412-15311_sent_7f5062bd": [
+      "2412-15311_paragraph_0a6b68ee"
+    ],
+    "2412-15311_sent_374000e6": [
+      "2412-15311_paragraph_0a6b68ee"
+    ],
+    "2412-15311_sent_6b4af34b": [
+      "2412-15311_paragraph_0a6b68ee"
+    ],
+    "2412-15311_sent_74b18640": [
+      "2412-15311_paragraph_0a6b68ee"
+    ],
+    "2412-15311_sent_e3aa6d1f": [
+      "2412-15311_paragraph_0a6b68ee"
+    ],
+    "2412-15311_paragraph_cfdfd7a5": [
+      "2412-15311_section_a7f20481"
+    ],
+    "2412-15311_sent_6f17c890": [
+      "2412-15311_paragraph_cfdfd7a5"
+    ],
+    "2412-15311_sent_dadb7a74": [
+      "2412-15311_paragraph_cfdfd7a5"
+    ],
+    "2412-15311_sent_e23caad2": [
+      "2412-15311_paragraph_cfdfd7a5"
+    ],
+    "2412-15311_section_6bcec94b": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_sent_2c352cfc": [
+      "2412-15311_section_6bcec94b"
+    ],
+    "2412-15311_sent_f151d996": [
+      "2412-15311_section_6bcec94b"
+    ],
+    "2412-15311_sent_62cd251b": [
+      "2412-15311_section_6bcec94b"
+    ],
+    "2412-15311_subsection_a291a5f9": [
+      "2412-15311_section_6bcec94b"
+    ],
+    "2412-15311_sent_de104589": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_a8f2e589": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_3721a33c": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_da939e8d": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_0e13ea60": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_2a327a4e": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_2c179ae5": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_61c1a448": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_eq_9c77ec00": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_ff2866a6": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_2c810f14": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_eq_ee3045e9": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_sent_1e084c46": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_fig_1bb9970b": [
+      "2412-15311_subsection_a291a5f9"
+    ],
+    "2412-15311_subsection_cf19125d": [
+      "2412-15311_section_6bcec94b"
+    ],
+    "2412-15311_sent_581fd403": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_85580cd6": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_84797794": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_fa6cf3c6": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_12f4aa68": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_eq_66a1b5af": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_6e4612a3": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_c2025562": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_e20105e7": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_96f5deed": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_71b2548f": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_4467e615": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_be04aa2d": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_d6fa7b1a": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_d7b7e2d7": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_f94420fa": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_331035e6": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_649c4a09": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_f29162b1": [
+      "2412-15311_paragraph_63d78e1d",
+      "2412-15311_paragraph_c6ef1e19",
+      "2412-15311_section_4829262c",
+      "2412-15311_section_a5a514e8",
+      "2412-15311_subsection_bf66c748",
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_c8966167": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_cb7f28c5": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_74f5066c": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_afc8648b": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_8e2610e8": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_70e86fce": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_d103668e": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_c98a84f9": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_sent_cd8b07e6": [
+      "2412-15311_subsection_cf19125d"
+    ],
+    "2412-15311_subsection_9e76cabf": [
+      "2412-15311_section_6bcec94b"
+    ],
+    "2412-15311_sent_20f790e8": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_489359a2": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_98a2b06e": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_e8ede3a7": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_enumerate_964d7516": [
+      "2412-15311_paragraph_5ca765a1",
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_67902f08": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_65d90eae": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_f8a3139d": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_f3a3c942": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_876c6e2a": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_subsection_ba9ab452": [
+      "2412-15311_section_6bcec94b"
+    ],
+    "2412-15311_sent_684f6cb5": [
+      "2412-15311_subsection_ba9ab452"
+    ],
+    "2412-15311_sent_c42ef882": [
+      "2412-15311_subsection_ba9ab452"
+    ],
+    "2412-15311_sent_862ed4b6": [
+      "2412-15311_subsection_ba9ab452"
+    ],
+    "2412-15311_eq_750e286f": [
+      "2412-15311_subsection_ba9ab452"
+    ],
+    "2412-15311_sent_5f5e983d": [
+      "2412-15311_subsection_ba9ab452"
+    ],
+    "2412-15311_sent_defc32f2": [
+      "2412-15311_subsection_ba9ab452"
+    ],
+    "2412-15311_sent_27aeb0e6": [
+      "2412-15311_subsection_ba9ab452"
+    ],
+    "2412-15311_sent_4dead7e5": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_05d62555": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_e96b2fa3": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_0b5c40b9": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_716dbc4a": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_dfebdb86": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_8c2f9dc9": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_e14a64c8": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_a7b5432c": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_sent_3c11027a": [
+      "2412-15311_subsection_9e76cabf"
+    ],
+    "2412-15311_section_4829262c": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_sent_5dbead6d": [
+      "2412-15311_section_4829262c"
+    ],
+    "2412-15311_sent_06e10ea2": [
+      "2412-15311_section_4829262c"
+    ],
+    "2412-15311_sent_e70b144b": [
+      "2412-15311_section_4829262c"
+    ],
+    "2412-15311_sent_b6cd147e": [
+      "2412-15311_section_4829262c"
+    ],
+    "2412-15311_subsection_d575842d": [
+      "2412-15311_section_4829262c"
+    ],
+    "2412-15311_paragraph_7bb9fd96": [
+      "2412-15311_subsection_d575842d"
+    ],
+    "2412-15311_sent_834eb52a": [
+      "2412-15311_paragraph_7bb9fd96"
+    ],
+    "2412-15311_sent_8db39600": [
+      "2412-15311_paragraph_7bb9fd96"
+    ],
+    "2412-15311_sent_421aaccc": [
+      "2412-15311_paragraph_7bb9fd96"
+    ],
+    "2412-15311_sent_5e2a2eea": [
+      "2412-15311_paragraph_7bb9fd96"
+    ],
+    "2412-15311_sent_522d3e0b": [
+      "2412-15311_paragraph_7bb9fd96"
+    ],
+    "2412-15311_sent_941cccf8": [
+      "2412-15311_paragraph_7bb9fd96"
+    ],
+    "2412-15311_paragraph_c6ef1e19": [
+      "2412-15311_subsection_d575842d"
+    ],
+    "2412-15311_sent_87164b85": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_0822ba9d": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_836ed347": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_914ae4f8": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_49509158": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_02436092": [
+      "2412-15311_paragraph_5ca765a1",
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_b6255295": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_440228e8": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_64733941": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_a752b1f2": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_89edf8f5": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_708deb73": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_8ae55db8": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_19ceecb2": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_sent_09ffba89": [
+      "2412-15311_paragraph_c6ef1e19"
+    ],
+    "2412-15311_subsection_fd69c5cf": [
+      "2412-15311_section_4829262c"
+    ],
+    "2412-15311_sent_bad93ce4": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_8626da98": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_34c7ccd7": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_d084b12c": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_28a890a7": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_c72e3f38": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_d1d59973": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_paragraph_e439aadf": [
+      "2412-15311_subsection_bf66c748",
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_67216d64": [
+      "2412-15311_paragraph_e439aadf"
+    ],
+    "2412-15311_sent_18ef42c1": [
+      "2412-15311_paragraph_e439aadf"
+    ],
+    "2412-15311_sent_2525c3ed": [
+      "2412-15311_paragraph_e439aadf"
+    ],
+    "2412-15311_sent_a58db928": [
+      "2412-15311_paragraph_e439aadf"
+    ],
+    "2412-15311_sent_4cb0a79c": [
+      "2412-15311_paragraph_e439aadf"
+    ],
+    "2412-15311_sent_f91b2e71": [
+      "2412-15311_paragraph_e439aadf"
+    ],
+    "2412-15311_paragraph_45a744ff": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_70005954": [
+      "2412-15311_paragraph_45a744ff"
+    ],
+    "2412-15311_sent_890392a9": [
+      "2412-15311_paragraph_45a744ff"
+    ],
+    "2412-15311_sent_b924fa7d": [
+      "2412-15311_paragraph_45a744ff"
+    ],
+    "2412-15311_sent_6da2f859": [
+      "2412-15311_paragraph_45a744ff"
+    ],
+    "2412-15311_paragraph_a53f5fad": [
+      "2412-15311_subsection_fd69c5cf"
+    ],
+    "2412-15311_sent_36437e55": [
+      "2412-15311_paragraph_a53f5fad"
+    ],
+    "2412-15311_sent_77a7b1cd": [
+      "2412-15311_paragraph_a53f5fad"
+    ],
+    "2412-15311_sent_ff485d40": [
+      "2412-15311_paragraph_a53f5fad"
+    ],
+    "2412-15311_sent_429ca263": [
+      "2412-15311_paragraph_a53f5fad"
+    ],
+    "2412-15311_subsection_739e6d2a": [
+      "2412-15311_section_4829262c"
+    ],
+    "2412-15311_paragraph_fdb7fcfe": [
+      "2412-15311_subsection_739e6d2a"
+    ],
+    "2412-15311_sent_fcda4b07": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_sent_442e6d5f": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_sent_e40b2d22": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_sent_5d090b73": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_sent_3f5e4010": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_sent_6eeb7d23": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_sent_70541032": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_sent_80f29bb5": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_fig_4cbea429": [
+      "2412-15311_paragraph_fdb7fcfe"
+    ],
+    "2412-15311_paragraph_168a5ebc": [
+      "2412-15311_subsection_739e6d2a"
+    ],
+    "2412-15311_sent_a8495431": [
+      "2412-15311_paragraph_168a5ebc"
+    ],
+    "2412-15311_sent_8a76bb6f": [
+      "2412-15311_paragraph_168a5ebc"
+    ],
+    "2412-15311_fig_2f0dfbb1": [
+      "2412-15311_paragraph_168a5ebc"
+    ],
+    "2412-15311_paragraph_a12597a5": [
+      "2412-15311_subsection_739e6d2a"
+    ],
+    "2412-15311_sent_f1dd26ef": [
+      "2412-15311_paragraph_a12597a5"
+    ],
+    "2412-15311_sent_b32777ff": [
+      "2412-15311_paragraph_a12597a5"
+    ],
+    "2412-15311_sent_b969ac1f": [
+      "2412-15311_paragraph_a12597a5"
+    ],
+    "2412-15311_sent_6de0c62a": [
+      "2412-15311_paragraph_a12597a5"
+    ],
+    "2412-15311_paragraph_70bf1c44": [
+      "2412-15311_subsection_739e6d2a"
+    ],
+    "2412-15311_sent_8636d625": [
+      "2412-15311_paragraph_70bf1c44"
+    ],
+    "2412-15311_sent_9438c2a6": [
+      "2412-15311_paragraph_70bf1c44"
+    ],
+    "2412-15311_sent_81eb35f5": [
+      "2412-15311_paragraph_70bf1c44"
+    ],
+    "2412-15311_sent_26762c0e": [
+      "2412-15311_paragraph_70bf1c44"
+    ],
+    "2412-15311_sent_ef7d39a5": [
+      "2412-15311_paragraph_70bf1c44"
+    ],
+    "2412-15311_sent_d4f7dbc9": [
+      "2412-15311_paragraph_70bf1c44"
+    ],
+    "2412-15311_fig_ef338f25": [
+      "2412-15311_paragraph_70bf1c44"
+    ],
+    "2412-15311_section_6f8b794f": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_sent_2b6aa58f": [
+      "2412-15311_section_6f8b794f"
+    ],
+    "2412-15311_sent_d3cf3c6e": [
+      "2412-15311_section_6f8b794f"
+    ],
+    "2412-15311_sent_a413a28f": [
+      "2412-15311_section_6f8b794f"
+    ],
+    "2412-15311_sent_2e019e35": [
+      "2412-15311_section_6f8b794f"
+    ],
+    "2412-15311_sent_cb654c40": [
+      "2412-15311_section_6f8b794f"
+    ],
+    "2412-15311_sent_16e00f30": [
+      "2412-15311_section_6f8b794f"
+    ],
+    "2412-15311_paragraph_0407c271": [
+      "2412-15311_section_6f8b794f"
+    ],
+    "2412-15311_sent_9ea824c1": [
+      "2412-15311_paragraph_0407c271"
+    ],
+    "2412-15311_sent_804ca741": [
+      "2412-15311_paragraph_0407c271"
+    ],
+    "2412-15311_section_09610b65": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_sent_7d4c82dc": [
+      "2412-15311_section_09610b65"
+    ],
+    "2412-15311_paragraph_e38b875e": [
+      "2412-15311_section_09610b65"
+    ],
+    "2412-15311_sent_ea69449c": [
+      "2412-15311_paragraph_e38b875e"
+    ],
+    "2412-15311_eq_3102a719": [
+      "2412-15311_paragraph_e38b875e"
+    ],
+    "2412-15311_paragraph_d8d21b59": [
+      "2412-15311_section_09610b65"
+    ],
+    "2412-15311_sent_4ee3ba49": [
+      "2412-15311_paragraph_d8d21b59"
+    ],
+    "2412-15311_eq_d4880c9a": [
+      "2412-15311_paragraph_d8d21b59"
+    ],
+    "2412-15311_paragraph_40fadc69": [
+      "2412-15311_section_09610b65"
+    ],
+    "2412-15311_sent_d5c451a7": [
+      "2412-15311_paragraph_40fadc69"
+    ],
+    "2412-15311_sent_24edc71b": [
+      "2412-15311_paragraph_40fadc69"
+    ],
+    "2412-15311_eq_bd1b2a21": [
+      "2412-15311_paragraph_40fadc69"
+    ],
+    "2412-15311_paragraph_cbee1c51": [
+      "2412-15311_section_09610b65"
+    ],
+    "2412-15311_sent_30fa3664": [
+      "2412-15311_paragraph_cbee1c51"
+    ],
+    "2412-15311_sent_2ac5eacf": [
+      "2412-15311_paragraph_cbee1c51"
+    ],
+    "2412-15311_eq_e5003c9e": [
+      "2412-15311_paragraph_cbee1c51"
+    ],
+    "2412-15311_sent_f96560a2": [
+      "2412-15311_paragraph_cbee1c51"
+    ],
+    "2412-15311_eq_17b324e3": [
+      "2412-15311_paragraph_cbee1c51"
+    ],
+    "2412-15311_paragraph_07528206": [
+      "2412-15311_section_09610b65"
+    ],
+    "2412-15311_sent_ce027a39": [
+      "2412-15311_paragraph_07528206"
+    ],
+    "2412-15311_eq_70634499": [
+      "2412-15311_paragraph_07528206"
+    ],
+    "2412-15311_sent_02bb0a52": [
+      "2412-15311_paragraph_07528206"
+    ],
+    "2412-15311_sent_0a2d0df8": [
+      "2412-15311_paragraph_07528206"
+    ],
+    "2412-15311_paragraph_85c7e21b": [
+      "2412-15311_section_09610b65"
+    ],
+    "2412-15311_sent_c88292c1": [
+      "2412-15311_paragraph_85c7e21b"
+    ],
+    "2412-15311_eq_7bd3e4dd": [
+      "2412-15311_paragraph_85c7e21b"
+    ],
+    "2412-15311_paragraph_5ca765a1": [
+      "2412-15311_section_09610b65"
+    ],
+    "2412-15311_sent_e073c330": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_562a2a6e": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_dc4bfcc2": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_abadc64b": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_6fc5b1b2": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_b9aed654": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_4b7b9ed3": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_42c576ca": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_a8e280df": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_1e7643e2": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_30f5bea2": [
+      "2412-15311_item_795583fc"
+    ],
+    "2412-15311_sent_7f953e0f": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_f3083251": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_e4294b89": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_26dacc10": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_78689501": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_e04cb950": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_c668476d": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_a0ff5565": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_25e47d62": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_fb5dec46": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_sent_eb45e74f": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_fig_72dedb6d": [
+      "2412-15311_paragraph_5ca765a1"
+    ],
+    "2412-15311_section_1c8ac169": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_subsection_f1cb45f6": [
+      "2412-15311_section_1c8ac169"
+    ],
+    "2412-15311_sent_402c5d4e": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_6223e497": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_3f6b697e": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_2bd148d7": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_ca961a9a": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_afec8e66": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_7262041f": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_af5b9d96": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_4c37535d": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_sent_04e7f01f": [
+      "2412-15311_subsection_f1cb45f6"
+    ],
+    "2412-15311_subsection_3f29224b": [
+      "2412-15311_section_1c8ac169"
+    ],
+    "2412-15311_sent_cc90168b": [
+      "2412-15311_subsection_3f29224b"
+    ],
+    "2412-15311_sent_ce35c391": [
+      "2412-15311_subsection_3f29224b"
+    ],
+    "2412-15311_subsection_bf66c748": [
+      "2412-15311_section_1c8ac169"
+    ],
+    "2412-15311_sent_e1308af1": [
+      "2412-15311_subsection_bf66c748"
+    ],
+    "2412-15311_sent_7f07ebaf": [
+      "2412-15311_subsection_bf66c748"
+    ],
+    "2412-15311_sent_d266b51e": [
+      "2412-15311_subsection_bf66c748"
+    ],
+    "2412-15311_sent_5e9263bc": [
+      "2412-15311_subsection_bf66c748"
+    ],
+    "2412-15311_paragraph_3d41c60c": [
+      "2412-15311_subsection_bf66c748"
+    ],
+    "2412-15311_sent_8d21d379": [
+      "2412-15311_paragraph_3d41c60c"
+    ],
+    "2412-15311_sent_f85eeb02": [
+      "2412-15311_paragraph_e439aadf"
+    ],
+    "2412-15311_fig_18fb0353": [
+      "2412-15311_paragraph_e439aadf"
+    ],
+    "2412-15311_section_a5a514e8": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_fig_1ab91065": [
+      "2412-15311_paragraph_2d215ebf",
+      "2412-15311_section_a5a514e8"
+    ],
+    "2412-15311_paragraph_2d215ebf": [
+      "2412-15311_section_a5a514e8",
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_fd91f24f": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_cc312d9b": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_1c41e53d": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_d2b0acbf": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_bbd174bc": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_da7d8401": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_fig_5cbb7a82": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_paragraph_31b26c5f": [
+      "2412-15311_section_a5a514e8"
+    ],
+    "2412-15311_sent_0cda0fe4": [
+      "2412-15311_paragraph_31b26c5f"
+    ],
+    "2412-15311_sent_b81ca54b": [
+      "2412-15311_paragraph_31b26c5f"
+    ],
+    "2412-15311_paragraph_63d78e1d": [
+      "2412-15311_section_a5a514e8"
+    ],
+    "2412-15311_sent_c4dd448f": [
+      "2412-15311_paragraph_63d78e1d"
+    ],
+    "2412-15311_sent_9138163c": [
+      "2412-15311_paragraph_63d78e1d"
+    ],
+    "2412-15311_fig_29c03699": [
+      "2412-15311_paragraph_63d78e1d"
+    ],
+    "2412-15311_subsection_5877e844": [
+      "2412-15311_section_a5a514e8"
+    ],
+    "2412-15311_sent_a01b03b7": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_eq_9dc87a81": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_a732e619": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_1a7ae447": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_cd55cd75": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_50cddc13": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_e8244ef2": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_eq_56ee93c1": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_dc3319d4": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_eq_f8f5a078": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_00aad3d0": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_75842a5f": [
+      "2412-15311_subsection_5877e844"
+    ],
+    "2412-15311_sent_3dc90f95": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_68eeb0ca": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_1216cae1": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_c2f39f98": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_8865b3f0": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_ceae2020": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_526ee22f": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_2ded8846": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_17cffda3": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_8df1110c": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_sent_03c4dd7b": [
+      "2412-15311_paragraph_2d215ebf"
+    ],
+    "2412-15311_section_eed9474f": [
+      "2412-15311_doc_root"
+    ],
+    "2412-15311_paragraph_b9edae7f": [
+      "2412-15311_section_eed9474f"
+    ],
+    "2412-15311_sent_cbe16daf": [
+      "2412-15311_paragraph_b9edae7f"
+    ],
+    "2412-15311_sent_5a37e4a0": [
+      "2412-15311_paragraph_b9edae7f"
+    ],
+    "2412-15311_sent_c1591ebf": [
+      "2412-15311_paragraph_b9edae7f"
+    ],
+    "2412-15311_paragraph_f3d9abb9": [
+      "2412-15311_section_eed9474f"
+    ],
+    "2412-15311_sent_e822b1eb": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_sent_4c5cbdd5": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_sent_633b6d28": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_sent_dfb2b62f": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_sent_6156843a": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_sent_a5c7d3c8": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_sent_25a4e469": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_sent_65343c04": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_sent_ddded384": [
+      "2412-15311_paragraph_f3d9abb9"
+    ],
+    "2412-15311_paragraph_854d7624": [
+      "2412-15311_section_eed9474f"
+    ],
+    "2412-15311_sent_c2060945": [
+      "2412-15311_paragraph_854d7624"
+    ],
+    "2412-15311_paragraph_1e5a41a4": [
+      "2412-15311_section_eed9474f"
+    ],
+    "2412-15311_sent_c06a50ed": [
+      "2412-15311_paragraph_1e5a41a4"
+    ]
+  }
+}

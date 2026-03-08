@@ -1,0 +1,2431 @@
+{
+  "elements": {
+    "2412-15295_doc_root": "DOCUMENT_ROOT",
+    "2412-15295_sent_d7d07f6e": "\\pagestyle{empty} \\fontsize{24pt}{30pt}\\selectfont Log-Time K-Means for 1D Data: \\\\ \\fontsize{20pt}{24pt}\\selectfont Novel Approaches with Proof and Implementation \\\\ \\fontsize{18pt}{22pt}\\selectfont (1D 데이터에 대한 로그 시간 K-평균 클러스터링: \\\\ 새로운 접근법의 증명과 구현) \\\\ \\fontsize{18pt}{18pt}\\selectfont 지도교수: 허 충 길 \\\\ \\fontsize{20pt}{20pt}\\selectfont 이 논문을 공학학사 학위 논문으로 제출함.",
+    "2412-15295_sent_79cd5a76": "\\\\ \\fontsize{18pt}{18pt}\\selectfont 2024년~~~12월~~~19일 \\\\ \\fontsize{20pt}{20pt}\\selectfont 서울대학교 공과대학 \\\\ 컴~~퓨~~터~~공~~학~~부 \\\\ 현~~재~~익 \\\\ \\fontsize{20pt}{20pt}\\selectfont 2025년~~~2월 \\\\ \\end{center} \\pagestyle{plain} \\pagenumbering{Roman} \\setcounter{page}{1}",
+    "2412-15295_chapter_e353dbe4": "Abstract",
+    "2412-15295_sent_fb4d3c2f": "\\addcontentsline{toc}{chapter}{Abstract} { \\fontsize{22pt}{22pt}\\selectfont Log-Time K-Means for 1D Data: \\\\ \\fontsize{18pt}{20pt}\\selectfont Novel Approaches with Proof and Implementation \\\\ { \\flushright \\fontsize{14pt}{16pt}\\selectfont Jake Hyun \\\\ Computer Science and Engineering \\\\ College of Engineering \\\\ Seoul National University \\\\ Clustering is a key task in machine learning, with $k$-means being widely used for its simplicity and effectiveness.",
+    "2412-15295_sent_bf271b9b": "While 1D clustering is common, existing methods often fail to exploit the structure of 1D data, leading to inefficiencies.",
+    "2412-15295_sent_c22a6b2e": "This thesis introduces optimized algorithms for $k$-means++ initialization and Lloyd's algorithm, leveraging sorted data, prefix sums, and binary search for improved computational performance.",
+    "2412-15295_sent_36219660": "The main contributions are: (1) an optimized $k$-cluster algorithm achieving $O(l \\cdot k^2 \\cdot \\log n)$ complexity for greedy $k$-means++ initialization and $O(i \\cdot k \\cdot \\log n)$ for Lloyd's algorithm, where $l$ is the number of greedy $k$-means++ local trials, and $i$ is the number of Lloyd's algorithm iterations, and (2) a binary search-based two-cluster algorithm, achieving $O(\\log n)$ runtime with deterministic convergence to a Lloyd’s algorithm local minimum.",
+    "2412-15295_sent_d070b5e8": "Benchmarks demonstrate over 4500x speedup compared to scikit-learn for large datasets while maintaining clustering quality measured by within-cluster sum of squares (WCSS).",
+    "2412-15295_sent_8aca4f6b": "Additionally, the algorithms achieve a 300x speedup in an LLM quantization task, highlighting their utility in emerging applications.",
+    "2412-15295_sent_46aa9fd7": "This thesis bridges theory and practice for 1D $k$-means clustering, delivering efficient and sound algorithms implemented in a JIT-optimized open-source Python library.",
+    "2412-15295_sent_3ae86c7f": "Keywords: $k$-means clustering, Lloyd’s algorithm, $k$-means++ initialization, one-dimensional clustering, binary search, prefix sums \\renewcommand\\baselinestretch{1.3} \\tableofcontents \\cleardoublepage \\pagenumbering{arabic} \\setcounter{page}{1}",
+    "2412-15295_chapter_0b79795d": "Introduction",
+    "2412-15295_sent_28f8c072": "Clustering is a fundamental task in data analysis and machine learning, with applications in diverse fields such as image segmentation, natural language processing, financial modeling, and bioinformatics \\cite{Xu2005Survey}.",
+    "2412-15295_sent_7fc0e0db": "Among clustering methods, $k$-means \\cite{MacQueen1967} is one of the most widely used algorithms due to its conceptual simplicity and computational efficiency.",
+    "2412-15295_sent_4eebd15c": "However, finding the optimal solution to the $k$-means problem is NP-hard in general for $d$-dimensional data \\cite{nphard}, prompting practical implementations to rely on heuristic approaches such as Lloyd’s algorithm \\cite{lloyd,max}.",
+    "2412-15295_sent_91149f70": "One-dimensional (1D) clustering problems arise frequently in a wide range of real-world scenarios, including social network analysis, bioinformatics, and the retail market \\cite{Arnaboldi_2016,genomemining,retail}.",
+    "2412-15295_sent_738c97e4": "For this special case, there have been significant advances in achieving globally optimal solutions efficiently.",
+    "2412-15295_sent_e49f6f03": "Wang and Song \\cite{wang1ddp} introduced a $O(k \\cdot n^2)$ dynamic programming algorithm for the 1D $k$-means problem, and Grønlund et al. \\cite{fastexactkmeans} later improved this to $O(n)$, demonstrating that optimal clustering can be computed in linear time for one dimension.",
+    "2412-15295_sent_c4bbd027": "While globally optimal algorithms for the 1D $k$-means problem exist, they are not always suitable for scenarios where speed and scalability are paramount.",
+    "2412-15295_sent_1f9e0e9f": "In many real-world applications—particularly those involving large datasets or latency-critical tasks—achieving a near-optimal solution quickly can be more valuable than computing the exact global minimum.",
+    "2412-15295_sent_d5fbcc60": "Practical libraries, such as scikit-learn's $k$-means \\cite{sklearn}, do not exploit the structure of 1D data and instead treat it as a general case, leaving room for further optimization.",
+    "2412-15295_sent_3906246b": "Under such conditions, improving Lloyd’s algorithm for 1D data provides a route to faster performance.",
+    "2412-15295_sent_d91b7862": "This thesis presents a novel set of algorithms that optimize Lloyd’s algorithm for the 1D setting.",
+    "2412-15295_sent_5f2cbb63": "By carefully exploiting the properties of sorted data, these methods achieve logarithmic runtime, dramatically reducing computational costs while maintaining high-quality clustering outcomes.",
+    "2412-15295_sent_dbbf8d5c": "The contributions include the following:",
+    "2412-15295_enumerate_8a3ba8a9": "enumerate",
+    "2412-15295_item_c22607d5": "item",
+    "2412-15295_sent_7afc35d2": "An optimized $k$-means++ initialization and Lloyd’s algorithm for approximating general $k$-cluster problems in one dimension.",
+    "2412-15295_sent_6ae296c2": "By carefully leveraging the properties of sorted data, the proposed approach replaces the linear dependence on the dataset size $n$ with logarithmic factors, resulting in substantial runtime improvements.",
+    "2412-15295_sent_ad06543f": "Specifically, the greedy $k$-means++ initialization achieves a time complexity of $O(l \\cdot k^2 \\cdot \\log n)$, where $l$ is the number of local trials, followed by Lloyd’s algorithm iterations with $O(i \\cdot k \\cdot \\log n)$, where $i$ is the number of iterations.",
+    "2412-15295_sent_935daa31": "Additional preprocessing, such as sorting and prefix sum calculations, contributes $O(n \\log n)$ and $O(n)$, respectively, when required. This method improves upon standard $k$-means implementations, where greedy $k$-means++ initialization requires $O(l \\cdot k \\cdot n)$ time, and Lloyd's algorithm iterations require $O(i \\cdot k \\cdot n)$.",
+    "2412-15295_sent_b9f4257b": "By reducing the dependence on $n$, the dataset size, the proposed optimizations achieve significant speedups, as experimentally demonstrated in Section~\\ref{sec:runtime_performance}.",
+    "2412-15295_sent_bda900a3": "A binary search-based algorithm for the two-cluster case, which achieves $O(\\log n)$ runtime and deterministically converges to a Lloyd’s algorithm solution, skipping iterative refinements entirely.",
+    "2412-15295_sent_38aa90f6": "Additional preprocessing costs include $O(n)$ for prefix sums and $O(n \\log n)$ for sorting, if not already provided. While the global minimum is not guaranteed, this method is highly desirable for scenarios requiring very fast and deterministic clustering.",
+    "2412-15295_sent_bc6d86e0": "Along with the thesis, a complete library implementation in Python 3 is provided, optimized with Numba just-in-time (JIT) compilation \\cite{numba} to enable efficient integration into various applications.",
+    "2412-15295_sent_b095b216": "Benchmarks against the highly optimized and widely used scikit-learn $k$-means implementation \\cite{sklearn} highlight the efficiency of these algorithms, as detailed in Section~\\ref{sec:runtime_performance}.",
+    "2412-15295_sent_2f04f331": "The results demonstrate the following:",
+    "2412-15295_itemize_6f49a267": "itemize",
+    "2412-15295_sent_0c6bd09e": "Orders-of-magnitude speedups, even when including preprocessing steps such as sorting and prefix sum calculations.",
+    "2412-15295_sent_ce2037aa": "Equivalent or comparable clustering results in terms of within-cluster sum of squares (WCSS), the objective function of K-means.",
+    "2412-15295_sent_fe618253": "The proposed algorithms also find utility in emerging and highly relevant applications such as quantization for large language models (LLMs), where efficient quantization can be achieved by running 1D $k$-means clustering on model weights \\cite{sqllm}.",
+    "2412-15295_sent_a8cb9d1e": "In particular, cutting-edge quantization methods like Any-Precision LLM \\cite{anyprec} rely on repeated executions of the two-cluster approach to hierarchically subdivide clusters of weights.",
+    "2412-15295_sent_1afbf3a3": "The novel algorithm presented here is exceptionally well-suited for such scenarios, providing over a 300-fold speedup compared to scikit-learn, as demonstrated in Section~\\ref{sec:llm_quantization}.",
+    "2412-15295_sent_696148b1": "This practical importance is underscored by the direct use of the proposed library implementation, flash1dkmeans, within the official Any-Precision LLM implementation\\footnote{\\url{https://github.com/SNU-ARC/any-precision-llm}}.",
+    "2412-15295_sent_d81a9ce8": "Overall, this thesis contributes both theoretical advancements and practical tools for one-dimensional $k$-means clustering.",
+    "2412-15295_sent_85106da0": "By providing a rigorous theoretical foundation and an optimized implementation, the proposed methods demonstrate the feasibility and efficiency of adapting $k$-means and Lloyd’s algorithm to the one-dimensional setting.",
+    "2412-15295_sent_7e413e12": "These contributions establish not only a proof of concept but also a practical solution ready for deployment in diverse computational tasks.",
+    "2412-15295_chapter_a9ded1e5": "Background",
+    "2412-15295_sent_2c54fd5e": "This chapter provides the necessary background on the $k$-means clustering problem, Lloyd's algorithm, and the $k$-means++ initialization, along with an overview of relevant works.",
+    "2412-15295_sent_6108f3e6": "The focus is on the theoretical foundations, time complexities, and practical implementations relevant to this thesis.",
+    "2412-15295_section_48c8af8d": "$k$-Means Clustering",
+    "2412-15295_sent_d3052247": "The $k$-means clustering problem is a widely studied unsupervised learning problem.",
+    "2412-15295_sent_94c180e1": "Given a set of $n$ data points $X = \\{x_1, x_2, \\dots, x_n\\}$ in a metric space and a positive integer $k$, the goal of $k$-means clustering is to partition the data into $k$ disjoint clusters $C_1, C_2, \\dots, C_k$ such that the within-cluster sum of squared distances (WCSS) is minimized. Formally, the objective function is:",
+    "2412-15295_eq_86b73b62": "\\begin{equation}\n\\text{WCSS} = \\sum_{i=1}^k \\sum_{x \\in C_i} \\|x - \\mu_i\\|^2,\n\\end{equation}",
+    "2412-15295_sent_b1053204": "where $\\mu_i$ is the centroid of cluster $C_i$, defined as the mean of all points in $C_i$.",
+    "2412-15295_sent_35db9132": "Finding the globally optimal solution to the $k$-means problem is NP-hard in general for $d$-dimensional data, even for $k = 2$ \\cite{nphard}.",
+    "2412-15295_sent_bcc957d7": "As a result, heuristic algorithms such as Lloyd's algorithm are commonly used in practice to approximate solutions efficiently.",
+    "2412-15295_section_aed11946": "Lloyd’s Algorithm",
+    "2412-15295_sent_bfe4cfbd": "Lloyd’s algorithm \\cite{lloyd,max} is a popular iterative method for solving the $k$-means problem.",
+    "2412-15295_sent_5c6e60a0": "It alternates between assigning data points to their nearest cluster centroid and updating the centroids based on the current cluster assignments.",
+    "2412-15295_sent_f88d59dc": "The steps of the algorithm are as follows:",
+    "2412-15295_sent_e88e2f80": "Initialization: Choose $k$ initial centroids $\\mu_1, \\mu_2, \\dots, \\mu_k$.",
+    "2412-15295_sent_de4d16b2": "Assignment step: Assign each point $x_j \\in X$ to the cluster $C_i$ with the closest centroid:",
+    "2412-15295_eq_e46c907e": " \\begin{equation}\nC_i = \\{x_j \\mid \\|x_j - \\mu_i\\| \\leq \\|x_j - \\mu_m\\|, \\, \\forall m \\neq i\\}.\n\\end{equation}",
+    "2412-15295_sent_01d96570": "Update step: Update each centroid $\\mu_i$ as the mean of all points assigned to $C_i$:",
+    "2412-15295_eq_e3dea4cc": " \\begin{equation}\n\\mu_i = \\frac{1}{|C_i|} \\sum_{x \\in C_i} x.\n\\end{equation}",
+    "2412-15295_sent_f841afb4": "Repeat the assignment and update steps until convergence, typically when the centroids no longer change significantly or a maximum number of iterations is reached.",
+    "2412-15295_sent_792789e7": "Remark: Both the assignment and update steps of Lloyd's algorithm ensure that the within-cluster sum of squares (WCSS) decreases monotonically after each iteration.",
+    "2412-15295_sent_8642889c": "As a result, the algorithm is guaranteed to converge to a local minimum of the WCSS objective function.",
+    "2412-15295_sent_f54770c7": "Time Complexity: The time complexity of Lloyd’s algorithm for general $d$-dimensional data is $O(i \\cdot k \\cdot n \\cdot d)$, where $i$ is the number of iterations.",
+    "2412-15295_sent_a349078e": "For 1D data, the complexity simplifies to $O(i \\cdot k \\cdot n)$.",
+    "2412-15295_section_1e4c83af": "$k$-Means++ Initialization",
+    "2412-15295_sent_4c10b5a0": "The quality of solutions obtained by Lloyd’s algorithm depends heavily on the choice of initial centroids.",
+    "2412-15295_sent_755fa474": "The $k$-means++ initialization algorithm \\cite{kmeansplusplus} improves the centroid selection process by probabilistically choosing points based on their distances to already selected centroids.",
+    "2412-15295_sent_b0190cb4": "Initialization: Choose the first centroid $\\mu_1$ uniformly at random from the data points.",
+    "2412-15295_sent_fee04249": "Candidate selection: For each subsequent centroid $\\mu_i$, select a point $x_j$ with probability proportional to its squared distance from the nearest already chosen centroid:",
+    "2412-15295_eq_02b0896d": " \\begin{equation}\nP(x_j) = \\frac{\\text{Distance}(x_j, C_{\\text{nearest}})^2}{\\sum_{x_i \\in X} \\text{Distance}(x_i, C_{\\text{nearest}})^2}.\n\\end{equation}",
+    "2412-15295_sent_db91ff68": "Repeat the candidate selection step until $k$ centroids are chosen.",
+    "2412-15295_sent_c6d88b31": "Remark: The $k$-means++ initialization improves the spread of centroids compared to random initialization, significantly reducing the likelihood of poor clustering outcomes.",
+    "2412-15295_sent_38721271": "However, this improvement comes at the cost of additional computation during the initialization phase.",
+    "2412-15295_sent_6ee92d55": "Time Complexity: The time complexity of standard $k$-means++ initialization for $d$-dimensional data is $O(k \\cdot n \\cdot d)$, where $k$ is the number of clusters, $n$ is the number of data points, and $d$ is the dimensionality of the data.",
+    "2412-15295_sent_cee33665": "Greedy $k$-Means++ Initialization: In the greedy version of $k$-means++ initialization, briefly mentioned in the conclusion of the original paper \\cite{kmeansplusplus}, $l$ candidate centroids are evaluated at each step, and the one minimizing the WCSS is selected. The total time complexity for the greedy version is $O(l \\cdot k \\cdot n \\cdot d)$, where $l$ is the number of local trials.",
+    "2412-15295_sent_c5b7eacf": "A common choice for $l$ is $O(\\log k)$ \\cite{localtrials1,localtrials2}, and scikit-learn adopts a similar approach with $l = 2 + \\log k$ \\cite{sklearn}.",
+    "2412-15295_sent_1ba9db60": "For 1D data, where $d = 1$, the complexity simplifies to $O(l \\cdot k \\cdot n)$.",
+    "2412-15295_section_3559b631": "Weighted $k$-Means",
+    "2412-15295_sent_a8dd2758": "Weighted $k$-means generalizes the standard $k$-means problem by assigning each data point $x_j$ a weight $w_j$.",
+    "2412-15295_sent_0f721832": "The objective function becomes:",
+    "2412-15295_eq_8eef9ebe": "\\begin{equation}\n\\text{WCSS} = \\sum_{i=1}^k \\sum_{x_j \\in C_i} w_j \\|x_j - \\mu_i\\|^2,\n\\end{equation}",
+    "2412-15295_sent_43a0d9fc": "where the centroid $\\mu_i$ is updated as the weighted mean:",
+    "2412-15295_eq_bc6caab4": "\\begin{equation}\n\\mu_i = \\frac{\\sum_{x_j \\in C_i} w_j \\cdot x_j}{\\sum_{x_j \\in C_i} w_j}.\n\\end{equation}",
+    "2412-15295_sent_377eaf6b": "Changes to Lloyd’s Algorithm: The update step computes weighted centroids instead of simple means.",
+    "2412-15295_sent_c78a7c80": "The assignment step remains unchanged. Changes to $k$-Means++ Initialization: The probability of selecting a point $x_j$ as a centroid becomes proportional to its weighted squared distance from the nearest already chosen centroid:",
+    "2412-15295_eq_601f4b4a": "\\begin{equation}\nP(x_j) = \\frac{w_j \\cdot \\text{Distance}(x_j, C_{\\text{nearest}})^2}{\\sum_{x_i \\in X} w_i \\cdot \\text{Distance}(x_i, C_{\\text{nearest}})^2}.\n\\end{equation}",
+    "2412-15295_sent_b55c909b": "Relevance: Weighted $k$-means is particularly useful in applications where data points contribute unequally to the clustering objective, such as quantization for large language models (LLMs) \\cite{sqllm,anyprec}.",
+    "2412-15295_sent_42f3e5a1": "Implementation Note: The algorithms detailed in this thesis support both unweighted and weighted $k$-means clustering, ensuring flexibility for practical use cases.",
+    "2412-15295_section_17542289": "Relevant Works",
+    "2412-15295_sent_2bb059ab": "For the special case of 1D $k$-means clustering, significant progress has been made in achieving globally optimal solutions.",
+    "2412-15295_sent_09a9ade1": "Wang and Song \\cite{wang1ddp} introduced a dynamic programming algorithm with a time complexity of $O(k \\cdot n^2)$.",
+    "2412-15295_sent_9cc97810": "This was later improved by Grønlund et al. \\cite{fastexactkmeans}, who developed an $O(n)$-time algorithm for computing the exact optimal clustering in 1D.",
+    "2412-15295_sent_fcfbec83": "Despite these advancements, widely used implementations such as scikit-learn's $k$-means algorithm \\cite{sklearn} do not include optimizations for the 1D case.",
+    "2412-15295_sent_22bc3604": "Instead, they treat 1D data as a general instance of higher-dimensional clustering.",
+    "2412-15295_sent_414b39bd": "scikit-learn uses Cython \\cite{cython} to achieve efficient performance for general-purpose Lloyd's algorithm and $k$-means++ initialization, but it still operates with $O(l \\cdot k \\cdot n)$ initialization time and $O(i \\cdot k \\cdot n)$ iteration time for 1D data.",
+    "2412-15295_sent_12ce5f25": "This thesis is the first to address the gap of optimizing Lloyd’s algorithm and $k$-means++ initialization specifically for 1D clustering, targeting scenarios where speed and scalability are paramount.",
+    "2412-15295_sent_346eee3e": "While prior works achieve globally optimal solutions, they do not target scenarios where speed and scalability are more critical than exact optimality.",
+    "2412-15295_sent_29ab0f1a": "By leveraging the properties of sorted data, the proposed algorithms achieve logarithmic runtime while delivering high-quality clustering results, offering a practical alternative for latency-critical and large-scale applications.",
+    "2412-15295_chapter_6a68ff2c": "Novel Approaches and Proof of Validity",
+    "2412-15295_sent_babbcbd6": "This chapter presents our proposed approaches for solving general $k$-cluster problems in one dimension.",
+    "2412-15295_sent_c5b25ce0": "We introduce two algorithms: the $k$-cluster algorithm and the 2-cluster algorithm.",
+    "2412-15295_sent_a9ab4972": "Both methods exploit the structure of one-dimensional data and utilize sorting, prefix sums, and binary search to achieve significant computational efficiency compared to traditional clustering methods.",
+    "2412-15295_paragraph_49d9e019": "Finding Cluster Boundaries:",
+    "2412-15295_sent_02b20ddb": "For one-dimensional data, determining a point's cluster assignment involves identifying the interval it falls into.",
+    "2412-15295_sent_7711a846": "The boundaries between clusters are the arithmetic midpoints of consecutive centroids.",
+    "2412-15295_sent_3c249e5f": "When both the data and centroids are sorted, these boundaries can be efficiently located using binary search, requiring $O(k \\cdot \\log n)$ time.",
+    "2412-15295_sent_6bcc785e": "If centroids need sorting, an additional $O(k \\cdot \\log k)$ time is needed; however, as $k \\leq n$, the total time remains $O(k \\cdot \\log n)$.",
+    "2412-15295_sent_9e5ba2ef": "This approach forms the basis for subsequent optimizations.",
+    "2412-15295_section_8d38d1e6": "The $k$-Cluster Algorithm",
+    "2412-15295_sent_337d477d": "The $k$-cluster algorithm is a one-dimensional adaptation of greedy $k$-means++ initialization followed by Lloyd’s algorithm iterations, and can be defined for both weighted and unweighted data.",
+    "2412-15295_sent_47465f13": "The algorithm leverages:",
+    "2412-15295_sent_22603e87": "Sorted Data: Sorting the input array $X$ of size $n$ in ascending order allows quick determination of cluster assignments via binary search on cluster boundaries.",
+    "2412-15295_sent_f9925ad5": "Prefix Sums: Precomputing prefix sums enables constant-time computation of weighted and unweighted sums, means, and inertia values over arbitrary intervals.",
+    "2412-15295_sent_cafe9f85": "Specifically, for weighted data:",
+    "2412-15295_eq_62864d1d": " \\begin{equation}\nW[j] = \\sum_{i=1}^j w_i, \\quad \n (WX)[j] = \\sum_{i=1}^j w_i x_i, \\quad \n (WX^2)[j] = \\sum_{i=1}^j w_i x_i^2.\n\\end{equation}",
+    "2412-15295_sent_62db4de2": "For unweighted data, this simplifies to:",
+    "2412-15295_eq_d947938b": " \\begin{equation}\nX^{(1)}[j] = \\sum_{i=1}^j x_i, \\quad X^{(2)}[j] = \\sum_{i=1}^j x_i^2.\n\\end{equation}",
+    "2412-15295_sent_fe3d1369": "Binary Search: Binary search is central to efficiently determining cluster boundaries and performing weighted random sampling during initialization.",
+    "2412-15295_subsection_dcdb9dc0": "WCSS and Prefix Sums",
+    "2412-15295_sent_bc73e63b": "The within-cluster sum of squares (WCSS) for weighted data is defined as:",
+    "2412-15295_eq_cf2ff389": "\\begin{equation}\n\\text{WCSS} = \\sum_{i=1}^k \\sum_{x_j \\in C_i} w_j (x_j - \\mu_i)^2,\n\\end{equation}",
+    "2412-15295_sent_89957aca": "where $C_i$ is the $i$-th cluster, $\\mu_i$ is its centroid, and $w_j$ is the weight of point $x_j$.",
+    "2412-15295_sent_b1959f96": "Expanding the squared term:",
+    "2412-15295_eq_9f6ac855": "\\begin{equation}\n(x_j - \\mu_i)^2 = x_j^2 - 2x_j\\mu_i + \\mu_i^2,\n\\end{equation}",
+    "2412-15295_sent_22765a88": "yields:",
+    "2412-15295_eq_d542eaa0": "\\begin{equation}\n\\text{WCSS}_i = \\sum_{x_j \\in C_i} w_j x_j^2 - 2\\mu_i \\sum_{x_j \\in C_i} w_j x_j + \\mu_i^2 \\sum_{x_j \\in C_i} w_j.\n\\end{equation}",
+    "2412-15295_sent_a6fdfbe5": "Using prefix sums:",
+    "2412-15295_eq_0d4918f1": "\\begin{equation}\n\\begin{aligned}\n\\sum_{x_j \\in C_i} w_j x_j^2 &= (WX^2)[b_i] - (WX^2)[b_{i-1}], \\\\\n\\sum_{x_j \\in C_i} w_j x_j &= (WX)[b_i] - (WX)[b_{i-1}], \\\\\n\\sum_{x_j \\in C_i} w_j &= W[b_i] - W[b_{i-1}].\n\\end{aligned}\n\\end{equation}",
+    "2412-15295_sent_7f3fb43d": "where $b_{i-1}$ and $b_i$ are the cluster boundaries.",
+    "2412-15295_sent_bb6e277f": "The centroid is:",
+    "2412-15295_eq_25b3b801": "\\begin{equation}\n\\mu_i = \\frac{(WX)[b_i] - (WX)[b_{i-1}]}{W[b_i] - W[b_{i-1}]}.\n\\end{equation}",
+    "2412-15295_sent_dd8ae660": "All these queries take $O(1)$ time per cluster once the prefix sums are computed. Hence, WCSS and centroid calculations are efficient, requiring only $O(k)$ time across all $k$ clusters, if cluster boundaries are known.",
+    "2412-15295_sent_c242e3e2": "Determining cluster boundaries costs $O(k \\log n)$, so the total cost for WCSS calculation given centroids is $O(k \\log n)$.",
+    "2412-15295_subsection_43662d56": "Greedy $k$-Means++ Initialization",
+    "2412-15295_sent_277e6126": "The $k$-means++ initialization selects centroids such that new centroids are chosen with probabilities proportional to their squared distances from the closest existing centroid.",
+    "2412-15295_sent_eee904df": "Our method efficiently implements this using binary search combined with cumulative sum queries.",
+    "2412-15295_paragraph_28870244": "Steps for Initialization:",
+    "2412-15295_sent_7ada675f": "First Centroid Selection: The first centroid is chosen randomly, weighted by the point weights $w_j$.",
+    "2412-15295_sent_383fd2c8": "To achieve this:",
+    "2412-15295_sent_2ae8aa15": "Given the cumulative sum of weights $W[j] = \\sum_{i=1}^j w_i$,",
+    "2412-15295_sent_c1ecb374": "Generate a random number $r \\in [0, W[n]]$,",
+    "2412-15295_sent_10ef057a": "Perform binary search on $W$ to find the smallest $j$ such that $W[j] \\geq r$, and thus the corresponding point $x_j$.",
+    "2412-15295_sent_0e734935": "This step costs $O(\\log n)$.",
+    "2412-15295_sent_49c955e4": "Subsequent Centroid Selection: For each new centroid:",
+    "2412-15295_sent_34dfed72": "Binary Search for Cluster Assignments: Given the existing centroids, determine the cluster boundaries using a binary search of consecutive centroid midpoints.",
+    "2412-15295_sent_3cfaa1cd": "This step costs $O(k \\log n)$.",
+    "2412-15295_sent_d7dbe5a5": "Cumulative Sum for Squared Distances: To sample a new centroid, we need the cumulative sum of squared distances $D_i^2$, where $D_i$ is the distance of $x_i$ to its closest centroid.",
+    "2412-15295_sent_ada10e68": "The cumulative sum $S[j]$ is defined as:",
+    "2412-15295_eq_3c80b8a3": " \\begin{equation}\nS[j] = \\sum_{i=1}^j D_i^2.\n\\end{equation}",
+    "2412-15295_sent_d3b0e938": "Importantly: $S$ is not explicitly constructed. Instead for each query $j$ on $S$:",
+    "2412-15295_sent_bc899c66": "The sum of squared distances $D_i^2$ are obtained using prefix sums over the $k$ clusters, up to the $j$th point.",
+    "2412-15295_sent_a8c97f48": "This is equivalent to calculating the WCSS up to the $j$th point.",
+    "2412-15295_sent_090ca7c5": "For each cluster, this sum can be retrieved in $O(1)$ time, as the cluster boundaries are known.",
+    "2412-15295_sent_028fbfd1": "Querying $S[j]$ for any $j$ requires $O(k)$ time, as it aggregates contributions from all relevant clusters.",
+    "2412-15295_sent_68366737": "Binary Search on $S$:",
+    "2412-15295_sent_ff8f0a51": "Generate a random number $r \\in [0, S[n]]$,",
+    "2412-15295_sent_4e76938c": "Perform binary search on $S$ to find the smallest $j$ such that $S[j] \\geq r$.",
+    "2412-15295_sent_a0136a28": "Each binary search involves $O(\\log n)$ queries of $S$, where each query takes $O(k)$.",
+    "2412-15295_sent_7f4daf2f": "Thus, the total cost for sampling one new centroid is $O(k \\cdot \\log n)$, and for $l$ candidates, $O(l \\cdot k \\cdot \\log n)$.",
+    "2412-15295_sent_d974cc3c": "Greedy Candidate Selection: For each candidate:",
+    "2412-15295_sent_128d3aae": "Update cluster boundaries using binary search ($O(k \\cdot \\log n)$),",
+    "2412-15295_sent_ea96dc25": "Compute the total WCSS using prefix sums ($O(k)$).",
+    "2412-15295_sent_344eb558": "The candidate minimizing the total WCSS is selected as the next centroid.",
+    "2412-15295_sent_e15394ef": "For $l$ candidates, this step costs $O(l \\cdot k \\cdot \\log n)$.",
+    "2412-15295_sent_a4b18585": "Combined Initialization Time Complexity: Combining the steps, the total cost for generating and evaluating $l$ candidates per new centroid is $O(k \\cdot \\log n \\cdot + l \\cdot k \\cdot \\log n + l \\cdot k \\cdot \\log n) = O(l \\cdot k \\cdot \\log n)$.",
+    "2412-15295_subsection_da2371df": "Complexity Analysis",
+    "2412-15295_sent_3376193b": "The overall time complexity of the $k$-cluster algorithm is as follows:",
+    "2412-15295_paragraph_5d32d44a": "Greedy $k$-Means++ Initialization:",
+    "2412-15295_sent_909c7dfd": "As detailed in the previous section:",
+    "2412-15295_sent_bf81782e": "Selecting the first centroid using weighted sampling costs $O(\\log n)$,",
+    "2412-15295_sent_09a7644b": "Each subsequent centroid requires $O(l \\cdot k \\cdot \\log n)$, where $l$ is the number of local trials.",
+    "2412-15295_sent_e3d0d5aa": "The total cost for initialization across $k$ centroids is therefore:",
+    "2412-15295_eq_f573500f": "\\begin{equation}\nO(l \\cdot k^2 \\cdot \\log n).\n\\end{equation}",
+    "2412-15295_paragraph_439f845d": "Lloyd’s Algorithm Iterations:",
+    "2412-15295_sent_1b2b482a": "Each iteration of Lloyd’s algorithm consists of:",
+    "2412-15295_sent_7ea7483b": "Updating cluster boundaries via binary search: $O(k \\cdot \\log n)$,",
+    "2412-15295_sent_e794bcd1": "Updating centroids using prefix sums: $O(k)$.",
+    "2412-15295_sent_7c2a3015": "For $i$ iterations, the total cost is:",
+    "2412-15295_eq_56b6d49d": "\\begin{equation}\nO(i \\cdot k \\cdot \\log n).\n\\end{equation}",
+    "2412-15295_paragraph_0e41ae7f": "Overall Time Complexity:",
+    "2412-15295_sent_98a9ae29": "The combined cost of greedy $k$-means++ initialization and Lloyd’s algorithm is:",
+    "2412-15295_eq_b0be00fb": "\\begin{equation}\nO(l \\cdot k^2 \\cdot \\log n) + O(i \\cdot k \\cdot \\log n).\n\\end{equation}",
+    "2412-15295_sent_d23bdf12": "This does not account for the initial overhead of sorting the data and calculating prefix sums, which cost $O(n \\log n)$ and $O(n)$, respectively.",
+    "2412-15295_sent_8e4943c3": "Comparing against conventional implementations of $O(l \\cdot k \\cdot n) + O(i \\cdot k \\cdot n)$, note how the dependence on $n$ (dataset size) has decreased, at the cost of quadratic complexity in $k$ during initialization.",
+    "2412-15295_sent_19190882": "However, since $k \\ll n$ in most practical cases, this tradeoff is justified. For experimental speedup proofs, see Chapter~\\ref{chap:experiments}.",
+    "2412-15295_section_fd355ab7": "The 2-Cluster Algorithm",
+    "2412-15295_sent_5affa7ea": "For the 2-cluster problem in one-dimensional sorted data, the task reduces to finding a single cluster boundary that divides the data into two contiguous clusters.",
+    "2412-15295_sent_9f336615": "To efficiently locate this boundary, we iteratively refine a search scope to identify the correct division interval. A division interval is defined as the interval between two consecutive points in the sorted data that contains the cluster boundary.",
+    "2412-15295_sent_10331dc3": "Note: For all discussions in this section, all notions of direction (i.e., left or right) are with respect to the one-dimensional coordinate axis along which the data points are sorted. Thus, left refers to decreasing $x$-values and right refers to increasing $x$-values.",
+    "2412-15295_subsection_265466c7": "Definitions and Key Observations",
+    "2412-15295_sent_d60082f4": "A division interval is defined as the interval between two consecutive points $x_{\\text{div\\_left}}$ and $x_{\\text{div\\_right}}$ in sorted data that contains the cluster boundary (note that, of course, $\\text{div\\_left} + 1 = \\text{div\\_right}$).",
+    "2412-15295_sent_9c2bb92e": "The midpoint for a division interval is defined as:",
+    "2412-15295_eq_e61c52a6": " \\begin{equation}\n\\text{Midpoint} = \\frac{\\mu_{\\text{left}} + \\mu_{\\text{right}}}{2},\n\\end{equation}",
+    "2412-15295_sent_38d4a5a6": "where $\\mu_{\\text{left}}$ and $\\mu_{\\text{right}}$ are the centroids of the left and right clusters defined by the division interval, respectively.",
+    "2412-15295_sent_a5b4612c": "These centroids are computed with prefix sums, using:",
+    "2412-15295_eq_44200a45": " \\begin{equation}\n\\mu_{\\text{left}} = \\frac{\\sum_{i=1}^{\\text{div\\_left}} w_i x_i}{\\sum_{i=1}^{\\text{div\\_left}} w_i}, \\quad \n \\mu_{\\text{right}} = \\frac{\\sum_{i=\\text{div\\_right}}^n w_i x_i}{\\sum_{i=\\text{div\\_right}}^n w_i}.\n\\end{equation}",
+    "2412-15295_sent_fa71ee6a": "The prefix sums $W$ and $WX$, as defined for the $k$-cluster algorithm, allow this calculation to be done in $O(1)$ time.",
+    "2412-15295_sent_0752e7d8": "A division interval is classified as follows:",
+    "2412-15295_sent_a1e0de9e": "Right-pointing: The midpoint lies to the right of $x_{\\text{div\\_right}}$.",
+    "2412-15295_sent_4f65ec05": "Left-pointing: The midpoint lies to the left of $x_{\\text{div\\_left}}$.",
+    "2412-15295_sent_7674f1a3": "Convergent: The midpoint lies within the division interval itself, indicating a Lloyd’s algorithm convergence.",
+    "2412-15295_sent_d2cd68a9": "Note that every division interval can be classified into exactly one of these three categories.",
+    "2412-15295_sent_169737b1": "The search scope refers to the range of candidate division intervals, which is iteratively refined during the binary search to locate a convergent interval.",
+    "2412-15295_subsection_7fb9b291": "Algorithm Description",
+    "2412-15295_sent_dd636c13": "The algorithm aims to identify the correct division interval (i.e., a convergent interval) using binary search.",
+    "2412-15295_sent_570d677e": "The key steps are as follows:",
+    "2412-15295_sent_0fcff02f": "Initialize the Search Scope: Start with the whole scope---that is, all possible division intervals ranging from the first interval $[x_1, x_2]$ to the last interval $[x_{n-1}, x_n]$.",
+    "2412-15295_sent_fa3f5f60": "Iteratively Query the Center Interval: At each step:",
+    "2412-15295_sent_8f95f0d1": "Select the center division interval within the current search scope.",
+    "2412-15295_sent_4e766f59": "Compute the centroids $\\mu_{\\text{left}}$ and $\\mu_{\\text{right}}$ and calculate the midpoint:",
+    "2412-15295_eq_544cc5fe": " \\begin{equation}\n\\text{Midpoint} = \\frac{\\mu_{\\text{left}} + \\mu_{\\text{right}}}{2}.\n\\end{equation}",
+    "2412-15295_sent_a9772ff2": "Refine the Search Scope: Compare the midpoint to the endpoints $x_{\\text{div\\_left}}$ and $x_{\\text{div\\_right}}$ of the queried division interval:",
+    "2412-15295_sent_9a4768a6": "If the interval is right-pointing, exclude all intervals to the left of the current interval, including itself.",
+    "2412-15295_sent_173edeb8": "If the interval is left-pointing, exclude all intervals to the right of the current interval, including itself.",
+    "2412-15295_sent_23ec9825": "If the interval is convergent, terminate; the cluster boundary has been found.",
+    "2412-15295_sent_f196dc70": "Repeat Until Convergence: Continue the process until a convergent interval is found.",
+    "2412-15295_sent_f75bc3bd": "The binary search guarantees that the number of candidate intervals is halved at each iteration, ensuring $O(\\log n)$ convergence.",
+    "2412-15295_subsection_502475f8": "Proof of Validity",
+    "2412-15295_sent_06d4dc65": "To prove the correctness of the algorithm, we rely on the monotonic behavior of the centroids’ midpoint and the structure of the division intervals.",
+    "2412-15295_paragraph_1ec6701e": "1. Monotonic Behavior of the Midpoint:",
+    "2412-15295_sent_564c9904": "When the division interval $[x_{\\text{div\\_left}}, x_{\\text{div\\_right}}]$ is shifted one step to the right, i.e., to $[x_{\\text{div\\_right}}, x_{\\text{div\\_right} + 1}]$:",
+    "2412-15295_sent_700103f5": "The point $x_{\\text{div\\_right}}$, which was previously the leftmost point in the right cluster, is excluded from the right cluster and added to the left cluster.",
+    "2412-15295_sent_5b023882": "This change causes the left centroid $\\mu_{\\text{left}}$ to increase, as a point with a larger value has been included in the left cluster.",
+    "2412-15295_sent_780331dd": "Simultaneously, the right centroid $\\mu_{\\text{right}}$ also increases, as the smallest point in the right cluster has been removed.",
+    "2412-15295_sent_959cf449": "Since both centroids increase, the new midpoint:",
+    "2412-15295_eq_0751ee44": " \\begin{equation}\n\\text{Midpoint}^{\\text{new}} = \\frac{\\mu_{\\text{left}}^{\\text{new}} + \\mu_{\\text{right}}^{\\text{new}}}{2}\n\\end{equation}",
+    "2412-15295_sent_38dd00c8": "is greater than the old midpoint:",
+    "2412-15295_eq_84d77dcd": " \\begin{equation}\n\\text{Midpoint}^{\\text{new}} > \\text{Midpoint}^{\\text{old}}.\n\\end{equation}",
+    "2412-15295_sent_56a8857d": "Similarly, shifting the division interval one step to the left causes the midpoint to strictly decrease.",
+    "2412-15295_paragraph_2f34a074": "2. Behavior of Right-Pointing and Left-Pointing Intervals:",
+    "2412-15295_sent_194157b5": "The monotonic behavior of the midpoint ensures the following:",
+    "2412-15295_sent_4cd23f38": "Right-Pointing Intervals: Suppose a division interval $[x_{\\text{div\\_left}}, x_{\\text{div\\_right}}]$ is right-pointing, so:",
+    "2412-15295_eq_d64c1f48": " \\begin{equation}\nx_{\\text{div\\_right}} < \\text{Midpoint}^{\\text{old}}.\n\\end{equation}",
+    "2412-15295_sent_0aa9cd66": "After shifting the interval one step to the right to the new interval $[x_{\\text{div\\_right}}, x_{\\text{div\\_right+1}}]$, the corresponding new midpoint strictly increases:",
+    "2412-15295_eq_51806a69": " \\begin{equation}\nx_{\\text{div\\_right}} < \\text{Midpoint}^{\\text{old}} < \\text{Midpoint}^{\\text{new}}.\n\\end{equation}",
+    "2412-15295_sent_d0f6e489": "For the new interval $[x_{\\text{div\\_right}}, x_{\\text{div\\_right+1}}]$ to become left-pointing, the new midpoint, $\\text{Midpoint}^{\\text{new}}$, would have to be less than $x_{\\text{div\\_right}}$.",
+    "2412-15295_sent_e13c4335": "But directly from the inequality above:",
+    "2412-15295_sent_94d2d55d": "Thus, a right-pointing interval cannot suddenly become left-pointing after a rightward shift; it remains right-pointing or becomes convergent.",
+    "2412-15295_sent_9cd324ce": "Left-Pointing Intervals: By a symmetric argument, for a left-pointing interval, shifting one step to the left strictly decreases the midpoint, ensuring it cannot suddenly become right-pointing.",
+    "2412-15295_sent_cbdb8a99": "Instead, it remains left-pointing or becomes convergent.",
+    "2412-15295_sent_0a7c40cb": "This ensures that from the perspective of shifting the intervals (one step at a time in the chosen direction), right-pointing and left-pointing intervals cannot directly switch roles in a single move.",
+    "2412-15295_paragraph_7616e817": "Convergent Interval in a Search Scope",
+    "2412-15295_sent_b168d96c": "In any search scope where the first interval is right-pointing and the last interval is left-pointing, there must exist at least one convergent interval between them.",
+    "2412-15295_sent_c3bbd415": "This follows from the fact that a right-pointing interval cannot immediately precede a left-pointing interval when moving stepwise to the right.",
+    "2412-15295_paragraph_d3ea660b": "Convergence of the Binary Search",
+    "2412-15295_sent_c6755be3": "For the entire search scope, the first division interval (between $x_1$ and $x_2$) is either right-pointing or convergent, and the last division interval (between $x_{n-1}$ and $x_n$) is either left-pointing or convergent.",
+    "2412-15295_sent_48200673": "Therefore, by the principle established above, there must exist at least one convergent interval within the entire scope.",
+    "2412-15295_sent_593feaaa": "The previously detailed binary search iteratively reduces this scope in a way such that a convergent interval is always included, eventually narrowing the scope to a single convergent interval.",
+    "2412-15295_subsection_e646e16b": "Limitations",
+    "2412-15295_sent_1355c6e6": "While the monotonicity argument ensures that right-pointing and left-pointing intervals cannot directly switch roles when shifting in the direction they point (rightward for right-pointing, leftward for left-pointing), this guarantee does not hold when shifting in the opposite direction.",
+    "2412-15295_sent_a2c01760": "Multiple local minima in Lloyd’s algorithm can produce patterns like:",
+    "2412-15295_eq_c6176421": "\\begin{equation}\nRRRCLLLRRRCLLL,\n\\end{equation}",
+    "2412-15295_sent_80b32156": "where $R$ denotes right-pointing, $L$ denotes left-pointing, and $C$ denotes convergent intervals.",
+    "2412-15295_sent_a45844fd": "In such scenarios:",
+    "2412-15295_sent_db5b2279": "Moving a left-pointing interval to the right can produce a right-pointing interval (and vice versa).",
+    "2412-15295_sent_d7512287": "The algorithm still finds at least one convergent interval in $O(\\log n)$ time, but the found cluster boundary may correspond to a local minimum rather than the global optimum.",
+    "2412-15295_subsection_be361ff1": "Algorithm Guarantees",
+    "2412-15295_sent_f385b3ba": "By leveraging the monotonic behavior of the midpoint and the fact that a convergent interval must exist between the first right-pointing and last left-pointing intervals, the binary search efficiently identifies a convergent interval representing a cluster boundary.",
+    "2412-15295_sent_6b885bf8": "The algorithm achieves this in $O(\\log n)$ time without relying on iterative steps of Lloyd's algorithm.",
+    "2412-15295_sent_fa1c6d25": "In the presence of multiple local minima, the algorithm is guaranteed to converge to a valid solution, though it may not necessarily find the global optimum.",
+    "2412-15295_sent_57a14e21": "Similar to the $k$-cluster algorithm, an initial preprocessing step is required, which includes sorting the data in $O(n \\log n)$ time and computing prefix sums in $O(n)$ time.",
+    "2412-15295_section_29061219": "Summary",
+    "2412-15295_sent_28433d31": "In this chapter, we introduced two novel algorithms for solving the $k$-cluster problem in one-dimensional sorted data: the $k$-cluster algorithm and the 2-cluster algorithm.",
+    "2412-15295_sent_1e893d7f": "Both methods leverage key observations about the structure of one-dimensional data to achieve significant computational efficiency.",
+    "2412-15295_sent_845cb1e4": "The $k$-cluster algorithm combines greedy $k$-means++ initialization with efficient Lloyd’s iterations.",
+    "2412-15295_sent_ce85f3a6": "By exploiting sorted data, prefix sums, and binary search:",
+    "2412-15295_sent_a07af887": "The initialization process achieves a complexity of $O(l \\cdot k^2 \\cdot \\log n)$, where $k$ is the number of clusters and $l$ is the number of local trials.",
+    "2412-15295_sent_413f0f28": "Each iteration of Lloyd’s algorithm requires $O(k \\log n)$ time, ensuring efficient updates of cluster boundaries and centroids.",
+    "2412-15295_sent_36bf9a35": "The 2-cluster algorithm focuses on the specific case of $k=2$, where the problem reduces to locating a single cluster boundary.",
+    "2412-15295_sent_64420ad0": "Using a binary search over division intervals:",
+    "2412-15295_sent_089d6200": "The midpoint of centroids behaves monotonically, allowing us to refine the search scope iteratively.",
+    "2412-15295_sent_f4c362d6": "The algorithm achieves a total complexity of $O(\\log n)$ and guarantees convergence to a local minimum of Lloyd's algorithm.",
+    "2412-15295_sent_440fc45e": "Both algorithms demonstrate how the structure of one-dimensional data enables faster computations compared to traditional clustering methods.",
+    "2412-15295_sent_e8741372": "In cases with multiple local minima, the solutions produced may not be globally optimal---a limitation shared with Lloyd's algorithm.",
+    "2412-15295_sent_22096fd7": "Nonetheless, the proposed methods strike an effective balance between accuracy and computational efficiency, making them highly suitable for practical applications.",
+    "2412-15295_chapter_4829262c": "Experiments",
+    "2412-15295_sent_32783c84": "This chapter presents experimental results comparing the proposed 1D $k$-means algorithms against the widely used scikit-learn implementation.",
+    "2412-15295_sent_958f4e35": "The evaluation focuses on runtime performance and clustering quality, using both real and synthetic datasets.",
+    "2412-15295_section_c2b2b81b": "Implementation Details",
+    "2412-15295_sent_b0822b4f": "\\sloppy The proposed algorithms have been implemented as an open-source Python package, flash1dkmeans, available on GitHub\\footnote{\\url{https://github.com/SyphonArch/flash1dkmeans}} and PyPI\\footnote{\\url{https://pypi.org/project/flash1dkmeans/}}.",
+    "2412-15295_sent_f0534dc1": "The package is built on top of NumPy \\cite{numpy} and Numba \\cite{numba} for efficient computation.",
+    "2412-15295_sent_3cd0a4d8": "The implementation includes both the $k$-cluster and 2-cluster algorithms, as well as the preprocessing steps for the sorting and prefix sum computations.",
+    "2412-15295_sent_da35ea88": "The preprocessing step is optional and can be disabled if the input data is already in adequate form.",
+    "2412-15295_sent_0cb7f5ca": "More details on the implementation can be found in the Appendix.",
+    "2412-15295_section_d575842d": "Experimental Setup",
+    "2412-15295_sent_f9e2c734": "The experiments were conducted on two processors: an Intel i9-13900K and an Apple M3.",
+    "2412-15295_sent_ce9ee3c0": "For the clustering quality and runtime comparisons, only the i9-13900K results are presented, as trends were consistent across both processors.",
+    "2412-15295_sent_26d5da4d": "Both real and synthetic 1D datasets were used, with varying sizes and numbers of clusters.",
+    "2412-15295_sent_6fdade65": "The real datasets include the iris and california housing datasets from scikit-learn, while synthetic datasets were generated using the sklearn.datasets.make\\_blobs and numpy.random.random\\_sample functions.",
+    "2412-15295_sent_68501b30": "Comparisons were made against scikit-learn's implementation of $k$-means\\footnote{\\url{https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html}} at default configuration, which utilizes greedy $k$-means++ initialization paired with Lloyd's algorithm.",
+    "2412-15295_sent_94051895": "For fair comparison, only a single thread was used. The number of local trials for the greedy $k$-means++ initialization, $l$, defaults to $2 + \\log k$ in scikit-learn.",
+    "2412-15295_sent_5ecf741e": "This was matched in flash1dkmeans.",
+    "2412-15295_section_1a7b54e3": "Results: Clustering Quality",
+    "2412-15295_fig_9ae77dce": "\\begin{figure}\n \\includegraphics[width=\\textwidth]{figures/inertia_comparison.pdf}\n \\caption{Squared error comparison of the proposed two-cluster algorithm and $k$-cluster algorithms in flash1dkmeans against scikit-learn on real and synthetic datasets. Lower is better.}\n\n\\end{figure}",
+    "2412-15295_sent_cb41b626": "The clustering quality comparison between the proposed 2-cluster algorithm and the $k$-cluster algorithms in flash1dkmeans and scikit-learn is shown in Figure~\\ref{fig:inertia_comparison}.",
+    "2412-15295_sent_0a7ac080": "The iris dataset was excluded for $k=128$ as the number of data points was insufficient.",
+    "2412-15295_sent_a9ab8788": "Across the configurations, the clustering quality, measured by squared error, is consistent with the baseline $k$-means algorithm.",
+    "2412-15295_sent_632ee56b": "For both the 2-cluster and $k$-cluster algorithms, this confirms that the proposed method produces clustering results equivalent or close to the $k$-means algorithm in scikit-learn.",
+    "2412-15295_section_6fc64da9": "Results: Runtime Performance",
+    "2412-15295_fig_0234e9e9": "\\begin{figure}\n \\includegraphics[width=\\textwidth]{figures/runtime_comparison.pdf}\n \\caption{Runtime comparison of the proposed two-cluster algorithm and $k$-cluster algorithms in flash1dkmeans against scikit-learn on datasets of varying sizes. Lower is better.}\n\n\\end{figure}",
+    "2412-15295_sent_2e1926ae": "Figure~\\ref{fig:runtime_comparison} compares the runtime of the proposed 2-cluster and $k$-cluster algorithms in flash1dkmeans to scikit-learn.",
+    "2412-15295_sent_b0763eda": "The runtime of flash1dkmeans includes preprocessing time, while flash1dkmeans\\_numba measures only the main algorithm runtime, assuming preprocessed and sorted input data.",
+    "2412-15295_sent_63aa6f25": "The results confirm that the $k$-cluster algorithm in flash1dkmeans achieves substantial runtime improvements compared to scikit-learn, showcasing the logarithmic dependence on dataset size.",
+    "2412-15295_sent_9c652686": "For example, for $k=128$ and dataset size $2^{23}$, the speedup exceeds 4500x.",
+    "2412-15295_sent_aa7dc40d": "However, for the 2-cluster algorithm on larger datasets, the $O(n \\log n)$ preprocessing time becomes a bottleneck, limiting the overall speedup.",
+    "2412-15295_sent_6905732f": "Nevertheless, the main algorithm runtimes confirm the log-time efficiency of the proposed optimizations, and flash1dkmeans with the $O(n \\log n)$ preprocessing still outperforms scikit-learn by a large margin in most cases.",
+    "2412-15295_section_108a3c1b": "Results: LLM Quantization",
+    "2412-15295_fig_e2b0920d": "\\begin{table}\n\n \\resizebox{\\linewidth}{!}{\n \\begin{tabular}{|l|c c c|c c c|}\n\n \\multicolumn{1}{c|}{} & \\multicolumn{3}{c|}{Seed (k-cluster algorithm)} & \\multicolumn{3}{c|}{Upscale (2-cluster algorithm)} \\\\\n\n Processor & sklearn & flash1dkmeans & speedup & sklearn & flash1dkmeans & speedup \\\\\n\n i9-13900K & 433 ms & 56 ms & 7.7x & 10551 ms & 34 ms & 310x \\\\\n Apple M3 & 572 ms & 114 ms & 5.0x & 7585 ms & 29 us & 262x \\\\\n\n \\end{tabular}\n\n \\caption{Performance comparison of flash1dkmeans against scikit-learn for both $k$-cluster and 2-cluster algorithms on i9-13900K and Apple M3 processors.}\n\n\\end{table}",
+    "2412-15295_sent_d04c8fe8": "Table~\\ref{tab:anyprec} compares the performance of flash1dkmeans and scikit-learn in the two-step LLM quantization process proposed in Any-Precision LLM \\cite{anyprec}.",
+    "2412-15295_sent_20490f17": "As an example, we quantize the 214th output channel (size 14,336) of the mlp.down\\_proj linear module in the 8th layer of Llama-3-8B \\cite{llama3} from 3-bit to 8-bit, as described in the original work.",
+    "2412-15295_sent_4fd4e89b": "We measure the total time over 100 runs for reliability.",
+    "2412-15295_sent_461da9d8": "The first step involves generating a seed model using $k$-means clustering, followed by incrementally subdividing clusters into two via $k$-means in the second step.",
+    "2412-15295_sent_97683584": "The preprocessing from the seed generation step is reusable during the upscale phase, enabling the $O(\\log n)$-time 2-cluster algorithm to be particularly efficient.",
+    "2412-15295_sent_e884bde6": "Results demonstrate that flash1dkmeans achieves remarkable speedups, surpassing 300x in the upscale step on an i9-13900K processor.",
+    "2412-15295_sent_af231c7e": "Experimental results demonstrate that the proposed algorithms in flash1dkmeans achieve comparable clustering quality to scikit-learn while offering significant runtime improvements.",
+    "2412-15295_sent_4ae325d6": "The $k$-cluster algorithm exhibits logarithmic time complexity with speedups exceeding 4500x on large datasets, while the 2-cluster algorithm achieves remarkable efficiency when given preprocessed inputs.",
+    "2412-15295_sent_4e41b51c": "These results validate the effectiveness of the proposed optimizations for both general clustering tasks and emerging applications such as LLM quantization.",
+    "2412-15295_chapter_6f8b794f": "Conclusion",
+    "2412-15295_sent_dad94cb9": "This thesis presents optimized algorithms for $k$-means++ initialization and Lloyd’s algorithm, specifically designed for one-dimensional (1D) clustering.",
+    "2412-15295_sent_cb793ee1": "By leveraging the structure of sorted data, the proposed methods replace the linear dependence on dataset size $n$ with logarithmic factors, significantly improving computational efficiency while maintaining clustering quality.",
+    "2412-15295_sent_be00c267": "The optimized greedy $k$-means++ initialization achieves a time complexity of $O(l \\cdot k^2 \\cdot \\log n)$, while Lloyd’s algorithm iterations achieve $O(i \\cdot k \\cdot \\log n)$, where $l$ is the number of local trials, and $i$ the number of iterations.",
+    "2412-15295_sent_8f9ae479": "Additionally, the binary search-based algorithm for the two-cluster case deterministically converges to a Lloyd’s algorithm solution in $O(\\log n)$, bypassing iterative refinements entirely.",
+    "2412-15295_sent_013874f9": "These methods offer significant benefits for latency-critical tasks and large-scale clustering problems.",
+    "2412-15295_sent_ece96e08": "The practical relevance of these contributions is demonstrated in key applications such as quantization for large language models (LLMs), where the optimized algorithms achieve a 300-fold speedup over scikit-learn, as discussed in Section~\\ref{sec:llm_quantization}.",
+    "2412-15295_sent_1c0bc873": "To ensure ease of use, a Python implementation of the proposed methods, optimized with just-in-time (JIT) compilation, is provided for practical deployment.",
+    "2412-15295_sent_3ec39fd7": "By exploiting the structure of 1D data, this thesis demonstrates that substantial computational improvements are achievable for $k$-means clustering, reducing dataset size dependencies from linear to logarithmic.",
+    "2412-15295_sent_df19c49f": "These contributions address an important gap in the existing literature and deliver efficient, high-performance clustering tools ready for real-world applications.",
+    "2412-15295_sent_1d1ef1bc": "\\cleardoublepage \\pagenumbering{roman} \\setcounter{page}{1} \\renewcommand{\\bibname}{References} \\phantomsection \\addcontentsline{toc}{chapter}{References} \\bibliographystyle{IEEEtran} \\bibliography{bib}",
+    "2412-15295_chapter_cff1be7f": "Appendix",
+    "2412-15295_sent_988222e2": "\\addcontentsline{toc}{chapter}{Appendix} \\renewcommand{\\thesection}{\\Alph{section}.} \\setcounter{section}{0}",
+    "2412-15295_section_c992cc22": "$k$-Cluster Algorithm Implementation",
+    "2412-15295_sent_5903f555": "Provided below is the Python 3 implementation of the $k$-cluster algorithm discussed in this work.",
+    "2412-15295_sent_d95e906c": "The Numba and Numpy packages are required, as well as the definition of macros like ARRAY\\_INDEX\\_DTYPE.",
+    "2412-15295_sent_fffdc60d": "For the fully integrated library please refer to section \\ref{sec:github}.",
+    "2412-15295_sent_a39304e1": "\\begin{lstlisting}[language=Python] @numba.njit(cache=True) def numba_kmeans_1d_k_cluster( sorted_X, n_clusters, max_iter, weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, start_idx, stop_idx, random_state=None, ): \"\"\"An optimized kmeans for 1D data with n clusters.",
+    "2412-15295_sent_dfe95065": "Exploits the fact that the data is 1D to optimize the calculations.",
+    "2412-15295_sent_f2f68092": "Time complexity: O(k ^ 2 * log(k) * log(n) + i * log(n) * k) Args: sorted_X: np.ndarray The input data.",
+    "2412-15295_sent_0f9cd809": "Should be sorted in ascending order.",
+    "2412-15295_sent_63a90c65": "n_clusters: int The number of clusters to generate max_iter: int The maximum number of iterations to run weights_prefix_sum: np.ndarray The prefix sum of the weights.",
+    "2412-15295_sent_0a613b56": "Should be None if the data is unweighted. weighted_X_prefix_sum: np.ndarray The prefix sum of the weighted X weighted_X_squared_prefix_sum: np.ndarray The prefix sum of the weighted X squared start_idx: int The start index of the range to consider stop_idx: int The stop index of the range to consider random_state: int or None The random seed to use.",
+    "2412-15295_sent_3da8f65a": "Returns: centroids: np.ndarray The centroids of the clusters cluster_borders: np.ndarray The borders of the clusters \"\"\" # set random_state set_np_seed_njit(random_state) cluster_borders = np.empty(n_clusters + 1, dtype=ARRAY_INDEX_DTYPE) cluster_borders[0] = start_idx cluster_borders[-1] = stop_idx centroids = _kmeans_plusplus( sorted_X, n_clusters, weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, start_idx, stop_idx, ) sorted_centroids = np.sort(centroids) for _ in range(max_iter): new_cluster_borders = _centroids_to_cluster_borders(sorted_X, sorted_centroids, start_idx, stop_idx) if np.array_equal(cluster_borders, new_cluster_borders): break cluster_borders[:] = new_cluster_borders for i in range(n_clusters): cluster_start = cluster_borders[i] cluster_end = cluster_borders[i + 1] if cluster_end < cluster_start: raise ValueError(\"Cluster end is less than cluster start\") if cluster_start == cluster_end: continue cluster_weighted_X_sum = query_prefix_sum(weighted_X_prefix_sum, cluster_start, cluster_end) cluster_weight_sum = query_prefix_sum(weights_prefix_sum, cluster_start, cluster_end) if cluster_weight_sum == 0: # if the sum of the weights is zero, we set the centroid to the mean of the cluster sorted_centroids[i] = sorted_X[cluster_start:cluster_end].mean() else: sorted_centroids[i] = cluster_weighted_X_sum / cluster_weight_sum return sorted_centroids, cluster_borders @numba.njit(cache=True) def _rand_choice_prefix_sum(arr, prob_prefix_sum, start_idx, stop_idx): \"\"\"Randomly choose an element from arr according to the probability distribution given by prob_prefix_sum Time complexity: O(log n) Args: arr: np.ndarray The array to choose from prob_prefix_sum: np.ndarray The prefix sum of the probability distribution start_idx: int The start index of the range to consider stop_idx: int The stop index of the range to consider Returns: The chosen element \"\"\" total_prob = query_prefix_sum(prob_prefix_sum, start_idx, stop_idx) selector = np.random.random_sample() * total_prob # Because we are using start_idx as the base, but the prefix sum is calculated from 0, # we need to adjust the selector if start_idx is not 0.",
+    "2412-15295_sent_ebade862": "adjusted_selector = selector + prob_prefix_sum[start_idx - 1] if start_idx > 0 else selector # Search for the index of the selector in the prefix sum, and add start_idx to get the index in the original array idx = np.searchsorted(prob_prefix_sum[start_idx:stop_idx], adjusted_selector) + start_idx return arr[idx] @numba.njit(cache=True) def _centroids_to_cluster_borders(X, sorted_centroids, start_idx, stop_idx): \"\"\"Converts the centroids to cluster borders.",
+    "2412-15295_sent_4be0e349": "The cluster borders are where the clusters are divided. The centroids must be sorted. Time complexity: O(k * log n) Args: X: np.ndarray The input data.",
+    "2412-15295_sent_6eec4e06": "sorted_centroids: np.ndarray The sorted centroids start_idx: int The start index of the range to consider stop_idx: int The stop index of the range to consider Returns: np.ndarray: The cluster borders \"\"\" midpoints = (sorted_centroids[:-1] + sorted_centroids[1:]) / 2 cluster_borders = np.empty(len(sorted_centroids) + 1, dtype=ARRAY_INDEX_DTYPE) cluster_borders[0] = start_idx cluster_borders[-1] = stop_idx cluster_borders[1:-1] = np.searchsorted(X[start_idx:stop_idx], midpoints) + start_idx return cluster_borders @numba.njit(cache=True) def _calculate_inertia(sorted_centroids, centroid_ranges, weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, stop_idx): \"\"\"Calculates the inertia of the clusters given the centroids.",
+    "2412-15295_sent_b3819ceb": "The inertia is the sum of the squared distances of each sample to the closest centroid.",
+    "2412-15295_sent_dac0a887": "The calculations are done efficiently using prefix sums.",
+    "2412-15295_sent_86ce906c": "Time complexity: O(k) Args: sorted_centroids: np.ndarray The centroids of the clusters centroid_ranges: np.ndarray The borders of the clusters weights_prefix_sum: np.ndarray The prefix sum of the weights.",
+    "2412-15295_sent_718ce374": "Should be None if the data is unweighted. weighted_X_prefix_sum: np.ndarray The prefix sum of the weighted X weighted_X_squared_prefix_sum: np.ndarray The prefix sum of the weighted X squared stop_idx: int The stop index of the range to consider \"\"\" # inertia = sigma_i(w_i * abs(x_i - c)^2) = sigma_i(w_i * (x_i^2 - 2 * x_i * c + c^2)) # = sigma_i(w_i * x_i^2) - 2 * c * sigma_i(w_i * x_i) + c^2 * sigma_i(w_i) # = sigma_i(weighted_X_squared) - 2 * c * sigma_i(weighted_X) + c^2 * sigma_i(weight) # Note that the centroid c is the CLOSEST centroid to x_i, so the above calculation must be done for each cluster inertia = 0 for i in range(len(sorted_centroids)): start = centroid_ranges[i] end = centroid_ranges[i + 1] if start >= stop_idx: break if end >= stop_idx: end = stop_idx if start == end: continue cluster_weighted_X_squared_sum = query_prefix_sum(weighted_X_squared_prefix_sum, start, end) cluster_weighted_X_sum = query_prefix_sum(weighted_X_prefix_sum, start, end) cluster_weight_sum = query_prefix_sum(weights_prefix_sum, start, end) inertia += (cluster_weighted_X_squared_sum - 2 * sorted_centroids[i] * cluster_weighted_X_sum + sorted_centroids[i] ** 2 * cluster_weight_sum) return inertia @numba.njit(cache=True) def _rand_choice_centroids(X, centroids, weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, sample_size, start_idx, stop_idx): \"\"\"Randomly choose sample_size elements from X, weighted by the distance to the closest centroid.",
+    "2412-15295_sent_6bf07264": "The weighted logic is implemented efficiently by utilizing the _calculate_inertia function.",
+    "2412-15295_sent_4d8b90ff": "Time complexity: O(l * k * log n) Args: X: np.ndarray The input data.",
+    "2412-15295_sent_cce4942a": "centroids: np.ndarray The centroids of the clusters is_weighted: bool Whether the data is weighted. If True, the weighted versions of the arrays should be provided. weights_prefix_sum: np.ndarray The prefix sum of the weights.",
+    "2412-15295_sent_741f7bfd": "Should be None if the data is unweighted. weighted_X_prefix_sum: np.ndarray The prefix sum of the weighted X weighted_X_squared_prefix_sum: np.ndarray The prefix sum of the weighted X squared sample_size: int The number of samples to choose start_idx: int The start index of the range to consider stop_idx: int The stop index of the range to consider Returns: np.ndarray: The chosen samples \"\"\" sorted_centroids = np.sort(centroids) # O(k log k) cluster_borders = _centroids_to_cluster_borders(X, sorted_centroids, start_idx, stop_idx) # O(k log n) total_inertia = _calculate_inertia(sorted_centroids, cluster_borders, # O(k) weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, stop_idx) selectors = np.random.random_sample(sample_size) * total_inertia results = np.empty(sample_size, dtype=centroids.dtype) for i in range(sample_size): # O(l k log n) selector = selectors[i] floor = start_idx + 1 ceiling = stop_idx while floor < ceiling: stop_idx_cand = (floor + ceiling) // 2 inertia = _calculate_inertia(sorted_centroids, cluster_borders, # O(k) weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, stop_idx_cand) if inertia < selector: floor = stop_idx_cand + 1 else: ceiling = stop_idx_cand results[i] = X[floor - 1] return results @numba.njit(cache=True) def _kmeans_plusplus(X, n_clusters, weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, start_idx, stop_idx): \"\"\"An optimized version of the kmeans++ initialization algorithm for 1D data.",
+    "2412-15295_sent_227799d2": "The algorithm is optimized for 1D data and utilizes prefix sums for efficient calculations.",
+    "2412-15295_sent_b1a9e261": "Time complexity: = O(k ^ 2 * log k * log n) Args: X: np.ndarray The input data n_clusters: int The number of clusters to choose weights_prefix_sum: np.ndarray The prefix sum of the weights.",
+    "2412-15295_sent_7d25c6bd": "Should be None if the data is unweighted. weighted_X_prefix_sum: np.ndarray The prefix sum of the weighted X weighted_X_squared_prefix_sum: np.ndarray The prefix sum of the weighted X squared Returns: np.ndarray: The chosen centroids \"\"\" centroids = np.empty(n_clusters, dtype=X.dtype) n_local_trials = 2 + int(np.log(n_clusters)) # First centroid is chosen randomly according to sample_weight centroids[0] = _rand_choice_prefix_sum(X, weights_prefix_sum, start_idx, stop_idx) # O(log n) for c_id in range(1, n_clusters): # O(k^2 l log n) # Choose the next centroid randomly according to the weighted distances # Sample n_local_trials candidates and choose the best one centroid_candidates = _rand_choice_centroids( # O(l k log n) X, centroids[:c_id], weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, n_local_trials, start_idx, stop_idx ) best_inertia = np.inf best_centroid = None for i in range(len(centroid_candidates)): # O(l k log n) # O(k log k + k log n + k) = O(k log n), as k <= n centroids[c_id] = centroid_candidates[i] sorted_centroids = np.sort(centroids[:c_id + 1]) # O(k log k), I think we could avoid centroid sorting and use some linear algorithm, but the gain would be minimal, especially considering that k <= n, and most times k << n centroid_ranges = _centroids_to_cluster_borders(X, sorted_centroids, start_idx, stop_idx) # O(k log n) inertia = _calculate_inertia(sorted_centroids, centroid_ranges, # O(k) weights_prefix_sum, weighted_X_prefix_sum, weighted_X_squared_prefix_sum, stop_idx) if inertia < best_inertia: best_inertia = inertia best_centroid = centroid_candidates[i] centroids[c_id] = best_centroid return centroids \\end{lstlisting}",
+    "2412-15295_section_c6742a05": "2-Cluster Agorithm Implementation",
+    "2412-15295_sent_63a3e3a1": "Provided below is the Python 3 implementation of the $2$-cluster algorithm discussed in this work.",
+    "2412-15295_sent_c2b90eed": "\\begin{lstlisting}[language=Python] @numba.njit(cache=True) def numba_kmeans_1d_two_cluster( sorted_X, weights_prefix_sum, weighted_X_prefix_sum, start_idx, stop_idx, ): \"\"\"An optimized kmeans for 1D data with 2 clusters, weighted version.",
+    "2412-15295_sent_4b43c9aa": "Utilizes a binary search to find the optimal division point.",
+    "2412-15295_sent_23241472": "Time complexity: O(log(n)) Args: sorted_X: np.ndarray The input data.",
+    "2412-15295_sent_5444ebf8": "weights_prefix_sum: np.ndarray The prefix sum of the sample weights.",
+    "2412-15295_sent_a5ead65d": "Should be None if the data is unweighted. weighted_X_prefix_sum: np.ndarray The prefix sum of (the weighted) X.",
+    "2412-15295_sent_5aa7d9d9": "start_idx: int The start index of the range to consider.",
+    "2412-15295_sent_146354fe": "stop_idx: int The stop index of the range to consider.",
+    "2412-15295_sent_b2cb1ef6": "Returns: centroids: np.ndarray The centroids of the two clusters, shape (2,) cluster_borders: np.ndarray The borders of the two clusters, shape (3,) WARNING: X should be sorted in ascending order before calling this function.",
+    "2412-15295_sent_65f0338d": "\"\"\" size = stop_idx - start_idx centroids = np.empty(2, dtype=sorted_X.dtype) cluster_borders = np.empty(3, dtype=ARRAY_INDEX_DTYPE) cluster_borders[0] = start_idx cluster_borders[2] = stop_idx # Remember to set cluster_borders[1] as the division point if size == 1: centroids[0], centroids[1] = sorted_X[start_idx], sorted_X[start_idx] cluster_borders[1] = start_idx + 1 return centroids, cluster_borders if size == 2: centroids[0], centroids[1] = sorted_X[start_idx], sorted_X[start_idx + 1] cluster_borders[1] = start_idx + 1 return centroids, cluster_borders # Now we know that there are at least 3 elements # If the sum of the sample weight in the range is 0, we assume that the data is unweighted if query_prefix_sum(weights_prefix_sum, start_idx, stop_idx) == 0: # We need to recalculate the prefix sum, as previously it would have been all zeros X_casted = sorted_X.astype(PREFIX_SUM_DTYPE) X_prefix_sum = np.cumsum(X_casted) return numba_kmeans_1d_two_cluster_unweighted(sorted_X, X_prefix_sum, start_idx, stop_idx) else: # Check if there is only one nonzero sample weight total_weight = query_prefix_sum(weights_prefix_sum, start_idx, stop_idx) sample_weight_prefix_sum_within_range = weights_prefix_sum[start_idx:stop_idx] final_increase_idx = np.searchsorted( sample_weight_prefix_sum_within_range, sample_weight_prefix_sum_within_range[-1] ) final_increase_amount = query_prefix_sum(weights_prefix_sum, start_idx + final_increase_idx, start_idx + final_increase_idx + 1) if total_weight == final_increase_amount: # If there is only one nonzero sample weight, we need to return the corresponding weight as the centroid # and set all elements to the left cluster nonzero_weight_index = start_idx + final_increase_idx centroids[0], centroids[1] = sorted_X[nonzero_weight_index], sorted_X[nonzero_weight_index] cluster_borders[1] = stop_idx return centroids, cluster_borders # Now we know that there are at least 3 elements and at least 2 nonzero weights # KMeans with 2 clusters on 1D data is equivalent to finding a division point.",
+    "2412-15295_sent_f6ed8dae": "# The division point can be found by doing a binary search on the prefix sum.",
+    "2412-15295_sent_70f3bf8a": "# We will do a search for the division point, # where we search for the optimum number of elements in the first cluster # We don't want empty clusters, so we set the floor and ceiling to start_idx + 1 and stop_idx - 1 floor = start_idx + 1 ceiling = stop_idx - 1 left_centroid = None right_centroid = None while floor < ceiling: division_point = (floor + ceiling) // 2 # If the left cluster has no weight, we need to move the floor up left_weight_sum = query_prefix_sum(weights_prefix_sum, start_idx, division_point) if left_weight_sum == 0: floor = division_point + 1 continue right_weight_sum = query_prefix_sum(weights_prefix_sum, division_point, stop_idx) # If the right cluster has no weight, we need to move the ceiling down if right_weight_sum == 0: ceiling = division_point - 1 continue left_centroid = query_prefix_sum(weighted_X_prefix_sum, start_idx, division_point) / left_weight_sum right_centroid = query_prefix_sum(weighted_X_prefix_sum, division_point, stop_idx) / right_weight_sum new_division_point_value = (left_centroid + right_centroid) / 2 if sorted_X[division_point - 1] <= new_division_point_value: if new_division_point_value <= sorted_X[division_point]: # The new division point matches the previous one, so we can stop break else: floor = division_point + 1 else: ceiling = division_point - 1 # recalculate division point based on final floor and ceiling division_point = (floor + ceiling) // 2 # initialize variables in case the loop above does not run through if left_centroid is None: left_centroid = (query_prefix_sum(weighted_X_prefix_sum, start_idx, division_point) / query_prefix_sum(weights_prefix_sum, start_idx, division_point)) if right_centroid is None: right_centroid = (query_prefix_sum(weighted_X_prefix_sum, division_point, stop_idx) / query_prefix_sum(weights_prefix_sum, division_point, stop_idx)) # avoid using lists to allow numba.njit centroids[0] = left_centroid centroids[1] = right_centroid cluster_borders[1] = division_point return centroids, cluster_borders \\end{lstlisting}",
+    "2412-15295_section_70a71cc4": "Library Implementation",
+    "2412-15295_sent_69bffa94": "The algorithms detailed in this thesis have been published open-source as flash1dkmeans.",
+    "2412-15295_sent_78edfa20": "Github respository: \\url{https://github.com/SyphonArch/flash1dkmeans} \\newline PyPI: \\url{https://pypi.org/project/flash1dkmeans/} \\cleardoublepage",
+    "2412-15295_chapter_324ce642": "국문초록",
+    "2412-15295_sent_7fc1e177": "\\addcontentsline{toc}{chapter}{국문초록} 클러스터링은 머신러닝에서 핵심적인 과제로, $k$-means는 단순성과 효율성 덕분에 널리 사용되는 알고리즘이다.",
+    "2412-15295_sent_f5f2f857": "1차원(1D) 클러스터링은 많은 실제 응용에서 발생하지만, 기존 $k$-means 구현체들은 1D 데이터의 구조를 효과적으로 활용하지 못해 비효율이 존재한다.",
+    "2412-15295_sent_3cb8a624": "본 논문에서는 정렬된 데이터, 누적합 배열, 이진탐색의 특성을 활용하여 1D 클러스터링에 최적화된 $k$-means++ 초기화 및 Lloyd 알고리즘을 제안한다.",
+    "2412-15295_sent_58c11816": "본 논문은 다음과 같은 로그 시간 알고리즘을 제시한다: (1) $k$-cluster 알고리즘은 greedy $k$-means++ 초기화에서 $O(l \\cdot k^2 \\cdot \\log n)$ 시간복잡도, Lloyd 알고리즘에서 $O(i \\cdot k \\cdot \\log n)$ 시간복잡도를 달성한다.",
+    "2412-15295_sent_3c8c092e": "여기서 $n$은 데이터셋 크기, $k$는 클러스터 개수, $l$은 greedy $k$-means++ local trials 수, $i$는 Lloyd 알고리즘 반복 횟수를 나타낸다.",
+    "2412-15295_sent_6d2cee13": "(2) 2-cluster 알고리즘은 이진탐색을 활용하여 $O(\\log n)$ 시간복잡도로 작동하며, 반복 없이 Lloyd 알고리즘의 국소 최적해에 빠르게 수렴한다.",
+    "2412-15295_sent_22acb9c1": "벤치마크 결과, 제시된 알고리즘은 대규모 데이터셋에서 scikit-learn 대비 4500배 이상의 속도 향상을 달성하면서도 within-cluster sum of squares (WCSS) 품질을 유지한다.",
+    "2412-15295_sent_0447256e": "또한, 대규모 언어 모델(LLMs) 양자화와 같은 최신 응용에서도 300배 이상의 속도 향상을 보여준다.",
+    "2412-15295_sent_9f1015a7": "본 연구는 1D $k$-means clustering의 이론과 실제 간 간극을 좁히는 효율적이고 실용적인 알고리즘을 제안한다.",
+    "2412-15295_sent_8511d83a": "제시된 알고리즘은 JIT 컴파일을 통해 최적화된 오픈소스 Python 라이브러리로 구현되었으며, 실제 응용에 쉽게 통합할 수 있도록 설계되었다.",
+    "2412-15295_sent_cae1b777": "주요어: $k$-means 클러스터링, Lloyd 알고리즘, $k$-means++ 초기화, 일차원 클러스터링, 이진탐색, 누적합",
+    "2412-15295_sent_b186c774": "Benchmarks demonstrate over a 4500x speedup compared to scikit-learn for large datasets while maintaining clustering quality measured by within-cluster sum of squares (WCSS).",
+    "2412-15295_sent_d5153de3": "More recently, Froese et al. \\cite{borderkmeans} proposed the Border $k$-Means algorithm, which optimizes 1D clustering by introducing deterministic border adjustments and achieves $O(n \\log n)$ time complexity overall, dominated by the initial sorting step.",
+    "2412-15295_sent_8e66e5ec": "The cluster update phase is $O(n)$ in practice for most datasets but can scale up to $O(n \\log n)$ under certain conditions.",
+    "2412-15295_sent_a0b20637": "While the algorithm produces deterministic results equivalent to Lloyd's algorithm, it does not guarantee globally optimal clustering solutions and focuses instead on practical efficiency.",
+    "2412-15295_sent_65035f6c": "Similarly, both Border $k$-Means and our $k$-cluster algorithm focus on efficient but non-optimal clustering.",
+    "2412-15295_sent_2718ea29": "However, our approach differs in two key aspects.",
+    "2412-15295_sent_b7e4582f": "First, it directly integrates $k$-means++ initialization to improve cluster seeding.",
+    "2412-15295_sent_94837fdc": "Second, it achieves $O(\\log n)$ time complexity for updates after an initial sorting and preprocessing phase, offering a significant improvement in efficiency for large-scale datasets.",
+    "2412-15295_sent_813f002b": "\\sloppy In contrast to these specialized approaches, widely-used libraries such as scikit-learn \\cite{sklearn} implement general-purpose $k$-means algorithms that are not optimized for the 1D case.",
+    "2412-15295_sent_a02de19e": "scikit-learn's $k$-means algorithm treats 1D data as a general instance of higher-dimensional clustering.",
+    "2412-15295_sent_7453919d": "While it leverages Cython \\cite{cython} for efficient performance, it operates with $O(l \\cdot k \\cdot n)$ initialization time and $O(i \\cdot k \\cdot n)$ iteration time for 1D data, significantly limiting its scalability compared to the specialized methods discussed above.",
+    "2412-15295_sent_c996a4b8": "This thesis addresses the gap in optimizing Lloyd’s algorithm and $k$-means++ initialization specifically for 1D clustering, targeting scenarios where speed and scalability are paramount.",
+    "2412-15295_sent_0e13e264": "By combining $k$-means++ initialization with logarithmic-time updates, our approach achieves a balance between computational efficiency and clustering quality, offering a practical solution for real-world applications."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15295_sent_d7d07f6e": "2412-15295_doc_root",
+      "2412-15295_sent_79cd5a76": "2412-15295_doc_root",
+      "2412-15295_chapter_e353dbe4": "2412-15295_doc_root",
+      "2412-15295_sent_fb4d3c2f": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_bf271b9b": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_c22a6b2e": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_36219660": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_d070b5e8": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_8aca4f6b": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_46aa9fd7": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_3ae86c7f": "2412-15295_chapter_e353dbe4",
+      "2412-15295_chapter_0b79795d": "2412-15295_doc_root",
+      "2412-15295_sent_28f8c072": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_7fc0e0db": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_4eebd15c": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_91149f70": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_738c97e4": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_e49f6f03": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_c4bbd027": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_1f9e0e9f": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_d5fbcc60": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_3906246b": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_d91b7862": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_5f2cbb63": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_dbbf8d5c": "2412-15295_chapter_0b79795d",
+      "2412-15295_enumerate_8a3ba8a9": "2412-15295_subsection_7fb9b291",
+      "2412-15295_item_c22607d5": "2412-15295_itemize_6f49a267",
+      "2412-15295_sent_7afc35d2": "2412-15295_item_c22607d5",
+      "2412-15295_sent_6ae296c2": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ad06543f": "2412-15295_item_c22607d5",
+      "2412-15295_sent_935daa31": "2412-15295_item_c22607d5",
+      "2412-15295_sent_b9f4257b": "2412-15295_item_c22607d5",
+      "2412-15295_sent_bda900a3": "2412-15295_item_c22607d5",
+      "2412-15295_sent_38aa90f6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_bc6d86e0": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_b095b216": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_2f04f331": "2412-15295_chapter_0b79795d",
+      "2412-15295_itemize_6f49a267": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0c6bd09e": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ce2037aa": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fe618253": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_a8cb9d1e": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_1afbf3a3": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_696148b1": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_d81a9ce8": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_85106da0": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_7e413e12": "2412-15295_chapter_0b79795d",
+      "2412-15295_chapter_a9ded1e5": "2412-15295_doc_root",
+      "2412-15295_sent_2c54fd5e": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_6108f3e6": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_section_48c8af8d": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_d3052247": "2412-15295_section_48c8af8d",
+      "2412-15295_sent_94c180e1": "2412-15295_section_48c8af8d",
+      "2412-15295_eq_86b73b62": "2412-15295_section_48c8af8d",
+      "2412-15295_sent_b1053204": "2412-15295_section_48c8af8d",
+      "2412-15295_sent_35db9132": "2412-15295_section_48c8af8d",
+      "2412-15295_sent_bcc957d7": "2412-15295_section_48c8af8d",
+      "2412-15295_section_aed11946": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_bfe4cfbd": "2412-15295_section_aed11946",
+      "2412-15295_sent_5c6e60a0": "2412-15295_section_aed11946",
+      "2412-15295_sent_f88d59dc": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_e88e2f80": "2412-15295_item_c22607d5",
+      "2412-15295_sent_de4d16b2": "2412-15295_item_c22607d5",
+      "2412-15295_eq_e46c907e": "2412-15295_item_c22607d5",
+      "2412-15295_sent_01d96570": "2412-15295_item_c22607d5",
+      "2412-15295_eq_e3dea4cc": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f841afb4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_792789e7": "2412-15295_section_aed11946",
+      "2412-15295_sent_8642889c": "2412-15295_section_aed11946",
+      "2412-15295_sent_f54770c7": "2412-15295_section_aed11946",
+      "2412-15295_sent_a349078e": "2412-15295_section_aed11946",
+      "2412-15295_section_1e4c83af": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_4c10b5a0": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_755fa474": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_b0190cb4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fee04249": "2412-15295_item_c22607d5",
+      "2412-15295_eq_02b0896d": "2412-15295_item_c22607d5",
+      "2412-15295_sent_db91ff68": "2412-15295_item_c22607d5",
+      "2412-15295_sent_c6d88b31": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_38721271": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_6ee92d55": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_cee33665": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_c5b7eacf": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_1ba9db60": "2412-15295_section_1e4c83af",
+      "2412-15295_section_3559b631": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_a8dd2758": "2412-15295_section_3559b631",
+      "2412-15295_sent_0f721832": "2412-15295_section_3559b631",
+      "2412-15295_eq_8eef9ebe": "2412-15295_section_3559b631",
+      "2412-15295_sent_43a0d9fc": "2412-15295_section_3559b631",
+      "2412-15295_eq_bc6caab4": "2412-15295_section_3559b631",
+      "2412-15295_sent_377eaf6b": "2412-15295_section_3559b631",
+      "2412-15295_sent_c78a7c80": "2412-15295_section_3559b631",
+      "2412-15295_eq_601f4b4a": "2412-15295_section_3559b631",
+      "2412-15295_sent_b55c909b": "2412-15295_section_3559b631",
+      "2412-15295_sent_42f3e5a1": "2412-15295_section_3559b631",
+      "2412-15295_section_17542289": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_2bb059ab": "2412-15295_section_17542289",
+      "2412-15295_sent_09a9ade1": "2412-15295_section_17542289",
+      "2412-15295_sent_9cc97810": "2412-15295_section_17542289",
+      "2412-15295_sent_fcfbec83": "2412-15295_section_17542289",
+      "2412-15295_sent_22bc3604": "2412-15295_section_17542289",
+      "2412-15295_sent_414b39bd": "2412-15295_section_17542289",
+      "2412-15295_sent_12ce5f25": "2412-15295_section_17542289",
+      "2412-15295_sent_346eee3e": "2412-15295_section_17542289",
+      "2412-15295_sent_29ab0f1a": "2412-15295_section_17542289",
+      "2412-15295_chapter_6a68ff2c": "2412-15295_doc_root",
+      "2412-15295_sent_babbcbd6": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_c5b25ce0": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_a9ab4972": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_paragraph_49d9e019": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_02b20ddb": "2412-15295_paragraph_49d9e019",
+      "2412-15295_sent_7711a846": "2412-15295_paragraph_49d9e019",
+      "2412-15295_sent_3c249e5f": "2412-15295_paragraph_49d9e019",
+      "2412-15295_sent_6bcc785e": "2412-15295_paragraph_49d9e019",
+      "2412-15295_sent_9e5ba2ef": "2412-15295_paragraph_49d9e019",
+      "2412-15295_section_8d38d1e6": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_337d477d": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_47465f13": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_22603e87": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f9925ad5": "2412-15295_item_c22607d5",
+      "2412-15295_sent_cafe9f85": "2412-15295_item_c22607d5",
+      "2412-15295_eq_62864d1d": "2412-15295_item_c22607d5",
+      "2412-15295_sent_62db4de2": "2412-15295_item_c22607d5",
+      "2412-15295_eq_d947938b": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fe3d1369": "2412-15295_item_c22607d5",
+      "2412-15295_subsection_dcdb9dc0": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_bc73e63b": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_cf2ff389": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_89957aca": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_b1959f96": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_9f6ac855": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_22765a88": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_d542eaa0": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_a6fdfbe5": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_0d4918f1": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_7f3fb43d": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_bb6e277f": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_25b3b801": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_dd8ae660": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_c242e3e2": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_subsection_43662d56": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_277e6126": "2412-15295_subsection_43662d56",
+      "2412-15295_sent_eee904df": "2412-15295_subsection_43662d56",
+      "2412-15295_paragraph_28870244": "2412-15295_subsection_43662d56",
+      "2412-15295_sent_7ada675f": "2412-15295_item_c22607d5",
+      "2412-15295_sent_383fd2c8": "2412-15295_item_c22607d5",
+      "2412-15295_sent_2ae8aa15": "2412-15295_item_c22607d5",
+      "2412-15295_sent_c1ecb374": "2412-15295_item_c22607d5",
+      "2412-15295_sent_10ef057a": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0e734935": "2412-15295_item_c22607d5",
+      "2412-15295_sent_49c955e4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_34dfed72": "2412-15295_item_c22607d5",
+      "2412-15295_sent_3cfaa1cd": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d7dbe5a5": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ada10e68": "2412-15295_item_c22607d5",
+      "2412-15295_eq_3c80b8a3": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d3b0e938": "2412-15295_item_c22607d5",
+      "2412-15295_sent_bc899c66": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a8c97f48": "2412-15295_item_c22607d5",
+      "2412-15295_sent_090ca7c5": "2412-15295_item_c22607d5",
+      "2412-15295_sent_028fbfd1": "2412-15295_item_c22607d5",
+      "2412-15295_sent_68366737": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ff8f0a51": "2412-15295_item_c22607d5",
+      "2412-15295_sent_4e76938c": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a0136a28": "2412-15295_item_c22607d5",
+      "2412-15295_sent_7f4daf2f": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d974cc3c": "2412-15295_item_c22607d5",
+      "2412-15295_sent_128d3aae": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ea96dc25": "2412-15295_item_c22607d5",
+      "2412-15295_sent_344eb558": "2412-15295_item_c22607d5",
+      "2412-15295_sent_e15394ef": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a4b18585": "2412-15295_item_c22607d5",
+      "2412-15295_subsection_da2371df": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_3376193b": "2412-15295_subsection_da2371df",
+      "2412-15295_paragraph_5d32d44a": "2412-15295_subsection_da2371df",
+      "2412-15295_sent_909c7dfd": "2412-15295_paragraph_5d32d44a",
+      "2412-15295_sent_bf81782e": "2412-15295_item_c22607d5",
+      "2412-15295_sent_09a7644b": "2412-15295_item_c22607d5",
+      "2412-15295_sent_e3d0d5aa": "2412-15295_paragraph_5d32d44a",
+      "2412-15295_eq_f573500f": "2412-15295_paragraph_5d32d44a",
+      "2412-15295_paragraph_439f845d": "2412-15295_subsection_da2371df",
+      "2412-15295_sent_1b2b482a": "2412-15295_paragraph_439f845d",
+      "2412-15295_sent_7ea7483b": "2412-15295_item_c22607d5",
+      "2412-15295_sent_e794bcd1": "2412-15295_item_c22607d5",
+      "2412-15295_sent_7c2a3015": "2412-15295_paragraph_439f845d",
+      "2412-15295_eq_56b6d49d": "2412-15295_paragraph_439f845d",
+      "2412-15295_paragraph_0e41ae7f": "2412-15295_subsection_da2371df",
+      "2412-15295_sent_98a9ae29": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_eq_b0be00fb": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_sent_d23bdf12": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_sent_8e4943c3": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_sent_19190882": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_section_fd355ab7": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_5affa7ea": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_9f336615": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_10331dc3": "2412-15295_section_fd355ab7",
+      "2412-15295_subsection_265466c7": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_d60082f4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_9c2bb92e": "2412-15295_item_c22607d5",
+      "2412-15295_eq_e61c52a6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_38d4a5a6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a5b4612c": "2412-15295_item_c22607d5",
+      "2412-15295_eq_44200a45": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fa71ee6a": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0752e7d8": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a1e0de9e": "2412-15295_item_c22607d5",
+      "2412-15295_sent_4f65ec05": "2412-15295_item_c22607d5",
+      "2412-15295_sent_7674f1a3": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d2cd68a9": "2412-15295_item_c22607d5",
+      "2412-15295_sent_169737b1": "2412-15295_item_c22607d5",
+      "2412-15295_subsection_7fb9b291": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_dd636c13": "2412-15295_subsection_7fb9b291",
+      "2412-15295_sent_570d677e": "2412-15295_subsection_7fb9b291",
+      "2412-15295_sent_0fcff02f": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fa3f5f60": "2412-15295_item_c22607d5",
+      "2412-15295_sent_8f95f0d1": "2412-15295_item_c22607d5",
+      "2412-15295_sent_4e766f59": "2412-15295_item_c22607d5",
+      "2412-15295_eq_544cc5fe": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a9772ff2": "2412-15295_item_c22607d5",
+      "2412-15295_sent_9a4768a6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_173edeb8": "2412-15295_item_c22607d5",
+      "2412-15295_sent_23ec9825": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f196dc70": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f75bc3bd": "2412-15295_subsection_7fb9b291",
+      "2412-15295_subsection_502475f8": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_06d4dc65": "2412-15295_subsection_502475f8",
+      "2412-15295_paragraph_1ec6701e": "2412-15295_subsection_502475f8",
+      "2412-15295_sent_564c9904": "2412-15295_paragraph_1ec6701e",
+      "2412-15295_sent_700103f5": "2412-15295_item_c22607d5",
+      "2412-15295_sent_5b023882": "2412-15295_item_c22607d5",
+      "2412-15295_sent_780331dd": "2412-15295_item_c22607d5",
+      "2412-15295_sent_959cf449": "2412-15295_item_c22607d5",
+      "2412-15295_eq_0751ee44": "2412-15295_item_c22607d5",
+      "2412-15295_sent_38dd00c8": "2412-15295_item_c22607d5",
+      "2412-15295_eq_84d77dcd": "2412-15295_item_c22607d5",
+      "2412-15295_sent_56a8857d": "2412-15295_paragraph_1ec6701e",
+      "2412-15295_paragraph_2f34a074": "2412-15295_subsection_502475f8",
+      "2412-15295_sent_194157b5": "2412-15295_paragraph_2f34a074",
+      "2412-15295_sent_4cd23f38": "2412-15295_item_c22607d5",
+      "2412-15295_eq_d64c1f48": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0aa9cd66": "2412-15295_item_c22607d5",
+      "2412-15295_eq_51806a69": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d0f6e489": "2412-15295_item_c22607d5",
+      "2412-15295_sent_e13c4335": "2412-15295_item_c22607d5",
+      "2412-15295_sent_94d2d55d": "2412-15295_item_c22607d5",
+      "2412-15295_sent_9cd324ce": "2412-15295_item_c22607d5",
+      "2412-15295_sent_cbdb8a99": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0a7c40cb": "2412-15295_paragraph_2f34a074",
+      "2412-15295_paragraph_7616e817": "2412-15295_subsection_502475f8",
+      "2412-15295_sent_b168d96c": "2412-15295_paragraph_7616e817",
+      "2412-15295_sent_c3bbd415": "2412-15295_paragraph_7616e817",
+      "2412-15295_paragraph_d3ea660b": "2412-15295_subsection_502475f8",
+      "2412-15295_sent_c6755be3": "2412-15295_paragraph_d3ea660b",
+      "2412-15295_sent_48200673": "2412-15295_paragraph_d3ea660b",
+      "2412-15295_sent_593feaaa": "2412-15295_paragraph_d3ea660b",
+      "2412-15295_subsection_e646e16b": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_1355c6e6": "2412-15295_subsection_e646e16b",
+      "2412-15295_sent_a2c01760": "2412-15295_subsection_e646e16b",
+      "2412-15295_eq_c6176421": "2412-15295_subsection_e646e16b",
+      "2412-15295_sent_80b32156": "2412-15295_subsection_e646e16b",
+      "2412-15295_sent_a45844fd": "2412-15295_subsection_e646e16b",
+      "2412-15295_sent_db5b2279": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d7512287": "2412-15295_item_c22607d5",
+      "2412-15295_subsection_be361ff1": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_f385b3ba": "2412-15295_subsection_be361ff1",
+      "2412-15295_sent_6b885bf8": "2412-15295_subsection_be361ff1",
+      "2412-15295_sent_fa1c6d25": "2412-15295_subsection_be361ff1",
+      "2412-15295_sent_57a14e21": "2412-15295_subsection_be361ff1",
+      "2412-15295_section_29061219": "2412-15295_chapter_4829262c",
+      "2412-15295_sent_28433d31": "2412-15295_section_29061219",
+      "2412-15295_sent_1e893d7f": "2412-15295_section_29061219",
+      "2412-15295_sent_845cb1e4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ce85f3a6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a07af887": "2412-15295_item_c22607d5",
+      "2412-15295_sent_413f0f28": "2412-15295_item_c22607d5",
+      "2412-15295_sent_36bf9a35": "2412-15295_item_c22607d5",
+      "2412-15295_sent_64420ad0": "2412-15295_item_c22607d5",
+      "2412-15295_sent_089d6200": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f4c362d6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_440fc45e": "2412-15295_section_29061219",
+      "2412-15295_sent_e8741372": "2412-15295_section_29061219",
+      "2412-15295_sent_22096fd7": "2412-15295_section_29061219",
+      "2412-15295_chapter_4829262c": "2412-15295_doc_root",
+      "2412-15295_sent_32783c84": "2412-15295_chapter_4829262c",
+      "2412-15295_sent_958f4e35": "2412-15295_chapter_4829262c",
+      "2412-15295_section_c2b2b81b": "2412-15295_chapter_4829262c",
+      "2412-15295_sent_b0822b4f": "2412-15295_section_c2b2b81b",
+      "2412-15295_sent_f0534dc1": "2412-15295_section_c2b2b81b",
+      "2412-15295_sent_3cd0a4d8": "2412-15295_section_c2b2b81b",
+      "2412-15295_sent_da35ea88": "2412-15295_section_c2b2b81b",
+      "2412-15295_sent_0cb7f5ca": "2412-15295_section_c2b2b81b",
+      "2412-15295_section_d575842d": "2412-15295_chapter_4829262c",
+      "2412-15295_sent_f9e2c734": "2412-15295_section_d575842d",
+      "2412-15295_sent_ce9ee3c0": "2412-15295_section_d575842d",
+      "2412-15295_sent_26d5da4d": "2412-15295_section_d575842d",
+      "2412-15295_sent_6fdade65": "2412-15295_section_d575842d",
+      "2412-15295_sent_68501b30": "2412-15295_section_d575842d",
+      "2412-15295_sent_94051895": "2412-15295_section_d575842d",
+      "2412-15295_sent_5ecf741e": "2412-15295_section_d575842d",
+      "2412-15295_section_1a7b54e3": "2412-15295_chapter_4829262c",
+      "2412-15295_fig_9ae77dce": "2412-15295_section_1a7b54e3",
+      "2412-15295_sent_cb41b626": "2412-15295_section_1a7b54e3",
+      "2412-15295_sent_0a7ac080": "2412-15295_section_1a7b54e3",
+      "2412-15295_sent_a9ab8788": "2412-15295_section_1a7b54e3",
+      "2412-15295_sent_632ee56b": "2412-15295_section_1a7b54e3",
+      "2412-15295_section_6fc64da9": "2412-15295_chapter_4829262c",
+      "2412-15295_fig_0234e9e9": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_2e1926ae": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_b0763eda": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_63aa6f25": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_9c652686": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_aa7dc40d": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_6905732f": "2412-15295_section_6fc64da9",
+      "2412-15295_section_108a3c1b": "2412-15295_chapter_4829262c",
+      "2412-15295_fig_e2b0920d": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_d04c8fe8": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_20490f17": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_4fd4e89b": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_461da9d8": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_97683584": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_e884bde6": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_af231c7e": "2412-15295_section_29061219",
+      "2412-15295_sent_4ae325d6": "2412-15295_section_29061219",
+      "2412-15295_sent_4e41b51c": "2412-15295_section_29061219",
+      "2412-15295_chapter_6f8b794f": "2412-15295_doc_root",
+      "2412-15295_sent_dad94cb9": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_cb793ee1": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_be00c267": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_8f9ae479": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_013874f9": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_ece96e08": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_1c0bc873": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_3ec39fd7": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_df19c49f": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_1d1ef1bc": "2412-15295_chapter_6f8b794f",
+      "2412-15295_chapter_cff1be7f": "2412-15295_doc_root",
+      "2412-15295_sent_988222e2": "2412-15295_chapter_cff1be7f",
+      "2412-15295_section_c992cc22": "2412-15295_chapter_cff1be7f",
+      "2412-15295_sent_5903f555": "2412-15295_section_c992cc22",
+      "2412-15295_sent_d95e906c": "2412-15295_section_c6742a05",
+      "2412-15295_sent_fffdc60d": "2412-15295_section_c6742a05",
+      "2412-15295_sent_a39304e1": "2412-15295_section_c992cc22",
+      "2412-15295_sent_dfe95065": "2412-15295_section_c992cc22",
+      "2412-15295_sent_f2f68092": "2412-15295_section_c992cc22",
+      "2412-15295_sent_0f9cd809": "2412-15295_section_c6742a05",
+      "2412-15295_sent_63a90c65": "2412-15295_section_c992cc22",
+      "2412-15295_sent_0a613b56": "2412-15295_section_c992cc22",
+      "2412-15295_sent_3da8f65a": "2412-15295_section_c992cc22",
+      "2412-15295_sent_ebade862": "2412-15295_section_c992cc22",
+      "2412-15295_sent_4be0e349": "2412-15295_section_c992cc22",
+      "2412-15295_sent_6eec4e06": "2412-15295_section_c992cc22",
+      "2412-15295_sent_b3819ceb": "2412-15295_section_c992cc22",
+      "2412-15295_sent_dac0a887": "2412-15295_section_c992cc22",
+      "2412-15295_sent_86ce906c": "2412-15295_section_c992cc22",
+      "2412-15295_sent_718ce374": "2412-15295_section_c992cc22",
+      "2412-15295_sent_6bf07264": "2412-15295_section_c992cc22",
+      "2412-15295_sent_4d8b90ff": "2412-15295_section_c992cc22",
+      "2412-15295_sent_cce4942a": "2412-15295_section_c992cc22",
+      "2412-15295_sent_741f7bfd": "2412-15295_section_c992cc22",
+      "2412-15295_sent_227799d2": "2412-15295_section_c992cc22",
+      "2412-15295_sent_b1a9e261": "2412-15295_section_c992cc22",
+      "2412-15295_sent_7d25c6bd": "2412-15295_section_c992cc22",
+      "2412-15295_section_c6742a05": "2412-15295_chapter_cff1be7f",
+      "2412-15295_sent_63a3e3a1": "2412-15295_section_c6742a05",
+      "2412-15295_sent_c2b90eed": "2412-15295_section_c6742a05",
+      "2412-15295_sent_4b43c9aa": "2412-15295_section_c6742a05",
+      "2412-15295_sent_23241472": "2412-15295_section_c6742a05",
+      "2412-15295_sent_5444ebf8": "2412-15295_section_c6742a05",
+      "2412-15295_sent_a5ead65d": "2412-15295_section_c6742a05",
+      "2412-15295_sent_5aa7d9d9": "2412-15295_section_c6742a05",
+      "2412-15295_sent_146354fe": "2412-15295_section_c6742a05",
+      "2412-15295_sent_b2cb1ef6": "2412-15295_section_c6742a05",
+      "2412-15295_sent_65f0338d": "2412-15295_section_c6742a05",
+      "2412-15295_sent_f6ed8dae": "2412-15295_section_c6742a05",
+      "2412-15295_sent_70f3bf8a": "2412-15295_section_c6742a05",
+      "2412-15295_section_70a71cc4": "2412-15295_chapter_cff1be7f",
+      "2412-15295_sent_69bffa94": "2412-15295_section_70a71cc4",
+      "2412-15295_sent_78edfa20": "2412-15295_section_70a71cc4",
+      "2412-15295_chapter_324ce642": "2412-15295_doc_root",
+      "2412-15295_sent_7fc1e177": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_f5f2f857": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_3cb8a624": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_58c11816": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_3c8c092e": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_6d2cee13": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_22acb9c1": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_0447256e": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_9f1015a7": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_8511d83a": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_cae1b777": "2412-15295_chapter_324ce642"
+    },
+    "2": {
+      "2412-15295_sent_d7d07f6e": "2412-15295_doc_root",
+      "2412-15295_sent_79cd5a76": "2412-15295_doc_root",
+      "2412-15295_chapter_e353dbe4": "2412-15295_doc_root",
+      "2412-15295_sent_fb4d3c2f": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_bf271b9b": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_c22a6b2e": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_36219660": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_b186c774": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_8aca4f6b": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_46aa9fd7": "2412-15295_chapter_e353dbe4",
+      "2412-15295_sent_3ae86c7f": "2412-15295_chapter_e353dbe4",
+      "2412-15295_chapter_0b79795d": "2412-15295_doc_root",
+      "2412-15295_sent_28f8c072": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_7fc0e0db": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_4eebd15c": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_91149f70": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_738c97e4": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_e49f6f03": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_c4bbd027": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_1f9e0e9f": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_d5fbcc60": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_3906246b": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_d91b7862": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_5f2cbb63": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_dbbf8d5c": "2412-15295_chapter_0b79795d",
+      "2412-15295_enumerate_8a3ba8a9": "2412-15295_subsection_7fb9b291",
+      "2412-15295_item_c22607d5": "2412-15295_itemize_6f49a267",
+      "2412-15295_sent_7afc35d2": "2412-15295_item_c22607d5",
+      "2412-15295_sent_6ae296c2": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ad06543f": "2412-15295_item_c22607d5",
+      "2412-15295_sent_935daa31": "2412-15295_item_c22607d5",
+      "2412-15295_sent_b9f4257b": "2412-15295_item_c22607d5",
+      "2412-15295_sent_bda900a3": "2412-15295_item_c22607d5",
+      "2412-15295_sent_38aa90f6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_bc6d86e0": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_b095b216": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_2f04f331": "2412-15295_chapter_0b79795d",
+      "2412-15295_itemize_6f49a267": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0c6bd09e": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ce2037aa": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fe618253": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_a8cb9d1e": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_1afbf3a3": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_696148b1": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_d81a9ce8": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_85106da0": "2412-15295_chapter_0b79795d",
+      "2412-15295_sent_7e413e12": "2412-15295_chapter_0b79795d",
+      "2412-15295_chapter_a9ded1e5": "2412-15295_doc_root",
+      "2412-15295_sent_2c54fd5e": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_6108f3e6": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_section_48c8af8d": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_d3052247": "2412-15295_section_48c8af8d",
+      "2412-15295_sent_94c180e1": "2412-15295_section_48c8af8d",
+      "2412-15295_eq_86b73b62": "2412-15295_section_48c8af8d",
+      "2412-15295_sent_b1053204": "2412-15295_section_48c8af8d",
+      "2412-15295_sent_35db9132": "2412-15295_section_48c8af8d",
+      "2412-15295_sent_bcc957d7": "2412-15295_section_48c8af8d",
+      "2412-15295_section_aed11946": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_bfe4cfbd": "2412-15295_section_aed11946",
+      "2412-15295_sent_5c6e60a0": "2412-15295_section_aed11946",
+      "2412-15295_sent_f88d59dc": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_e88e2f80": "2412-15295_item_c22607d5",
+      "2412-15295_sent_de4d16b2": "2412-15295_item_c22607d5",
+      "2412-15295_eq_e46c907e": "2412-15295_item_c22607d5",
+      "2412-15295_sent_01d96570": "2412-15295_item_c22607d5",
+      "2412-15295_eq_e3dea4cc": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f841afb4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_792789e7": "2412-15295_section_aed11946",
+      "2412-15295_sent_8642889c": "2412-15295_section_aed11946",
+      "2412-15295_sent_f54770c7": "2412-15295_section_aed11946",
+      "2412-15295_sent_a349078e": "2412-15295_section_aed11946",
+      "2412-15295_section_1e4c83af": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_4c10b5a0": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_755fa474": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_b0190cb4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fee04249": "2412-15295_item_c22607d5",
+      "2412-15295_eq_02b0896d": "2412-15295_item_c22607d5",
+      "2412-15295_sent_db91ff68": "2412-15295_item_c22607d5",
+      "2412-15295_sent_c6d88b31": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_38721271": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_6ee92d55": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_cee33665": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_c5b7eacf": "2412-15295_section_1e4c83af",
+      "2412-15295_sent_1ba9db60": "2412-15295_section_1e4c83af",
+      "2412-15295_section_3559b631": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_a8dd2758": "2412-15295_section_3559b631",
+      "2412-15295_sent_0f721832": "2412-15295_section_3559b631",
+      "2412-15295_eq_8eef9ebe": "2412-15295_section_3559b631",
+      "2412-15295_sent_43a0d9fc": "2412-15295_section_3559b631",
+      "2412-15295_eq_bc6caab4": "2412-15295_section_3559b631",
+      "2412-15295_sent_377eaf6b": "2412-15295_section_3559b631",
+      "2412-15295_sent_c78a7c80": "2412-15295_section_3559b631",
+      "2412-15295_eq_601f4b4a": "2412-15295_section_3559b631",
+      "2412-15295_sent_b55c909b": "2412-15295_section_3559b631",
+      "2412-15295_sent_42f3e5a1": "2412-15295_section_3559b631",
+      "2412-15295_section_17542289": "2412-15295_chapter_a9ded1e5",
+      "2412-15295_sent_2bb059ab": "2412-15295_section_17542289",
+      "2412-15295_sent_09a9ade1": "2412-15295_section_17542289",
+      "2412-15295_sent_9cc97810": "2412-15295_section_17542289",
+      "2412-15295_sent_d5153de3": "2412-15295_section_17542289",
+      "2412-15295_sent_8e66e5ec": "2412-15295_section_17542289",
+      "2412-15295_sent_a0b20637": "2412-15295_section_17542289",
+      "2412-15295_sent_65035f6c": "2412-15295_section_17542289",
+      "2412-15295_sent_2718ea29": "2412-15295_section_17542289",
+      "2412-15295_sent_b7e4582f": "2412-15295_section_17542289",
+      "2412-15295_sent_94837fdc": "2412-15295_section_17542289",
+      "2412-15295_sent_813f002b": "2412-15295_section_17542289",
+      "2412-15295_sent_a02de19e": "2412-15295_section_17542289",
+      "2412-15295_sent_7453919d": "2412-15295_section_17542289",
+      "2412-15295_sent_c996a4b8": "2412-15295_section_17542289",
+      "2412-15295_sent_0e13e264": "2412-15295_section_17542289",
+      "2412-15295_chapter_6a68ff2c": "2412-15295_doc_root",
+      "2412-15295_sent_babbcbd6": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_c5b25ce0": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_a9ab4972": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_paragraph_49d9e019": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_02b20ddb": "2412-15295_paragraph_49d9e019",
+      "2412-15295_sent_7711a846": "2412-15295_paragraph_49d9e019",
+      "2412-15295_sent_3c249e5f": "2412-15295_paragraph_49d9e019",
+      "2412-15295_sent_6bcc785e": "2412-15295_paragraph_49d9e019",
+      "2412-15295_sent_9e5ba2ef": "2412-15295_paragraph_49d9e019",
+      "2412-15295_section_8d38d1e6": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_337d477d": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_47465f13": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_22603e87": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f9925ad5": "2412-15295_item_c22607d5",
+      "2412-15295_sent_cafe9f85": "2412-15295_item_c22607d5",
+      "2412-15295_eq_62864d1d": "2412-15295_item_c22607d5",
+      "2412-15295_sent_62db4de2": "2412-15295_item_c22607d5",
+      "2412-15295_eq_d947938b": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fe3d1369": "2412-15295_item_c22607d5",
+      "2412-15295_subsection_dcdb9dc0": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_bc73e63b": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_cf2ff389": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_89957aca": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_b1959f96": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_9f6ac855": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_22765a88": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_d542eaa0": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_a6fdfbe5": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_0d4918f1": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_7f3fb43d": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_bb6e277f": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_eq_25b3b801": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_dd8ae660": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_sent_c242e3e2": "2412-15295_subsection_dcdb9dc0",
+      "2412-15295_subsection_43662d56": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_277e6126": "2412-15295_subsection_43662d56",
+      "2412-15295_sent_eee904df": "2412-15295_subsection_43662d56",
+      "2412-15295_paragraph_28870244": "2412-15295_subsection_43662d56",
+      "2412-15295_sent_7ada675f": "2412-15295_item_c22607d5",
+      "2412-15295_sent_383fd2c8": "2412-15295_item_c22607d5",
+      "2412-15295_sent_2ae8aa15": "2412-15295_item_c22607d5",
+      "2412-15295_sent_c1ecb374": "2412-15295_item_c22607d5",
+      "2412-15295_sent_10ef057a": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0e734935": "2412-15295_item_c22607d5",
+      "2412-15295_sent_49c955e4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_34dfed72": "2412-15295_item_c22607d5",
+      "2412-15295_sent_3cfaa1cd": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d7dbe5a5": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ada10e68": "2412-15295_item_c22607d5",
+      "2412-15295_eq_3c80b8a3": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d3b0e938": "2412-15295_item_c22607d5",
+      "2412-15295_sent_bc899c66": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a8c97f48": "2412-15295_item_c22607d5",
+      "2412-15295_sent_090ca7c5": "2412-15295_item_c22607d5",
+      "2412-15295_sent_028fbfd1": "2412-15295_item_c22607d5",
+      "2412-15295_sent_68366737": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ff8f0a51": "2412-15295_item_c22607d5",
+      "2412-15295_sent_4e76938c": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a0136a28": "2412-15295_item_c22607d5",
+      "2412-15295_sent_7f4daf2f": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d974cc3c": "2412-15295_item_c22607d5",
+      "2412-15295_sent_128d3aae": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ea96dc25": "2412-15295_item_c22607d5",
+      "2412-15295_sent_344eb558": "2412-15295_item_c22607d5",
+      "2412-15295_sent_e15394ef": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a4b18585": "2412-15295_item_c22607d5",
+      "2412-15295_subsection_da2371df": "2412-15295_section_8d38d1e6",
+      "2412-15295_sent_3376193b": "2412-15295_subsection_da2371df",
+      "2412-15295_paragraph_5d32d44a": "2412-15295_subsection_da2371df",
+      "2412-15295_sent_909c7dfd": "2412-15295_paragraph_5d32d44a",
+      "2412-15295_sent_bf81782e": "2412-15295_item_c22607d5",
+      "2412-15295_sent_09a7644b": "2412-15295_item_c22607d5",
+      "2412-15295_sent_e3d0d5aa": "2412-15295_paragraph_5d32d44a",
+      "2412-15295_eq_f573500f": "2412-15295_paragraph_5d32d44a",
+      "2412-15295_paragraph_439f845d": "2412-15295_subsection_da2371df",
+      "2412-15295_sent_1b2b482a": "2412-15295_paragraph_439f845d",
+      "2412-15295_sent_7ea7483b": "2412-15295_item_c22607d5",
+      "2412-15295_sent_e794bcd1": "2412-15295_item_c22607d5",
+      "2412-15295_sent_7c2a3015": "2412-15295_paragraph_439f845d",
+      "2412-15295_eq_56b6d49d": "2412-15295_paragraph_439f845d",
+      "2412-15295_paragraph_0e41ae7f": "2412-15295_subsection_da2371df",
+      "2412-15295_sent_98a9ae29": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_eq_b0be00fb": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_sent_d23bdf12": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_sent_8e4943c3": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_sent_19190882": "2412-15295_paragraph_0e41ae7f",
+      "2412-15295_section_fd355ab7": "2412-15295_chapter_6a68ff2c",
+      "2412-15295_sent_5affa7ea": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_9f336615": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_10331dc3": "2412-15295_section_fd355ab7",
+      "2412-15295_subsection_265466c7": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_d60082f4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_9c2bb92e": "2412-15295_item_c22607d5",
+      "2412-15295_eq_e61c52a6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_38d4a5a6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a5b4612c": "2412-15295_item_c22607d5",
+      "2412-15295_eq_44200a45": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fa71ee6a": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0752e7d8": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a1e0de9e": "2412-15295_item_c22607d5",
+      "2412-15295_sent_4f65ec05": "2412-15295_item_c22607d5",
+      "2412-15295_sent_7674f1a3": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d2cd68a9": "2412-15295_item_c22607d5",
+      "2412-15295_sent_169737b1": "2412-15295_item_c22607d5",
+      "2412-15295_subsection_7fb9b291": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_dd636c13": "2412-15295_subsection_7fb9b291",
+      "2412-15295_sent_570d677e": "2412-15295_subsection_7fb9b291",
+      "2412-15295_sent_0fcff02f": "2412-15295_item_c22607d5",
+      "2412-15295_sent_fa3f5f60": "2412-15295_item_c22607d5",
+      "2412-15295_sent_8f95f0d1": "2412-15295_item_c22607d5",
+      "2412-15295_sent_4e766f59": "2412-15295_item_c22607d5",
+      "2412-15295_eq_544cc5fe": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a9772ff2": "2412-15295_item_c22607d5",
+      "2412-15295_sent_9a4768a6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_173edeb8": "2412-15295_item_c22607d5",
+      "2412-15295_sent_23ec9825": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f196dc70": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f75bc3bd": "2412-15295_subsection_7fb9b291",
+      "2412-15295_subsection_502475f8": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_06d4dc65": "2412-15295_subsection_502475f8",
+      "2412-15295_paragraph_1ec6701e": "2412-15295_subsection_502475f8",
+      "2412-15295_sent_564c9904": "2412-15295_paragraph_1ec6701e",
+      "2412-15295_sent_700103f5": "2412-15295_item_c22607d5",
+      "2412-15295_sent_5b023882": "2412-15295_item_c22607d5",
+      "2412-15295_sent_780331dd": "2412-15295_item_c22607d5",
+      "2412-15295_sent_959cf449": "2412-15295_item_c22607d5",
+      "2412-15295_eq_0751ee44": "2412-15295_item_c22607d5",
+      "2412-15295_sent_38dd00c8": "2412-15295_item_c22607d5",
+      "2412-15295_eq_84d77dcd": "2412-15295_item_c22607d5",
+      "2412-15295_sent_56a8857d": "2412-15295_paragraph_1ec6701e",
+      "2412-15295_paragraph_2f34a074": "2412-15295_subsection_502475f8",
+      "2412-15295_sent_194157b5": "2412-15295_paragraph_2f34a074",
+      "2412-15295_sent_4cd23f38": "2412-15295_item_c22607d5",
+      "2412-15295_eq_d64c1f48": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0aa9cd66": "2412-15295_item_c22607d5",
+      "2412-15295_eq_51806a69": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d0f6e489": "2412-15295_item_c22607d5",
+      "2412-15295_sent_e13c4335": "2412-15295_item_c22607d5",
+      "2412-15295_sent_94d2d55d": "2412-15295_item_c22607d5",
+      "2412-15295_sent_9cd324ce": "2412-15295_item_c22607d5",
+      "2412-15295_sent_cbdb8a99": "2412-15295_item_c22607d5",
+      "2412-15295_sent_0a7c40cb": "2412-15295_paragraph_2f34a074",
+      "2412-15295_paragraph_7616e817": "2412-15295_subsection_502475f8",
+      "2412-15295_sent_b168d96c": "2412-15295_paragraph_7616e817",
+      "2412-15295_sent_c3bbd415": "2412-15295_paragraph_7616e817",
+      "2412-15295_paragraph_d3ea660b": "2412-15295_subsection_502475f8",
+      "2412-15295_sent_c6755be3": "2412-15295_paragraph_d3ea660b",
+      "2412-15295_sent_48200673": "2412-15295_paragraph_d3ea660b",
+      "2412-15295_sent_593feaaa": "2412-15295_paragraph_d3ea660b",
+      "2412-15295_subsection_e646e16b": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_1355c6e6": "2412-15295_subsection_e646e16b",
+      "2412-15295_sent_a2c01760": "2412-15295_subsection_e646e16b",
+      "2412-15295_eq_c6176421": "2412-15295_subsection_e646e16b",
+      "2412-15295_sent_80b32156": "2412-15295_subsection_e646e16b",
+      "2412-15295_sent_a45844fd": "2412-15295_subsection_e646e16b",
+      "2412-15295_sent_db5b2279": "2412-15295_item_c22607d5",
+      "2412-15295_sent_d7512287": "2412-15295_item_c22607d5",
+      "2412-15295_subsection_be361ff1": "2412-15295_section_fd355ab7",
+      "2412-15295_sent_f385b3ba": "2412-15295_subsection_be361ff1",
+      "2412-15295_sent_6b885bf8": "2412-15295_subsection_be361ff1",
+      "2412-15295_sent_fa1c6d25": "2412-15295_subsection_be361ff1",
+      "2412-15295_sent_57a14e21": "2412-15295_subsection_be361ff1",
+      "2412-15295_section_29061219": "2412-15295_chapter_4829262c",
+      "2412-15295_sent_28433d31": "2412-15295_section_29061219",
+      "2412-15295_sent_1e893d7f": "2412-15295_section_29061219",
+      "2412-15295_sent_845cb1e4": "2412-15295_item_c22607d5",
+      "2412-15295_sent_ce85f3a6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_a07af887": "2412-15295_item_c22607d5",
+      "2412-15295_sent_413f0f28": "2412-15295_item_c22607d5",
+      "2412-15295_sent_36bf9a35": "2412-15295_item_c22607d5",
+      "2412-15295_sent_64420ad0": "2412-15295_item_c22607d5",
+      "2412-15295_sent_089d6200": "2412-15295_item_c22607d5",
+      "2412-15295_sent_f4c362d6": "2412-15295_item_c22607d5",
+      "2412-15295_sent_440fc45e": "2412-15295_section_29061219",
+      "2412-15295_sent_e8741372": "2412-15295_section_29061219",
+      "2412-15295_sent_22096fd7": "2412-15295_section_29061219",
+      "2412-15295_chapter_4829262c": "2412-15295_doc_root",
+      "2412-15295_sent_32783c84": "2412-15295_chapter_4829262c",
+      "2412-15295_sent_958f4e35": "2412-15295_chapter_4829262c",
+      "2412-15295_section_c2b2b81b": "2412-15295_chapter_4829262c",
+      "2412-15295_sent_b0822b4f": "2412-15295_section_c2b2b81b",
+      "2412-15295_sent_f0534dc1": "2412-15295_section_c2b2b81b",
+      "2412-15295_sent_3cd0a4d8": "2412-15295_section_c2b2b81b",
+      "2412-15295_sent_da35ea88": "2412-15295_section_c2b2b81b",
+      "2412-15295_sent_0cb7f5ca": "2412-15295_section_c2b2b81b",
+      "2412-15295_section_d575842d": "2412-15295_chapter_4829262c",
+      "2412-15295_sent_f9e2c734": "2412-15295_section_d575842d",
+      "2412-15295_sent_ce9ee3c0": "2412-15295_section_d575842d",
+      "2412-15295_sent_26d5da4d": "2412-15295_section_d575842d",
+      "2412-15295_sent_6fdade65": "2412-15295_section_d575842d",
+      "2412-15295_sent_68501b30": "2412-15295_section_d575842d",
+      "2412-15295_sent_94051895": "2412-15295_section_d575842d",
+      "2412-15295_sent_5ecf741e": "2412-15295_section_d575842d",
+      "2412-15295_section_1a7b54e3": "2412-15295_chapter_4829262c",
+      "2412-15295_fig_9ae77dce": "2412-15295_section_1a7b54e3",
+      "2412-15295_sent_cb41b626": "2412-15295_section_1a7b54e3",
+      "2412-15295_sent_0a7ac080": "2412-15295_section_1a7b54e3",
+      "2412-15295_sent_a9ab8788": "2412-15295_section_1a7b54e3",
+      "2412-15295_sent_632ee56b": "2412-15295_section_1a7b54e3",
+      "2412-15295_section_6fc64da9": "2412-15295_chapter_4829262c",
+      "2412-15295_fig_0234e9e9": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_2e1926ae": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_b0763eda": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_63aa6f25": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_9c652686": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_aa7dc40d": "2412-15295_section_6fc64da9",
+      "2412-15295_sent_6905732f": "2412-15295_section_6fc64da9",
+      "2412-15295_section_108a3c1b": "2412-15295_chapter_4829262c",
+      "2412-15295_fig_e2b0920d": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_d04c8fe8": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_20490f17": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_4fd4e89b": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_461da9d8": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_97683584": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_e884bde6": "2412-15295_section_108a3c1b",
+      "2412-15295_sent_af231c7e": "2412-15295_section_29061219",
+      "2412-15295_sent_4ae325d6": "2412-15295_section_29061219",
+      "2412-15295_sent_4e41b51c": "2412-15295_section_29061219",
+      "2412-15295_chapter_6f8b794f": "2412-15295_doc_root",
+      "2412-15295_sent_dad94cb9": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_cb793ee1": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_be00c267": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_8f9ae479": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_013874f9": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_ece96e08": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_1c0bc873": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_3ec39fd7": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_df19c49f": "2412-15295_chapter_6f8b794f",
+      "2412-15295_sent_1d1ef1bc": "2412-15295_chapter_6f8b794f",
+      "2412-15295_chapter_cff1be7f": "2412-15295_doc_root",
+      "2412-15295_sent_988222e2": "2412-15295_chapter_cff1be7f",
+      "2412-15295_section_c992cc22": "2412-15295_chapter_cff1be7f",
+      "2412-15295_sent_5903f555": "2412-15295_section_c992cc22",
+      "2412-15295_sent_d95e906c": "2412-15295_section_c6742a05",
+      "2412-15295_sent_fffdc60d": "2412-15295_section_c6742a05",
+      "2412-15295_sent_a39304e1": "2412-15295_section_c992cc22",
+      "2412-15295_sent_dfe95065": "2412-15295_section_c992cc22",
+      "2412-15295_sent_f2f68092": "2412-15295_section_c992cc22",
+      "2412-15295_sent_0f9cd809": "2412-15295_section_c6742a05",
+      "2412-15295_sent_63a90c65": "2412-15295_section_c992cc22",
+      "2412-15295_sent_0a613b56": "2412-15295_section_c992cc22",
+      "2412-15295_sent_3da8f65a": "2412-15295_section_c992cc22",
+      "2412-15295_sent_ebade862": "2412-15295_section_c992cc22",
+      "2412-15295_sent_4be0e349": "2412-15295_section_c992cc22",
+      "2412-15295_sent_6eec4e06": "2412-15295_section_c992cc22",
+      "2412-15295_sent_b3819ceb": "2412-15295_section_c992cc22",
+      "2412-15295_sent_dac0a887": "2412-15295_section_c992cc22",
+      "2412-15295_sent_86ce906c": "2412-15295_section_c992cc22",
+      "2412-15295_sent_718ce374": "2412-15295_section_c992cc22",
+      "2412-15295_sent_6bf07264": "2412-15295_section_c992cc22",
+      "2412-15295_sent_4d8b90ff": "2412-15295_section_c992cc22",
+      "2412-15295_sent_cce4942a": "2412-15295_section_c992cc22",
+      "2412-15295_sent_741f7bfd": "2412-15295_section_c992cc22",
+      "2412-15295_sent_227799d2": "2412-15295_section_c992cc22",
+      "2412-15295_sent_b1a9e261": "2412-15295_section_c992cc22",
+      "2412-15295_sent_7d25c6bd": "2412-15295_section_c992cc22",
+      "2412-15295_section_c6742a05": "2412-15295_chapter_cff1be7f",
+      "2412-15295_sent_63a3e3a1": "2412-15295_section_c6742a05",
+      "2412-15295_sent_c2b90eed": "2412-15295_section_c6742a05",
+      "2412-15295_sent_4b43c9aa": "2412-15295_section_c6742a05",
+      "2412-15295_sent_23241472": "2412-15295_section_c6742a05",
+      "2412-15295_sent_5444ebf8": "2412-15295_section_c6742a05",
+      "2412-15295_sent_a5ead65d": "2412-15295_section_c6742a05",
+      "2412-15295_sent_5aa7d9d9": "2412-15295_section_c6742a05",
+      "2412-15295_sent_146354fe": "2412-15295_section_c6742a05",
+      "2412-15295_sent_b2cb1ef6": "2412-15295_section_c6742a05",
+      "2412-15295_sent_65f0338d": "2412-15295_section_c6742a05",
+      "2412-15295_sent_f6ed8dae": "2412-15295_section_c6742a05",
+      "2412-15295_sent_70f3bf8a": "2412-15295_section_c6742a05",
+      "2412-15295_section_70a71cc4": "2412-15295_chapter_cff1be7f",
+      "2412-15295_sent_69bffa94": "2412-15295_section_70a71cc4",
+      "2412-15295_sent_78edfa20": "2412-15295_section_70a71cc4",
+      "2412-15295_chapter_324ce642": "2412-15295_doc_root",
+      "2412-15295_sent_7fc1e177": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_f5f2f857": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_3cb8a624": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_58c11816": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_3c8c092e": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_6d2cee13": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_22acb9c1": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_0447256e": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_9f1015a7": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_8511d83a": "2412-15295_chapter_324ce642",
+      "2412-15295_sent_cae1b777": "2412-15295_chapter_324ce642"
+    }
+  },
+  "merged_parents": {
+    "2412-15295_sent_d7d07f6e": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_79cd5a76": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_chapter_e353dbe4": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_fb4d3c2f": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_sent_bf271b9b": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_sent_c22a6b2e": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_sent_36219660": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_sent_d070b5e8": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_sent_8aca4f6b": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_sent_46aa9fd7": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_sent_3ae86c7f": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_chapter_0b79795d": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_28f8c072": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_7fc0e0db": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_4eebd15c": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_91149f70": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_738c97e4": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_e49f6f03": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_c4bbd027": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_1f9e0e9f": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_d5fbcc60": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_3906246b": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_d91b7862": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_5f2cbb63": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_dbbf8d5c": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_enumerate_8a3ba8a9": [
+      "2412-15295_chapter_0b79795d",
+      "2412-15295_item_c22607d5",
+      "2412-15295_paragraph_28870244",
+      "2412-15295_section_1e4c83af",
+      "2412-15295_section_8d38d1e6",
+      "2412-15295_section_aed11946",
+      "2412-15295_subsection_7fb9b291"
+    ],
+    "2412-15295_item_c22607d5": [
+      "2412-15295_enumerate_8a3ba8a9",
+      "2412-15295_itemize_6f49a267"
+    ],
+    "2412-15295_sent_7afc35d2": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_6ae296c2": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_ad06543f": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_935daa31": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_b9f4257b": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_bda900a3": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_38aa90f6": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_bc6d86e0": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_b095b216": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_2f04f331": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_itemize_6f49a267": [
+      "2412-15295_chapter_0b79795d",
+      "2412-15295_item_c22607d5",
+      "2412-15295_paragraph_1ec6701e",
+      "2412-15295_paragraph_2f34a074",
+      "2412-15295_paragraph_439f845d",
+      "2412-15295_paragraph_5d32d44a",
+      "2412-15295_section_29061219",
+      "2412-15295_subsection_265466c7",
+      "2412-15295_subsection_e646e16b"
+    ],
+    "2412-15295_sent_0c6bd09e": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_ce2037aa": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_fe618253": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_a8cb9d1e": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_1afbf3a3": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_696148b1": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_d81a9ce8": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_85106da0": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_sent_7e413e12": [
+      "2412-15295_chapter_0b79795d"
+    ],
+    "2412-15295_chapter_a9ded1e5": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_2c54fd5e": [
+      "2412-15295_chapter_a9ded1e5"
+    ],
+    "2412-15295_sent_6108f3e6": [
+      "2412-15295_chapter_a9ded1e5"
+    ],
+    "2412-15295_section_48c8af8d": [
+      "2412-15295_chapter_a9ded1e5"
+    ],
+    "2412-15295_sent_d3052247": [
+      "2412-15295_section_48c8af8d"
+    ],
+    "2412-15295_sent_94c180e1": [
+      "2412-15295_section_48c8af8d"
+    ],
+    "2412-15295_eq_86b73b62": [
+      "2412-15295_section_48c8af8d"
+    ],
+    "2412-15295_sent_b1053204": [
+      "2412-15295_section_48c8af8d"
+    ],
+    "2412-15295_sent_35db9132": [
+      "2412-15295_section_48c8af8d"
+    ],
+    "2412-15295_sent_bcc957d7": [
+      "2412-15295_section_48c8af8d"
+    ],
+    "2412-15295_section_aed11946": [
+      "2412-15295_chapter_a9ded1e5"
+    ],
+    "2412-15295_sent_bfe4cfbd": [
+      "2412-15295_section_aed11946"
+    ],
+    "2412-15295_sent_5c6e60a0": [
+      "2412-15295_section_aed11946"
+    ],
+    "2412-15295_sent_f88d59dc": [
+      "2412-15295_section_1e4c83af",
+      "2412-15295_section_aed11946"
+    ],
+    "2412-15295_sent_e88e2f80": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_de4d16b2": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_e46c907e": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_01d96570": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_e3dea4cc": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_f841afb4": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_792789e7": [
+      "2412-15295_section_aed11946"
+    ],
+    "2412-15295_sent_8642889c": [
+      "2412-15295_section_aed11946"
+    ],
+    "2412-15295_sent_f54770c7": [
+      "2412-15295_section_aed11946"
+    ],
+    "2412-15295_sent_a349078e": [
+      "2412-15295_section_aed11946"
+    ],
+    "2412-15295_section_1e4c83af": [
+      "2412-15295_chapter_a9ded1e5"
+    ],
+    "2412-15295_sent_4c10b5a0": [
+      "2412-15295_section_1e4c83af"
+    ],
+    "2412-15295_sent_755fa474": [
+      "2412-15295_section_1e4c83af"
+    ],
+    "2412-15295_sent_b0190cb4": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_fee04249": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_02b0896d": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_db91ff68": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_c6d88b31": [
+      "2412-15295_section_1e4c83af"
+    ],
+    "2412-15295_sent_38721271": [
+      "2412-15295_section_1e4c83af"
+    ],
+    "2412-15295_sent_6ee92d55": [
+      "2412-15295_section_1e4c83af"
+    ],
+    "2412-15295_sent_cee33665": [
+      "2412-15295_section_1e4c83af"
+    ],
+    "2412-15295_sent_c5b7eacf": [
+      "2412-15295_section_1e4c83af"
+    ],
+    "2412-15295_sent_1ba9db60": [
+      "2412-15295_section_1e4c83af"
+    ],
+    "2412-15295_section_3559b631": [
+      "2412-15295_chapter_a9ded1e5"
+    ],
+    "2412-15295_sent_a8dd2758": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_sent_0f721832": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_eq_8eef9ebe": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_sent_43a0d9fc": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_eq_bc6caab4": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_sent_377eaf6b": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_sent_c78a7c80": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_eq_601f4b4a": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_sent_b55c909b": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_sent_42f3e5a1": [
+      "2412-15295_section_3559b631"
+    ],
+    "2412-15295_section_17542289": [
+      "2412-15295_chapter_a9ded1e5"
+    ],
+    "2412-15295_sent_2bb059ab": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_09a9ade1": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_9cc97810": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_fcfbec83": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_22bc3604": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_414b39bd": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_12ce5f25": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_346eee3e": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_29ab0f1a": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_chapter_6a68ff2c": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_babbcbd6": [
+      "2412-15295_chapter_6a68ff2c"
+    ],
+    "2412-15295_sent_c5b25ce0": [
+      "2412-15295_chapter_6a68ff2c"
+    ],
+    "2412-15295_sent_a9ab4972": [
+      "2412-15295_chapter_6a68ff2c"
+    ],
+    "2412-15295_paragraph_49d9e019": [
+      "2412-15295_chapter_6a68ff2c"
+    ],
+    "2412-15295_sent_02b20ddb": [
+      "2412-15295_paragraph_49d9e019"
+    ],
+    "2412-15295_sent_7711a846": [
+      "2412-15295_paragraph_49d9e019"
+    ],
+    "2412-15295_sent_3c249e5f": [
+      "2412-15295_paragraph_49d9e019"
+    ],
+    "2412-15295_sent_6bcc785e": [
+      "2412-15295_paragraph_49d9e019"
+    ],
+    "2412-15295_sent_9e5ba2ef": [
+      "2412-15295_paragraph_49d9e019"
+    ],
+    "2412-15295_section_8d38d1e6": [
+      "2412-15295_chapter_6a68ff2c"
+    ],
+    "2412-15295_sent_337d477d": [
+      "2412-15295_section_8d38d1e6"
+    ],
+    "2412-15295_sent_47465f13": [
+      "2412-15295_section_8d38d1e6"
+    ],
+    "2412-15295_sent_22603e87": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_f9925ad5": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_cafe9f85": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_62864d1d": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_62db4de2": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_d947938b": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_fe3d1369": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_subsection_dcdb9dc0": [
+      "2412-15295_section_8d38d1e6"
+    ],
+    "2412-15295_sent_bc73e63b": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_eq_cf2ff389": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_sent_89957aca": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_sent_b1959f96": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_eq_9f6ac855": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_sent_22765a88": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_eq_d542eaa0": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_sent_a6fdfbe5": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_eq_0d4918f1": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_sent_7f3fb43d": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_sent_bb6e277f": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_eq_25b3b801": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_sent_dd8ae660": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_sent_c242e3e2": [
+      "2412-15295_subsection_dcdb9dc0"
+    ],
+    "2412-15295_subsection_43662d56": [
+      "2412-15295_section_8d38d1e6"
+    ],
+    "2412-15295_sent_277e6126": [
+      "2412-15295_subsection_43662d56"
+    ],
+    "2412-15295_sent_eee904df": [
+      "2412-15295_subsection_43662d56"
+    ],
+    "2412-15295_paragraph_28870244": [
+      "2412-15295_subsection_43662d56"
+    ],
+    "2412-15295_sent_7ada675f": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_383fd2c8": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_2ae8aa15": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_c1ecb374": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_10ef057a": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_0e734935": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_49c955e4": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_34dfed72": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_3cfaa1cd": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_d7dbe5a5": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_ada10e68": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_3c80b8a3": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_d3b0e938": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_bc899c66": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_a8c97f48": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_090ca7c5": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_028fbfd1": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_68366737": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_ff8f0a51": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_4e76938c": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_a0136a28": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_7f4daf2f": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_d974cc3c": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_128d3aae": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_ea96dc25": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_344eb558": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_e15394ef": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_a4b18585": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_subsection_da2371df": [
+      "2412-15295_section_8d38d1e6"
+    ],
+    "2412-15295_sent_3376193b": [
+      "2412-15295_subsection_da2371df"
+    ],
+    "2412-15295_paragraph_5d32d44a": [
+      "2412-15295_subsection_da2371df"
+    ],
+    "2412-15295_sent_909c7dfd": [
+      "2412-15295_paragraph_5d32d44a"
+    ],
+    "2412-15295_sent_bf81782e": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_09a7644b": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_e3d0d5aa": [
+      "2412-15295_paragraph_5d32d44a"
+    ],
+    "2412-15295_eq_f573500f": [
+      "2412-15295_paragraph_5d32d44a"
+    ],
+    "2412-15295_paragraph_439f845d": [
+      "2412-15295_subsection_da2371df"
+    ],
+    "2412-15295_sent_1b2b482a": [
+      "2412-15295_paragraph_439f845d"
+    ],
+    "2412-15295_sent_7ea7483b": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_e794bcd1": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_7c2a3015": [
+      "2412-15295_paragraph_439f845d"
+    ],
+    "2412-15295_eq_56b6d49d": [
+      "2412-15295_paragraph_439f845d"
+    ],
+    "2412-15295_paragraph_0e41ae7f": [
+      "2412-15295_subsection_da2371df"
+    ],
+    "2412-15295_sent_98a9ae29": [
+      "2412-15295_paragraph_0e41ae7f"
+    ],
+    "2412-15295_eq_b0be00fb": [
+      "2412-15295_paragraph_0e41ae7f"
+    ],
+    "2412-15295_sent_d23bdf12": [
+      "2412-15295_paragraph_0e41ae7f"
+    ],
+    "2412-15295_sent_8e4943c3": [
+      "2412-15295_paragraph_0e41ae7f"
+    ],
+    "2412-15295_sent_19190882": [
+      "2412-15295_paragraph_0e41ae7f"
+    ],
+    "2412-15295_section_fd355ab7": [
+      "2412-15295_chapter_6a68ff2c"
+    ],
+    "2412-15295_sent_5affa7ea": [
+      "2412-15295_section_fd355ab7"
+    ],
+    "2412-15295_sent_9f336615": [
+      "2412-15295_section_fd355ab7"
+    ],
+    "2412-15295_sent_10331dc3": [
+      "2412-15295_section_fd355ab7"
+    ],
+    "2412-15295_subsection_265466c7": [
+      "2412-15295_section_fd355ab7"
+    ],
+    "2412-15295_sent_d60082f4": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_9c2bb92e": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_e61c52a6": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_38d4a5a6": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_a5b4612c": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_44200a45": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_fa71ee6a": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_0752e7d8": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_a1e0de9e": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_4f65ec05": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_7674f1a3": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_d2cd68a9": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_169737b1": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_subsection_7fb9b291": [
+      "2412-15295_section_fd355ab7"
+    ],
+    "2412-15295_sent_dd636c13": [
+      "2412-15295_subsection_7fb9b291"
+    ],
+    "2412-15295_sent_570d677e": [
+      "2412-15295_subsection_7fb9b291"
+    ],
+    "2412-15295_sent_0fcff02f": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_fa3f5f60": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_8f95f0d1": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_4e766f59": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_544cc5fe": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_a9772ff2": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_9a4768a6": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_173edeb8": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_23ec9825": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_f196dc70": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_f75bc3bd": [
+      "2412-15295_subsection_7fb9b291"
+    ],
+    "2412-15295_subsection_502475f8": [
+      "2412-15295_section_fd355ab7"
+    ],
+    "2412-15295_sent_06d4dc65": [
+      "2412-15295_subsection_502475f8"
+    ],
+    "2412-15295_paragraph_1ec6701e": [
+      "2412-15295_subsection_502475f8"
+    ],
+    "2412-15295_sent_564c9904": [
+      "2412-15295_paragraph_1ec6701e"
+    ],
+    "2412-15295_sent_700103f5": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_5b023882": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_780331dd": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_959cf449": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_0751ee44": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_38dd00c8": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_84d77dcd": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_56a8857d": [
+      "2412-15295_paragraph_1ec6701e"
+    ],
+    "2412-15295_paragraph_2f34a074": [
+      "2412-15295_subsection_502475f8"
+    ],
+    "2412-15295_sent_194157b5": [
+      "2412-15295_paragraph_2f34a074"
+    ],
+    "2412-15295_sent_4cd23f38": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_d64c1f48": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_0aa9cd66": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_eq_51806a69": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_d0f6e489": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_e13c4335": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_94d2d55d": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_9cd324ce": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_cbdb8a99": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_0a7c40cb": [
+      "2412-15295_paragraph_2f34a074"
+    ],
+    "2412-15295_paragraph_7616e817": [
+      "2412-15295_subsection_502475f8"
+    ],
+    "2412-15295_sent_b168d96c": [
+      "2412-15295_paragraph_7616e817"
+    ],
+    "2412-15295_sent_c3bbd415": [
+      "2412-15295_paragraph_7616e817"
+    ],
+    "2412-15295_paragraph_d3ea660b": [
+      "2412-15295_subsection_502475f8"
+    ],
+    "2412-15295_sent_c6755be3": [
+      "2412-15295_paragraph_d3ea660b"
+    ],
+    "2412-15295_sent_48200673": [
+      "2412-15295_paragraph_d3ea660b"
+    ],
+    "2412-15295_sent_593feaaa": [
+      "2412-15295_paragraph_d3ea660b"
+    ],
+    "2412-15295_subsection_e646e16b": [
+      "2412-15295_section_fd355ab7"
+    ],
+    "2412-15295_sent_1355c6e6": [
+      "2412-15295_subsection_e646e16b"
+    ],
+    "2412-15295_sent_a2c01760": [
+      "2412-15295_subsection_e646e16b"
+    ],
+    "2412-15295_eq_c6176421": [
+      "2412-15295_subsection_e646e16b"
+    ],
+    "2412-15295_sent_80b32156": [
+      "2412-15295_subsection_e646e16b"
+    ],
+    "2412-15295_sent_a45844fd": [
+      "2412-15295_subsection_e646e16b"
+    ],
+    "2412-15295_sent_db5b2279": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_d7512287": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_subsection_be361ff1": [
+      "2412-15295_section_fd355ab7"
+    ],
+    "2412-15295_sent_f385b3ba": [
+      "2412-15295_subsection_be361ff1"
+    ],
+    "2412-15295_sent_6b885bf8": [
+      "2412-15295_subsection_be361ff1"
+    ],
+    "2412-15295_sent_fa1c6d25": [
+      "2412-15295_subsection_be361ff1"
+    ],
+    "2412-15295_sent_57a14e21": [
+      "2412-15295_subsection_be361ff1"
+    ],
+    "2412-15295_section_29061219": [
+      "2412-15295_chapter_4829262c",
+      "2412-15295_chapter_6a68ff2c"
+    ],
+    "2412-15295_sent_28433d31": [
+      "2412-15295_section_29061219"
+    ],
+    "2412-15295_sent_1e893d7f": [
+      "2412-15295_section_29061219"
+    ],
+    "2412-15295_sent_845cb1e4": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_ce85f3a6": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_a07af887": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_413f0f28": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_36bf9a35": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_64420ad0": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_089d6200": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_f4c362d6": [
+      "2412-15295_item_c22607d5"
+    ],
+    "2412-15295_sent_440fc45e": [
+      "2412-15295_section_29061219"
+    ],
+    "2412-15295_sent_e8741372": [
+      "2412-15295_section_29061219"
+    ],
+    "2412-15295_sent_22096fd7": [
+      "2412-15295_section_29061219"
+    ],
+    "2412-15295_chapter_4829262c": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_32783c84": [
+      "2412-15295_chapter_4829262c"
+    ],
+    "2412-15295_sent_958f4e35": [
+      "2412-15295_chapter_4829262c"
+    ],
+    "2412-15295_section_c2b2b81b": [
+      "2412-15295_chapter_4829262c"
+    ],
+    "2412-15295_sent_b0822b4f": [
+      "2412-15295_section_c2b2b81b"
+    ],
+    "2412-15295_sent_f0534dc1": [
+      "2412-15295_section_c2b2b81b"
+    ],
+    "2412-15295_sent_3cd0a4d8": [
+      "2412-15295_section_c2b2b81b"
+    ],
+    "2412-15295_sent_da35ea88": [
+      "2412-15295_section_c2b2b81b"
+    ],
+    "2412-15295_sent_0cb7f5ca": [
+      "2412-15295_section_c2b2b81b"
+    ],
+    "2412-15295_section_d575842d": [
+      "2412-15295_chapter_4829262c"
+    ],
+    "2412-15295_sent_f9e2c734": [
+      "2412-15295_section_d575842d"
+    ],
+    "2412-15295_sent_ce9ee3c0": [
+      "2412-15295_section_d575842d"
+    ],
+    "2412-15295_sent_26d5da4d": [
+      "2412-15295_section_d575842d"
+    ],
+    "2412-15295_sent_6fdade65": [
+      "2412-15295_section_d575842d"
+    ],
+    "2412-15295_sent_68501b30": [
+      "2412-15295_section_d575842d"
+    ],
+    "2412-15295_sent_94051895": [
+      "2412-15295_section_d575842d"
+    ],
+    "2412-15295_sent_5ecf741e": [
+      "2412-15295_section_d575842d"
+    ],
+    "2412-15295_section_1a7b54e3": [
+      "2412-15295_chapter_4829262c"
+    ],
+    "2412-15295_fig_9ae77dce": [
+      "2412-15295_section_1a7b54e3"
+    ],
+    "2412-15295_sent_cb41b626": [
+      "2412-15295_section_1a7b54e3"
+    ],
+    "2412-15295_sent_0a7ac080": [
+      "2412-15295_section_1a7b54e3"
+    ],
+    "2412-15295_sent_a9ab8788": [
+      "2412-15295_section_1a7b54e3"
+    ],
+    "2412-15295_sent_632ee56b": [
+      "2412-15295_section_1a7b54e3"
+    ],
+    "2412-15295_section_6fc64da9": [
+      "2412-15295_chapter_4829262c"
+    ],
+    "2412-15295_fig_0234e9e9": [
+      "2412-15295_section_6fc64da9"
+    ],
+    "2412-15295_sent_2e1926ae": [
+      "2412-15295_section_6fc64da9"
+    ],
+    "2412-15295_sent_b0763eda": [
+      "2412-15295_section_6fc64da9"
+    ],
+    "2412-15295_sent_63aa6f25": [
+      "2412-15295_section_6fc64da9"
+    ],
+    "2412-15295_sent_9c652686": [
+      "2412-15295_section_6fc64da9"
+    ],
+    "2412-15295_sent_aa7dc40d": [
+      "2412-15295_section_6fc64da9"
+    ],
+    "2412-15295_sent_6905732f": [
+      "2412-15295_section_6fc64da9"
+    ],
+    "2412-15295_section_108a3c1b": [
+      "2412-15295_chapter_4829262c"
+    ],
+    "2412-15295_fig_e2b0920d": [
+      "2412-15295_section_108a3c1b"
+    ],
+    "2412-15295_sent_d04c8fe8": [
+      "2412-15295_section_108a3c1b"
+    ],
+    "2412-15295_sent_20490f17": [
+      "2412-15295_section_108a3c1b"
+    ],
+    "2412-15295_sent_4fd4e89b": [
+      "2412-15295_section_108a3c1b"
+    ],
+    "2412-15295_sent_461da9d8": [
+      "2412-15295_section_108a3c1b"
+    ],
+    "2412-15295_sent_97683584": [
+      "2412-15295_section_108a3c1b"
+    ],
+    "2412-15295_sent_e884bde6": [
+      "2412-15295_section_108a3c1b"
+    ],
+    "2412-15295_sent_af231c7e": [
+      "2412-15295_section_29061219"
+    ],
+    "2412-15295_sent_4ae325d6": [
+      "2412-15295_section_29061219"
+    ],
+    "2412-15295_sent_4e41b51c": [
+      "2412-15295_section_29061219"
+    ],
+    "2412-15295_chapter_6f8b794f": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_dad94cb9": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_cb793ee1": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_be00c267": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_8f9ae479": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_013874f9": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_ece96e08": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_1c0bc873": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_3ec39fd7": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_df19c49f": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_sent_1d1ef1bc": [
+      "2412-15295_chapter_6f8b794f"
+    ],
+    "2412-15295_chapter_cff1be7f": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_988222e2": [
+      "2412-15295_chapter_cff1be7f"
+    ],
+    "2412-15295_section_c992cc22": [
+      "2412-15295_chapter_cff1be7f"
+    ],
+    "2412-15295_sent_5903f555": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_d95e906c": [
+      "2412-15295_section_c6742a05",
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_fffdc60d": [
+      "2412-15295_section_c6742a05",
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_a39304e1": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_dfe95065": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_f2f68092": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_0f9cd809": [
+      "2412-15295_section_c6742a05",
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_63a90c65": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_0a613b56": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_3da8f65a": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_ebade862": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_4be0e349": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_6eec4e06": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_b3819ceb": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_dac0a887": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_86ce906c": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_718ce374": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_6bf07264": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_4d8b90ff": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_cce4942a": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_741f7bfd": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_227799d2": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_b1a9e261": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_sent_7d25c6bd": [
+      "2412-15295_section_c992cc22"
+    ],
+    "2412-15295_section_c6742a05": [
+      "2412-15295_chapter_cff1be7f"
+    ],
+    "2412-15295_sent_63a3e3a1": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_c2b90eed": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_4b43c9aa": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_23241472": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_5444ebf8": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_a5ead65d": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_5aa7d9d9": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_146354fe": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_b2cb1ef6": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_65f0338d": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_f6ed8dae": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_sent_70f3bf8a": [
+      "2412-15295_section_c6742a05"
+    ],
+    "2412-15295_section_70a71cc4": [
+      "2412-15295_chapter_cff1be7f"
+    ],
+    "2412-15295_sent_69bffa94": [
+      "2412-15295_section_70a71cc4"
+    ],
+    "2412-15295_sent_78edfa20": [
+      "2412-15295_section_70a71cc4"
+    ],
+    "2412-15295_chapter_324ce642": [
+      "2412-15295_doc_root"
+    ],
+    "2412-15295_sent_7fc1e177": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_f5f2f857": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_3cb8a624": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_58c11816": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_3c8c092e": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_6d2cee13": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_22acb9c1": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_0447256e": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_9f1015a7": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_8511d83a": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_cae1b777": [
+      "2412-15295_chapter_324ce642"
+    ],
+    "2412-15295_sent_b186c774": [
+      "2412-15295_chapter_e353dbe4"
+    ],
+    "2412-15295_sent_d5153de3": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_8e66e5ec": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_a0b20637": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_65035f6c": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_2718ea29": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_b7e4582f": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_94837fdc": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_813f002b": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_a02de19e": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_7453919d": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_c996a4b8": [
+      "2412-15295_section_17542289"
+    ],
+    "2412-15295_sent_0e13e264": [
+      "2412-15295_section_17542289"
+    ]
+  }
+}

@@ -1,0 +1,2030 @@
+{
+  "elements": {
+    "2412-15304_doc_root": "DOCUMENT_ROOT",
+    "2412-15304_sent_108a4b5e": "\\title{\\system: A Framework for Training and Deploying Language Models at the Edge Computers} \\author [Kandala]{Savitha Viswanadh Kandala} \\orcid{0009-0009-0969-0953} \\affiliation{ \\institution{National University of Singapore} \\country{} \\email{viswanadh@u.nus.edu} \\author [Medaranga] {Pramuka Medaranga} \\orcid{0009-0006-1512-4841} \\affiliation{ \\institution{National University of Singapore} \\country{} \\email{pramukas@comp.nus.edu.sg} \\author[Varshney] {Ambuj Varshney} \\orcid{0000-0002-9282-4108} \\affiliation{ \\institution{National University of Singapore} \\country{} \\email{ambujv@nus.edu.sg} \\renewcommand{\\shortauthors}{Viswanadh and Ambuj}",
+    "2412-15304_abstract_ce28071e": "abstract",
+    "2412-15304_sent_07097a0c": "Language models have gained significant interest due to their general-purpose capabilities, which appear to emerge as models are scaled to increasingly larger parameter sizes.",
+    "2412-15304_sent_30ec370d": "However, these large models impose stringent requirements on computing systems, necessitating significant memory and processing requirements for inference.",
+    "2412-15304_sent_ff49fe79": "This makes performing inference on mobile and edge devices challenging, often requiring invocating remotely-hosted models via network calls.",
+    "2412-15304_sent_1240520a": "Remote inference, in turn, introduces issues like latency, unreliable network connectivity, and privacy concerns.",
+    "2412-15304_sent_d7581c0c": "To address these challenges, we explored the possibility of deviating from the trend of increasing model size.",
+    "2412-15304_sent_059a245d": "Instead, we hypothesize that much smaller models (~30-120M parameters) can outperform their larger counterparts for specific tasks by carefully curating the data used for pre-training and fine-tuning.",
+    "2412-15304_sent_bb4b5d8a": "We investigate this within the context of deploying edge-device models to support sensing applications.",
+    "2412-15304_sent_78519ba0": "We trained several foundational models through a systematic study and found that small models can run locally on edge devices, achieving high token rates and accuracy.",
+    "2412-15304_sent_2a8976a8": "Based on these findings, we developed a framework\\footnote{\\url{https://tinyllm.org/}} that allows users to train foundational models tailored to their specific applications and deploy them at the edge.",
+    "2412-15304_sent_676977e1": "\\maketitle",
+    "2412-15304_section_0b79795d": "Introduction",
+    "2412-15304_sent_b848c97c": "We have seen considerable interest in machine learning models based on transformer architecture~\\cite{vaswani2023attention}.",
+    "2412-15304_sent_a865fa94": "They are trained across modalities: Models trained on textual data have given rise to large language models~(LLMs)~\\cite{devlin2018bert,llm_gpt2,llm_gpt3,llm_gpt4,llm_gemini}, which are now widely used for interaction with computers through chatbots.",
+    "2412-15304_sent_8b2786aa": "Similarly, models that are trained on images~\\cite{rombach2022high} can now generate photorealistic visuals.",
+    "2412-15304_sent_aa63341f": "Models that can generate music are also trained on analog information like acoustic data~\\cite{huang2018musictransformer}.",
+    "2412-15304_sent_20b1eb7f": "Nonetheless, we find that a common thread across these models is the scaling of the training data size.",
+    "2412-15304_sent_735472e2": "This follows the observation that larger training datasets result in models that can provide more accurate responses while demonstrating general-purpose capabilities~\\cite{emergent_abilities,scaling_laws,agi_gpt4}.",
+    "2412-15304_sent_b60b95ab": "At a high level, a machine-learning model is defined by its parameters—weights that the model learns during training.",
+    "2412-15304_sent_cb26f7bb": "The larger the model, the more parameters it has, and the more data it requires to effectively learn from training~\\cite{scaling_laws,compute_optimal_LLM}.",
+    "2412-15304_sent_a1a6d5c2": "State-of-the-art (SoTA) models now reach hundreds of billions of parameters~\\cite{llm_llama3,llm_gpt3}, posing significant challenges due to elevated computational demands.",
+    "2412-15304_sent_2df0e821": "As parameter size grows, so do the memory and processing requirements for training and inference, limiting the feasibility of training and using these models on commodity computing systems.",
+    "2412-15304_sent_03037963": "Typically, a model of tens to hundreds of billions of parameters requires clusters of expensive graphical processing units~(GPU) running for a prolonged period~\\cite{carbon_emissions}, making this task highly challenging and infeasible for most people and organizations.",
+    "2412-15304_sent_7c696937": "For example, the Llama 3.1 70B variant required approximately 7 million GPU hours on Nvidia H100-80GB hardware, while the 405B variant required over 31 million GPU hours~\\cite{llm_llama3}.",
+    "2412-15304_sent_95ffdf7d": "Using 16,000 GPUs for pre-training, this translates to around 20 days of training for the 70B model and 78 days for the 405B model.",
+    "2412-15304_fig_1c19a949": "\\begin{figure}\n \\includegraphics[width=1\\columnwidth]{figures/overview_v1.pdf}\n\n \\caption{An embedded application often involves sensors that collect environmental data, which is then communicated to an edge device. \\system\\space provides a framework for training foundational models tailored for edge deployment, enabling these models to support a variety of tasks. This work explores training custom foundational models to enhance sensor data analysis. Our approach demonstrates a significantly smaller parameter-sized model than state-of-the-art language models, facilitating high-accuracy sensor data analysis while enabling rapid, local inference on even a constrained edge platform.}\n\n\\end{figure}",
+    "2412-15304_sent_666b7c32": "Beyond training, a larger parameter size model also negatively impacts the inference process.",
+    "2412-15304_sent_2180f214": "This is a step where the weights are loaded into memory and then used to answer queries through prompts provided by the user.",
+    "2412-15304_sent_db85e6de": "As parameter size grows, so do the memory and processing requirements for inference, limiting the feasibility of using these models on commodity systems~\\cite{llm_inferencing,memory_constraint,energy_llms}.",
+    "2412-15304_sent_ee8117e0": "For instance, loading a 70B parameter model in half-precision (FP16) would require at least 140GB of memory, exceeding the capacity of most GPUs.",
+    "2412-15304_sent_937fd9f8": "Today, even high-specification workstations struggle with memory bandwidth limitations, leading to the rise of alternative strategies to tackle model scaling~\\cite{llm_llama3,squeeze_llm,smoothquant}.",
+    "2412-15304_sent_9c41a001": "Consequently, the dominant mode of accessing models from mobile and edge devices has become function calls over a network to remotely hosted models.",
+    "2412-15304_sent_7c409269": "However, this approach introduces several challenges, including latency issues, unpredictable network conditions, and privacy concerns related to sharing sensitive information.",
+    "2412-15304_fig_8f463b03": "\\begin{figure}\n \\includegraphics[width=\\linewidth]{figures/training_v2.pdf}\n\n \\caption{\\system\\space trains a custom foundational model for deployment at the edge device following a series of steps. It begins by appending a curated dataset with general conversational data. After pre-processing, the dataset is tokenized to pre-train a small model~(30-120M parameter). The pre-trained model undergoes fine-tuning with the custom dataset before deployment on the edge device to support embedded applications.}\n\n\\end{figure}",
+    "2412-15304_sent_b4dfa18f": "A promising approach to tackle this challenge is explicitly trading off parameter size.",
+    "2412-15304_sent_010a78ac": "A smaller parameter-sized model requires proportionally smaller memory and computing resources and can also perform inference faster, even on devices with constrained processing capabilities such as edge computers.",
+    "2412-15304_sent_7d3bc1e1": "\\system\\space framework builds on this approach.",
+    "2412-15304_sent_9924bf36": "\\fakepar{\\system\\space Framework Overview} We systematically study various trade-offs, models, and architectures and design a framework to pre-train foundational models from scratch.",
+    "2412-15304_sent_de10e2ae": "This framework is tailored to deploy such models at the edge.",
+    "2412-15304_sent_4e7e5806": "We prototype it for a challenging case related to embedded sensing, finding that much smaller models, with only tens of millions of parameters—orders of magnitude smaller than SoTA models—are sufficient for sensor data inference.",
+    "2412-15304_sent_82cb8e69": "We consolidate these insights into a framework called \\system, meaning “more” in Swedish and “own” in Hindi.",
+    "2412-15304_sent_cc7841d3": "Pre-trained on carefully curated data, these smaller models offer significant benefits for embedded sensing applications.",
+    "2412-15304_sent_42e38426": "They can run locally on constrained edge platforms and perform rapid inference on modestly configured edge and mobile devices.",
+    "2412-15304_sent_55b3275b": "\\fakepar{\\system\\space Design} \\system\\space simplifies the process for end-users to train custom foundational models for deployment at the edge.",
+    "2412-15304_sent_9eb16bb7": "Users only need to provide a suitable training or fine-tuning dataset, and the framework manages the remaining steps to create a tailored foundational model.",
+    "2412-15304_sent_9fd15a45": "Performing this process involves following steps, as illustrated in Figure~\\ref{fig:training}.",
+    "2412-15304_sent_f698aec4": "The first step involves preparing the dataset as the foundation for pre-training a model.",
+    "2412-15304_sent_5c271b55": "Users can provide their dataset; however, even for smaller custom models, large amounts of data are typically required. It may be necessary to augment this data with relevant datasets related to language and conversation.",
+    "2412-15304_sent_07eeb592": "\\system\\space facilitates this process by preparing the dataset for pre-training and offering a pre-curated collection that users can use to complement their datasets, ensuring an effective pre-training process.",
+    "2412-15304_sent_b419a423": "The next step in the framework involves processing the data, which is crucial due to the diverse application scenarios requiring custom foundational models.",
+    "2412-15304_sent_21c1de6e": "For instance, in embedded sensing applications, even a simple sensor like an accelerometer may record motion across different axes.",
+    "2412-15304_sent_3e3d0ba1": "However, variations in resolution, sampling modes (analog vs. digital), and other intricacies can introduce inconsistencies.",
+    "2412-15304_sent_87ac7b57": "This step ensures data consistency by separating individual sensor readings by timestamp and organizing them into rows and columns.",
+    "2412-15304_sent_cca247c6": "Additionally, it performs basic preprocessing tasks, such as removing unnecessary characters or spaces to fit the data within the model’s context window.",
+    "2412-15304_sent_3631eaf2": "Tokenization is the final step in the processing of the data.",
+    "2412-15304_sent_f01c0bf0": "Next, the framework involves training the foundational models.",
+    "2412-15304_sent_1836224d": "The framework adopts an architecture similar to existing models like GPT-2, which has proven effective for creating smaller models.",
+    "2412-15304_sent_d81c8124": "Our results show that this approach achieves high accuracy for sensor data analysis.",
+    "2412-15304_sent_900c0af9": "Additionally, the architecture allows flexibility in configuring parameter sizes as low as 30 million.",
+    "2412-15304_sent_6e2335a5": "While training these smaller foundational models still requires a GPU, the overall computing resources are minimal. For instance, we completed training on a single Nvidia H100 in just a few hours.",
+    "2412-15304_sent_d5c50f06": "After pre-training the model, we found that through extensive experiments, despite careful curation of the dataset, smaller models may still struggle to achieve high accuracy for specific applications.",
+    "2412-15304_sent_adf07009": "Therefore, fine-tuning becomes crucial to enhance their performance.",
+    "2412-15304_sent_98db66e4": "The framework efficiently manages this step, requiring only a small set of examples for fine-tuning.",
+    "2412-15304_sent_3cbb6e3c": "Specifically, we employed the LoRa method for fine-tuning, significantly reducing the number of samples needed compared to traditional machine learning methods.",
+    "2412-15304_sent_08d1c252": "For instance, in hand gesture sensing one of the use cases presented in the work.",
+    "2412-15304_sent_2015992e": "We only required 440 examples for the model to achieve high accuracy in detecting future events.",
+    "2412-15304_sent_83d9b36f": "Once the custom model is trained and fine-tuned, it can be deployed on an edge device to support embedded sensing applications.",
+    "2412-15304_sent_c0018dc1": "While smaller models are generally expected to struggle with tasks involving mathematical operations and reasoning—key elements in many sensor data analysis tasks—we intentionally used these as a challenging test case for our system.",
+    "2412-15304_sent_066f9114": "Surprisingly, we found that smaller models can be highly effective for embedded sensing analysis and, in some cases, even outperform much larger models with significantly greater parameter sizes.",
+    "2412-15304_sent_f120c6a0": "\\fakepar{Summary of Results} The key results are:",
+    "2412-15304_itemize_1481fa44": "itemize",
+    "2412-15304_item_253692db": "item",
+    "2412-15304_sent_fdf7776a": "We present a framework that supports two primary tasks: (1) training smaller models for edge deployment on user-defined datasets and (2) fine-tuning these models or off-the-shelf LLMs on domain-specific datasets.",
+    "2412-15304_sent_70351339": "We demonstrate this by training five smaller models, ranging from 30M to 124M parameters, following the GPT-2 architecture.",
+    "2412-15304_sent_7bd395f5": "We also fine-tuned other models, such as Phi 2, Phi 3, and Llama 2, Llama 3.",
+    "2412-15304_sent_a3576d2e": "We compare the accuracy of smaller custom models trained through our framework, with fewer than 125M parameters, against larger models with billions of parameters across different IoT sensor datasets, including our collected and external datasets.",
+    "2412-15304_sent_60309933": "Our results demonstrate that these smaller models perform comparably to larger ones while requiring significantly fewer GPU resources and less training time.",
+    "2412-15304_sent_00236294": "We investigate the suitability for deployment of smaller models on resource-constrained edge platforms and demonstrate that they lead to significantly faster inference or token generation rates.",
+    "2412-15304_section_a9ded1e5": "Background",
+    "2412-15304_sent_b23fab9a": "We provide the necessary background relevant to the design of \\system.",
+    "2412-15304_sent_c8b865ec": "We also discuss and place related systems and developments related to the proposed system, \\system.",
+    "2412-15304_sent_3d021a79": "\\fakepar{Conditional probability view of models} Language modeling is framed as an unsupervised distribution estimation problem.",
+    "2412-15304_sent_0619396e": "Given a sequence of tokens $\\mathbf{x} = [x_1, x_2, \\ldots, x_n]$, the language model places a probability distribution $p(\\mathbf{x})$ over the output token sequence.",
+    "2412-15304_sent_e7fe805e": "This probability can be decomposed into a product of conditional probabilities where each token depends on all the previous tokens:",
+    "2412-15304_eq_18a84689": "\\begin{equation}\n p(\\mathbf{x}) = \\prod_{i=1}^{n} p(x_i \\mid x_1, x_2, \\ldots, x_{i-1})\n\\end{equation}",
+    "2412-15304_sent_0db217ec": "This formulation allows the model to generate text by sampling from the distribution $p(\\mathbf{x})$ and provides a basis for tractable estimation and sampling.",
+    "2412-15304_sent_b826da39": "The approach has been significantly improved by introducing models capable of computing these conditional probabilities effectively, such as the Transformer architecture \\cite{vaswani2023attention}.",
+    "2412-15304_sent_4bf1adf0": "Causal language modeling proves effective for analyzing user prompts and generating text.",
+    "2412-15304_sent_b853751e": "Auto-regressive decoder models, such as GPT-2, are well-suited. These models, which \\system\\space trains for deployment on edge devices, excel in handling sequential data by predicting the next token based on previous ones, making them ideal for generating coherent text in response to user prompts.",
+    "2412-15304_sent_84cccec8": "\\fakepar{Characterization of models} LLMs can be characterized along two primary axes: computational and memory requirements and performance.",
+    "2412-15304_sent_479dc465": "The parameter count—the number of weights a model contains—directly influences its computational and memory demands.",
+    "2412-15304_sent_84404faa": "Models can vary widely in size, ranging from hundreds of millions to billions of parameters.",
+    "2412-15304_sent_2e21ce89": "As parameter counts increase, so do the memory and processing resources required. Commercial vendors now offer models with parameter sizes reaching hundreds of billions, hosted on GPU-based clusters and accessible via web chat interfaces or API calls.",
+    "2412-15304_sent_474e59c7": "Examples include ChatGPT~\\cite{llm_ChatGPT}, Claude~\\cite{llm_claude}, Gemini~\\cite{llm_gemini}, and LLama~\\cite{llm_llama2,llm_llama3}.",
+    "2412-15304_sent_10cb899e": "Performance-wise, two critical factors define LLMs: accuracy and response time.",
+    "2412-15304_sent_5170a255": "LLMs sometimes produce irrelevant or factually incorrect responses, referred to as hallucinations~\\cite{hallucination}.",
+    "2412-15304_sent_b7d7a291": "Minimizing hallucination rates is a key goal, as higher rates negatively affect usability.",
+    "2412-15304_sent_58edde56": "Larger, cloud-based models tend to exhibit lower hallucination rates, with ongoing improvements targeting further reductions~\\cite{hallucination_less}.",
+    "2412-15304_sent_c3375a56": "Response time, measured by the token generation rate, refers to how many words or tokens the model generates per unit of time.",
+    "2412-15304_sent_4155dbdb": "A higher token rate translates to faster responses to user prompts.",
+    "2412-15304_sent_6eb7ed36": "\\fakepar{Larger models are unsuitable for \\system\\space} Highly capable LLMs with tens to hundreds of billions of parameters present challenges, making them unsuitable for \\system\\space.",
+    "2412-15304_sent_744ec4ca": "First, these models require expensive and complex infrastructure for inference, typically involving powerful computers with GPUs or custom ASICs.",
+    "2412-15304_sent_19535948": "Second, due to their high resource demands, they are hosted by third-party providers and accessed via API calls, leading to increased operational costs for end-users.",
+    "2412-15304_sent_c46a7b9c": "Third, sensor data, often containing private information, must be shared with these providers, posing significant privacy risks.",
+    "2412-15304_sent_2eae6539": "Fourth, fine-tuning these models is an expensive process requiring highly capable GPU-based machines.",
+    "2412-15304_sent_9c0338a9": "Lastly, many of these models function as “black boxes,” raising concerns about using private data for training and fine-tuning without transparency.",
+    "2412-15304_sent_c19a3256": "\\fakepar{Smaller models can run locally on edge computers} Smaller language models~\\cite{llm_phi2,llm_phi3,llm_llama2,llm_llama3,llm_mistral,llm_gemma} trade parameter size for reduced computational and memory requirements, typically ranging from hundreds of millions to a few billion parameters—much smaller than their larger counterparts.",
+    "2412-15304_sent_a630575a": "This reduction leads to smaller model weights; for example, Microsoft Phi 2, with 2.7 billion parameters, has weights around 5.5 GB.",
+    "2412-15304_sent_bef80b6e": "A system running an LLM requires RAM at least as large as the model weight since the entire model must load into memory for inference.",
+    "2412-15304_sent_f5cd4896": "As a result, smaller models in half-precision (FP16) can run on edge-class commodity computers with 8–32 GB of RAM, such as Raspberry Pi~\\cite{raspberrypi}, Lattepanda Sigma~\\cite{lattepanda}, and Intel N100~\\cite{intel_n100}.",
+    "2412-15304_sent_34b97d12": "There has been recent interest in smaller models, which inspire the design of \\system.",
+    "2412-15304_sent_c0531850": "Ma et al. \\cite{1bitllm} introduces variants of LLM with ternary weights {-1, 0, 1}, effectively using just 1.58 bits per parameter instead of the usual 16-bit (FP16) or 32-bit floating-point (FP32), reducing the computational and memory bandwidths significantly while performing comparably with full precision transformer.",
+    "2412-15304_sent_52ca0953": "Ruoss et al. \\cite{chess_llm} shows a development of a 270M parameter LLM based on the transformer that achieves grandmaster-level chess rating, reaching the performance of best chess engines, showing that smaller and specialized models with careful training can perform at par or better than rule-based ML systems.",
+    "2412-15304_sent_d2d878e4": "Srinivas et al. \\cite{knowledge-boosting} introduces knowledge boosting, where a smaller model, usually deployed for real-time inferences on wearables, obtains delayed hints from a relatively larger model, often deployed on smartphones.",
+    "2412-15304_sent_cb9d4cfc": "This is shown in tasks involving speech separation and enhancement.",
+    "2412-15304_sent_4baf6844": "There have also been works that have explored applying smaller models to mobile devices.",
+    "2412-15304_sent_bbde4dff": "Yuan et al. \\cite{mobile-models} introduced the concept of a \"mobile foundation model,\" which functions like firmware and can serve a wide range of tasks on smartphones.",
+    "2412-15304_sent_363ee180": "This model would be managed by the mobile OS and hardware and exposed as a system service to applications.",
+    "2412-15304_sent_5c0d429c": "\\system\\space allows for training at least an order of magnitude smaller language models consisting of only tens of millions of parameters.",
+    "2412-15304_sent_e8d79f8e": "This enables faster inference even on constrained embedded platforms.",
+    "2412-15304_sent_8acdf21e": "From a training perspective, the end-user may easily train their custom models even with the modest computational resources.",
+    "2412-15304_sent_d17ed8ba": "It also facilitates the deployment of models on a wide range of simpler embedded platforms with limited memory and RAM, including SBCs, opening up the possibility of various embedded applications.",
+    "2412-15304_sent_9e54e4db": "\\fakepar{Challenges with remotely accessing larger models} To bring the capabilities of language models to edge devices, larger models can be accessed remotely.",
+    "2412-15304_sent_fb5719f0": "However, this approach introduces several challenges, particularly for embedded sensing applications, which are the focus of this work.",
+    "2412-15304_sent_002a28a9": "First, maintaining persistent network connectivity is often unfeasible, as many embedded sensing applications involve mobile devices, resulting in intermittent and unpredictable connections~\\cite{persistent_network}.",
+    "2412-15304_sent_ef8828ec": "Second, variable network latency and server constraints can lead to unpredictable response times, affecting the quality of service for time-sensitive tasks.",
+    "2412-15304_sent_2e70eee4": "Third, remote model access incurs costs, with providers charging based on usage~\\cite{openai_pricing}.",
+    "2412-15304_sent_7fd4351f": "Fourth, embedded sensing applications frequently collect sensitive user data, raising privacy and security concerns when sharing information with third parties~\\cite{inversion_attack}.",
+    "2412-15304_sent_1228d9ca": "Lastly, while SoTA models offer powerful general-purpose capabilities, they can be excessive for specific embedded sensing tasks, which often do not require the full range of these models’ capabilities.",
+    "2412-15304_sent_df7d9821": "\\fakepar{Our choice} \\system\\space focuses on utilizing smaller models running locally on edge devices, driven by several key considerations.",
+    "2412-15304_sent_ee19697c": "Firstly, it enables executing the model closer to end devices, minimizing network dependencies and latency.",
+    "2412-15304_sent_485b75ac": "Many end devices are situated in remote or hard-to-reach locations, where maintaining persistent network connectivity for the gateway device is challenging.",
+    "2412-15304_sent_b785b3fe": "Secondly, many sensor applications involve collecting sensitive environmental data, and transmitting this data to third-party providers raises privacy concerns.",
+    "2412-15304_sent_0a0c7988": "Additionally, concerns persist regarding the use of such data to train LLMs. Thirdly, local processing lowers operational costs, as third-party providers typically charge per-token usage fees.",
+    "2412-15304_sent_be447ece": "Finally, as demonstrated in this work, smaller, task-specific models running locally can outperform generalized cloud-based models for specific applications, making them preferable over invoking more powerful but less specialized remote models.",
+    "2412-15304_section_1afa74da": "Design",
+    "2412-15304_fig_b71837c1": "\\begin{figure*}",
+    "2412-15304_sent_692b16c9": "\\includegraphics[width=0.85\\textwidth]{figures/flows/pre-training_v2.pdf} \\caption{Processing the dataset is essential for effective pre-training.",
+    "2412-15304_sent_5b8fb250": "This step addresses the challenges posed by the dataset’s diversity, ensures alignment of the dataset with the model’s context window size limitations, and formats the data appropriately for its usage with the subsequent training process.} \\end{figure*} \\system\\space enables the training of custom foundational models for embedded sensing for deployment on edge devices.",
+    "2412-15304_sent_45773a2f": "It manages various process stages, including pre-processing diverse datasets to facilitate pre-training for a foundational model tailored for embedded sensing applications.",
+    "2412-15304_sent_2cde411b": "\\system\\space also provides tools for fine-tuning models to align with the application scenario.",
+    "2412-15304_sent_e2db73ef": "The final step involves training and deploying the model on an edge device.",
+    "2412-15304_sent_9207f64e": "We illustrate various steps in the \\system\\space in the Figure~\\ref{fig:training}, and describe them next.",
+    "2412-15304_subsection_b5d784a4": "Dataset preparation for pre-training of a model",
+    "2412-15304_sent_4900b7e5": "Training a foundational model requires a large corpus of data.",
+    "2412-15304_sent_37ebbaf1": "When relying on third-party foundational models, users typically have very little control over the datasets used in the pre-training process, creating several challenges.",
+    "2412-15304_sent_78fa8daf": "First, users are unsure if datasets relevant to their specific use case are included in the model’s pre-training, often leading them to opt for larger models with a higher likelihood of containing such information.",
+    "2412-15304_sent_787e0409": "This, however, increases parameter size and the computational requirements for inference.",
+    "2412-15304_sent_865545fc": "Second, the opaque nature of these models raises legal and compliance concerns, as users cannot verify whether the model was trained on copyrighted or restricted content.",
+    "2412-15304_sent_f0d3baf0": "Finally, third-party models may also incur additional costs or impose licensing restrictions, further limiting their usability.",
+    "2412-15304_sent_02f16a3d": "\\system\\space enables users to curate the dataset used for pre-training, giving them greater control over the information included in the model's training process.",
+    "2412-15304_sent_6de749f6": "This approach reduces non-essential information being part of the pre-training dataset, resulting in the generation of highly specialized, smaller models tailored for the specific application scenario.",
+    "2412-15304_subsection_cb8b5893": "Processing of the pre-training dataset",
+    "2412-15304_sent_ea98d4f7": "After preparing the dataset for pre-training, the next step in the framework involves curating it for its efficient use during the training.",
+    "2412-15304_sent_53386d87": "This step is crucial since datasets often come in diverse formats and structures, which must be handled properly before use.",
+    "2412-15304_sent_ab740a98": "Additionally, models have limited context windows, so the data must be structured to maximize the efficient use of this window.",
+    "2412-15304_sent_181ed7c7": "Finally, the dataset is tokenized to ensure compatibility with the training process.",
+    "2412-15304_sent_2e7a386d": "The processing step ensures data consistency for subsequent usage in the training process.",
+    "2412-15304_sent_d97cb1bf": "We illustrate the various steps involved in the processing stage of the framework in Figure~\\ref{fig:dataset-prep}.",
+    "2412-15304_sent_e9822ebb": "\\fakepar{Transformation} The dataset structure often varies based on the application, with much of it consisting of numerical data.",
+    "2412-15304_sent_b7043127": "The first step focuses on transforming data into text since models are primarily trained using textual information.",
+    "2412-15304_sent_f6e16af1": "If the data contains timestamps, it may be grouped by timestamp into separate rows and columns.",
+    "2412-15304_sent_a827a12d": "The transformation also involves data cleaning to optimize usage within the model’s limited context window.",
+    "2412-15304_sent_93f8df49": "For example, GPT-2's 1024-token context window can limit longer prompts.",
+    "2412-15304_sent_177db381": "We address this by normalizing readings to integers within specific ranges (0 to 100), reducing each reading to two characters.",
+    "2412-15304_sent_063822ab": "The framework adjusts character counts based on use cases and available context windows, keeping data compact and suitable for model training.",
+    "2412-15304_sent_0146bb0f": "The specific steps would vary by application and the model that is employed. \\fakepar{Tokenization} Tokenization prepares datasets for pre-training by converting text into numerical data that models can process.",
+    "2412-15304_sent_0f9ec43a": "It breaks text into tokens, which are smaller units representing words, characters, or subwords.",
+    "2412-15304_sent_2ab90989": "\\system\\space uses the GPT-2 tokenizer to process the datasets.",
+    "2412-15304_sent_60024979": "The tokenizer processes tokens organized into data shards by \\system\\space and marks row separations with end tokens.",
+    "2412-15304_sent_39bf9208": "For unstructured datasets, we fill shards sequentially until the file is completed. For structured datasets with multiple columns, we merge columns into single prompts.",
+    "2412-15304_sent_bf4f6ba9": "Each prompt begins with dataset context, including information about units and data range, followed by data output and an end token.",
+    "2412-15304_sent_c7ebd141": "To optimize memory usage, we merge, tokenize, and store all prompts in fixed-size shards (200 MB).",
+    "2412-15304_sent_14eba005": "When tokens exceed shard size, we create new shards from the excess tokens.",
+    "2412-15304_sent_f749273e": "\\fakepar{Splitting and Mixing} The final step before pre-training involves mixing tokens from multiple datasets.",
+    "2412-15304_sent_f0b9de3d": "Users can define the appropriate proportions for different types of data.",
+    "2412-15304_sent_e8433e0c": "For example, if the dataset includes textual conversations, the user can specify the proportion of tokens from such conversations.",
+    "2412-15304_sent_9b0104bf": "Using lazy loading, the framework loads the tokenized datasets in chunks, efficiently managing large data sizes.",
+    "2412-15304_sent_545ac330": "Tokens from different datasets are sampled based on user-defined ratios.",
+    "2412-15304_sent_3307f541": "A probability-based sampling method ensures that tokens are randomly selected from each dataset, maintaining the specified proportions.",
+    "2412-15304_sent_50998b60": "The selected tokens are then accumulated and saved into fixed-size shards, following the same process as in earlier steps.",
+    "2412-15304_sent_3ead1111": "By default, \\system\\space splits the dataset into training and test sets in a 98:2 ratio.",
+    "2412-15304_subsection_85b1d093": "Training a custom foundational model",
+    "2412-15304_sent_1e8f35be": "Next, we describe steps to process a custom foundational model based on the processed dataset.",
+    "2412-15304_sent_1c4528a0": "We discuss the architecture of the model that we pre-train in this work.",
+    "2412-15304_sent_b8923411": "\\fakepar{Model architecture} We design the model architecture based on GPT-2~\\cite{llm_gpt2}, a transformer-based, decoder-only language model that generates text by predicting the next word in a sequence.",
+    "2412-15304_sent_011cc503": "This architecture effectively supports training smaller parameter-sized models, which motivated our choice.",
+    "2412-15304_sent_343b76c3": "Specifically, by adjusting the number of transformer blocks, the model offers variants with parameter counts between 30M and 124M.",
+    "2412-15304_sent_469d1cbe": "Additionally, \\system\\space ensures flexibility, allowing users to select and implement other architectures.",
+    "2412-15304_sent_13237ca8": "The architecture consists of an input embedding layer, positional encoding, multiple transformer blocks (each containing multi-head attention and feed-forward networks), and a final output layer as shown in the Figure~\\ref{fig:llm-arch}.",
+    "2412-15304_sent_1a2eead0": "Input Embedding:\\space Converts input tokens into dense vectors of fixed size $C$.",
+    "2412-15304_sent_a16b68ea": "These vectors represent the input tokens in a high-dimensional space where similar words have similar vectors.",
+    "2412-15304_sent_95c02058": "The input tokens are characterised by the vocabulary size ($V$), which is the number of unique tokens (words or subwords) the model can recognize and generate.",
+    "2412-15304_sent_04f05d4c": "Positional Encoding:\\space This layer adds the positional information to the token embeddings so that the model can distinguish between the positions of tokens in a sequence.",
+    "2412-15304_sent_0c6685dd": "This is important since the transformer architecture itself does not inherently encode order information.",
+    "2412-15304_sent_053044b2": "Transformer Block (Repeated $l$ Times):\\space Each transformer block consists of multiple sub-blocks which are as follows: 1) {Layer Normalization:} Normalizes the inputs to the block to stabilize and speed up the training process.",
+    "2412-15304_sent_2588343a": "2) {Multi-Head Attention:} Applies self-attention to the inputs, allowing the model to simultaneously focus on different parts of the sequence.",
+    "2412-15304_sent_76953cf4": "This is done in multiple \"heads\" in parallel, each learning different aspects of the sequence.",
+    "2412-15304_sent_521c3e45": "3) {Feed-Forward Network (FFN):} Consists of two linear transformations with a non-linearity (Gaussian Error Linear Unit (GeLU)) in between.",
+    "2412-15304_sent_9acdd05b": "It helps capture complex patterns by transforming the output of the attention mechanism.",
+    "2412-15304_sent_05dfe7d2": "4) {Residual Connections and Additional LayerNorm:} Adds the input of each sub-layer (Attention and FFN) to its output to form a residual connection.",
+    "2412-15304_sent_38b65e75": "This helps in stabilizing the learning process.",
+    "2412-15304_fig_1cf02732": "\\begin{figure}\n\n \\includegraphics[width=0.75\\columnwidth]{figures/others/llm-arch.pdf}\n\n \\caption{The high-level representation of the architecture for the model used in this work is based on the GPT-2. The model architecture consists of l transformer blocks}\n\n\\end{figure}",
+    "2412-15304_sent_400527f9": "\\fakepar{Training process} To train a model, the \\system\\space builds ontop of llm.c, that provides implementation of GPT-2.",
+    "2412-15304_sent_2ce19422": "It consists of $l$ transformer blocks, with the total number of parameters $N$ summarized: The input embedding layer has $V \\times C$ parameters, and the Positional Encoding layer has $T \\times C$ parameters.",
+    "2412-15304_sent_6a7b7f56": "Each transformer block contains layer normalization, multi-head attention, and feed-forward network components.",
+    "2412-15304_sent_e644f74b": "The total parameters per block are $l \\times (12C^2+12C)$.",
+    "2412-15304_sent_1ccb61e3": "With $V = 50,257$, $T = 1,024$, $C = 64l$, we can estimate the total parameters of the model (in Million) approximately using the empirical expression:",
+    "2412-15304_eq_3ddd23b9": "\\begin{equation}\nN = 0.05l^3 + 3.2l\n\\end{equation}",
+    "2412-15304_sent_36998c9a": "By varying $l$, we can scale the model to different sizes, balancing model capacity with computational requirements.",
+    "2412-15304_fig_8903f167": "\\begin{table}\n\n\\resizebox{\\columnwidth}{!}{\n\\begin{tabular}{cccc}\n\nDepth ($l$) & Hidden Size ($C$) & Parameters ($N$) & RAM Usage (MB) \\\\\n\n6 & 384 & 30M & 95.49 \\\\\n8 & 512 & 51M & 148.37 \\\\\n10 & 640 & 82M & 219.27 \\\\\n11 & 704 & 102M & 262.89 \\\\\n12 & 768 & 124M & 312.7 \\\\\n\n\\end{tabular}\n\n\\caption{Approximate parameter count and RAM usage of the GPT-2 model for given depth and hidden size values}\n\n\\end{table}",
+    "2412-15304_sent_3a30018e": "Embedded platforms are often limited in memory and processing capabilities.",
+    "2412-15304_sent_f394d17a": "Therefore, we intentionally select a parameter size between 30M and 124M, as shown in Table~\\ref{tab:gpt2_parameters}, for pre-training the foundational model.",
+    "2412-15304_sent_1a117a66": "As demonstrated later, this choice enables the model to perform rapid inference even on constrained embedded platforms, such as SBCs which are commonly used as edge devices.",
+    "2412-15304_sent_c975d9cb": "\\fakepar{Parameters and resources} We default to a 12-layer model unless stated otherwise.",
+    "2412-15304_sent_a4f2e09b": "The training parameters include a micro-batch size of 64 and a sequence length of 1024.",
+    "2412-15304_sent_f9259231": "The model runs over 10 billion tokens for one epoch, approximately 20,000 steps.",
+    "2412-15304_sent_8c0bb1c8": "The training process requires around 25GB of GPU memory.",
+    "2412-15304_sent_d2bff7bb": "It was conducted on a single Nvidia H100 GPU and completed in roughly 9 hours.",
+    "2412-15304_sent_6f192d7f": "To ensure stable training, we incorporated techniques such as learning rate scheduling—with 700 warm-up steps followed by cosine decay—and gradient clipping with a maximum norm of 1.0.",
+    "2412-15304_fig_43c04971": "\\begin{figure} \n\n\\begin{tcolorbox}[\n enhanced,\n attach boxed title to top left={yshift=-3mm,yshifttext=-1mm, xshift=3mm},\n colback=white, colframe=black, boxrule=0.5mm, rounded corners,\n title=Prompt: Gesture Detection, fonttitle=\\bfseries,\n boxed title style={colframe=black, colback=white, rounded corners, boxrule=0.5mm, fontupper=\\bfseries, interior style={draw=none, fill=none}}\n]\n\\#\\#\\# Instruction:\\\\\nSensor data values are provided in the following order: proximity, red, green, and blue light intensity values. Using these sensor values, determine the hand gesture performed. Give your answer only as Tap, Double, or Hold.\\\\\n\\\\\n\\#\\#\\# Input:\\\\\nProximity: [2, 10, ..., 23] \\\\Red: [244, 243, ..., 20] \\\\Blue: [255, 255, ..., 255] \\\\Green: [200, 201, ..., 45]\\\\\n\\\\\n\\#\\#\\# Response:\\\\\nHold\n\n\\end{tcolorbox}\n\n\\caption{We borrow a template from Alpaca for prompts and dataset entries required for fine-tuning a pre-trained model. Fine-tuning is an important step to ensure accurate responses to user queries for the specific application scenario.}\n\n\\end{figure}",
+    "2412-15304_sent_5c396a22": "\\includegraphics[width=\\textwidth]{figures/flows/fine-tuning_v1.pdf} \\caption{Pre-trained foundational models, despite careful dataset curation, often show lower accuracy.",
+    "2412-15304_sent_07e93a3b": "Fine-tuning these models with a small, curated dataset from the target application scenario significantly improves their accuracy.",
+    "2412-15304_sent_e10401b5": "Our \\system\\space framework supports fine-tuning foundational models for deployment at the edge.} \\end{figure*}",
+    "2412-15304_subsection_267652a5": "Finetuning of pre-trained custom model",
+    "2412-15304_sent_2e890a4c": "Even with curated datasets, we observed that the pre-trained model struggles to answer specific user queries~\\cite{finetune}, even when similar examples exist within the pre-training data.",
+    "2412-15304_sent_23327788": "Consequently, the model requires an additional fine-tuning step tailored to the specific application scenario.",
+    "2412-15304_sent_ef2e4f95": "This step introduces new queries that the model has not encountered before and uses these examples to improve its ability to answer related queries.",
+    "2412-15304_sent_f9178072": "\\system\\space supports the fine-tuning of the custom-trained foundational model through several steps.",
+    "2412-15304_sent_6012f2e5": "The process begins with collecting relevant data for fine-tuning, requiring structured data formatted as input-output pairs.",
+    "2412-15304_sent_62ffde31": "Each entry includes an input query and the expected output from the model based on the provided input.",
+    "2412-15304_sent_c910c646": "To optimize token usage and fit within the model’s limited context window, we apply min-max normalization to reduce the character count.",
+    "2412-15304_sent_6f80cd47": "Each dataset entry used in the process must be formatted according to predefined prompt templates.",
+    "2412-15304_sent_67a8a80f": "We adopt the Alpaca model template~\\cite{alpaca}, which consists of three components: an instruction that describes the task, an input that provides additional context, and a response that completes the request, as illustrated in Figure~\\ref{alpaca_prompt}.",
+    "2412-15304_sent_f3d9610b": "Each prompt must include relevant context within the prompt entry, thus ensuring a coherent input-output pair.",
+    "2412-15304_sent_be943ece": "The next step involves shuffling the dataset entries and splitting them into training, validation, and test sets.",
+    "2412-15304_sent_7bba55af": "The split ratio depends on the size and nature of the data (e.g., 80\\% training, 10\\% validation, and 10\\% test).",
+    "2412-15304_sent_322bb920": "This step ensures the model generalizes better by preventing overfitting to any specific order in the data.",
+    "2412-15304_sent_a096334f": "The final step involves the fine-tuning process.",
+    "2412-15304_sent_bcd00f3b": "Various techniques are available for fine-tuning, including PEFT (Parameter-Efficient Fine-Tuning).",
+    "2412-15304_sent_3826ec0c": "PEFT methods are popular because they allow users to train only a fraction of the model’s parameters, significantly reducing the memory footprint compared to full model fine-tuning.",
+    "2412-15304_sent_1c905af0": "One such method is LoRA (Low-Rank Adaptation)~\\cite{loraft}, which requires setting the adapter size and other parameters.",
+    "2412-15304_sent_c7310f78": "As a result, we employ LoRA as part of the \\system\\space framework.",
+    "2412-15304_sent_339f352a": "The key parameters for fine-tuning are the number of fine-tuning steps (or epochs), batch size, learning rate (which must be carefully tuned to prevent overfitting or underfitting), and dropout rates to control model regularization.",
+    "2412-15304_sent_235371c6": "Specifically for LoRA, the parameters include the adapter size, which determines how much the model adapts to new information; the rank of adaptation, which specifies the layers of the model affected by fine-tuning; and the scaling factor, which controls the contribution of various parameters.",
+    "2412-15304_sent_f160e2b3": "\\fakepar{Post-Fine-Tuning Evaluation:} Once fine-tuning is complete, the model generates domain-specific responses by passing queries using the template employed during training.",
+    "2412-15304_subsection_b672f52a": "Implementation",
+    "2412-15304_sent_3b1a185e": "Embedded sensing applications often do not produce sufficient data to train a language model independently.",
+    "2412-15304_sent_6c32e365": "General information must also be incorporated to enhance interaction through natural language prompts with such specialized models.",
+    "2412-15304_sent_adca75bf": "We curated a base dataset of over 9 billion tokens from publicly available sources, which can be combined with user-provided datasets for pre-training the foundational model.",
+    "2412-15304_sent_ba1ba6bb": "This addresses scenarios where the available data from the user is limited. Specifically, we utilized the Fineweb dataset~\\cite{fineweb_dataset_hf}, selecting 9 billion tokens from a collection of over 15 trillion tokens compiled from CommonCrawl dumps since 2013.",
+    "2412-15304_sent_e4a41efc": "Additionally, we incorporated the SHL dataset~\\cite{shl}, which contains annotated data collected via smartphone sensors (e.g., accelerometers, gyroscopes, magnetometers, barometers, GPS) for human activity recognition across activities like walking, running, sitting, and driving.",
+    "2412-15304_sent_2847a08b": "To further enhance the dataset, we included the ExtraSensory dataset~\\cite{extra_sensory}, which comprises multi-sensor data from 60 participants over several days, totaling 300,000 minutes of activity and environmental context (e.g., walking, sitting, outdoors, at home) sampled every minute.",
+    "2412-15304_sent_7b76203f": "The mixed dataset integrates Fineweb and sensor datasets in user-defined proportions, totaling 9 billion tokens.",
+    "2412-15304_sent_b103d796": "We split the dataset into training and validation sets using a 98:2 ratio.",
+    "2412-15304_sent_af35fef1": "For the SHL dataset, we merged sensor values corresponding to a given timestamp with descriptive prompts followed by the associated human action.",
+    "2412-15304_sent_1395d519": "We maintained consistency by splitting the datasets into 60-65\\% for training, 20-30\\% for testing, and 10-15\\% for validation.",
+    "2412-15304_sent_fd38af27": "The Hugging Face Transformers library\\footnote{\\url{https://huggingface.co/docs/transformers/en/index}} was employed for fine-tuning.",
+    "2412-15304_sent_964046d1": "We used LoRA adapters with ranks varying in powers of 2 (from 16 to 256) and dropout probabilities between 0.1 and 0.3, with gradient accumulation over six steps.",
+    "2412-15304_sent_1b6b9b8c": "Learning rates ranged from $4e^{-4}$ to $6e^{-4}$, and the training steps varied from 100 to 300, using the AdamW optimizer~\\cite{adamw} for fine-tuning.",
+    "2412-15304_sent_cd347a2e": "Gradient checkpointing was enabled, with evaluations performed at each logging step.",
+    "2412-15304_sent_97013165": "The best model, determined by evaluation loss, was saved. After fine-tuning, the base model was merged with the LoRA layers and converted to GGUF format, ensuring compatibility with the llama.cpp library~\\cite{llama.cpp}.",
+    "2412-15304_sent_ee9ab2b8": "This conversion allows efficient inferencing on various embedded edge platforms through a C++ wrapper.",
+    "2412-15304_section_b74a43db": "Evaluation",
+    "2412-15304_sent_ada4a3ca": "We evaluate the custom foundational models trained using \\system across resource-constrained edge platforms.",
+    "2412-15304_sent_3e75d259": "Specifically, we utilize single-board computers with diverse computational capabilities, as illustrated in Figure~\\ref{fig:single-board-computers}.",
+    "2412-15304_sent_e63f147e": "In these experiments, we focus on the impact of the pre-training data on the model's accuracy for embedded sensing applications.",
+    "2412-15304_sent_adf27eec": "We compare the performance of our custom model against state-of-the-art language models, focusing on metrics such as token generation rate, task completion time, and accuracy.",
+    "2412-15304_sent_4aaf98eb": "The key highlights of some of the results are as follows.",
+    "2412-15304_sent_e196a3e1": "Custom models exhibit improved performance after careful fine-tuning and incorporating domain-specific information into the pre-training dataset.",
+    "2412-15304_sent_c57706d9": "Custom models achieve better token generation rates and task completion times than commodity models",
+    "2412-15304_sent_fb725345": "Smaller models can be deployed on resource-constrained edge platforms, addressing memory limitations that hinder the deployment of commodity models.",
+    "2412-15304_fig_a40533d6": "\\begin{table}\n\n\\resizebox{\\columnwidth}{!}{\n\\begin{tabular}{ccccc}\n\n\\begin{tabular}[c]{@{}c@{}}Dataset\\\\ Name\\end{tabular} & Source & \\# Readings & \\# Datastreams & \\begin{tabular}[c]{@{}c@{}}\\# Output\\\\ Labels\\end{tabular} \\\\ \n\n\\begin{tabular}[c]{@{}c@{}}Gesture\\\\ Detection\\\\ \\end{tabular} & In-house & 630 & 4 & 3 \\\\\n\n\\begin{tabular}[c]{@{}c@{}}Localisation\\\\ \\end{tabular} & In-house & 350 & 8 & 3 \\\\\n\n\\begin{tabular}[c]{@{}c@{}}Swimming Style\\\\ Detection \\end{tabular} & Brunner et al.~\\cite{swimming_dataset} & 3,730 & 3 & 5 \\\\ \n\\end{tabular}\n\n\\caption{Datasets used for evaluation. The datasets are split into 70\\% for training, 10\\% for validation, and 20\\% for testing.}\n\n\\end{table}",
+    "2412-15304_fig_31b43c76": "\\begin{figure}\n\n\\begin{subfigure}{1\\columnwidth}\n\n \\includegraphics[width=0.7\\columnwidth]{figures/use_case_gesture.pdf}\n \\caption{}\n\\end{subfigure}\n\n\\begin{subfigure}{1\\columnwidth}\n\n \\includegraphics[width=0.85\\columnwidth]{figures/Hand_gestures_v1.pdf}\n \\caption{}\n\\end{subfigure}\n\n\\caption{ (a) A user performing a hand gesture, and (b) observed light intensity values for different hand gestures.}\n\n\\end{figure}",
+    "2412-15304_fig_95ff4537": "\\begin{figure}\n\n \\includegraphics[width=\\columnwidth]{figures/single-board-computers.pdf}\n\n \\caption{Embedded platforms for running \\system\\space-trained models vary in processing and memory capabilities, ranging from a few hundred megabytes to several gigabytes of RAM.}\n\n\\end{figure}",
+    "2412-15304_sent_cdbec7da": "\\begin{subfigure}{1\\columnwidth} \\includegraphics[width=\\columnwidth]{figures/use_case_localisation.pdf} \\caption{} \\end{subfigure} \\begin{subfigure}{1\\columnwidth} \\includegraphics[width=\\columnwidth, height=4cm]{figures/localisation_dataset.pdf} \\caption{} \\end{subfigure} \\caption{The localisation dataset was created based on data collected from sensors deployed on a moving robot in an indoor workspace.",
+    "2412-15304_sent_af3031d6": "(a) shows sensors deployed on an indoor robot for sensor-based location detection, and (b)The physical location and sensor data collected.} \\end{figure*} \\fakepar{Dataset} Since we target embedded sensing applications as a case study in this work, we collect relevant datasets to support such applications.",
+    "2412-15304_sent_b1e9dc8c": "Specifically, we utilize three datasets, summarized in Table~\\ref{tab:datasets}.",
+    "2412-15304_sent_721662ea": "Two datasets—gesture detection and localization—were collected specifically for this work, while the swimming style detection dataset was sourced from~\\cite{swimming_dataset} and is publicly available.",
+    "2412-15304_sent_707837ff": "It is worth noting that our framework can easily incorporate any additional datasets.",
+    "2412-15304_sent_ead89ed6": "The custom dataset collected for this work includes 630 instances of hand gesture data captured using the APDS9960 light sensor at a sampling rate of 12.6 Hz, with each gesture instance lasting 4 seconds.",
+    "2412-15304_sent_e290c785": "This data was recorded from seven participants performing gestures under three distinct light levels: low (100–200 lux), medium (600–750 lux), and high (1500–1600 lux), as well as across two distance ranges: close (2–4 cm) and far (8–10 cm).",
+    "2412-15304_sent_e84af35b": "The gestures included “Single Tap”, “Double Tap”, and “Hold” (as illustrated in Figure~\\ref{fig:gesture_dataset}), with an equal number of samples for each gesture class.",
+    "2412-15304_sent_961da240": "The second dataset captures environmental parameters characterizing various locations within a workspace (illustrated in Figure~\\ref{fig:localisation_dataset}).",
+    "2412-15304_sent_223af526": "The recorded parameters include temperature (°C), humidity (\\%), air pressure (hPa), light intensity (RGB channels), and sound intensity.",
+    "2412-15304_sent_a4139c74": "These measurements were taken at three distinct indoor locations: the entrance, the charging station, and the server rack.",
+    "2412-15304_sent_c53b8026": "The dataset contains 350 instances collected using sensors mounted on a moving robot, with readings taken hourly between 11:00 AM and 5:00 PM over two consecutive days at the respective locations.",
+    "2412-15304_sent_41abe3ec": "The dataset comprises 120 instances each for the “Charging Station” and “Entrance” locations, and 110 instances for the “Server Rack”.",
+    "2412-15304_sent_5606ecde": "Finally, the externally sourced dataset, the Swimming Style Detection Dataset~\\cite{swimming_dataset}, consists of 17 hours of sensor data collected from 40 swimmers of varying skill levels.",
+    "2412-15304_sent_4042cc49": "The data, obtained using the Nixon The Mission\\footnote{\\url{https://www.nixon.com/ch/en/smart}} smartwatch, includes measurements from an accelerometer, gyroscope, magnetometer, barometer, and ambient light sensor, sampled at a frequency of 30 Hz.",
+    "2412-15304_sent_9c263153": "We utilized only the accelerometer data for evaluations, comprising three streams representing movement along the $X$, $Y$, and $Z$ axes.",
+    "2412-15304_sent_52fdfbfd": "These streams were segmented into chunks containing 100 readings per stream (approximately 3 seconds) to create input samples.",
+    "2412-15304_sent_c0af556c": "Each chunk was annotated with one of five action labels, resulting in the following class distribution: “Freestyle” (1,504 samples), “Breaststroke” (285 samples), “Backstroke” (475 samples), “Butterfly” (222 samples), and “Transition” (1,244 samples).",
+    "2412-15304_sent_2af0f457": "\\fakepar{Pre-training and Fine-tuning Using Custom Models} We provide a brief overview of the specific steps undertaken with these datasets for pre-training and fine-tuning model development within the \\system framework.",
+    "2412-15304_sent_6bd37ef6": "For pre-training, we first created a sensor dataset by processing data from the Extrasensory~\\cite{extra_sensory} and SHL~\\cite{shl} datasets, as illustrated in Figure~\\ref{fig:dataset-prep}.",
+    "2412-15304_sent_d93122bc": "This sensor dataset was combined with the Fineweb dataset, using a 40:60 split (unless explicitly stated otherwise) to pre-train the custom models for evaluation.",
+    "2412-15304_sent_1cc89cbd": "For fine-tuning, we followed the steps outlined in Figure~\\ref{fig:fine-tuning}.",
+    "2412-15304_sent_4bf67ad8": "Due to space constraints, we will only detail this process for the gesture dataset.",
+    "2412-15304_sent_98ba123d": "The gesture dataset consists of four time-series data streams: proximity and light intensity (red, blue, and green channels).",
+    "2412-15304_sent_3b0db106": "For each sample, sensor readings were concatenated into a text string formatted as follows: Proximity: [...] \\textbackslash n Red: [...] \\textbackslash n Blue: [...] \\textbackslash n Green: [...]''.",
+    "2412-15304_sent_e4a4fd02": "The corresponding output labels included one of three gestures: Tap’’, Double Tap'', and Hold’’.",
+    "2412-15304_sent_29837f6f": "The instruction provided was: ``Sensor data values are provided in the following order: proximity, red, green, and blue light intensity values.",
+    "2412-15304_sent_775de96c": "Using these sensor values, determine the hand gesture performed. Give your answer only as Tap, Double Tap, or Hold.’’",
+    "2412-15304_sent_12d8d210": "\\begin{subfigure}[b]{0.42\\textwidth} \\includegraphics[width=\\textwidth]{figures/results/accuracies_gesture.pdf} \\caption{Gesture dataset} \\end{subfigure} \\begin{subfigure}[b]{0.42\\textwidth} \\includegraphics[width=\\textwidth]{figures/results/accuracies_local.pdf} \\caption{Localisation dataset} \\end{subfigure} \\begin{subfigure}[b]{0.15\\textwidth} \\includegraphics[width=\\textwidth]{figures/results/accuracies_legend.pdf} \\end{subfigure} \\caption{Compares the accuracy of fine-tuned off-the-shelf models (Phi and Llama) and custom models across (a) gesture and (b) localisation datasets, as a function of model size.",
+    "2412-15304_sent_ab151b79": "The plots show that larger models do not always achieve high accuracy.",
+    "2412-15304_sent_ea96dcfa": "In several cases, a smaller custom model achieves comparable or better performance than the larger model} \\end{figure*} \\fakepar{Experiment setup} We use multiple single-board computers for deploying custom and off-the-shelf models.",
+    "2412-15304_sent_6f5660ae": "This includes Latte Panda Sigma~\\cite{lattepanda} (Intel Core i5-1340P, 32 GB RAM, Ubuntu 20.04.4 LTS), Orange Pi 5 \\cite{orangepi5} (16GB RAM, Orange Pi OS), and Orange Pi Zero 2 W \\cite{orangepi502w} (2GB RAM, Orange Pi OS).",
+    "2412-15304_sent_30d792ea": "We use the llama.cpp~\\cite{llama.cpp} library and its metrics (token generation rate and run time) for the execution and evaluation of the selected models.",
+    "2412-15304_sent_d118ae81": "We have set the LLM's parameters for generating the responses: temperature (T = 0.7), repeat penalty = 1.1, and threads (t = 2) to maintain consistency across models and experiments.",
+    "2412-15304_sent_b147e915": "In addition to the custom models, we employ off-the-shelf LLMs and their quantized versions \\cite{quantization} to enable comparison.",
+    "2412-15304_sent_640d4b0f": "In the quantized versions, model weights are stored at lower precisions, which reduces the memory requirements but can also impact the quality of the model’s responses.",
+    "2412-15304_sent_d037660b": "Several quantization schemes exist, among which we used q2\\_k and q4\\_k for some of the evaluations.",
+    "2412-15304_sent_18a205be": "In all experiments, we conduct ten trials for each configuration and plot the average value and the standard deviation unless specified otherwise.",
+    "2412-15304_sent_6718b4a7": "We also evaluate model performance using accuracy, which is the percentage of correctly generated outputs.",
+    "2412-15304_sent_b2b27c30": "Since our prompts follow a specific template, the correct label is expected within the first few tokens.",
+    "2412-15304_sent_12194e81": "We check for the expected word within the first 3–4 tokens (ignoring line breaks).",
+    "2412-15304_sent_2c482140": "If it is missing, or if gibberish or incorrect classes are predicted, the output is classified as incorrect.",
+    "2412-15304_sent_47c7de33": "Accuracy is calculated as the ratio of correct predictions to the total number of test cases, then multiplied by 100 for a percentage score.",
+    "2412-15304_subsection_4f9d251b": "Accuracy of Fine-tuned Custom Models",
+    "2412-15304_sent_7fdf6e66": "The custom models, Llama and Phi, are fine-tuned on three different datasets, and their accuracy is evaluated based on test data.",
+    "2412-15304_sent_bada8f6c": "The quantized versions of the fine-tuned Phi and Llama models are also evaluated for accuracy.",
+    "2412-15304_sent_945297b6": "However, the same analysis could not be performed on the swimming dataset, as the fine-tuning process for Llama 3 and Phi 3 exceeded 72 hours (3 days) due to the dataset's higher count of samples compared to the collected datasets.",
+    "2412-15304_sent_7cdb3bc8": "It can be noted that Phi 3\\_q2 is not plotted as it achieved zero accuracy, as it repeatedly generated irrelevant outputs (mostly repeating the prompt).",
+    "2412-15304_sent_21ae2a3c": "\\fakepar{Insights} As shown in Figure \\ref{fig:accuracy} the accuracy of the custom models, Llama, and Phi models fine-tuned with the collected datasets.",
+    "2412-15304_sent_b66f0613": "Notably, the smaller custom models perform on par with or better than the larger models.",
+    "2412-15304_sent_c28f8e17": "Among the datasets, higher accuracy is observed for the localization dataset, suggesting that the gesture dataset poses more challenges.",
+    "2412-15304_sent_586ec6e4": "For the gesture dataset, Llama 2 outperforms Llama 3, while Phi 3 consistently performs well across both datasets, with Phi 2 following closely.",
+    "2412-15304_sent_c988b23d": "Phi models performed better than Llama models, which can be attributed to their pre-training data being more focused on computer programming (coding) datasets, enhancing their ability to handle sensor data as well.",
+    "2412-15304_subsection_fe910cb2": "Different Pre-training Datasets",
+    "2412-15304_fig_7a9f2202": "\\begin{figure}\n\n \\begin{subfigure}[b]{0.49\\columnwidth}\n\n \\includegraphics[width=\\textwidth]{figures/results/split_gesture.pdf}\n\n \\caption{Gesture}\n\n \\end{subfigure}\n\n \\begin{subfigure}[b]{0.49\\columnwidth}\n\n \\includegraphics[width=\\textwidth]{figures/results/split_local.pdf}\n\n \\caption{Localisation}\n\n \\end{subfigure}\n\n \\caption{Compares the accuracy of fine-tuned custom models (124M) on the (a) gesture and (b) localization datasets. The models are pre-trained on varying splits of sensor data and general web data, with a split of 0 indicating training solely on web data and a split of 1 indicating training exclusively on the sensor dataset. The shaded region highlights the preferred data split.}\n\n \\end{figure}",
+    "2412-15304_sent_82a484b3": "With the sensor dataset created earlier, we merged the Fineweb dataset to generate a series of mixed datasets in varying proportions, ranging from 0 (only Fineweb dataset) to 1 (only sensor dataset) in increments of 0.1.",
+    "2412-15304_sent_d9f7dfda": "Then, a custom 124M model is pre-trained on these datasets separately and subsequently fine-tuned separately on gesture and localization datasets.Figure~\\ref{fig:split_gesture} and \\ref{fig:split_local} show the accuracy of the fine-tuned 124M parameter model, pre-trained on varying splits of sensor and web data.",
+    "2412-15304_sent_e99b5417": "It can be observed that an almost equal mix of web and sensor data yields the highest accuracy (marked in blue).",
+    "2412-15304_sent_686a5663": "For both tasks, performance declines significantly as the data split shifts towards either extreme (i.e., pure web or pure sensor data).",
+    "2412-15304_sent_733a6adb": "\\fakepar{Insights} This suggests that a balanced dataset improves model performance for sensor data-specific applications like gesture recognition and localization.",
+    "2412-15304_sent_ba26f082": "A notable spike in accuracy is observed with the localization dataset when the split is 0.9, which occurred because the model consistently returned the same output label for all input prompts, artificially inflating the accuracy to 33\\%.",
+    "2412-15304_subsection_fd8d4824": "Varied Custom Model Parameter",
+    "2412-15304_fig_1e5374ec": "\\begin{figure}\n\n \\includegraphics[width=0.8\\columnwidth]{figures/results/accuracy_gpt2.pdf}\n\n \\caption{The accuracy of sensor data analysis increases with the model’s parameter size. Notably, even smaller models with fewer than 100 million parameters achieve high accuracy.}\n\n\\end{figure}",
+    "2412-15304_fig_d567847d": "\\begin{figure}\n\n \\includegraphics[width=0.9\\columnwidth]{figures/eval/small_models_combined.pdf}\n\n \\caption{Shows the variation of evaluation tokens per second when prompted with a gesture recognition prompt. The lowest token generation rate is comparable to the average human typing speed, demonstrating that custom models achieve reasonable performance, even on resource-constrained platforms.}\n\n\\end{figure}",
+    "2412-15304_sent_21d81a55": "In evaluating the performance of custom models on resource-constrained platforms, we employ models with varying parameters (30M to 124M), fine-tuned on the datasets discussed above.",
+    "2412-15304_sent_82984349": "We evaluate performance based on accuracy, inference time, and tokens per second.",
+    "2412-15304_sent_65055965": "Figure~\\ref{fig:gpt_acc} shows the accuracy of smaller models across the three datasets considered. We observe that accuracy generally improves as the number of model parameters increases, although some minor exceptions exist.",
+    "2412-15304_sent_d96b49c9": "Notably, the 30M and 50M models perform poorly on the gesture dataset, with the custom 30M model achieving zero accuracy.",
+    "2412-15304_sent_ed7a0f3a": "Figure~\\ref{fig:small_models} shows the variation of token generation rate with the number of parameters of gesture fine-tuned custom models.",
+    "2412-15304_sent_886d68fe": "We observe that models with fewer parameters achieve higher tokens per second rates compared to larger models or those with higher parameter counts.",
+    "2412-15304_sent_534dc5d3": "Additionally, the token generation rate decreases as the computational power of the device decreases.",
+    "2412-15304_sent_f5490715": "Figure~\\ref{fig:inference_timings} shows the inference time with varied model parameter sizes across custom and off-the-shelf models.",
+    "2412-15304_fig_a2cdf73e": "\\begin{figure}\n\n \\includegraphics[width=0.9\\columnwidth]{figures/results/inference_time.pdf}\n\n \\caption{Smaller models enable rapid inference. \\system\\space-trained models significantly improve inference time while maintaining high accuracy for the sensor data analysis.}\n\n \\Description{}\n\n\\end{figure}",
+    "2412-15304_sent_43cebd6b": "\\fakepar{Insights} Smaller models achieve higher token generation rates and reduced inference times, presenting a trade-off with accuracy.",
+    "2412-15304_sent_e4910514": "As shown in Figure~\\ref{fig:gpt_acc} for the swimming dataset, while the maximum accuracy achieved was 93.1\\%, the highest F1-score recorded was 0.78, which is lower than the 0.97 F1-score reported in \\cite{swimming_dataset}.",
+    "2412-15304_sent_4230ffd0": "It is important to note that we only used 3 datastreams (accelerometer readings along X, Y, and Z) out of the 11 provided in the dataset, due to the limited window context of the smaller models used in this study.",
+    "2412-15304_subsection_9234c4ce": "Multiple Active Instances",
+    "2412-15304_fig_368f83ed": "\\begin{figure}\n\n \\includegraphics[width=0.9\\columnwidth]{figures/eval/lattepanda_general_prompt_eval.pdf}\n\n \\caption{Shows the variation of evaluation tokens per second when multiple instances of the same LLM are running simultaneously on LattePanda Sigma.}\n\n\\end{figure}",
+    "2412-15304_sent_3005d872": "We evaluate the impact of running multiple concurrent instances of the same model on the token generation rate.",
+    "2412-15304_sent_699cc83f": "We use the sample prompt: \"How to interface a sensor to a micro-controller?",
+    "2412-15304_sent_ae2df8c0": "Explain in great detail.\" and set the number of new tokens to generate to $n = 300$, deploying the models on LattePanda Sigma.As shown in Figure \\ref{fig:multiple_active_instances}, we observed that across all models, the overall token generation rate decreases as the number of active instances increases.",
+    "2412-15304_sent_307838b7": "This rate reduction is more pronounced in larger models compared to smaller ones.",
+    "2412-15304_sent_58b7c34c": "\\fakepar{Insights} Notably, the custom model exhibits a significantly higher token generation rate due to its smaller size, which may allow multiple custom models specialized for different sensor data-related tasks to operate concurrently on resource-constrained devices without significantly compromising performance.",
+    "2412-15304_subsection_be2be469": "Varied Background Load",
+    "2412-15304_fig_e1c4a68b": "\\begin{figure}\n\n \\includegraphics[width=0.9\\columnwidth]{figures/eval/background_load.pdf}\n\n \\caption{Displays the total time taken by different models for inferring location under various background load conditions on the LattePanda Sigma. Custom models significantly outperform the other models by completing the inference task within a second.}\n\n\\end{figure}",
+    "2412-15304_sent_8d189c01": "We evaluate the impact of background load on task completion time.",
+    "2412-15304_sent_93cf1c42": "To do this, we actively prompt a single model while multiple models are loaded into the memory of the LattePanda Sigma.",
+    "2412-15304_sent_1ff048f1": "We employ custom and off-the-shelf models fine-tuned on the localisation dataset, using a localisation-based prompt, and set the number of new tokens to generate to $n = 9$.",
+    "2412-15304_sent_42add9f7": "We consider three different background loads based on the inactive models: High (three instances of Llama-3), Low (three instances of Phi-3), and None (no inactive LLMs loaded).As shown in Figure~\\ref{fig:background_load}, we observe that the background load from inactive LLM instances has little to no impact on the time taken to achieve a task-inferring location.",
+    "2412-15304_sent_fce283eb": "\\fakepar{Insights} The time taken by the custom model to perform the task is significantly less (over 70 times) than the time taken by other models for the same task across all background load conditions considered. This complements the results of the previous experiment, which showed that the custom model had a significantly higher token generation rate.",
+    "2412-15304_subsection_ed12428e": "Multiple Edge platforms",
+    "2412-15304_fig_62c39420": "\\begin{figure}\n\n \\includegraphics[width=0.9\\columnwidth]{figures/eval/sbc_localisation_eval_tps.pdf}\n\n \\caption{The smaller size of these models enables concurrent loading of multiple specialized models. Their token generation rates show they maintain efficient inference speeds even when running multiple instances simultaneously.}\n\n\\end{figure}",
+    "2412-15304_sent_a37255b5": "We evaluated the performance of the custom model on different single-board computers and assessed it based on average tokens per second and the impact of running multiple concurrent instances of the same model.",
+    "2412-15304_sent_62d03d10": "We used a custom model fine-tuned on the localisation dataset, with a localisation based prompt and a new tokens generated parameter set to $n = 4$.",
+    "2412-15304_sent_2f1824f0": "As shown in Figure~\\ref{fig:tokens_load}, we observe that while the token generation rate decreases with an increasing number of concurrent instances on the SBC, it maintains a reasonable rate.",
+    "2412-15304_sent_d2cb100e": "Although the custom model can be deployed on all the SBCs considered, we observe a steep drop in the token generation rate when moving to more resource-constrained devices.",
+    "2412-15304_sent_13d3d290": "This drop is due to the decreasing computing power of the processors in the SBCs.",
+    "2412-15304_sent_48db88e1": "\\fakepar{Insights} Even in highly constrained devices such as the Orange Pi Zero 2W, on which the considered off-the-shelf models cannot be deployed, the custom model achieves a token rate of approximately 6 tokens per second, comparable to the average typing speed of humans.",
+    "2412-15304_sent_58b4d633": "\\FloatBarrier",
+    "2412-15304_section_99ccd316": "Limitations and Discussion",
+    "2412-15304_sent_548c710f": "\\fakepar{Model Architectures} Currently, the framework supports only pre-training of GPT-2 based architectures, although fine-tuning supports many other models.",
+    "2412-15304_sent_3cb6e3b8": "\\fakepar{Context Window length} The input prompt size is currently limited to 1024, which might limit the applicability of some usecases consisting of longer prompts Here, the smaller models (below 120M) are scaled down from the 124M parameter model by reducing the number of transformer blocks but maintaining the relation $C = 64l$ as shown in Table~\\ref{tab:gpt2_parameters}.",
+    "2412-15304_sent_d6b95717": "However, it might be interesting to explore the training of smaller models created by varying $C$ and $l$ without constraining.",
+    "2412-15304_section_aed402c3": "Related Work",
+    "2412-15304_sent_6ee0dbfc": "\\fakepar{Sensing and Models} While it is widely known that LLMs excel at language-based tasks, various attempts are made to test LLMs on different modalities like images, audio, and time-series data.",
+    "2412-15304_sent_cc48208a": "There are significant advancements in audio and image domains~\\cite{audio_transformer,vision_transformer}.",
+    "2412-15304_sent_f76f680e": "Time-series as input to LLMs still remains a bigger challenge to be solved, although there are many works aimed that have had decent progress~\\cite{times-series-llm}.",
+    "2412-15304_sent_be45ff42": "Advances in this benefit many domains like medical~\\cite{health_learners} and sensor data analysis~\\cite{penetrative_ai}, which primarily contain time-series data from sensors.",
+    "2412-15304_sent_cab57b94": "Mo et al.~\\cite{iot-lm} makes LLMs comprehend sensory data by modifying the LLM's architecture.",
+    "2412-15304_sent_239756c7": "A new multisensory multi-task adapter layer is introduced, making the model capable of perceiving eight IoT tasks.",
+    "2412-15304_sent_018a14bd": "\\fakepar{LLMs and Programming} Recent years have seen growing interest in using LLMs in the software development process.",
+    "2412-15304_sent_a7c5bca0": "They demonstrate an increasing ability to generate relevant code from natural language prompts.",
+    "2412-15304_sent_1e067a46": "LLMs are also used for other coding tasks like completion, syntax correction, and refactoring.",
+    "2412-15304_sent_36a3a793": "These capabilities have led to surprising results: AlphaDev~\\cite{AlphaDev2023}, for instance, discovered a faster sorting algorithm that surpasses previously known human benchmarks.",
+    "2412-15304_sent_c7681cf1": "Meta's LLM Compiler~\\cite{MetaCompiler2024}, designed for compiler optimization, is another breakthrough by enhancing code generation efficiency and aims to optimize code for better performance and resource utilization.",
+    "2412-15304_sent_63a095cc": "Consequently, alongside larger, cloud-based LLMs such as ChatGPT and Claude, smaller LLMs designed specifically for coding tasks have also emerged. Examples include CodeLlama~\\cite{roziere2023code}, StarCoder~\\cite{llm_starcoder}, Codestral~\\cite{llm_codestral}, DeepSeek Coder~\\cite{llm_deepseek}, and CodeBERT~\\cite{feng2020codebert}.",
+    "2412-15304_sent_98e3fa07": "Many of these LLMs are now part of commercial products, including GitHub CoPilot\\footnote{\\url{https://github.com/features/copilot}} and OpenAI Codex\\footnote{\\url{https://openai.com/index/openai-codex/}}.",
+    "2412-15304_sent_fe335218": "\\system\\space is complementary to these systems and can utilize LLMs optimized for coding purposes.",
+    "2412-15304_section_6f8b794f": "Conclusion",
+    "2412-15304_sent_c4929860": "\\system\\space enables the pre-training and fine-tuning small language models on custom user data.",
+    "2412-15304_sent_20a209e8": "The framework supports deploying models at the edge, ranging between 30M and 124M parameters.",
+    "2412-15304_sent_10dfbdce": "Our results show that these smaller models can match or even surpass the performance of much larger models across various applications.",
+    "2412-15304_sent_08a0b7fb": "Incorporating domain-specific pre-training data further enhances their effectiveness.",
+    "2412-15304_sent_ba0f3e6f": "This framework takes a step towards deploying smaller, domain-adapted language models optimized for edge computing to support embedded sensing applications.",
+    "2412-15304_section_0407c271": "Acknowledgements",
+    "2412-15304_sent_1452bd16": "This work is funded by a grant from NUS-NCS Joint Center~(A-0008542-02-00).",
+    "2412-15304_sent_5bf3170a": "It is also supported by a startup grant (A-8000277-00-00), a MoE Tier 1 grant (A-8001661-00-00) and an unrestricted gift from Google through their Research Scholar Program~(A-8002307-00-00), hosted at NUS."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15304_sent_108a4b5e": "2412-15304_doc_root",
+      "2412-15304_abstract_ce28071e": "2412-15304_doc_root",
+      "2412-15304_sent_07097a0c": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_30ec370d": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_ff49fe79": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_1240520a": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_d7581c0c": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_059a245d": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_bb4b5d8a": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_78519ba0": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_2a8976a8": "2412-15304_abstract_ce28071e",
+      "2412-15304_sent_676977e1": "2412-15304_doc_root",
+      "2412-15304_section_0b79795d": "2412-15304_doc_root",
+      "2412-15304_sent_b848c97c": "2412-15304_section_0b79795d",
+      "2412-15304_sent_a865fa94": "2412-15304_section_0b79795d",
+      "2412-15304_sent_8b2786aa": "2412-15304_section_0b79795d",
+      "2412-15304_sent_aa63341f": "2412-15304_section_0b79795d",
+      "2412-15304_sent_20b1eb7f": "2412-15304_section_0b79795d",
+      "2412-15304_sent_735472e2": "2412-15304_section_0b79795d",
+      "2412-15304_sent_b60b95ab": "2412-15304_section_0b79795d",
+      "2412-15304_sent_cb26f7bb": "2412-15304_section_0b79795d",
+      "2412-15304_sent_a1a6d5c2": "2412-15304_section_0b79795d",
+      "2412-15304_sent_2df0e821": "2412-15304_section_0b79795d",
+      "2412-15304_sent_03037963": "2412-15304_section_0b79795d",
+      "2412-15304_sent_7c696937": "2412-15304_section_0b79795d",
+      "2412-15304_sent_95ffdf7d": "2412-15304_section_0b79795d",
+      "2412-15304_fig_1c19a949": "2412-15304_section_0b79795d",
+      "2412-15304_sent_666b7c32": "2412-15304_section_0b79795d",
+      "2412-15304_sent_2180f214": "2412-15304_section_0b79795d",
+      "2412-15304_sent_db85e6de": "2412-15304_section_0b79795d",
+      "2412-15304_sent_ee8117e0": "2412-15304_section_0b79795d",
+      "2412-15304_sent_937fd9f8": "2412-15304_section_0b79795d",
+      "2412-15304_sent_9c41a001": "2412-15304_section_0b79795d",
+      "2412-15304_sent_7c409269": "2412-15304_section_0b79795d",
+      "2412-15304_fig_8f463b03": "2412-15304_section_0b79795d",
+      "2412-15304_sent_b4dfa18f": "2412-15304_section_0b79795d",
+      "2412-15304_sent_010a78ac": "2412-15304_section_0b79795d",
+      "2412-15304_sent_7d3bc1e1": "2412-15304_section_0b79795d",
+      "2412-15304_sent_9924bf36": "2412-15304_section_0b79795d",
+      "2412-15304_sent_de10e2ae": "2412-15304_section_0b79795d",
+      "2412-15304_sent_4e7e5806": "2412-15304_section_0b79795d",
+      "2412-15304_sent_82cb8e69": "2412-15304_section_0b79795d",
+      "2412-15304_sent_cc7841d3": "2412-15304_section_0b79795d",
+      "2412-15304_sent_42e38426": "2412-15304_section_0b79795d",
+      "2412-15304_sent_55b3275b": "2412-15304_section_0b79795d",
+      "2412-15304_sent_9eb16bb7": "2412-15304_section_0b79795d",
+      "2412-15304_sent_9fd15a45": "2412-15304_section_0b79795d",
+      "2412-15304_sent_f698aec4": "2412-15304_section_0b79795d",
+      "2412-15304_sent_5c271b55": "2412-15304_section_0b79795d",
+      "2412-15304_sent_07eeb592": "2412-15304_section_0b79795d",
+      "2412-15304_sent_b419a423": "2412-15304_section_0b79795d",
+      "2412-15304_sent_21c1de6e": "2412-15304_section_0b79795d",
+      "2412-15304_sent_3e3d0ba1": "2412-15304_section_0b79795d",
+      "2412-15304_sent_87ac7b57": "2412-15304_section_0b79795d",
+      "2412-15304_sent_cca247c6": "2412-15304_section_0b79795d",
+      "2412-15304_sent_3631eaf2": "2412-15304_section_0b79795d",
+      "2412-15304_sent_f01c0bf0": "2412-15304_section_0b79795d",
+      "2412-15304_sent_1836224d": "2412-15304_section_0b79795d",
+      "2412-15304_sent_d81c8124": "2412-15304_section_0b79795d",
+      "2412-15304_sent_900c0af9": "2412-15304_section_0b79795d",
+      "2412-15304_sent_6e2335a5": "2412-15304_section_0b79795d",
+      "2412-15304_sent_d5c50f06": "2412-15304_section_0b79795d",
+      "2412-15304_sent_adf07009": "2412-15304_section_0b79795d",
+      "2412-15304_sent_98db66e4": "2412-15304_section_0b79795d",
+      "2412-15304_sent_3cbb6e3c": "2412-15304_section_0b79795d",
+      "2412-15304_sent_08d1c252": "2412-15304_section_0b79795d",
+      "2412-15304_sent_2015992e": "2412-15304_section_0b79795d",
+      "2412-15304_sent_83d9b36f": "2412-15304_section_0b79795d",
+      "2412-15304_sent_c0018dc1": "2412-15304_section_0b79795d",
+      "2412-15304_sent_066f9114": "2412-15304_section_0b79795d",
+      "2412-15304_sent_f120c6a0": "2412-15304_section_0b79795d",
+      "2412-15304_itemize_1481fa44": "2412-15304_section_b74a43db",
+      "2412-15304_item_253692db": "2412-15304_itemize_1481fa44",
+      "2412-15304_sent_fdf7776a": "2412-15304_item_253692db",
+      "2412-15304_sent_70351339": "2412-15304_item_253692db",
+      "2412-15304_sent_7bd395f5": "2412-15304_item_253692db",
+      "2412-15304_sent_a3576d2e": "2412-15304_item_253692db",
+      "2412-15304_sent_60309933": "2412-15304_item_253692db",
+      "2412-15304_sent_00236294": "2412-15304_item_253692db",
+      "2412-15304_section_a9ded1e5": "2412-15304_doc_root",
+      "2412-15304_sent_b23fab9a": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_c8b865ec": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_3d021a79": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_0619396e": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_e7fe805e": "2412-15304_section_a9ded1e5",
+      "2412-15304_eq_18a84689": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_0db217ec": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_b826da39": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_4bf1adf0": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_b853751e": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_84cccec8": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_479dc465": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_84404faa": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_2e21ce89": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_474e59c7": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_10cb899e": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_5170a255": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_b7d7a291": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_58edde56": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_c3375a56": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_4155dbdb": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_6eb7ed36": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_744ec4ca": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_19535948": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_c46a7b9c": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_2eae6539": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_9c0338a9": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_c19a3256": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_a630575a": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_bef80b6e": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_f5cd4896": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_34b97d12": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_c0531850": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_52ca0953": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_d2d878e4": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_cb9d4cfc": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_4baf6844": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_bbde4dff": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_363ee180": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_5c0d429c": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_e8d79f8e": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_8acdf21e": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_d17ed8ba": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_9e54e4db": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_fb5719f0": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_002a28a9": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_ef8828ec": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_2e70eee4": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_7fd4351f": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_1228d9ca": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_df7d9821": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_ee19697c": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_485b75ac": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_b785b3fe": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_0a0c7988": "2412-15304_section_a9ded1e5",
+      "2412-15304_sent_be447ece": "2412-15304_section_a9ded1e5",
+      "2412-15304_section_1afa74da": "2412-15304_doc_root",
+      "2412-15304_fig_b71837c1": "2412-15304_section_b74a43db",
+      "2412-15304_sent_692b16c9": "2412-15304_section_1afa74da",
+      "2412-15304_sent_5b8fb250": "2412-15304_section_1afa74da",
+      "2412-15304_sent_45773a2f": "2412-15304_section_1afa74da",
+      "2412-15304_sent_2cde411b": "2412-15304_section_1afa74da",
+      "2412-15304_sent_e2db73ef": "2412-15304_section_1afa74da",
+      "2412-15304_sent_9207f64e": "2412-15304_section_1afa74da",
+      "2412-15304_subsection_b5d784a4": "2412-15304_section_1afa74da",
+      "2412-15304_sent_4900b7e5": "2412-15304_subsection_b5d784a4",
+      "2412-15304_sent_37ebbaf1": "2412-15304_subsection_b5d784a4",
+      "2412-15304_sent_78fa8daf": "2412-15304_subsection_b5d784a4",
+      "2412-15304_sent_787e0409": "2412-15304_subsection_b5d784a4",
+      "2412-15304_sent_865545fc": "2412-15304_subsection_b5d784a4",
+      "2412-15304_sent_f0d3baf0": "2412-15304_subsection_b5d784a4",
+      "2412-15304_sent_02f16a3d": "2412-15304_subsection_b5d784a4",
+      "2412-15304_sent_6de749f6": "2412-15304_subsection_b5d784a4",
+      "2412-15304_subsection_cb8b5893": "2412-15304_section_1afa74da",
+      "2412-15304_sent_ea98d4f7": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_53386d87": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_ab740a98": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_181ed7c7": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_2e7a386d": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_d97cb1bf": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_e9822ebb": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_b7043127": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_f6e16af1": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_a827a12d": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_93f8df49": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_177db381": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_063822ab": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_0146bb0f": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_0f9ec43a": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_2ab90989": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_60024979": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_39bf9208": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_bf4f6ba9": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_c7ebd141": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_14eba005": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_f749273e": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_f0b9de3d": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_e8433e0c": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_9b0104bf": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_545ac330": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_3307f541": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_50998b60": "2412-15304_subsection_cb8b5893",
+      "2412-15304_sent_3ead1111": "2412-15304_subsection_cb8b5893",
+      "2412-15304_subsection_85b1d093": "2412-15304_section_1afa74da",
+      "2412-15304_sent_1e8f35be": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_1c4528a0": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_b8923411": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_011cc503": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_343b76c3": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_469d1cbe": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_13237ca8": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_1a2eead0": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_a16b68ea": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_95c02058": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_04f05d4c": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_0c6685dd": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_053044b2": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_2588343a": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_76953cf4": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_521c3e45": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_9acdd05b": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_05dfe7d2": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_38b65e75": "2412-15304_subsection_85b1d093",
+      "2412-15304_fig_1cf02732": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_400527f9": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_2ce19422": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_6a7b7f56": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_e644f74b": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_1ccb61e3": "2412-15304_subsection_85b1d093",
+      "2412-15304_eq_3ddd23b9": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_36998c9a": "2412-15304_subsection_85b1d093",
+      "2412-15304_fig_8903f167": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_3a30018e": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_f394d17a": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_1a117a66": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_c975d9cb": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_a4f2e09b": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_f9259231": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_8c0bb1c8": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_d2bff7bb": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_6f192d7f": "2412-15304_subsection_85b1d093",
+      "2412-15304_fig_43c04971": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_5c396a22": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_07e93a3b": "2412-15304_subsection_85b1d093",
+      "2412-15304_sent_e10401b5": "2412-15304_subsection_85b1d093",
+      "2412-15304_subsection_267652a5": "2412-15304_section_1afa74da",
+      "2412-15304_sent_2e890a4c": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_23327788": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_ef2e4f95": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_f9178072": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_6012f2e5": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_62ffde31": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_c910c646": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_6f80cd47": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_67a8a80f": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_f3d9610b": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_be943ece": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_7bba55af": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_322bb920": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_a096334f": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_bcd00f3b": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_3826ec0c": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_1c905af0": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_c7310f78": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_339f352a": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_235371c6": "2412-15304_subsection_267652a5",
+      "2412-15304_sent_f160e2b3": "2412-15304_subsection_267652a5",
+      "2412-15304_subsection_b672f52a": "2412-15304_section_1afa74da",
+      "2412-15304_sent_3b1a185e": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_6c32e365": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_adca75bf": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_ba1ba6bb": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_e4a41efc": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_2847a08b": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_7b76203f": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_b103d796": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_af35fef1": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_1395d519": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_fd38af27": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_964046d1": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_1b6b9b8c": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_cd347a2e": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_97013165": "2412-15304_subsection_b672f52a",
+      "2412-15304_sent_ee9ab2b8": "2412-15304_subsection_b672f52a",
+      "2412-15304_section_b74a43db": "2412-15304_doc_root",
+      "2412-15304_sent_ada4a3ca": "2412-15304_section_b74a43db",
+      "2412-15304_sent_3e75d259": "2412-15304_section_b74a43db",
+      "2412-15304_sent_e63f147e": "2412-15304_section_b74a43db",
+      "2412-15304_sent_adf27eec": "2412-15304_section_b74a43db",
+      "2412-15304_sent_4aaf98eb": "2412-15304_section_b74a43db",
+      "2412-15304_sent_e196a3e1": "2412-15304_item_253692db",
+      "2412-15304_sent_c57706d9": "2412-15304_item_253692db",
+      "2412-15304_sent_fb725345": "2412-15304_item_253692db",
+      "2412-15304_fig_a40533d6": "2412-15304_section_b74a43db",
+      "2412-15304_fig_31b43c76": "2412-15304_section_b74a43db",
+      "2412-15304_fig_95ff4537": "2412-15304_section_b74a43db",
+      "2412-15304_sent_cdbec7da": "2412-15304_section_b74a43db",
+      "2412-15304_sent_af3031d6": "2412-15304_section_b74a43db",
+      "2412-15304_sent_b1e9dc8c": "2412-15304_section_b74a43db",
+      "2412-15304_sent_721662ea": "2412-15304_section_b74a43db",
+      "2412-15304_sent_707837ff": "2412-15304_section_b74a43db",
+      "2412-15304_sent_ead89ed6": "2412-15304_section_b74a43db",
+      "2412-15304_sent_e290c785": "2412-15304_section_b74a43db",
+      "2412-15304_sent_e84af35b": "2412-15304_section_b74a43db",
+      "2412-15304_sent_961da240": "2412-15304_section_b74a43db",
+      "2412-15304_sent_223af526": "2412-15304_section_b74a43db",
+      "2412-15304_sent_a4139c74": "2412-15304_section_b74a43db",
+      "2412-15304_sent_c53b8026": "2412-15304_section_b74a43db",
+      "2412-15304_sent_41abe3ec": "2412-15304_section_b74a43db",
+      "2412-15304_sent_5606ecde": "2412-15304_section_b74a43db",
+      "2412-15304_sent_4042cc49": "2412-15304_section_b74a43db",
+      "2412-15304_sent_9c263153": "2412-15304_section_b74a43db",
+      "2412-15304_sent_52fdfbfd": "2412-15304_section_b74a43db",
+      "2412-15304_sent_c0af556c": "2412-15304_section_b74a43db",
+      "2412-15304_sent_2af0f457": "2412-15304_section_b74a43db",
+      "2412-15304_sent_6bd37ef6": "2412-15304_section_b74a43db",
+      "2412-15304_sent_d93122bc": "2412-15304_section_b74a43db",
+      "2412-15304_sent_1cc89cbd": "2412-15304_section_b74a43db",
+      "2412-15304_sent_4bf67ad8": "2412-15304_section_b74a43db",
+      "2412-15304_sent_98ba123d": "2412-15304_section_b74a43db",
+      "2412-15304_sent_3b0db106": "2412-15304_section_b74a43db",
+      "2412-15304_sent_e4a4fd02": "2412-15304_section_b74a43db",
+      "2412-15304_sent_29837f6f": "2412-15304_section_b74a43db",
+      "2412-15304_sent_775de96c": "2412-15304_section_b74a43db",
+      "2412-15304_sent_12d8d210": "2412-15304_section_b74a43db",
+      "2412-15304_sent_ab151b79": "2412-15304_section_b74a43db",
+      "2412-15304_sent_ea96dcfa": "2412-15304_section_b74a43db",
+      "2412-15304_sent_6f5660ae": "2412-15304_section_b74a43db",
+      "2412-15304_sent_30d792ea": "2412-15304_section_b74a43db",
+      "2412-15304_sent_d118ae81": "2412-15304_section_b74a43db",
+      "2412-15304_sent_b147e915": "2412-15304_section_b74a43db",
+      "2412-15304_sent_640d4b0f": "2412-15304_section_b74a43db",
+      "2412-15304_sent_d037660b": "2412-15304_section_b74a43db",
+      "2412-15304_sent_18a205be": "2412-15304_section_b74a43db",
+      "2412-15304_sent_6718b4a7": "2412-15304_section_b74a43db",
+      "2412-15304_sent_b2b27c30": "2412-15304_section_b74a43db",
+      "2412-15304_sent_12194e81": "2412-15304_section_b74a43db",
+      "2412-15304_sent_2c482140": "2412-15304_section_b74a43db",
+      "2412-15304_sent_47c7de33": "2412-15304_section_b74a43db",
+      "2412-15304_subsection_4f9d251b": "2412-15304_section_b74a43db",
+      "2412-15304_sent_7fdf6e66": "2412-15304_subsection_4f9d251b",
+      "2412-15304_sent_bada8f6c": "2412-15304_subsection_4f9d251b",
+      "2412-15304_sent_945297b6": "2412-15304_subsection_4f9d251b",
+      "2412-15304_sent_7cdb3bc8": "2412-15304_subsection_4f9d251b",
+      "2412-15304_sent_21ae2a3c": "2412-15304_subsection_4f9d251b",
+      "2412-15304_sent_b66f0613": "2412-15304_subsection_4f9d251b",
+      "2412-15304_sent_c28f8e17": "2412-15304_subsection_4f9d251b",
+      "2412-15304_sent_586ec6e4": "2412-15304_subsection_4f9d251b",
+      "2412-15304_sent_c988b23d": "2412-15304_subsection_4f9d251b",
+      "2412-15304_subsection_fe910cb2": "2412-15304_section_b74a43db",
+      "2412-15304_fig_7a9f2202": "2412-15304_subsection_fe910cb2",
+      "2412-15304_sent_82a484b3": "2412-15304_subsection_fe910cb2",
+      "2412-15304_sent_d9f7dfda": "2412-15304_subsection_fe910cb2",
+      "2412-15304_sent_e99b5417": "2412-15304_subsection_fe910cb2",
+      "2412-15304_sent_686a5663": "2412-15304_subsection_fe910cb2",
+      "2412-15304_sent_733a6adb": "2412-15304_subsection_fe910cb2",
+      "2412-15304_sent_ba26f082": "2412-15304_subsection_fe910cb2",
+      "2412-15304_subsection_fd8d4824": "2412-15304_section_b74a43db",
+      "2412-15304_fig_1e5374ec": "2412-15304_subsection_fd8d4824",
+      "2412-15304_fig_d567847d": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_21d81a55": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_82984349": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_65055965": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_d96b49c9": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_ed7a0f3a": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_886d68fe": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_534dc5d3": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_f5490715": "2412-15304_subsection_fd8d4824",
+      "2412-15304_fig_a2cdf73e": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_43cebd6b": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_e4910514": "2412-15304_subsection_fd8d4824",
+      "2412-15304_sent_4230ffd0": "2412-15304_subsection_fd8d4824",
+      "2412-15304_subsection_9234c4ce": "2412-15304_section_b74a43db",
+      "2412-15304_fig_368f83ed": "2412-15304_subsection_9234c4ce",
+      "2412-15304_sent_3005d872": "2412-15304_subsection_9234c4ce",
+      "2412-15304_sent_699cc83f": "2412-15304_subsection_9234c4ce",
+      "2412-15304_sent_ae2df8c0": "2412-15304_subsection_9234c4ce",
+      "2412-15304_sent_307838b7": "2412-15304_subsection_9234c4ce",
+      "2412-15304_sent_58b7c34c": "2412-15304_subsection_9234c4ce",
+      "2412-15304_subsection_be2be469": "2412-15304_section_b74a43db",
+      "2412-15304_fig_e1c4a68b": "2412-15304_subsection_be2be469",
+      "2412-15304_sent_8d189c01": "2412-15304_subsection_be2be469",
+      "2412-15304_sent_93cf1c42": "2412-15304_subsection_be2be469",
+      "2412-15304_sent_1ff048f1": "2412-15304_subsection_be2be469",
+      "2412-15304_sent_42add9f7": "2412-15304_subsection_be2be469",
+      "2412-15304_sent_fce283eb": "2412-15304_subsection_be2be469",
+      "2412-15304_subsection_ed12428e": "2412-15304_section_b74a43db",
+      "2412-15304_fig_62c39420": "2412-15304_subsection_ed12428e",
+      "2412-15304_sent_a37255b5": "2412-15304_subsection_ed12428e",
+      "2412-15304_sent_62d03d10": "2412-15304_subsection_ed12428e",
+      "2412-15304_sent_2f1824f0": "2412-15304_subsection_ed12428e",
+      "2412-15304_sent_d2cb100e": "2412-15304_subsection_ed12428e",
+      "2412-15304_sent_13d3d290": "2412-15304_subsection_ed12428e",
+      "2412-15304_sent_48db88e1": "2412-15304_subsection_ed12428e",
+      "2412-15304_sent_58b4d633": "2412-15304_section_0407c271",
+      "2412-15304_section_99ccd316": "2412-15304_doc_root",
+      "2412-15304_sent_548c710f": "2412-15304_section_99ccd316",
+      "2412-15304_sent_3cb6e3b8": "2412-15304_section_99ccd316",
+      "2412-15304_sent_d6b95717": "2412-15304_section_99ccd316",
+      "2412-15304_section_aed402c3": "2412-15304_doc_root",
+      "2412-15304_sent_6ee0dbfc": "2412-15304_section_aed402c3",
+      "2412-15304_sent_cc48208a": "2412-15304_section_aed402c3",
+      "2412-15304_sent_f76f680e": "2412-15304_section_aed402c3",
+      "2412-15304_sent_be45ff42": "2412-15304_section_aed402c3",
+      "2412-15304_sent_cab57b94": "2412-15304_section_aed402c3",
+      "2412-15304_sent_239756c7": "2412-15304_section_aed402c3",
+      "2412-15304_sent_018a14bd": "2412-15304_section_aed402c3",
+      "2412-15304_sent_a7c5bca0": "2412-15304_section_aed402c3",
+      "2412-15304_sent_1e067a46": "2412-15304_section_aed402c3",
+      "2412-15304_sent_36a3a793": "2412-15304_section_aed402c3",
+      "2412-15304_sent_c7681cf1": "2412-15304_section_aed402c3",
+      "2412-15304_sent_63a095cc": "2412-15304_section_aed402c3",
+      "2412-15304_sent_98e3fa07": "2412-15304_section_aed402c3",
+      "2412-15304_sent_fe335218": "2412-15304_section_aed402c3",
+      "2412-15304_section_6f8b794f": "2412-15304_doc_root",
+      "2412-15304_sent_c4929860": "2412-15304_section_6f8b794f",
+      "2412-15304_sent_20a209e8": "2412-15304_section_6f8b794f",
+      "2412-15304_sent_10dfbdce": "2412-15304_section_6f8b794f",
+      "2412-15304_sent_08a0b7fb": "2412-15304_section_6f8b794f",
+      "2412-15304_sent_ba0f3e6f": "2412-15304_section_6f8b794f",
+      "2412-15304_section_0407c271": "2412-15304_doc_root",
+      "2412-15304_sent_1452bd16": "2412-15304_section_0407c271",
+      "2412-15304_sent_5bf3170a": "2412-15304_section_0407c271"
+    }
+  },
+  "merged_parents": {
+    "2412-15304_sent_108a4b5e": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_abstract_ce28071e": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_sent_07097a0c": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_30ec370d": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_ff49fe79": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_1240520a": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_d7581c0c": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_059a245d": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_bb4b5d8a": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_78519ba0": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_2a8976a8": [
+      "2412-15304_abstract_ce28071e"
+    ],
+    "2412-15304_sent_676977e1": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_section_0b79795d": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_sent_b848c97c": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_a865fa94": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_8b2786aa": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_aa63341f": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_20b1eb7f": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_735472e2": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_b60b95ab": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_cb26f7bb": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_a1a6d5c2": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_2df0e821": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_03037963": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_7c696937": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_95ffdf7d": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_fig_1c19a949": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_666b7c32": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_2180f214": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_db85e6de": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_ee8117e0": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_937fd9f8": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_9c41a001": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_7c409269": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_fig_8f463b03": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_b4dfa18f": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_010a78ac": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_7d3bc1e1": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_9924bf36": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_de10e2ae": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_4e7e5806": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_82cb8e69": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_cc7841d3": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_42e38426": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_55b3275b": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_9eb16bb7": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_9fd15a45": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_f698aec4": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_5c271b55": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_07eeb592": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_b419a423": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_21c1de6e": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_3e3d0ba1": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_87ac7b57": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_cca247c6": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_3631eaf2": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_f01c0bf0": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_1836224d": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_d81c8124": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_900c0af9": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_6e2335a5": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_d5c50f06": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_adf07009": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_98db66e4": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_3cbb6e3c": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_08d1c252": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_2015992e": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_83d9b36f": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_c0018dc1": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_066f9114": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_sent_f120c6a0": [
+      "2412-15304_section_0b79795d"
+    ],
+    "2412-15304_itemize_1481fa44": [
+      "2412-15304_section_0b79795d",
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_item_253692db": [
+      "2412-15304_itemize_1481fa44"
+    ],
+    "2412-15304_sent_fdf7776a": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_sent_70351339": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_sent_7bd395f5": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_sent_a3576d2e": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_sent_60309933": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_sent_00236294": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_section_a9ded1e5": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_sent_b23fab9a": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_c8b865ec": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_3d021a79": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_0619396e": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_e7fe805e": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_eq_18a84689": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_0db217ec": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_b826da39": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_4bf1adf0": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_b853751e": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_84cccec8": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_479dc465": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_84404faa": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_2e21ce89": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_474e59c7": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_10cb899e": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_5170a255": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_b7d7a291": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_58edde56": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_c3375a56": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_4155dbdb": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_6eb7ed36": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_744ec4ca": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_19535948": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_c46a7b9c": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_2eae6539": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_9c0338a9": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_c19a3256": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_a630575a": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_bef80b6e": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_f5cd4896": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_34b97d12": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_c0531850": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_52ca0953": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_d2d878e4": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_cb9d4cfc": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_4baf6844": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_bbde4dff": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_363ee180": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_5c0d429c": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_e8d79f8e": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_8acdf21e": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_d17ed8ba": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_9e54e4db": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_fb5719f0": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_002a28a9": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_ef8828ec": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_2e70eee4": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_7fd4351f": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_1228d9ca": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_df7d9821": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_ee19697c": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_485b75ac": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_b785b3fe": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_0a0c7988": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_sent_be447ece": [
+      "2412-15304_section_a9ded1e5"
+    ],
+    "2412-15304_section_1afa74da": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_fig_b71837c1": [
+      "2412-15304_section_1afa74da",
+      "2412-15304_section_b74a43db",
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_692b16c9": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_5b8fb250": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_45773a2f": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_2cde411b": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_e2db73ef": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_9207f64e": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_subsection_b5d784a4": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_4900b7e5": [
+      "2412-15304_subsection_b5d784a4"
+    ],
+    "2412-15304_sent_37ebbaf1": [
+      "2412-15304_subsection_b5d784a4"
+    ],
+    "2412-15304_sent_78fa8daf": [
+      "2412-15304_subsection_b5d784a4"
+    ],
+    "2412-15304_sent_787e0409": [
+      "2412-15304_subsection_b5d784a4"
+    ],
+    "2412-15304_sent_865545fc": [
+      "2412-15304_subsection_b5d784a4"
+    ],
+    "2412-15304_sent_f0d3baf0": [
+      "2412-15304_subsection_b5d784a4"
+    ],
+    "2412-15304_sent_02f16a3d": [
+      "2412-15304_subsection_b5d784a4"
+    ],
+    "2412-15304_sent_6de749f6": [
+      "2412-15304_subsection_b5d784a4"
+    ],
+    "2412-15304_subsection_cb8b5893": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_ea98d4f7": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_53386d87": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_ab740a98": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_181ed7c7": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_2e7a386d": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_d97cb1bf": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_e9822ebb": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_b7043127": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_f6e16af1": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_a827a12d": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_93f8df49": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_177db381": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_063822ab": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_0146bb0f": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_0f9ec43a": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_2ab90989": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_60024979": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_39bf9208": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_bf4f6ba9": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_c7ebd141": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_14eba005": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_f749273e": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_f0b9de3d": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_e8433e0c": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_9b0104bf": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_545ac330": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_3307f541": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_50998b60": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_sent_3ead1111": [
+      "2412-15304_subsection_cb8b5893"
+    ],
+    "2412-15304_subsection_85b1d093": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_1e8f35be": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_1c4528a0": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_b8923411": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_011cc503": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_343b76c3": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_469d1cbe": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_13237ca8": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_1a2eead0": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_a16b68ea": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_95c02058": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_04f05d4c": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_0c6685dd": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_053044b2": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_2588343a": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_76953cf4": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_521c3e45": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_9acdd05b": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_05dfe7d2": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_38b65e75": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_fig_1cf02732": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_400527f9": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_2ce19422": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_6a7b7f56": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_e644f74b": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_1ccb61e3": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_eq_3ddd23b9": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_36998c9a": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_fig_8903f167": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_3a30018e": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_f394d17a": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_1a117a66": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_c975d9cb": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_a4f2e09b": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_f9259231": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_8c0bb1c8": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_d2bff7bb": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_6f192d7f": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_fig_43c04971": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_5c396a22": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_07e93a3b": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_sent_e10401b5": [
+      "2412-15304_subsection_85b1d093"
+    ],
+    "2412-15304_subsection_267652a5": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_2e890a4c": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_23327788": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_ef2e4f95": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_f9178072": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_6012f2e5": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_62ffde31": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_c910c646": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_6f80cd47": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_67a8a80f": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_f3d9610b": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_be943ece": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_7bba55af": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_322bb920": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_a096334f": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_bcd00f3b": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_3826ec0c": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_1c905af0": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_c7310f78": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_339f352a": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_235371c6": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_sent_f160e2b3": [
+      "2412-15304_subsection_267652a5"
+    ],
+    "2412-15304_subsection_b672f52a": [
+      "2412-15304_section_1afa74da"
+    ],
+    "2412-15304_sent_3b1a185e": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_6c32e365": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_adca75bf": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_ba1ba6bb": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_e4a41efc": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_2847a08b": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_7b76203f": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_b103d796": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_af35fef1": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_1395d519": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_fd38af27": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_964046d1": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_1b6b9b8c": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_cd347a2e": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_97013165": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_sent_ee9ab2b8": [
+      "2412-15304_subsection_b672f52a"
+    ],
+    "2412-15304_section_b74a43db": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_sent_ada4a3ca": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_3e75d259": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_e63f147e": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_adf27eec": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_4aaf98eb": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_e196a3e1": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_sent_c57706d9": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_sent_fb725345": [
+      "2412-15304_item_253692db"
+    ],
+    "2412-15304_fig_a40533d6": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_fig_31b43c76": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_fig_95ff4537": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_cdbec7da": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_af3031d6": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_b1e9dc8c": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_721662ea": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_707837ff": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_ead89ed6": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_e290c785": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_e84af35b": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_961da240": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_223af526": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_a4139c74": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_c53b8026": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_41abe3ec": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_5606ecde": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_4042cc49": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_9c263153": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_52fdfbfd": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_c0af556c": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_2af0f457": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_6bd37ef6": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_d93122bc": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_1cc89cbd": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_4bf67ad8": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_98ba123d": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_3b0db106": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_e4a4fd02": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_29837f6f": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_775de96c": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_12d8d210": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_ab151b79": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_ea96dcfa": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_6f5660ae": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_30d792ea": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_d118ae81": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_b147e915": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_640d4b0f": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_d037660b": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_18a205be": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_6718b4a7": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_b2b27c30": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_12194e81": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_2c482140": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_47c7de33": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_subsection_4f9d251b": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_sent_7fdf6e66": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_sent_bada8f6c": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_sent_945297b6": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_sent_7cdb3bc8": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_sent_21ae2a3c": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_sent_b66f0613": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_sent_c28f8e17": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_sent_586ec6e4": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_sent_c988b23d": [
+      "2412-15304_subsection_4f9d251b"
+    ],
+    "2412-15304_subsection_fe910cb2": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_fig_7a9f2202": [
+      "2412-15304_subsection_fe910cb2"
+    ],
+    "2412-15304_sent_82a484b3": [
+      "2412-15304_subsection_fe910cb2"
+    ],
+    "2412-15304_sent_d9f7dfda": [
+      "2412-15304_subsection_fe910cb2"
+    ],
+    "2412-15304_sent_e99b5417": [
+      "2412-15304_subsection_fe910cb2"
+    ],
+    "2412-15304_sent_686a5663": [
+      "2412-15304_subsection_fe910cb2"
+    ],
+    "2412-15304_sent_733a6adb": [
+      "2412-15304_subsection_fe910cb2"
+    ],
+    "2412-15304_sent_ba26f082": [
+      "2412-15304_subsection_fe910cb2"
+    ],
+    "2412-15304_subsection_fd8d4824": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_fig_1e5374ec": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_fig_d567847d": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_21d81a55": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_82984349": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_65055965": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_d96b49c9": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_ed7a0f3a": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_886d68fe": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_534dc5d3": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_f5490715": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_fig_a2cdf73e": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_43cebd6b": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_e4910514": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_sent_4230ffd0": [
+      "2412-15304_subsection_fd8d4824"
+    ],
+    "2412-15304_subsection_9234c4ce": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_fig_368f83ed": [
+      "2412-15304_subsection_9234c4ce"
+    ],
+    "2412-15304_sent_3005d872": [
+      "2412-15304_subsection_9234c4ce"
+    ],
+    "2412-15304_sent_699cc83f": [
+      "2412-15304_subsection_9234c4ce"
+    ],
+    "2412-15304_sent_ae2df8c0": [
+      "2412-15304_subsection_9234c4ce"
+    ],
+    "2412-15304_sent_307838b7": [
+      "2412-15304_subsection_9234c4ce"
+    ],
+    "2412-15304_sent_58b7c34c": [
+      "2412-15304_subsection_9234c4ce"
+    ],
+    "2412-15304_subsection_be2be469": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_fig_e1c4a68b": [
+      "2412-15304_subsection_be2be469"
+    ],
+    "2412-15304_sent_8d189c01": [
+      "2412-15304_subsection_be2be469"
+    ],
+    "2412-15304_sent_93cf1c42": [
+      "2412-15304_subsection_be2be469"
+    ],
+    "2412-15304_sent_1ff048f1": [
+      "2412-15304_subsection_be2be469"
+    ],
+    "2412-15304_sent_42add9f7": [
+      "2412-15304_subsection_be2be469"
+    ],
+    "2412-15304_sent_fce283eb": [
+      "2412-15304_subsection_be2be469"
+    ],
+    "2412-15304_subsection_ed12428e": [
+      "2412-15304_section_b74a43db"
+    ],
+    "2412-15304_fig_62c39420": [
+      "2412-15304_subsection_ed12428e"
+    ],
+    "2412-15304_sent_a37255b5": [
+      "2412-15304_subsection_ed12428e"
+    ],
+    "2412-15304_sent_62d03d10": [
+      "2412-15304_subsection_ed12428e"
+    ],
+    "2412-15304_sent_2f1824f0": [
+      "2412-15304_subsection_ed12428e"
+    ],
+    "2412-15304_sent_d2cb100e": [
+      "2412-15304_subsection_ed12428e"
+    ],
+    "2412-15304_sent_13d3d290": [
+      "2412-15304_subsection_ed12428e"
+    ],
+    "2412-15304_sent_48db88e1": [
+      "2412-15304_subsection_ed12428e"
+    ],
+    "2412-15304_sent_58b4d633": [
+      "2412-15304_section_0407c271",
+      "2412-15304_subsection_ed12428e"
+    ],
+    "2412-15304_section_99ccd316": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_sent_548c710f": [
+      "2412-15304_section_99ccd316"
+    ],
+    "2412-15304_sent_3cb6e3b8": [
+      "2412-15304_section_99ccd316"
+    ],
+    "2412-15304_sent_d6b95717": [
+      "2412-15304_section_99ccd316"
+    ],
+    "2412-15304_section_aed402c3": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_sent_6ee0dbfc": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_cc48208a": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_f76f680e": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_be45ff42": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_cab57b94": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_239756c7": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_018a14bd": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_a7c5bca0": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_1e067a46": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_36a3a793": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_c7681cf1": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_63a095cc": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_98e3fa07": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_sent_fe335218": [
+      "2412-15304_section_aed402c3"
+    ],
+    "2412-15304_section_6f8b794f": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_sent_c4929860": [
+      "2412-15304_section_6f8b794f"
+    ],
+    "2412-15304_sent_20a209e8": [
+      "2412-15304_section_6f8b794f"
+    ],
+    "2412-15304_sent_10dfbdce": [
+      "2412-15304_section_6f8b794f"
+    ],
+    "2412-15304_sent_08a0b7fb": [
+      "2412-15304_section_6f8b794f"
+    ],
+    "2412-15304_sent_ba0f3e6f": [
+      "2412-15304_section_6f8b794f"
+    ],
+    "2412-15304_section_0407c271": [
+      "2412-15304_doc_root"
+    ],
+    "2412-15304_sent_1452bd16": [
+      "2412-15304_section_0407c271"
+    ],
+    "2412-15304_sent_5bf3170a": [
+      "2412-15304_section_0407c271"
+    ]
+  }
+}

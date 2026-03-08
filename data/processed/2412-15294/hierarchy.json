@@ -1,0 +1,1930 @@
+{
+  "elements": {
+    "2412-15294_doc_root": "DOCUMENT_ROOT",
+    "2412-15294_sent_5d12c20f": "\\title{A Universal Model for Human Mobility Prediction}",
+    "2412-15294_abstract_ce28071e": "abstract",
+    "2412-15294_sent_b9862eaa": "Predicting human mobility is crucial for urban planning, traffic control, and emergency response.",
+    "2412-15294_sent_80619c93": "Mobility behaviors can be categorized into individual and collective, and these behaviors are recorded by diverse mobility data, such as individual trajectory and crowd flow.",
+    "2412-15294_sent_f6564e97": "As different modalities of mobility data, individual trajectory and crowd flow have a close coupling relationship.",
+    "2412-15294_sent_50c24b76": "Crowd flows originate from the bottom-up aggregation of individual trajectories, while the constraints imposed by crowd flows shape these individual trajectories.",
+    "2412-15294_sent_7e0c6bf5": "Existing mobility prediction methods are limited to single tasks due to modal gaps between individual trajectory and crowd flow.",
+    "2412-15294_sent_9d99f0a6": "In this work, we aim to unify mobility prediction to break through the limitations of task-specific models.",
+    "2412-15294_sent_16bbb8b0": "We propose a universal human mobility prediction model (named UniMob), which can be applied to both individual trajectory and crowd flow.",
+    "2412-15294_sent_0b95ded2": "UniMob leverages a multi-view mobility tokenizer that transforms both trajectory and flow data into spatiotemporal tokens, facilitating unified sequential modeling through a diffusion transformer architecture.",
+    "2412-15294_sent_110cde67": "To bridge the gap between the different characteristics of these two data modalities, we implement a novel bidirectional individual and collective alignment mechanism.",
+    "2412-15294_sent_d1d2dc54": "This mechanism enables learning common spatiotemporal patterns from different mobility data, facilitating mutual enhancement of both trajectory and flow predictions.",
+    "2412-15294_sent_19aff344": "Extensive experiments on real-world datasets validate the superiority of our model over state-of-the-art baselines in trajectory and flow prediction.",
+    "2412-15294_sent_ab076af0": "Especially in noisy and scarce data scenarios, our model achieves the highest performance improvement of more than 14\\% and 25\\% in MAPE and Accuracy@5.",
+    "2412-15294_sent_d88ec53a": "\\iffalse \\begin{CCSXML} <ccs2012> <concept> <concept_id>10002951.10003227</concept_id> <concept_desc>Information systems~Information systems applications</concept_desc> <concept_significance>500</concept_significance> </concept> </ccs2012> \\end{CCSXML} \\ccsdesc[500]{Information systems~Information systems applications} \\fi \\begin{CCSXML} <ccs2012> <concept> <concept_id>10002951.10003227.10003236</concept_id> <concept_desc>Information systems~Spatial-temporal systems</concept_desc> <concept_significance>500</concept_significance> </concept> <concept> <concept_id>10003033.10003079.10003081</concept_id> <concept_desc>Networks~Network simulations</concept_desc> <concept_significance>300</concept_significance> </concept> <concept> <concept_id>10010147.10010341.10010366.10010369</concept_id> <concept_desc>Computing methodologies~Simulation tools</concept_desc> <concept_significance>300</concept_significance> </concept> </ccs2012> \\end{CCSXML} \\ccsdesc[500]{Information systems~Spatial-temporal systems} \\ccsdesc[300]{Networks~Network simulations} \\ccsdesc[300]{Computing methodologies~Simulation tools} \\keywords{Universal model, trajectory prediction, flow prediction} \\maketitle",
+    "2412-15294_section_0b79795d": "Introduction",
+    "2412-15294_sent_27c6e0a6": "Human mobility data records the movement of human beings in space over time~\\cite{barbosa2018human,long2023practical,yuan2022activity}.",
+    "2412-15294_sent_48395d34": "It supports various activities~\\cite{yuan2024generating,yuan2023learning} and reflects the spatiotemporal dynamics of the city~\\cite{rong2024learning,yuan2023spatio}.",
+    "2412-15294_sent_d0469209": "Consequently, predicting human mobility has significant practical implications, such as urban planning~\\cite{zheng2023spatial,zheng2023road}, traffic control~\\cite{pappalardo2023future,zeng2024citylight}, and emergency response~\\cite{yuan2022activity}.",
+    "2412-15294_sent_69914ddf": "Individual trajectory and crowd flow can be treated as two observations of human mobility that represent two different modalities of mobility data.",
+    "2412-15294_sent_7690e886": "Individual trajectories describe human mobility behavior from a micro perspective, highlighting personal preferences~\\cite{zhou2021self}.",
+    "2412-15294_sent_6f0cf447": "Conversely, crowd flows encapsulate human movements from a macro perspective, reflecting collective trends~\\cite{chang2012dynamic}.",
+    "2412-15294_sent_5e0bfd6b": "Crowd flows originate from the bottom-up aggregation of individual trajectories, while individual trajectories are influenced by the constraints imposed by crowd flows.",
+    "2412-15294_sent_3fb929f2": "This bidirectional influence between individual and collective contributes to the complexity of human mobility.",
+    "2412-15294_sent_6d848dc2": "Many years ago, various models were proposed to model and predict human mobility, such as Lévy flight~\\cite{mandelbrot1983fractal}, random walk models~\\cite{gonzalez2008understanding}, radiation model~\\cite{simini2012universal}, and gravity models~\\cite{zipf1946p}.",
+    "2412-15294_sent_04350fb4": "Later, trajectory prediction models have been developed to capture individual mobility preferences, such as EPR~\\cite{brockmann2006scaling}, MPRW~\\cite{yan2017universal}, MobTCast~\\cite{xue2021mobtcast} and DeepMove~\\cite{feng2018deepmove}.",
+    "2412-15294_sent_bc11a5c2": "At the same time, flow prediction models like ST-ResNet~\\cite{zhang2017deep}, TODE~\\cite{zhou2021urban}, DeepCrowd~\\cite{jiang2021deepcrowd} and CrowdNet~\\cite{cardia2022enhancing} were created to capture the collective movement trends.",
+    "2412-15294_sent_ffd83a37": "Some research has started integrating trajectory and flow data.",
+    "2412-15294_sent_b3e4fde5": "For example, GETNext incorporates collective mobility patterns into trajectory prediction~\\cite{yang2022getnext}, while TrGNN uses individual mobility data to aid non-recurring flow prediction~\\cite{li2021traffic}.",
+    "2412-15294_sent_8722f949": "Although these works have made initial attempts and progress in fusing trajectory and flow data, they remain limited to using other modality data as features.",
+    "2412-15294_sent_e22b173e": "As a result, only a single modality can be predicted, failing to realize the unification of different mobility data modalities.",
+    "2412-15294_fig_4a3691f7": "\\begin{figure}\n\n\\includegraphics[width=0.47\\textwidth]{figure/UniMob.pdf}\n\n\\caption{The transition from single model to universal model.}\n\n\\end{figure}",
+    "2412-15294_sent_28dcefe9": "As shown in Figure~\\ref{fig:UniMob}, we are exploring a natural research question: can we unify human mobility prediction in one universal model?",
+    "2412-15294_sent_f1c23b0a": "The benefits of such unification are evident: The universal model that learns the common spatiotemporal patterns of two different mobility data in one model can achieve mutual enhancement in trajectory and flow prediction.",
+    "2412-15294_sent_35a8c141": "However, achieving unified human mobility prediction faces the following critical challenges:",
+    "2412-15294_itemize_23e77d05": "itemize",
+    "2412-15294_item_f31440d5": "item",
+    "2412-15294_sent_a063f1fa": "Diverse data formats of two different mobility data.",
+    "2412-15294_sent_5bd979e5": "The data collection methods for individual trajectories and crowd flows are different, resulting in distinct forms of representation for them.",
+    "2412-15294_sent_abe389cd": "For example, trajectory data records the movement of individuals across different locations over time, while flow data represents the number of people in a specific location that changes over time.",
+    "2412-15294_sent_e4fd33a7": "These diverse data formats of trajectory and flow make it difficult to represent these data in a unified manner.",
+    "2412-15294_sent_c3c892f4": "Significant characteristic differences in two modalities of mobility data.",
+    "2412-15294_sent_197ea0af": "Trajectory data details individual preferences from a micro perspective, whereas flow data reveals collective trends from a macro perspective.",
+    "2412-15294_sent_9083fd48": "Thus, incorporating these two types of data into a unified training framework and extracting common spatiotemporal patterns from their distinct characteristics is a challenging task.",
+    "2412-15294_sent_3c1c94e4": "To address these challenges, we propose a universal mobility prediction model, UniMob, that can be applied to both trajectory and flow data.",
+    "2412-15294_sent_c62e3872": "Firstly, we design a multi-view mobility tokenizer to utilize multiple perspectives of mobility behavior for unified tokenization.",
+    "2412-15294_sent_076c9e09": "Based on sequentially organized trajectory tokens and flow tokens, we implement a diffusion transformer architecture to capture spatiotemporal dynamics inherent in different modalities of mobility data.",
+    "2412-15294_sent_a21bc6cf": "Secondly, to address significant characteristic differences in these two modalities, we introduced an innovative bidirectional alignment mechanism that facilitates interaction between trajectories and flows.",
+    "2412-15294_sent_66ad3bea": "This mechanism enables the extraction of common spatiotemporal patterns from individual and collective mobility behaviors.",
+    "2412-15294_sent_32c5f54c": "Specifically, the alignment from individual to collective is achieved by aligning aggregated trajectories with flow data, which aids in modeling collective movement trends.",
+    "2412-15294_sent_8abcf2da": "Conversely, the alignment from collective to individual employs contrastive learning to identify semantically similar flows and trajectories, capturing consistent spatiotemporal patterns at both macro and micro levels.",
+    "2412-15294_sent_4e03a309": "In this way, UniMob advances towards developing a universal model.",
+    "2412-15294_sent_58903a38": "UniMob achieves mutual enhancement in trajectory and flow prediction by learning common spatiotemporal patterns from different mobility data.",
+    "2412-15294_sent_e91aee79": "Moreover, UniMob has excellent scalability and can flexibly derive into multiple variants according to different requirements, thus adapting to diverse application scenarios.",
+    "2412-15294_sent_e4825ced": "Our contributions can be summarized as follows:",
+    "2412-15294_sent_7c4593c2": "To our knowledge, we are the first to unify human mobility prediction, exploring the one-for-all model's potential in individual trajectory and crowd flow.",
+    "2412-15294_sent_90d5d64f": "We propose a universal mobility prediction model.",
+    "2412-15294_sent_e3bca82a": "Multi-view tokenization harmonizes diverse data formats of individual trajectory and crowd flow.",
+    "2412-15294_sent_93369c75": "Then, the model utilizes bidirectional alignment mechanisms for individual and collective to address the characteristic differences caused by caused by data modalities.",
+    "2412-15294_sent_31585298": "Extensive experiments on real-world datasets have validated that UniMob achieves superior performance in trajectory and flow predictions.",
+    "2412-15294_sent_a62d5280": "Further in-depth analysis confirms UniMob's robustness, particularly in handling noisy and scarce data, achieving improvements of over 14\\% in MAPE and over 25\\% in Accuracy@5.",
+    "2412-15294_section_aed402c3": "Related Work",
+    "2412-15294_paragraph_a2cc3f00": "Mobility Prediction",
+    "2412-15294_sent_60a3c8f1": "Mobility prediction can be divided into individual and collective categories.",
+    "2412-15294_sent_b23941be": "Individual prediction focuses on personal preferences~\\cite{qingyue2024privacy}.",
+    "2412-15294_sent_6293c709": "For example, Qiao et al.~\\cite{gao2019predicting} and Wang et al.~\\cite{wang2021attentional} developed a Markov-based model by considering the spatiotemporal characteristics of individual mobility.",
+    "2412-15294_sent_737768b5": "Collective flow prediction emphasizes modeling collective mobility trends.",
+    "2412-15294_sent_9a3e022c": "For example, DeepSTN+~\\cite{feng2021context} uses a context-aware spatiotemporal neural network for flow prediction.",
+    "2412-15294_sent_c2186a6d": "CrowdNet utilizes graph convolutional networks to achieve flow prediction adapted to various spatial and temporal granularities~\\cite{cardia2022enhancing}.",
+    "2412-15294_sent_e49b7107": "Researchers have integrated individual and collective mobility data better to understand human mobility~\\cite{chen2023multi,bontorin2024mixing,li2023learning}.",
+    "2412-15294_sent_5b3bc109": "TrGNN~\\cite{li2021traffic} uses vehicle trajectories to infer short-term traffic flow, predicting unseen and non-recurring traffic patterns.",
+    "2412-15294_sent_3a7e7bce": "GETNext~\\cite{yang2022getnext} constructs a global flow graph to integrate transition patterns into trajectory prediction.",
+    "2412-15294_sent_7bdd7cf4": "With the emergence of large language models (LLMs), researchers have begun exploring their potential in mobility prediction, such as LLM-Mob~\\cite{wang2023would}, AgentMove~\\cite{feng2024agentmove}, TrajAgent~\\cite{du2024trajagent} and CoPB~\\cite{shao2024beyond}.",
+    "2412-15294_sent_0b417894": "However, there is still a gap in using LLM to understand and reason about human behavior.",
+    "2412-15294_sent_cfdc0854": "Thus, it is necessary to develop foundational models from scratch, specifically trained on pure mobility data.",
+    "2412-15294_sent_ae14c26a": "Table~\\ref{tab:model_comparison} compares the advantages of our model with existing solutions.",
+    "2412-15294_sent_968f3ed2": "In this work, we build a universal model using different types of mobility data, which can effectively predict both trajectories and flows, demonstrating exceptional robustness.",
+    "2412-15294_paragraph_380ac03a": "Diffusion Models and Foundation Models",
+    "2412-15294_sent_6cb14230": "We focus on human mobility studies based on diffusion models.",
+    "2412-15294_sent_eca2d893": "DiffTraj~\\cite{zhou2023towards} and ControlTraj~\\cite{zhu2024controltraj} combine the generative capabilities of diffusion models with spatiotemporal features derived from trajectories.",
+    "2412-15294_sent_bee1f72c": "PriSTI~\\cite{liu2023pristi} uses a conditional diffusion framework for spatiotemporal imputation with enhanced prior modeling.",
+    "2412-15294_sent_a164e927": "TrajGDM~\\cite{chu2024simulating} utilizes diffusion models to capture the universal mobility pattern in a trajectory dataset.",
+    "2412-15294_sent_ba2c6ae8": "Foundation models have revolutionized natural language processing~\\cite{achiam2023gpt} and computer vision~\\cite{liu2024sora} through their ability to generalize across different applications.",
+    "2412-15294_sent_35b68fd4": "Building on the success of foundation models in these fields, extending them to the spatiotemporal domain is a natural next step.",
+    "2412-15294_sent_3664de9e": "Although models like UniST~\\cite{yuan2024unist} and GPD~\\cite{yuan2024spatio}, have made some progress in predicting collective dynamics, there remains a significant gap in universal models capable of adapting to various types of mobility data.",
+    "2412-15294_sent_7dae7175": "In this work, we present the UniMob model, marking the first attempt to apply a universal mobility prediction model based on a diffusion transformer.",
+    "2412-15294_sent_e42d3104": "We provide more discussions of diffusion models in Appendix~\\ref{sec::diffusion}.",
+    "2412-15294_fig_232c694d": "\\begin{table}\n\n \\caption{Comparison of UniMob with other mobility prediction models regarding important properties.}\n\n {\\fontsize{8}{10}\\selectfont\n \\begin{tabular}{ccccc}\n\n \\makecell{Model} & \\makecell{Trajectory\\\\ Prediction} & \\makecell{Flow\\\\ Prediction} & \\makecell{Data \\\\ Fusion$^{(1)}$} & \\makecell{Robustnes$^{(2)}$} \\\\ \n\n DeepMove~\\cite{feng2018deepmove} & \\cmark & \\xmark & \\xmark & \\xmark \\\\ \n SNPM~\\cite{yin2023next} & \\cmark & \\xmark & \\xmark & \\xmark \\\\ \n TrajGDM~\\cite{chu2024simulating} & \\cmark & \\xmark & \\xmark & \\cmark \\\\ \n ST-ResNet~\\cite{zhang2017deep} & \\xmark & \\cmark & \\xmark & \\xmark \\\\ \n STID~\\cite{shao2022spatial} & \\xmark & \\cmark & \\xmark & \\xmark \\\\ \n PriSTI~\\cite{liu2023pristi} & \\xmark & \\cmark & \\xmark & \\cmark \\\\ \n TrGNN~\\cite{li2021traffic} & \\xmark & \\cmark & \\cmark & \\xmark \\\\ \n GETNext~\\cite{yang2022getnext} & \\cmark & \\xmark & \\cmark & \\xmark \\\\ \n LLM-Mob~\\cite{wang2023would} & \\cmark & \\xmark & \\xmark & \\cmark \\\\ \n UniMob & \\cmark & \\cmark & \\cmark & \\cmark \\\\ \n\n \\end{tabular}\n\n \\begin{tabular}{ll}\n (1) & Use of multi-source data (trajectory and flow). \\\\\n (2) & Keep ability with noisy or scarce data. \\\\\n \\end{tabular}}\n\n\\end{table}",
+    "2412-15294_section_e0dbeb29": "PRELIMINARIES",
+    "2412-15294_sent_f407f936": "\\includegraphics[width=0.95\\textwidth]{figure/framework.pdf} \\caption{The overview architecture of UniMob, which consists of four modules: (1) Multi-view Mobility Tokenizer, (2) Bidirectional Individual-Collective Alignment, (3) Joint Noise Predictor, (3) Mobility Predictor.} \\end{figure*}",
+    "2412-15294_subsection_1f2e4e60": "Problem Definition",
+    "2412-15294_sent_ba6f544d": "Human mobility data can be divided into two types: individual and collective.",
+    "2412-15294_sent_2bd66eaf": "Trajectories can describe individual mobility, while flow data can characterize collective mobility.",
+    "2412-15294_sent_0cd5314c": "\\para{Definition 1: (Individual Trajectory).} An individual trajectory can be defined as $X^{traj}=\\{(l_1, t_1),(l_2, t_2),...,(l_n, t_n)\\}$, where each location $l_i$ is represented as the form in latitude and longitude coordinates or a region ID.",
+    "2412-15294_sent_5f038aae": "\\para{Definition 2: (Crowd Flow).} Crowd flow includes inflow and outflow, defined as the number of people entering or leaving a region within a given time interval. The crowd flow for a region $l$ can be represented as $X^{flow}_l \\in \\mathbb{R}^{N \\times T}$, where $T$ is the number of time intervals, and $N$ is the dimension of the flow, such as $N = 2$ for inflow and outflow.",
+    "2412-15294_sent_2d5b845d": "The entire city's flow can be represented as $Y \\in \\mathbb{R}^{N \\times T \\times L}$, where $L$ is the number of regions.",
+    "2412-15294_sent_6c37a6ff": "\\para{Problem Statement: (Mobility Prediction).} Given $p$ historical records of mobility data (which can be trajectory $X^{traj}_{[t-p:t]}$ or flow $X^{flow}_{[t-p:t]}$), our goal is to predict the future $k$ steps $X^{traj}_{[t:t+k]}$ or $X^{flow}_{[t:t+k]}$.",
+    "2412-15294_subsection_86bc2a88": "Denoising Diffusion Probabilistic Model",
+    "2412-15294_sent_91801f00": "Diffusion models use latent variable models, denoted as $p_\\theta(x_0) :=\\int p_\\theta(x_{0:T}) dx_{1:T}$.",
+    "2412-15294_sent_cbd9fba0": "The latent variables $x_1, ..., x_T$ have the same dimension as the data $x_0 \\sim q(x_0)$.",
+    "2412-15294_sent_61f1df72": "The model uses two Markov chains: a forward chain that perturbs data into noise and a reverse chain that converts noise back into data.",
+    "2412-15294_sent_2064f360": "The forward diffusion process:",
+    "2412-15294_eq_0d15ea43": "\\begin{equation}\nq\\left(\\mathbf{x}_{1: T} \\mid \\mathbf{x}_{0}\\right):=\\prod_{t=1}^{T} q\\left(\\mathbf{x}_{t} \\mid \\mathbf{x}_{t-1}\\right),\n\\end{equation}",
+    "2412-15294_sent_2b9da74c": "where $q\\left(\\mathbf{x}_{t} \\mid \\mathbf{x}_{t-1}\\right):=\\mathcal{N}\\left(\\sqrt{1-\\beta_{t}} \\mathbf{x}_{t-1}, \\beta_{t} \\mathbf{I}\\right)$.",
+    "2412-15294_sent_9a797ebf": "Equivalently, $x_t$ can be expressed as $x_{t}=\\sqrt{\\alpha_{t}} x_{0}+\\left(1-\\alpha_{t}\\right) \\epsilon$ for $\\epsilon \\sim \\mathcal{N}(0, \\mathbf{I})$, with $\\alpha_{t}=\\sum_{i=1}^{t}\\left(1-\\beta_{i}\\right)$.",
+    "2412-15294_sent_76c02503": "The reverse process denoises $x_t$ to retrieve $x_0$, where $\\mathbf{x}_{T} \\sim \\mathcal{N}(\\mathbf{0}, \\mathbf{I})$.",
+    "2412-15294_sent_c8ec19f8": "Assuming $p_\\theta(x_{t-1}|x_t)$ follows a normal distribution:",
+    "2412-15294_eq_7eec7432": "\\begin{equation}\n\\left\\{\n\\begin{array}{l}\np_{\\theta}\\left(\\mathbf{x}_{0: T}\\right) := p\\left(\\mathbf{x}_{T}\\right) \\prod_{t=1}^{T} p_{\\theta}\\left(\\mathbf{x}_{t-1} \\mid \\mathbf{x}_{t}\\right), \\\\\np_{\\theta}\\left(\\mathbf{x}_{t-1} \\mid \\mathbf{x}_{t}\\right) := \\mathcal{N}\\left(\\mathbf{x}_{t-1}; \\boldsymbol{\\mu}_{\\theta}\\left(\\mathbf{x}_{t}, t\\right), \\sigma_{\\theta}\\left(\\mathbf{x}_{t}, t\\right) \\mathbf{I}\\right)\n\\end{array}\n\\right.\n\\end{equation}",
+    "2412-15294_sent_709c5323": "Ho et al.~\\cite{ho2020denoising} introduced denoising diffusion probabilistic models:",
+    "2412-15294_eq_6354ffd1": "\\begin{equation}\n\\begin{cases}\n\\boldsymbol{\\mu}_{\\theta}\\left(\\mathbf{x}_{t}, t\\right)=\\frac{1}{\\alpha_{t}}\\left(\\mathbf{x}_{t}-\\frac{\\beta_{t}}{\\sqrt{1-\\alpha_{t}}} \\boldsymbol{\\epsilon}_{\\theta}\\left(\\mathbf{x}_{t}, t\\right)\\right),\\\\\n\\sigma_{\\theta}\\left(\\mathbf{x}_{t}, t\\right)=\\tilde{\\beta}_{t}^{1 / 2}, \\tilde{\\beta}_{t}=\\left\\{\\begin{array}{ll}\n\\frac{1-\\alpha_{t-1}}{1-\\alpha_{t}} \\beta_{t} & t>1 \\\\\n\\beta_{1} & t=1\n\\end{array}\\right.\n\\end{cases}\n\\end{equation}",
+    "2412-15294_sent_6b034343": "where $\\epsilon_\\theta$ is a trainable denoising function.",
+    "2412-15294_sent_937ab516": "The objective for training the reverse process is:",
+    "2412-15294_eq_b0fe55a7": "\\begin{equation}\n\\min _{\\theta} \\mathcal{L}(\\theta):=\\min _{\\theta} \\mathbb{E}_{\\mathbf{x}_{0} \\sim q\\left(\\mathbf{x}_{0}\\right), \\boldsymbol{\\epsilon} \\sim \\mathcal{N}(\\mathbf{0}, \\mathbf{I}), t}\\parallel\\boldsymbol{\\epsilon}-\\boldsymbol{\\epsilon}_{\\theta}\\left(\\mathbf{x}_{t}, t\\right)\\parallel_{2}^{2},\n\\end{equation}",
+    "2412-15294_sent_753c992a": "where $\\mathbf{x}_{t}=\\sqrt{\\alpha_{t}} \\mathbf{x}_{0}+\\left(1-\\alpha_{t}\\right) \\boldsymbol{\\epsilon}$.",
+    "2412-15294_sent_60e52167": "This can be seen as a weighted variational constraint on the negative log-likelihood, reducing the significance of terms at low $t$ when little noise is present.",
+    "2412-15294_section_4c3880bb": "Method",
+    "2412-15294_sent_9f46c528": "To unify diverse data formats and varied data characteristics, our universal solution includes two key designs: 1) The mobility tokenizer transforms trajectory and flow into a unified spatiotemporal token format, facilitating the utilization of the powerful diffusion transformer architecture.",
+    "2412-15294_sent_e8e4e865": "2) The individual and collective alignment is designed to jointly train different data types within the same model framework, effectively aligning the differences in individual and collective mobility behavior.",
+    "2412-15294_subsection_fd0e72b6": "Overall framework",
+    "2412-15294_sent_c70cd736": "The framework of UniMob is shown in Figure~\\ref{fig:framework}, which consists of four modules:",
+    "2412-15294_sent_38f8cf52": "Multi-view Mobility Tokenizer: It first standardizes different data types through tokenization and then uses two mobility encoders to capture the spatiotemporal dynamics of trajectory and flow from multiple views.",
+    "2412-15294_sent_1b9295b4": "Bidirectional Individual-Collective Alignment: This module consists of two parts: Individual-to-Collective alignment and Collective-to-Individual alignment.",
+    "2412-15294_sent_a272fc97": "Individual-to-Collective alignment utilizes the I2C loss function, which captures collective dynamics by aligning aggregated trajectories with the flow.",
+    "2412-15294_sent_02ead1a8": "Collective-to-Individual alignment uses the C2I loss function, which employs contrast learning to align individual trajectory and crowd flow with the same spatiotemporal pattern.",
+    "2412-15294_sent_685aec21": "Joint Noise Predictor: Learning the spatiotemporal distribution of mobility behavior can be represented as a denoising diffusion process, utilizing a joint noise predictor for trajectories and flows to model individual and collective mobility effectively.",
+    "2412-15294_sent_c9c7a8e6": "Mobility Predictor: The goal of the mobility predictor is to decode high-dimensional spatiotemporal features, capture the dynamic changes in trajectory or flow, and achieve accurate prediction results.",
+    "2412-15294_sent_71786695": "Overall, the training of the model is supervised by three types of losses: I2C loss, C2I loss, and prediction loss.",
+    "2412-15294_sent_1508428c": "The first two losses are designed to promote alignment between individuals and collective, while the prediction loss targets the joint noise predictor of the diffusion model to estimate the noise to be removed and improve prediction accuracy.",
+    "2412-15294_sent_8faf94d0": "The combined effect of these losses significantly improves the accuracy and robustness of UniMob in understanding and predicting complex mobility behaviors.",
+    "2412-15294_subsection_394922cb": "Multi-view Mobility Tokenizer",
+    "2412-15294_sent_e0c529c8": "To address the challenge of diverse data formats, tokenization is applied to process different data types into a unified sequential format.",
+    "2412-15294_sent_03b07d1d": "Subsequently, two encoders capture the spatiotemporal dynamics inherent in the mobility data from multiple views.",
+    "2412-15294_subsubsection_4d619861": "Tokenization",
+    "2412-15294_sent_ad4c1b9a": "Tokenization is applied to mobility data such as trajectories and flow data, converting it into compact token sequences to enable more efficient computation and standardized processing.",
+    "2412-15294_sent_d3af58ca": "We divide the trajectory $X^{traj}$ and flow $X^{flow}$ into several continuous overlapping or non-overlapping tokens, each with a length of $p$.",
+    "2412-15294_sent_8e3a467c": "Therefore, the total number of input tokens is $C=\\frac{(T-p)}{Q}$, where $T$ denotes the total number of time intervals and $Q$ represents the horizontal sliding stride.",
+    "2412-15294_subsubsection_50d5dfc1": "Trajectory Encoder",
+    "2412-15294_sent_73064539": "In this module, we model trajectory from the spatial and temporal perspectives.",
+    "2412-15294_sent_48c27663": "Firstly, to capture the geographical continuity of mobility, we construct a spatial graph $ G = (V, E) $.",
+    "2412-15294_sent_e64eebc9": "The nodes $ V $ represent all visited locations, and the edges $ E $ define the connections between these locations.",
+    "2412-15294_sent_eb8fa84b": "Each edge $ e = (u, v) $ is an unordered pair with a positive weight $ w_{uv} $, representing the Euclidean distance between locations $ u $ and $ v $.",
+    "2412-15294_sent_40561c0c": "We use a graph embedding approach $\\mathcal{F}(\\cdot)$ to get the location embedding $S$, which is denoted as follows:",
+    "2412-15294_eq_955394cb": "\\begin{equation}\nS={\\mathcal{F}}_\\theta(G),\n\\end{equation}",
+    "2412-15294_sent_cfcd2ff0": "We obtain a spatial embedding matrix $S \\in \\mathbb{R}^{L \\times W}$, where $L$ is the number of regions, and $W$ is the dimension of embedding.",
+    "2412-15294_sent_867d3b66": "Then, to capture the periodicity of time, we use temporal embedding matrices $H \\in \\mathbb{R}^{T_h \\times W}$ and $D \\in \\mathbb{R}^{T_d \\times w}$ to represent the time features.",
+    "2412-15294_sent_7664ce80": "$T_h$ is the number of time slots in a day (determined by the sampling frequency), and $T_d = 7$ is the number of days in a week.",
+    "2412-15294_sent_cc576904": "Finally, the trajectory embedding $R$ is obtained by concatenating the spatial and temporal embeddings, represented as:",
+    "2412-15294_eq_b1858a84": "\\begin{equation}\nR_t=[S_t; H_t; D_t],\n\\end{equation}",
+    "2412-15294_sent_0da0b49d": "where $R_t$ is the vector representation of the $t$-th trajectory point.",
+    "2412-15294_subsubsection_4296a4ba": "Flow Encoder",
+    "2412-15294_sent_7022dcfc": "The flow can obtain corresponding spatial and temporal embeddings like the trajectory.",
+    "2412-15294_sent_e51cee64": "Moreover, the flow has an extra embedding for historical values, achieved by mapping the raw historical time series $X^{flow}_{[t-p:t]}$ into the latent space $V_t \\in \\mathbb{R}^{W}$:",
+    "2412-15294_eq_70d6a354": "\\begin{equation}\nV_t = FC(X^{flow}_{[t-p:t]}),\n\\end{equation}",
+    "2412-15294_sent_29a39364": "where $FC(\\cdot)$ is a fully connected layer and $W$ is the dimension of embedding.",
+    "2412-15294_sent_8faa0334": "Thus, we connect the spatial embedding, the temporal embedding, and historical embedding to obtain the flow embedding $F$:",
+    "2412-15294_eq_a662ee3e": "\\begin{equation}\nF_t=[S_t; H_t; D_t; V_t].\n\\end{equation}",
+    "2412-15294_subsection_380dd7d9": "Joint Noise Predictor",
+    "2412-15294_sent_bcdb68cb": "Formally, suppose we have two types of mobility data sampled from the distribution $q(R_0, F_0)$.",
+    "2412-15294_sent_b77392d3": "Our goal is to design a diffusion-based model that can capture some related distributions determined by $q(R_0, F_0)$, specifically the marginal distributions $q(R_0)$ and $q(F_0)$.",
+    "2412-15294_sent_0710ec36": "According to Bao et al.~\\cite{bao2023one}, different forms of distributions can be unified into the general form of $\\mathbb{E}[\\epsilon^R, \\epsilon^F \\mid R_{t^R}, F_{t^F}]$, where $t^R$ and $t^F$ are two different timesteps, and $R_{t^R}$ and $F_{t^F}$ are the corresponding perturbed data.",
+    "2412-15294_sent_973639ad": "Particularly, a maximum timestep $T$ means marginalizing it.",
+    "2412-15294_sent_81ced6b2": "By setting $t^F = T$, we have $\\mathbb{E}[\\epsilon^R \\mid R_{t^R}, F_T] \\approx \\mathbb{E}[\\epsilon^R \\mid R_{t^R}]$, which corresponds to the marginal distribution $q(R_0)$.",
+    "2412-15294_sent_8b46a5de": "Similarly, by setting $t^R = T$, we have $\\mathbb{E}[\\epsilon^F \\mid F_{t^F}, R_T] \\approx \\mathbb{E}[\\epsilon^F \\mid F_{t^F}]$, which corresponds to the marginal distribution $q(F_0)$.",
+    "2412-15294_sent_69af666e": "Inspired by the unified view, we learn $\\mathbb{E}[\\epsilon^R, \\epsilon^F \\mid R_{t^R}, F_{t^F}]$ for all $0 \\leq t^R, t^F \\leq T$ to model all relevant distributions determined by $q(R_0, F_0)$.",
+    "2412-15294_sent_6a2fb7c3": "We employ a joint noise prediction network $\\epsilon_\\theta(R_{t^R}, F_{t^F}, t^R, t^F)$ to predict the noise injected into $R_{t^R}$ and $F_{t^F}$ together:",
+    "2412-15294_eq_275c127c": "\\begin{equation}\n\\hat{\\epsilon}_{\\theta}=\\epsilon_\\theta(R_{t^R}, F_{t^F}, t^R, t^F),\n\\end{equation}",
+    "2412-15294_sent_9d874737": "We train a joint noise prediction network based on the trajectory and flow embeddings obtained in Section~\\ref{sec:encoder}.",
+    "2412-15294_sent_60621656": "Naturally, to capture the spatiotemporal correlations of mobility data, we use a transformer-based backbone in UniMob to process inputs from different mobility data types.",
+    "2412-15294_subsection_7b63dd3d": "Mobility Predictor",
+    "2412-15294_sent_7114e765": "After the denoising process in the latent space is complete, the target of the predictor is to transform the embeddings back into the form of the original data.",
+    "2412-15294_subsubsection_58ff717e": "Trajectory Predictor",
+    "2412-15294_sent_67901f5b": "For the discrete space domain, we add an inverse step at the end of the denoising process, which converts the real-valued embedding of $\\hat{R}_0$ to the probability distribution of locations $d=\\{d_1,d_2,...,d_N\\}$ as follows:",
+    "2412-15294_eq_c56b097f": "\\begin{equation}\nP(E) = (E^T E)^{-1} E^T,\n\\end{equation}",
+    "2412-15294_sent_4c2f9d63": "where $E$ denotes Embedded Matrix, $E^T$ denotes the transpose of matrix $E$, and $(\\cdot)^{-1}$ represents the matrix inverse.",
+    "2412-15294_eq_e57161cf": "\\begin{equation}\nd = \\hat{R}_0*P(E),\n\\end{equation}",
+    "2412-15294_sent_5d946ac6": "where $d$ denotes the probability of visiting each location in the trajectory.",
+    "2412-15294_eq_adde535b": "\\begin{equation}\ni = argmax(d),\n\\end{equation}",
+    "2412-15294_sent_5506bc97": "where $argmax(\\cdot)$ function is used to find the maximum value index in a vector, and $i$ denotes the next location id.",
+    "2412-15294_subsubsection_a905954b": "Flow Predictor",
+    "2412-15294_sent_38e947a9": "The regression layer makes predictions based on the following:",
+    "2412-15294_eq_41976003": "\\begin{equation}\nY_{[t:t+f]} = FC(\\hat{F}_0),\n\\end{equation}",
+    "2412-15294_sent_3a08a763": "where $FC(\\cdot)$ is a fully connected layer and $Y_{[t:t+f]}$ is future flow.",
+    "2412-15294_subsection_896ed9fc": "Bidirectional Individual-Collective Alignment",
+    "2412-15294_sent_c365d863": "To address significant characteristic differences in two modalities of mobility data, we design several alignment mechanisms, including Individual-to-Collective and Collective-to-Individual alignment.",
+    "2412-15294_sent_54029462": "These methods enable collaborative perception and complementary expression of multi-source mobility data.",
+    "2412-15294_sent_bfb0030c": "After obtaining well-interacted representations of trajectories and flows, we employ the prediction loss from a joint noise prediction network.",
+    "2412-15294_subsubsection_69c99c22": "Individual-to-Collective Alignment",
+    "2412-15294_sent_5bdba733": "The alignment from individuals to collective is designed to aggregate individual movements from the bottom up, collaborating with collective mobility patterns to capture collective dynamics.",
+    "2412-15294_sent_007d2b7f": "Thus, we utilize I2C (Individual to Collective) loss to align trajectory with flow.",
+    "2412-15294_sent_460a228a": "Specifically, we first aggregate multiple trajectory embeddings:",
+    "2412-15294_eq_f4b3ce93": "\\begin{equation}\nR^{all} = R^{u_1} + R^{u_2} + ... + R^{u_n},\n\\end{equation}",
+    "2412-15294_sent_2371b35d": "where $R^{all}$ is the aggregated trajectory embeddings of multiple users, while $R^{u_n}$ represents the trajectory embedding of user $u_n$.",
+    "2412-15294_sent_df13f9b6": "This aggregated embedding captures and displays the collective behavioral characteristics and trends.",
+    "2412-15294_sent_70c83d3a": "Then, we interact this aggregated result with the flow embedding.",
+    "2412-15294_sent_6a2a7c3a": "We can optimize their collaborative representation by maximizing the similarity between these two embeddings:",
+    "2412-15294_eq_1f30d2ad": "\\begin{equation}\n\\mathcal{L}_{I2C} = 1 - \\frac{{u} \\cdot {v}}{||u|| ||v||},\n\\end{equation}",
+    "2412-15294_sent_a98c71a7": "Through the I2C loss, we can more accurately capture and describe the dynamic changes of collective in space and time.",
+    "2412-15294_subsubsection_9fa37eae": "Collective-to-Individual Alignment",
+    "2412-15294_sent_d774e6bb": "The alignment from the collective to the individual aims to impose constraints on individual behavior through collective mobility patterns, better modeling individual movement preferences.",
+    "2412-15294_sent_332e088e": "Through contrastive learning, we utilize C2I (Collective to Individual) loss to identify common spatiotemporal patterns in micro-level trajectories and macro-level flows.",
+    "2412-15294_sent_d4aa2906": "We determine positive and negative samples based on the spatiotemporal consistency between trajectory data and flow data:",
+    "2412-15294_sent_6bf27afd": "Positive samples $R^+$: If at a specific time and location, the flow data shows a peak (for example, a traffic hub during the morning rush hour), then individual trajectory data that matches this time and location are considered positive samples.",
+    "2412-15294_sent_2dd611f8": "This implies that these individual trajectories are aligned with the spatiotemporal patterns of the flow data.",
+    "2412-15294_sent_94b19ae6": "Negative samples $R^-$: Trajectories that appear at the same location when there is no flow peak or at different times and locations are considered negative samples.",
+    "2412-15294_sent_cf1c5344": "These trajectories do not align with the spatiotemporal patterns of the flow data.",
+    "2412-15294_sent_ee1db1a1": "For example, in a commercial area, we observe that the flow of people peaks between 5 PM and 6 PM every day, mainly because most office workers leave work during this period.",
+    "2412-15294_sent_b47e112c": "The positive samples are the trajectories recorded in the commercial area during this time.",
+    "2412-15294_sent_a9ce66c2": "These trajectories reflect the common behavior of most office workers leaving work on time, showing the main flow direction in the commercial area.",
+    "2412-15294_sent_4a48438a": "On the other hand, negative samples are the trajectories recorded in other areas (such as suburbs or residential areas) during the same period.",
+    "2412-15294_sent_e3136980": "These represent people who leave work early or those whose workplaces are not in the commercial area.",
+    "2412-15294_sent_e5345a86": "By comparing these samples, we can align collective mobility dynamics with individual mobility preferences, ensuring consistency between micro-level and macro-level mobility patterns.",
+    "2412-15294_sent_b15176be": "According to the contrast learning framework, we maximize the similarity between anchors and augmented positive examples while minimizing the similarity between anchors and negative examples lost through InfoNCE~\\cite{oord2018representation}:",
+    "2412-15294_eq_f81a5ec2": "\\begin{equation}\n\\mathcal{L}_{C2I} =\\sum_{i=1}^{N} \\log \\frac{\\boldsymbol{\\varphi}\\left(\\boldsymbol{F}, {\\boldsymbol{R}}^{+}\\right)}{\\sum_{\\boldsymbol{R}^{-} \\in S} \\boldsymbol{\\varphi}\\left(\\boldsymbol{F}, \\boldsymbol{R}^{-}\\right)},\n\\end{equation}",
+    "2412-15294_sent_150589ed": "where $\\boldsymbol{\\varphi}(i, j)=\\exp (\\operatorname{sim}(i, j) / \\tau)$ measures the correlation between two representations, where $\\operatorname{sim}(\\cdot, \\cdot)$ denotes the cosine similarity function, ${R}^{+}$ represents the positive sample.",
+    "2412-15294_sent_7681251e": "$S$ is a set of random negative samples from the same batch.",
+    "2412-15294_subsection_cf270e40": "Training",
+    "2412-15294_sent_6d5e0bba": "We model the embedding of trajectories and flows using a joint noise prediction network with the following prediction loss function:",
+    "2412-15294_eq_66e0f4dc": "\\begin{equation}\n\\mathcal{L}_{pred} = {\\mathbb{E}_{\\boldsymbol{R}_{0}, \\boldsymbol{F}_{0}, \\boldsymbol{\\epsilon}^{R}, \\boldsymbol{\\epsilon}^{F}, t^{R}, t^{F}}||\\boldsymbol{\\epsilon}_{\\boldsymbol{\\theta}}(\\boldsymbol{R}_{t^{R}}, \\boldsymbol{F}_{t^{F}}, t^{R}, t^{F})-[\\boldsymbol{\\epsilon}^{R}, \\boldsymbol{\\epsilon}^{F}]||_{2}^{2},},\n\\end{equation}",
+    "2412-15294_sent_2dcec844": "where $[, ]$ denotes concatenation, ${\\epsilon}^{R}$ and ${\\epsilon}^{F}$ are sampled from standard Gaussian distributions, and $t_R$ and $t_F$ are uniformly sampled from $\\{1, 2, .",
+    "2412-15294_sent_5058f1af": ".",
+    "2412-15294_sent_5e13c9f3": ", T\\}$ independently.",
+    "2412-15294_sent_498005d5": "Finally, the total loss is expressed as:",
+    "2412-15294_eq_d710924d": "\\begin{equation}\n\\mathcal{L}_{total} = \\alpha\\mathcal{L}_{I2C} + \\beta\\mathcal{L}_{C2I} + \\gamma\\mathcal{L}_{pred},\n\\end{equation}",
+    "2412-15294_sent_34058ce5": "The weights $\\alpha$, $\\beta$, and $\\gamma$ correspond to the three loss terms, allowing the total loss function $\\mathcal{L}_{total}$ to simultaneously enable trajectory and flow interactions and accurately predict mobility.",
+    "2412-15294_subsection_e9ad310d": "Variants",
+    "2412-15294_sent_978dbb97": "In the real world, universal models have a wide range of application scenarios and diverse application requirements.",
+    "2412-15294_sent_b8179c00": "For example, in some cases, there is only one type of mobility data available; in other cases, to save computational resources, it is desirable to use a shared set of parameters to perform flow and trajectory predictions simultaneously.",
+    "2412-15294_sent_3998118f": "Therefore, we design four model variants to ensure our model can flexibly adapt to different application scenarios and possess greater practicality.",
+    "2412-15294_sent_b9d2583e": "As shown in Figure~\\ref{fig:use}, these variants are based on whether parameters are shared and whether both types of mobility data are used during testing:",
+    "2412-15294_sent_0761eff5": "UniMob-v1: This variant is designed for scenarios with limited data types and constrained computational resources.",
+    "2412-15294_sent_89b7dd06": "UniMob-v2: This variant is suitable for scenarios with multiple types of mobility data but needs to save computational resources.",
+    "2412-15294_sent_ac79676c": "UniMob-v3: This variant can handle scenarios with rich data types but limited computational resources.",
+    "2412-15294_sent_f5db7464": "UniMob-v4: This variant is designed for users with rich data types and ample computational resources.",
+    "2412-15294_fig_a6da4589": "\\begin{figure}\n\n\\includegraphics[width=1.0\\linewidth]{figure/use.pdf}\n\n\\caption{Four model variants based on whether parameters are shared and whether two types of mobility data are used during testing.}\n\n\\end{figure}",
+    "2412-15294_section_50301c95": "experiments",
+    "2412-15294_subsection_aa66d95e": "Experimental Settings",
+    "2412-15294_subsubsection_239658e0": "Dataset",
+    "2412-15294_sent_c31546a8": "We conduct extensive experiments on three real-world mobility datasets from Shanghai, Senegal, and Xinjiang.",
+    "2412-15294_sent_9157216c": "Each dataset includes both trajectory and flow data.",
+    "2412-15294_sent_09de175f": "The details of datasets are summarized in Appendix~\\ref{sec::datasets_info}.",
+    "2412-15294_sent_ff8c6ad3": "The experiment section only presents the results for the Shanghai and Senegal datasets.",
+    "2412-15294_sent_a0b199eb": "Detailed results for the Xinjiang dataset can be found in Appendix~\\ref{sec::Results}.",
+    "2412-15294_subsubsection_e6165364": "Baselines",
+    "2412-15294_sent_2c122e85": "We compare the performance of our model with state-of-the-art baselines.",
+    "2412-15294_sent_b1684d9d": "Previous methods could only accomplish one type of mobility data prediction task, so the baseline methods are divided into trajectory and flow prediction.",
+    "2412-15294_sent_8eda54c8": "For Flow Prediction, we compared our model with six SOTA baselines (HA~\\cite{sun2020predicting}, VAR~\\cite{lu2016integrating}, ST-ResNet~\\cite{zhang2017deep}, MSDR~\\cite{liu2022msdr}, STID~\\cite{shao2022spatial}, and PriSTI~\\cite{liu2023pristi}.",
+    "2412-15294_sent_3615bf34": "For Trajectory Prediction, we compared our model with seven SOTA baselines (Markov~\\cite{gambs2012next}, LSTM~\\cite{Kong2018HST}, DeepMove~\\cite{feng2018deepmove}, STAN~\\cite{luo2021stan}, SNPM~\\cite{yin2023next}, TrajGDM~\\cite{chu2024simulating}, and GETNext~\\cite{yang2022getnext}.",
+    "2412-15294_sent_a46626e8": "We provide the details of baselines in Appendix~\\ref{sec::baselines}.",
+    "2412-15294_subsubsection_f32c3eda": "Metrics",
+    "2412-15294_sent_0652860e": "For trajectory prediction, we use Accuracy@k to sort candidate locations by model-predict probabilities and check if the true position falls within the top k predictions.",
+    "2412-15294_sent_6cb8cf55": "For flow prediction, we choose mean absolute errors (MAE), Mean Absolute Percentage Error (MAPE), and root mean squared errors (RMSE) as the evaluation metrics.",
+    "2412-15294_sent_6858751c": "MAE is the mean absolute error between predicted and ground truth values.",
+    "2412-15294_sent_bea54e4b": "MAPE is the mean absolute percentage error between the predicted and ground truth values.",
+    "2412-15294_sent_00f5ab12": "RMSE is the square root of the mean squared error between the predicted and ground truth values.",
+    "2412-15294_sent_a59150a6": "\\caption{Overall Performance on Shanghai and Senegal datasets.} \\scalebox{0.78}{ \\begin{tabular}{lcccccccccccc} & \\multicolumn{6}{c}{Shanghai Dataset} & \\multicolumn{6}{c}{Senegal Dataset} \\\\ \\cmidrule(lr){2-7} \\cmidrule(lr){8-13} & \\multicolumn{3}{c}{Flow Prediction} & \\multicolumn{3}{c}{Trajectory Prediction} & \\multicolumn{3}{c}{Flow Prediction} & \\multicolumn{3}{c}{Trajectory Prediction}\\\\ \\cmidrule(lr){2-4} \\cmidrule(lr){5-7} \\cmidrule(lr){8-10} \\cmidrule(lr){11-13} & MAE & MAPE(\\%) & RMSE & Acc@1 & Acc@3 & Acc@5 & MAE & MAPE(\\%) & RMSE & Acc@1 & Acc@3 & Acc@5 \\\\ HA & 35.19 & 29.76 & 42.72 & - & - & - & 20.75 & 19.32 & 31.17 & - & - & - \\\\ VAR & 28.25 & 25.61 & 40.14 & - & - & - & 17.20 & 15.95 & 28.43 & - & - & - \\\\ ST-ResNet & 21.54 & 19.02 & 34.18 & - & - & - & 15.95 & 13.84 & 26.37 & - & - & - \\\\ MSDR & 20.01 & 17.84 & 32.63 & - & - & - & 14.08 & 13.26 & 25.04 & - & - & - \\\\ STID & 18.72 & 15.17 & 30.40 & - & - & - & 13.52 & 12.31 & 23.19 & - & - & - \\\\ PriSTI & 18.40 & 14.59 & 29.71 & - & - & - & 13.28 & 12.15 & 22.80 & - & - & - \\\\ Markov & - & - & - & 0.2825 & 0.3986 & 0.5012 & - & - & - & 0.3894 & 0.4418 & 0.5828 \\\\ LSTM & - & - & - & 0.3401 & 0.4298 & 0.5737 & - & - & - & 0.4573 & 0.5185 & 0.6509 \\\\ DeepMove & - & - & - & 0.3813 & 0.4672 & 0.6191 & - & - & - & 0.4980 & 0.5764 & 0.7125 \\\\ STAN & - & - & - & 0.3975 & 0.4746 & 0.6303 & - & - & - & 0.5105 & 0.6042 & 0.7303 \\\\ SNPM & - & - & - & 0.4012 & 0.4797 & 0.6378 & - & - & - & 0.5236 & 0.6260 & 0.7591 \\\\ GETNext & - & - & - & 0.4063 & 0.4836 & 0.6415 & - & - & - & 0.5251 & 0.6287 & 0.7638 \\\\ TrajGDM & - & - & - & 0.4103 & 0.4875 & 0.6434 & - & - & - & 0.5295 & 0.6302 & 0.7674 \\\\ UniMob-v1 & 17.93 & 14.01 & 28.65 & 0.4205 & 0.5024 & 0.6570 & 12.70 & 11.65 & 21.94 & 0.5403 & 0.6412 & 0.7889 \\\\ UniMob-v2 & 17.89 & 13.98 & 28.60 & 0.4228 & 0.5057 & 0.6615 & 12.52 & 11.50 & 21.57 & 0.5439 & 0.6450 & 0.7924 \\\\ UniMob-v3 & 17.90 & 13.96 & 28.63 & 0.4213 & 0.5040 & 0.6593 & 12.61 & 11.59 & 21.73 & 0.5415 & 0.6436 & 0.7907 \\\\ UniMob-v4 & 17.76 & 13.93 & 28.50 & 0.4267 & 0.5091 & 0.6653 & 12.08 & 11.12 & 21.03 & 0.5486 & 0.6515 & 0.7993 \\\\ \\end{tabular} \\end{table*}",
+    "2412-15294_sent_c6923d3b": "\\caption{Ablation study on Shanghai datasets.} \\scalebox{1.}{ \\begin{tabular}{lcccccc} & \\multicolumn{3}{c}{Trajectory Prediction} & \\multicolumn{3}{c}{Flow Prediction} \\\\ \\cmidrule(lr){2-4} \\cmidrule(lr){5-7} & Acc@1 & Acc@3 & Acc@5 & MAE & MAPE(\\%) & RMSE\\\\ Ours & 0.4205 & 0.5024 & 0.6570 & 17.93 & 14.01 & 28.65 \\\\ w/o I2C loss & 0.4165 (-0.95\\%) & 0.4906 (-2.35\\%) & 0.6487 (-1.26\\%) & 18.48 (-2.98\\%) & 14.76 (-5.35\\%) & 29.91 (-4.21\\%) \\\\ w/o C2I loss & 0.4053 (-3.61\\%) & 0.4849 (-3.48\\%) & 0.6442 (-1.95\\%) & 18.27 (-1.86\\%) & 14.41 (-2.78\\%) & 29.25 (-2.05\\%)\\\\ w/o shared transformer & 0.4115 (-2.14\\%) & 0.4882 (-2.83\\%) & 0.6461 (-1.66\\%) & 18.40 (-2.55\\%) & 14.60 (-4.21\\%) & 29.67 (-3.44\\%) \\\\ w/o flow data & 0.4036(-4.02\\%) & 0.4840(-3.66\\%) & 0.6421(-2.27\\%) & - & - & - \\\\ w/o trajectory data & - & - & - & 18.56(-3.51\\%) & 14.86(-6.07\\%) & 30.02(-4.78\\%) \\\\ \\end{tabular} \\end{table*}",
+    "2412-15294_sent_f702c874": "\\caption{Ablation study on Senegal datasets.} \\scalebox{1.}{ \\begin{tabular}{lcccccc} & \\multicolumn{3}{c}{Trajectory Prediction} & \\multicolumn{3}{c}{Flow Prediction} \\\\ \\cmidrule(lr){2-4} \\cmidrule(lr){5-7} & Acc@1 & Acc@3 & Acc@5 & MAE & MAPE(\\%) & RMSE\\\\ Ours & 0.5403 & 0.6412 & 0.7889 & 12.70 & 11.65 & 21.94 \\\\ w/o I2C loss & 0.5371 (-0.59\\%) & 0.6356 (-0.87\\%) & 0.7620 (-3.41\\%) & 13.32 (-4.88\\%) & 12.12 (-4.03\\%) & 22.91 (-4.42\\%) \\\\ w/o C2I loss & 0.5285(-2.18\\%) & 0.6327 (-1.33\\%) & 0.7476 (-5.24\\%) & 12.89 (-1.50\\%) & 11.73 (-0.69\\%) & 22.10 (-0.73\\%) \\\\ w/o shared transformer & 0.5314 (-1.65\\%) & 0.6331 (-1.26\\%) & 0.7538 (-4.45\\%) & 13.20 (-3.94\\%) & 11.97 (-2.75\\%) & 22.62 (-3.10\\%) \\\\ w/o flow data & 0.5262(-2.61\\%) & 0.6297(-1.80\\%) & 0.7548(-4.32\\%) & - & - & - \\\\ w/o trajectory data & - & - & - & 13.40(-5.51\\%) & 12.18(-4.55\\%) & 22.98(-4.74\\%) \\\\ \\end{tabular} \\end{table*}",
+    "2412-15294_subsection_edee8e50": "Overall Performance",
+    "2412-15294_sent_7699562f": "As shown in Tables~\\ref{tab:two datasets}, our method demonstrates similar or better performance than the state-of-the-art baselines for all tasks on Shanghai and Senegal datasets (Please refer to Table~\\ref{tab:Xinjiang} in Appendix~\\ref{sec::Overall Performance} for Xingjiang dataset).",
+    "2412-15294_sent_658fece7": "We conducted multiple experiments and reported the average performance.",
+    "2412-15294_sent_51558f65": "In flow and trajectory prediction tasks conducted on multiple real-world datasets, our UniMob model demonstrated the best performance across all evaluation metrics.",
+    "2412-15294_sent_c636f038": "Specifically, it achieved a performance improvement of over 6\\% in flow prediction and 3.73\\% increase in trajectory prediction.",
+    "2412-15294_sent_c344df94": "Additionally, compared to other baseline methods, only our model can simultaneously perform flow and trajectory predictions, demonstrating that our model design effectively achieves unified human mobility prediction.",
+    "2412-15294_sent_368d9ac8": "Furthermore, we used four model variants for each task.",
+    "2412-15294_sent_b12bf283": "Each variant outperformed other baseline methods, maintaining flexibility to handle different scenarios while demonstrating excellent performance.",
+    "2412-15294_sent_67324b73": "The above conclusions fully demonstrate the feasibility of a unified model in human mobility prediction.",
+    "2412-15294_sent_1d3eee0c": "Our UniMob model can handle various types of mobility data, showcasing exceptional scalability and robustness.",
+    "2412-15294_sent_11df27e2": "As the first attempt to propose a universal model paradigm for mobility prediction, we have successfully expanded the boundaries of this field.",
+    "2412-15294_sent_255edb3e": "Notably, mobility prediction models based on diffusion models, such as PriSTI and TrajGDM, demonstrate superior performance compared to other baselines.",
+    "2412-15294_sent_44e18d86": "This underscores the powerful modeling capability of diffusion models in capturing the spatiotemporal correlations of mobility data.",
+    "2412-15294_sent_455729c7": "Diffusion models effectively handle dynamics and uncertainties in mobility data through an iterative denoising process, significantly enhancing prediction performance.",
+    "2412-15294_sent_4a67e469": "Therefore, our UniMob model leverages diffusion models to accurately capture spatiotemporal dependencies in mobility data accurately, proving its effectiveness.",
+    "2412-15294_subsection_feb8fbab": "Ablation Study",
+    "2412-15294_sent_eb007a41": "To evaluate the impact of each module in UniMob, we conducted ablation experiments, divided into ablations of model design and data usage.",
+    "2412-15294_sent_e4349cf4": "Model Design: (1) w/o I2C loss: This variant keeps the model structure unchanged but removes the I2C loss.",
+    "2412-15294_sent_132e87c8": "(2) w/o C2I loss: Similar to the previous one, this variant only removes the C2I loss.",
+    "2412-15294_sent_435c7a15": "(3) w/o shared transformer: In this variant, the flow and trajectory losses no longer share a transformer; instead, each has its independent transformer.",
+    "2412-15294_sent_5dccce21": "Data Usage: (4) w/o flow data: The model is trained using only trajectory data.",
+    "2412-15294_sent_78cad063": "(5) w/o trajectory data: The model is trained using only flow data.",
+    "2412-15294_sent_7f583454": "The results of the ablation experiments conducted on the Shanghai and Senegal datasets are shown in Tables~\\ref{tab:Ablation1} and ~\\ref{tab:Ablation3} (see Table~\\ref{tab:Ablation2} in Appendix~\\ref{sec::ablation} for the Xinjiang dataset).",
+    "2412-15294_sent_8b64b656": "For the ablation experiments on model design, it is evident that the shared transformer offers limited benefits for interacting with different mobility data types.",
+    "2412-15294_sent_666cb9b4": "The most significant performance improvements come from task-specific loss functions.",
+    "2412-15294_sent_13125a07": "For instance, the I2C loss enhances flow prediction by using aggregated trajectory and flow data for spatiotemporal alignment.",
+    "2412-15294_sent_51b04480": "Similarly, the C2I loss uses contrastive learning to construct positive samples of flow and trajectory with similar spatiotemporal patterns, thereby aligning macro and micro mobility distribution.",
+    "2412-15294_sent_abdc2b9c": "These experiments highlight the effectiveness of our approach in aligning trajectory and flow data.",
+    "2412-15294_sent_374826c6": "We removed different data types for the ablation experiments on data usage and trained the model using only a single type of mobility data.",
+    "2412-15294_sent_0b5705f7": "The results showed a significant performance decline.",
+    "2412-15294_sent_fd734161": "This demonstrates the effectiveness and importance of our model in utilizing different types of mobility data.",
+    "2412-15294_sent_704f497e": "By combining multiple data types, UniMob can more comprehensively understand and predict human mobility behavior, thereby significantly enhancing the model's overall performance.",
+    "2412-15294_subsection_f2e40b1d": "Noise Perturbation",
+    "2412-15294_sent_9e9a9658": "In real life, mobility data often contains noise.",
+    "2412-15294_sent_bafd96bf": "This noise can arise from various sources, such as errors produced by sensors during the collection process or intentionally added by data operators to protect user privacy.",
+    "2412-15294_sent_ee27bf39": "To assess our UniMob model's robustness, we added noise to the data and evaluated its performance.",
+    "2412-15294_sent_86dc5277": "For flow data, we introduced varying noise levels to simulate different degrees of data quality.",
+    "2412-15294_sent_e0b93cbb": "Figure~\\ref{fig:noisy_flow} shows that our model's improvement over the best baseline is relatively small without noise.",
+    "2412-15294_sent_d56eb5ef": "When the noise level reaches 0.3, our model demonstrates a relative improvement of more than 10\\%.",
+    "2412-15294_sent_5a8f32dc": "This indicates that compared to other baseline models, UniMob exhibits better robustness in handling noisy data, making it more capable of adapting to flow data with noise for prediction.",
+    "2412-15294_sent_420bedde": "Moreover, we experimented with adding different noise levels to trajectories.",
+    "2412-15294_sent_2ce056aa": "Figure~\\ref{fig:noisy_trajectory} shows that as the noise ratio increases, the improvement of our model relative to the best baseline also increases, achieving a maximum gain of up to 17.82\\%.",
+    "2412-15294_sent_358e6f37": "Because UniMob integrates two types of mobility data, allowing one type of data to provide the same spatiotemporal dynamics as a supplement when the other type of data is noisy, thereby enhancing the model's robustness.",
+    "2412-15294_sent_b8091c2d": "The synergistic effects between different data types can still provide reliable predictions even in noisy data.",
+    "2412-15294_fig_3831025e": "\\begin{figure}\n\n\\subfigure[Shanghai]{\\includegraphics[width=.23\\textwidth]{figure/shanghai_noisy_flow.pdf}}\n\n\\subfigure[Senegal]{\\includegraphics[width=.23\\textwidth]{figure/sainei_noisy_flow.pdf}}\n\\caption{Flow prediction with noisy data on Shanghai and Senegal datasets.} \n\n\\end{figure}",
+    "2412-15294_fig_ee84ff6d": "\\begin{figure}\n\n\\subfigure[Shanghai]{\\includegraphics[width=.23\\textwidth]{figure/shanghai_noisy_trajectory.pdf}}\n\n\\subfigure[Senegal]{\\includegraphics[width=.23\\textwidth]{figure/sainei_noisy_trajectory.pdf}}\n\\caption{Trajectory prediction with noisy data on Shanghai and Senegal datasets.} \n\n\\end{figure}",
+    "2412-15294_subsection_8abc9ea0": "Few-shot Performance",
+    "2412-15294_sent_901a239d": "Similarly, the amount of mobility data may be limited in real-world scenarios due to privacy concerns, data collection challenges, or other constraints.",
+    "2412-15294_sent_8fd6399b": "To simulate this situation, we reduce the amount of flow and trajectory data through different operations.",
+    "2412-15294_sent_e3fb0bd9": "As shown in Figure~\\ref{fig:low_flow}, we constructed scenarios with varying proportions of locations having missing flow records.",
+    "2412-15294_sent_5c74d6ae": "As the proportion of regions with missing flow data increased, our model still demonstrated a significant performance improvement compared to the best baseline.",
+    "2412-15294_sent_5f6245d6": "For instance, in the Shanghai dataset, UniMob achieves an improvement of up to 14\\% when 75\\% of the region is missing.",
+    "2412-15294_sent_4417a0f5": "UniMob's robustness is evident in its ability to maintain high performance despite the absence of a substantial amount of flow data.",
+    "2412-15294_sent_feaccd73": "This is due to its ability to leverage the available trajectory data, compensating for the missing flow information through its joint modeling approach.",
+    "2412-15294_sent_5670ae3d": "As shown in Figure~\\ref{fig:low_trajectory}, we used datasets of different sizes for trajectory data to explore the performance of trajectory prediction with limited data.",
+    "2412-15294_sent_d2b1a03e": "When the amount of trajectory data is very limited (e.g., only 25\\% of the dataset), our model shows a 25\\% improvement in the Shanghai dataset compared to the best baseline.",
+    "2412-15294_sent_45d38b34": "This indicates that when trajectory data is scarce, the flow data provides more diverse mobility patterns, effectively compensating for the lack of trajectory data.",
+    "2412-15294_sent_d324cdce": "By effectively utilizing the spatiotemporal correlations between different types of mobility data, UniMob can provide accurate predictions even in data-scarce environments.",
+    "2412-15294_sent_1ec5677b": "UniMob's ability to deliver reliable predictions with limited data highlights its robustness and practical applicability in various scenarios, ensuring dependable performance regardless of data constraints.",
+    "2412-15294_fig_76334f4f": "\\begin{figure}\n\n\\subfigure[Shanghai]{\\includegraphics[width=.23\\textwidth]{figure/shanghai_low_flow.pdf}}\n\n\\subfigure[Senegal]{\\includegraphics[width=.23\\textwidth]{figure/sainei_low_flow.pdf}}\n\\caption{Flow prediction with scarce data on Shanghai and Senegal datasets.} \n\n\\end{figure}",
+    "2412-15294_fig_124def22": "\\begin{figure}\n\n\\subfigure[Shanghai]{\\includegraphics[width=.23\\textwidth]{figure/shanghai_low_trajectory.pdf}}\n\n\\subfigure[Senegal]{\\includegraphics[width=.23\\textwidth]{figure/sainei_low_trajectory.pdf}}\n\\caption{Trajectory prediction with scarce data on Shanghai and Senegal datasets.} \n\n\\end{figure}",
+    "2412-15294_section_6f8b794f": "Conclusion",
+    "2412-15294_sent_f1d9eb7f": "In this paper, we address an important problem of unified human mobility prediction.",
+    "2412-15294_sent_5396264a": "We propose a universal human mobility prediction model named UniMob, achieving broad adaptability to various data formats and characteristics.",
+    "2412-15294_sent_5e7b77bc": "UniMob successfully captures the spatiotemporal dynamics inherent in different modalities of mobility data by unified tokenization and bidirectional alignment between them, enabling unified modeling.",
+    "2412-15294_sent_72a776ad": "Extensive experiments on real-world datasets demonstrate that UniMob outperforms in trajectory and flow prediction.",
+    "2412-15294_sent_319c9861": "Moreover, UniMob can flexibly adapt to noisy and scarce data scenarios, showcasing its robustness.",
+    "2412-15294_sent_0820d040": "In the future, we will explore integrating additional urban data modalities, such as weather data, social network data, and GIS data.",
+    "2412-15294_sent_1610da35": "These factors influence human mobility, we can better predict human mobility patterns by combining them with mobility data.",
+    "2412-15294_sent_1ad10c65": "\\bibliographystyle{ACM-Reference-Format} \\balance \\bibliography{sample-base} \\appendix \\balance",
+    "2412-15294_section_acce45f3": "APPENDIX FOR REPRODUCIBILITY",
+    "2412-15294_subsubsection_6f7a32cd": "Diffusion Models",
+    "2412-15294_sent_99fdbeb4": "The diffusion model is a probabilistic generative model first introduced by Sohl-Dickstein et al.~\\cite{sohl2015deep} and further improved by Ho et al. ~\\cite{ho2020denoising} and Song et al. ~\\cite{song2020score}.",
+    "2412-15294_sent_18d61d3b": "As a novel generative model, diffusion models have rapidly advanced in time series and spatio-temporal modeling.",
+    "2412-15294_sent_a1d510ae": "Research on time series modeling based on diffusion models is widely applied, such as time series imputation ~\\cite{alcaraz2022diffusion,liu2023pristi}, time series generation~\\cite{lim2023regular,lin2023diffusion}, and time series forecasting~\\cite{li2022generative,bilovs2022modeling}.",
+    "2412-15294_sent_9ce1beff": "DiffSTG~\\cite{wen2023diffstg} is the first attempt to generalize the widespread denoising diffusion probabilistic models to spatiotemporal graphs (STGs), leading to a novel non-autoregressive framework.",
+    "2412-15294_sent_07e52a3d": "KSTDiff~\\cite{zhou2023towards} designed a knowledge-enhanced denoising network to capture the spatiotemporal dependencies of urban flows and the influence of the urban environment in the denoising process.",
+    "2412-15294_sent_46b43986": "DiffTraj~\\cite{zhou2023towards} is a spatiotemporal diffusion probabilistic model for trajectory generation.",
+    "2412-15294_sent_4601699f": "This model effectively combines the generative capabilities of diffusion models with spatiotemporal features derived from real trajectories.",
+    "2412-15294_sent_2cc77e1f": "In this work, we introduce the diffusion model for unified mobility prediction adapted to different data types.",
+    "2412-15294_subsection_c0739dfe": "Datasets Details",
+    "2412-15294_sent_b2fee75d": "We conducted extensive experiments on three real-world mobility datasets: Shanghai, Senegal, and Xinjiang.",
+    "2412-15294_sent_ba8da656": "The details of datasets are summarized in Table~\\ref{table:datasets}.",
+    "2412-15294_sent_6f441013": "We preprocess the trajectory data for three datasets, filtering out users with fewer than five records per day.",
+    "2412-15294_sent_279e901c": "For location preprocessing, we map GPS points to predefined grid IDs of a specific granularity.",
+    "2412-15294_sent_23a14af1": "For temporal preprocessing, we organize the time data into fixed intervals, such as hourly or half-hourly segments.",
+    "2412-15294_sent_eaf6383e": "Finally, we divide the data into training, validation, and testing sets in a 7:1:2 ratio in chronological order.",
+    "2412-15294_fig_be899c93": "\\begin{table}\n\n\\caption{Basic statistics of mobility datasets.}\n\n\\begin{center}\n\\scalebox{0.9}{\n\\begin{tabular}{ >{\\arraybackslash}m{1cm} \n>{\\arraybackslash}m{1cm} \n>{\\arraybackslash}m{1.2cm} \n>{\\arraybackslash}m{1cm}\n>{\\arraybackslash}m{1cm}\n>{\\arraybackslash}m{1cm}}\n\nCity & Duration & Users & Location \\\\ \n\nShanghai & 7 days & 700000 & 4096 \\\\ \nSenegal & 14 days & 8000 & 1666 \\\\ \nXinjiang & 28 days & 1200000 & 4096\\\\ \n\n\\end{tabular}}\n\\end{center}\n\n\\end{table}",
+    "2412-15294_sent_baae3a49": "To evaluate the performance of our proposed model, we compared it with state-of-the-art models.",
+    "2412-15294_paragraph_07ceac0b": "Flow Prediction",
+    "2412-15294_sent_ec2f973f": "HA~\\cite{sun2020predicting}: It considers the inflow and outflow to be seasonal processes and employs the average of the previous seasons as the prediction for a week-long period.",
+    "2412-15294_sent_9a892b49": "VAR~\\cite{lu2016integrating}: This method is vector autoregressive single-step predictor.",
+    "2412-15294_sent_fda91438": "ST-ResNet~\\cite{zhang2017deep}: ST-ResNet employs the residual neural network framework to model the temporal closeness, period, and trend properties of crowd flow.",
+    "2412-15294_sent_6e9274a9": "MSDR~\\cite{liu2022msdr}: Multi-Step Dependency Relationship (MSDR) is a brand new variant of recurrent neural networks.",
+    "2412-15294_sent_f4053fee": "Instead of only looking at the hidden state from the latest time step, MSDR explicitly takes those from multiple historical time steps as the input of each time unit.",
+    "2412-15294_sent_3dfa01a6": "STID~\\cite{shao2022spatial}: A simple multi-layer perceptron addresses the indistinguishability of time series samples in spatial and temporal dimensions.",
+    "2412-15294_sent_7ed4d06d": "PriSTI~\\cite{liu2023pristi}: This method extracts coarse but effective spatiotemporal dependencies from conditional information using a diffusion model, serving as a global context prior.",
+    "2412-15294_paragraph_8f670df2": "Trajectory Prediction",
+    "2412-15294_sent_e2ed4be9": "Markov Model~\\cite{gambs2012next}: The Markov model is a statistical model used to describe the change of states over time.",
+    "2412-15294_sent_69e88228": "It uses historical trajectory data for location prediction by calculating the transition probabilities between these locations.",
+    "2412-15294_sent_c9440d7c": "LSTM~\\cite{Kong2018HST}: The LSTM network is good at handling sequential data and has the advantage of encoding long-term dependencies, which can naturally be applied to location prediction.",
+    "2412-15294_sent_acf3eaf9": "DeepMove~\\cite{feng2018deepmove}: The method designs a multimodal embedding recurrent neural network to capture complex sequential transitions by jointly embedding multiple factors that control human mobility.",
+    "2412-15294_sent_0fcb5672": "STAN~\\cite{luo2021stan}: This model associates non-contiguous but functionally similar visited points that are not adjacent to each other to predict the next location.",
+    "2412-15294_sent_5cb30ba0": "SNPM~\\cite{yin2023next}: The method constructs a Sequence-based, Dynamic Neighbor Graph (SDNG) to find the similarity neighborhood and develop a Multi-Step Dependency Prediction model.",
+    "2412-15294_sent_809a8999": "TrajGDM~\\cite{chu2024simulating}: The method utilizes diffusion models to capture the universal mobility pattern in a trajectory dataset for trajectory prediction.",
+    "2412-15294_sent_b6500cd9": "GETNext~\\cite{yang2022getnext}: The method employs a global trajectory flow map and a novel Graph Enhanced Transformer model to leverage collaborative signals for more accurate trajectory prediction.",
+    "2412-15294_fig_95c2a057": "\\begin{table}\n\n\\caption{Overall Performance on Xinjiang datasets.}\n\n\\scalebox{0.9}{\n\\begin{tabular}{lcccccc}\n\n& \\multicolumn{3}{c}{Flow Prediction} & \\multicolumn{3}{c}{Trajectory Prediction} \\\\\n\\cmidrule(lr){2-4} \\cmidrule(lr){5-7}\n& MAE & MAPE(\\%) & RMSE\n& Acc@1 & Acc@3 & Acc@5\\\\\n\nHA & 33.16 & 30.54 & 44.28 & - & - & - \\\\\nVAR & 23.90 & 22.15 & 36.63 & - & - & - \\\\\nST-ResNet & 19.72 & 17.36 & 31.56 & - & - & - \\\\\nMSDR & 17.95 & 16.53 & 29.60 & - & - & - \\\\\nSTID & 17.01 & 15.70 & 27.36 & - & - & - \\\\\nPriSTI & 16.80 & 15.37 & 26.47 & - & - & - \\\\\nMarkov & - & - & - & 0.3156 & 0.3924 & 0.4571 \\\\\nLSTM & - & - & - & 0.3847 & 0.4519 & 0.5450 \\\\\nDeepMove & - & - & - & 0.4261 & 0.5143 & 0.6318 \\\\\nSTAN & - & - & - & 0.4432 & 0.5307 & 0.6609 \\\\\nSNPM & - & - & - & 0.4618 & 0.5574 & 0.6926 \\\\\nGETNext & - & - & - & 0.4650 & 0.5598 & 0.6975 \\\\\nTrajGDM & - & - & - & 0.4673 & 0.5632 & 0.7054 \\\\\nUniMob-v1 & 16.31 & 14.91 & 25.98 & 0.4768 & 0.5795 & 0.7217 \\\\\nUniMob-v2 & 15.96 & 14.72 & 25.54 & 0.4815 & 0.5853 & 0.7286 \\\\\nUniMob-v3 & 16.12 & 14.84 & 25.70 & 0.4791 & 0.5830 & 0.7253 \\\\\nUniMob-v4 & \\bf{15.87} & \\bf{14.50} & \\bf{25.19} & \\bf{0.4841} & \\bf{0.5897} & \\bf{0.7336} \\\\\n\n\\end{tabular}\n\n\\end{table}",
+    "2412-15294_sent_191e5185": "\\caption{Ablation study on Xinjiang datasets.} \\scalebox{1.}{ \\begin{tabular}{lcccccc} & \\multicolumn{3}{c}{Trajectory Prediction} & \\multicolumn{3}{c}{Flow Prediction} \\\\ \\cmidrule(lr){2-4} \\cmidrule(lr){5-7} & Acc@1 & Acc@3 & Acc@5 & MAE & MAPE(\\%) & RMSE\\\\ Ours & 0.4768 & 0.5795 & 0.7217 & 16.31 & 14.91 & 25.98 \\\\ w/o I2C loss & 0.4736 (-0.67\\%) & 0.5730 (-1.12\\%) & 0.7125 (-1.28\\%) & 16.78 (-2.88\\%) & 15.43 (-3.49\\%) & 27.02 (-4.00\\%) \\\\ w/o C2I loss & 0.4689 (-1.66\\%) & 0.5671 (-2.14\\%) & 0.7064 (-2.12\\%) & 16.46 (-0.92\\%) & 15.08 (-1.14\\%) & 26.90 (-3.54\\%) \\\\ w/o shared transformer & 0.4702 (-1.39\\%) & 0.5693 (-1.76\\%) & 0.7091 (-1.75\\%) & 16.67 (-2.21\\%) & 15.29 (-2.55\\%) & 26.97 (-3.81\\%) \\\\ w/o flow data & 0.4639(-2.71\\%) & 0.5620(-3.02\\%) & 0.6998(-3.03\\%) & - & - & - \\\\ w/o trajectory data & - & - & - & 16.87(-3.43\\%) & 15.56(-4.36\\%) & 27.20(-4.70\\%) \\\\ \\end{tabular} \\end{table*}",
+    "2412-15294_section_18fbafb9": "Experimental Performance",
+    "2412-15294_sent_6c8aa822": "Table~\\ref{tab:Xinjiang} shows the performance of our universal mobility prediction model on the Xinjiang dataset.",
+    "2412-15294_sent_495ac402": "UniMob not only accomplishes both trajectory and flow predictions simultaneously but also surpasses current advanced baseline models in all evaluation metrics.",
+    "2412-15294_sent_6d778dcf": "Specifically, it achieves 5.34\\% performance improvement in flow prediction and more than 4\\% enhancement in trajectory prediction.",
+    "2412-15294_sent_184fe378": "These results fully demonstrate the generality and reliability of our model.",
+    "2412-15294_sent_506088ab": "We conducted ablation experiments on two aspects: model design and data utilization.",
+    "2412-15294_sent_952c12bc": "By sequentially removing components of the model design, we identified three design elements that align with different data formats and distributions, each impacting performance, thus validating their effectiveness.",
+    "2412-15294_sent_564fe31f": "Regarding data utilization, by replacing multi-type data with single-type data, we visually demonstrated the performance enhancement brought by using multi-type mobility data in human mobility prediction through our universal model.",
+    "2412-15294_fig_1cfb3086": "\\begin{figure}\n\n\\subfigure[Flow prediction]{\\includegraphics[width=.23\\textwidth]{figure/xinjiang_noisy_flow.pdf}}\n\n\\subfigure[Trajectory prediction]{\\includegraphics[width=.23\\textwidth]{figure/xinjiang_noisy_trajectory.pdf}}\n\\caption{Flow and trajectory prediction with noisy data on Xinjiang dataset.} \n\n\\end{figure}",
+    "2412-15294_sent_79f4f599": "Due to biases from sensor collection and artificial noise added for privacy protection, the data used for mobility prediction often contains noise.",
+    "2412-15294_sent_749e010b": "To verify whether our model can still maintain good predictive capabilities in noisy conditions, we added noise to both the flow and trajectory data.",
+    "2412-15294_sent_0e024219": "Figure~\\ref{fig:noisy} shows that as noise levels increase, our model continues to outperform the best baseline model, and our performance advantage becomes even more pronounced relative to the baseline with increasing noise.",
+    "2412-15294_sent_49cd879d": "This effectively demonstrates the high robustness of our UniMob model.",
+    "2412-15294_sent_19ddd300": "Similarly, due to data collection and privacy protection limitations, the amount of mobility data we acquire is often limited. Therefore, we tested the few-shot learning capabilities of our UniMob model.",
+    "2412-15294_sent_360cecab": "As shown in Figure~\\ref{fig:low}, our model still performs excellently even in a data-constrained environment.",
+    "2412-15294_fig_9eb25d85": "\\begin{figure}\n\n\\subfigure[Flow prediction]{\\includegraphics[width=.23\\textwidth]{figure/xinjiang_low_flow.pdf}}\n\n\\subfigure[Trajectory prediction]{\\includegraphics[width=.23\\textwidth]{figure/xinjiang_low_trajectory.pdf}}\n\\caption{Flow and trajectory prediction with scarce data on Xinjiang dataset.} \n\n\\end{figure}"
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15294_sent_5d12c20f": "2412-15294_paragraph_8f670df2",
+      "2412-15294_abstract_ce28071e": "2412-15294_doc_root",
+      "2412-15294_sent_b9862eaa": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_80619c93": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_f6564e97": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_50c24b76": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_7e0c6bf5": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_9d99f0a6": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_16bbb8b0": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_0b95ded2": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_110cde67": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_d1d2dc54": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_19aff344": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_ab076af0": "2412-15294_abstract_ce28071e",
+      "2412-15294_sent_d88ec53a": "2412-15294_doc_root",
+      "2412-15294_section_0b79795d": "2412-15294_doc_root",
+      "2412-15294_sent_27c6e0a6": "2412-15294_section_0b79795d",
+      "2412-15294_sent_48395d34": "2412-15294_section_0b79795d",
+      "2412-15294_sent_d0469209": "2412-15294_section_0b79795d",
+      "2412-15294_sent_69914ddf": "2412-15294_section_0b79795d",
+      "2412-15294_sent_7690e886": "2412-15294_section_0b79795d",
+      "2412-15294_sent_6f0cf447": "2412-15294_section_0b79795d",
+      "2412-15294_sent_5e0bfd6b": "2412-15294_section_0b79795d",
+      "2412-15294_sent_3fb929f2": "2412-15294_section_0b79795d",
+      "2412-15294_sent_6d848dc2": "2412-15294_section_0b79795d",
+      "2412-15294_sent_04350fb4": "2412-15294_section_0b79795d",
+      "2412-15294_sent_bc11a5c2": "2412-15294_section_0b79795d",
+      "2412-15294_sent_ffd83a37": "2412-15294_section_0b79795d",
+      "2412-15294_sent_b3e4fde5": "2412-15294_section_0b79795d",
+      "2412-15294_sent_8722f949": "2412-15294_section_0b79795d",
+      "2412-15294_sent_e22b173e": "2412-15294_section_0b79795d",
+      "2412-15294_fig_4a3691f7": "2412-15294_section_0b79795d",
+      "2412-15294_sent_28dcefe9": "2412-15294_section_0b79795d",
+      "2412-15294_sent_f1c23b0a": "2412-15294_section_0b79795d",
+      "2412-15294_sent_35a8c141": "2412-15294_section_0b79795d",
+      "2412-15294_itemize_23e77d05": "2412-15294_paragraph_8f670df2",
+      "2412-15294_item_f31440d5": "2412-15294_itemize_23e77d05",
+      "2412-15294_sent_a063f1fa": "2412-15294_item_f31440d5",
+      "2412-15294_sent_5bd979e5": "2412-15294_item_f31440d5",
+      "2412-15294_sent_abe389cd": "2412-15294_item_f31440d5",
+      "2412-15294_sent_e4fd33a7": "2412-15294_item_f31440d5",
+      "2412-15294_sent_c3c892f4": "2412-15294_item_f31440d5",
+      "2412-15294_sent_197ea0af": "2412-15294_item_f31440d5",
+      "2412-15294_sent_9083fd48": "2412-15294_item_f31440d5",
+      "2412-15294_sent_3c1c94e4": "2412-15294_section_0b79795d",
+      "2412-15294_sent_c62e3872": "2412-15294_section_0b79795d",
+      "2412-15294_sent_076c9e09": "2412-15294_section_0b79795d",
+      "2412-15294_sent_a21bc6cf": "2412-15294_section_0b79795d",
+      "2412-15294_sent_66ad3bea": "2412-15294_section_0b79795d",
+      "2412-15294_sent_32c5f54c": "2412-15294_section_0b79795d",
+      "2412-15294_sent_8abcf2da": "2412-15294_section_0b79795d",
+      "2412-15294_sent_4e03a309": "2412-15294_section_0b79795d",
+      "2412-15294_sent_58903a38": "2412-15294_section_0b79795d",
+      "2412-15294_sent_e91aee79": "2412-15294_section_0b79795d",
+      "2412-15294_sent_e4825ced": "2412-15294_section_0b79795d",
+      "2412-15294_sent_7c4593c2": "2412-15294_item_f31440d5",
+      "2412-15294_sent_90d5d64f": "2412-15294_item_f31440d5",
+      "2412-15294_sent_e3bca82a": "2412-15294_item_f31440d5",
+      "2412-15294_sent_93369c75": "2412-15294_item_f31440d5",
+      "2412-15294_sent_31585298": "2412-15294_item_f31440d5",
+      "2412-15294_sent_a62d5280": "2412-15294_item_f31440d5",
+      "2412-15294_section_aed402c3": "2412-15294_section_acce45f3",
+      "2412-15294_paragraph_a2cc3f00": "2412-15294_section_aed402c3",
+      "2412-15294_sent_60a3c8f1": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_b23941be": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_6293c709": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_737768b5": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_9a3e022c": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_c2186a6d": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_e49b7107": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_5b3bc109": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_3a7e7bce": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_7bdd7cf4": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_0b417894": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_cfdc0854": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_ae14c26a": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_sent_968f3ed2": "2412-15294_paragraph_a2cc3f00",
+      "2412-15294_paragraph_380ac03a": "2412-15294_section_aed402c3",
+      "2412-15294_sent_6cb14230": "2412-15294_paragraph_380ac03a",
+      "2412-15294_sent_eca2d893": "2412-15294_paragraph_380ac03a",
+      "2412-15294_sent_bee1f72c": "2412-15294_paragraph_380ac03a",
+      "2412-15294_sent_a164e927": "2412-15294_paragraph_380ac03a",
+      "2412-15294_sent_ba2c6ae8": "2412-15294_paragraph_380ac03a",
+      "2412-15294_sent_35b68fd4": "2412-15294_paragraph_380ac03a",
+      "2412-15294_sent_3664de9e": "2412-15294_paragraph_380ac03a",
+      "2412-15294_sent_7dae7175": "2412-15294_paragraph_380ac03a",
+      "2412-15294_sent_e42d3104": "2412-15294_paragraph_380ac03a",
+      "2412-15294_fig_232c694d": "2412-15294_paragraph_380ac03a",
+      "2412-15294_section_e0dbeb29": "2412-15294_doc_root",
+      "2412-15294_sent_f407f936": "2412-15294_section_e0dbeb29",
+      "2412-15294_subsection_1f2e4e60": "2412-15294_section_e0dbeb29",
+      "2412-15294_sent_ba6f544d": "2412-15294_subsection_1f2e4e60",
+      "2412-15294_sent_2bd66eaf": "2412-15294_subsection_1f2e4e60",
+      "2412-15294_sent_0cd5314c": "2412-15294_subsection_1f2e4e60",
+      "2412-15294_sent_5f038aae": "2412-15294_subsection_1f2e4e60",
+      "2412-15294_sent_2d5b845d": "2412-15294_subsection_1f2e4e60",
+      "2412-15294_sent_6c37a6ff": "2412-15294_subsection_1f2e4e60",
+      "2412-15294_subsection_86bc2a88": "2412-15294_section_e0dbeb29",
+      "2412-15294_sent_91801f00": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_cbd9fba0": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_61f1df72": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_2064f360": "2412-15294_subsection_86bc2a88",
+      "2412-15294_eq_0d15ea43": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_2b9da74c": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_9a797ebf": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_76c02503": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_c8ec19f8": "2412-15294_subsection_86bc2a88",
+      "2412-15294_eq_7eec7432": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_709c5323": "2412-15294_subsection_86bc2a88",
+      "2412-15294_eq_6354ffd1": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_6b034343": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_937ab516": "2412-15294_subsection_86bc2a88",
+      "2412-15294_eq_b0fe55a7": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_753c992a": "2412-15294_subsection_86bc2a88",
+      "2412-15294_sent_60e52167": "2412-15294_subsection_86bc2a88",
+      "2412-15294_section_4c3880bb": "2412-15294_doc_root",
+      "2412-15294_sent_9f46c528": "2412-15294_section_4c3880bb",
+      "2412-15294_sent_e8e4e865": "2412-15294_section_4c3880bb",
+      "2412-15294_subsection_fd0e72b6": "2412-15294_section_4c3880bb",
+      "2412-15294_sent_c70cd736": "2412-15294_subsection_fd0e72b6",
+      "2412-15294_sent_38f8cf52": "2412-15294_item_f31440d5",
+      "2412-15294_sent_1b9295b4": "2412-15294_item_f31440d5",
+      "2412-15294_sent_a272fc97": "2412-15294_item_f31440d5",
+      "2412-15294_sent_02ead1a8": "2412-15294_item_f31440d5",
+      "2412-15294_sent_685aec21": "2412-15294_item_f31440d5",
+      "2412-15294_sent_c9c7a8e6": "2412-15294_item_f31440d5",
+      "2412-15294_sent_71786695": "2412-15294_subsection_fd0e72b6",
+      "2412-15294_sent_1508428c": "2412-15294_subsection_fd0e72b6",
+      "2412-15294_sent_8faf94d0": "2412-15294_subsection_fd0e72b6",
+      "2412-15294_subsection_394922cb": "2412-15294_section_4c3880bb",
+      "2412-15294_sent_e0c529c8": "2412-15294_subsection_394922cb",
+      "2412-15294_sent_03b07d1d": "2412-15294_subsection_394922cb",
+      "2412-15294_subsubsection_4d619861": "2412-15294_subsection_394922cb",
+      "2412-15294_sent_ad4c1b9a": "2412-15294_subsubsection_4d619861",
+      "2412-15294_sent_d3af58ca": "2412-15294_subsubsection_4d619861",
+      "2412-15294_sent_8e3a467c": "2412-15294_subsubsection_4d619861",
+      "2412-15294_subsubsection_50d5dfc1": "2412-15294_subsection_394922cb",
+      "2412-15294_sent_73064539": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_48c27663": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_e64eebc9": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_eb8fa84b": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_40561c0c": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_eq_955394cb": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_cfcd2ff0": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_867d3b66": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_7664ce80": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_cc576904": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_eq_b1858a84": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_sent_0da0b49d": "2412-15294_subsubsection_50d5dfc1",
+      "2412-15294_subsubsection_4296a4ba": "2412-15294_subsection_394922cb",
+      "2412-15294_sent_7022dcfc": "2412-15294_subsubsection_4296a4ba",
+      "2412-15294_sent_e51cee64": "2412-15294_subsubsection_4296a4ba",
+      "2412-15294_eq_70d6a354": "2412-15294_subsubsection_4296a4ba",
+      "2412-15294_sent_29a39364": "2412-15294_subsubsection_4296a4ba",
+      "2412-15294_sent_8faa0334": "2412-15294_subsubsection_4296a4ba",
+      "2412-15294_eq_a662ee3e": "2412-15294_subsubsection_4296a4ba",
+      "2412-15294_subsection_380dd7d9": "2412-15294_section_4c3880bb",
+      "2412-15294_sent_bcdb68cb": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_b77392d3": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_0710ec36": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_973639ad": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_81ced6b2": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_8b46a5de": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_69af666e": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_6a2fb7c3": "2412-15294_subsection_380dd7d9",
+      "2412-15294_eq_275c127c": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_9d874737": "2412-15294_subsection_380dd7d9",
+      "2412-15294_sent_60621656": "2412-15294_subsection_380dd7d9",
+      "2412-15294_subsection_7b63dd3d": "2412-15294_section_4c3880bb",
+      "2412-15294_sent_7114e765": "2412-15294_subsection_7b63dd3d",
+      "2412-15294_subsubsection_58ff717e": "2412-15294_subsection_7b63dd3d",
+      "2412-15294_sent_67901f5b": "2412-15294_subsubsection_58ff717e",
+      "2412-15294_eq_c56b097f": "2412-15294_subsubsection_58ff717e",
+      "2412-15294_sent_4c2f9d63": "2412-15294_subsubsection_58ff717e",
+      "2412-15294_eq_e57161cf": "2412-15294_subsubsection_58ff717e",
+      "2412-15294_sent_5d946ac6": "2412-15294_subsubsection_58ff717e",
+      "2412-15294_eq_adde535b": "2412-15294_subsubsection_58ff717e",
+      "2412-15294_sent_5506bc97": "2412-15294_subsubsection_58ff717e",
+      "2412-15294_subsubsection_a905954b": "2412-15294_subsection_7b63dd3d",
+      "2412-15294_sent_38e947a9": "2412-15294_subsubsection_a905954b",
+      "2412-15294_eq_41976003": "2412-15294_subsubsection_a905954b",
+      "2412-15294_sent_3a08a763": "2412-15294_subsubsection_a905954b",
+      "2412-15294_subsection_896ed9fc": "2412-15294_section_4c3880bb",
+      "2412-15294_sent_c365d863": "2412-15294_subsection_896ed9fc",
+      "2412-15294_sent_54029462": "2412-15294_subsection_896ed9fc",
+      "2412-15294_sent_bfb0030c": "2412-15294_subsection_896ed9fc",
+      "2412-15294_subsubsection_69c99c22": "2412-15294_subsection_896ed9fc",
+      "2412-15294_sent_5bdba733": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_sent_007d2b7f": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_sent_460a228a": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_eq_f4b3ce93": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_sent_2371b35d": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_sent_df13f9b6": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_sent_70c83d3a": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_sent_6a2a7c3a": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_eq_1f30d2ad": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_sent_a98c71a7": "2412-15294_subsubsection_69c99c22",
+      "2412-15294_subsubsection_9fa37eae": "2412-15294_subsection_896ed9fc",
+      "2412-15294_sent_d774e6bb": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_332e088e": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_d4aa2906": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_6bf27afd": "2412-15294_item_f31440d5",
+      "2412-15294_sent_2dd611f8": "2412-15294_item_f31440d5",
+      "2412-15294_sent_94b19ae6": "2412-15294_item_f31440d5",
+      "2412-15294_sent_cf1c5344": "2412-15294_item_f31440d5",
+      "2412-15294_sent_ee1db1a1": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_b47e112c": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_a9ce66c2": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_4a48438a": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_e3136980": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_e5345a86": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_b15176be": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_eq_f81a5ec2": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_150589ed": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_sent_7681251e": "2412-15294_subsubsection_9fa37eae",
+      "2412-15294_subsection_cf270e40": "2412-15294_section_4c3880bb",
+      "2412-15294_sent_6d5e0bba": "2412-15294_subsection_cf270e40",
+      "2412-15294_eq_66e0f4dc": "2412-15294_subsection_cf270e40",
+      "2412-15294_sent_2dcec844": "2412-15294_subsection_cf270e40",
+      "2412-15294_sent_5058f1af": "2412-15294_subsection_cf270e40",
+      "2412-15294_sent_5e13c9f3": "2412-15294_subsection_cf270e40",
+      "2412-15294_sent_498005d5": "2412-15294_subsection_cf270e40",
+      "2412-15294_eq_d710924d": "2412-15294_subsection_cf270e40",
+      "2412-15294_sent_34058ce5": "2412-15294_subsection_cf270e40",
+      "2412-15294_subsection_e9ad310d": "2412-15294_section_4c3880bb",
+      "2412-15294_sent_978dbb97": "2412-15294_subsection_e9ad310d",
+      "2412-15294_sent_b8179c00": "2412-15294_subsection_e9ad310d",
+      "2412-15294_sent_3998118f": "2412-15294_subsection_e9ad310d",
+      "2412-15294_sent_b9d2583e": "2412-15294_subsection_e9ad310d",
+      "2412-15294_sent_0761eff5": "2412-15294_item_f31440d5",
+      "2412-15294_sent_89b7dd06": "2412-15294_item_f31440d5",
+      "2412-15294_sent_ac79676c": "2412-15294_item_f31440d5",
+      "2412-15294_sent_f5db7464": "2412-15294_item_f31440d5",
+      "2412-15294_fig_a6da4589": "2412-15294_subsection_e9ad310d",
+      "2412-15294_section_50301c95": "2412-15294_doc_root",
+      "2412-15294_subsection_aa66d95e": "2412-15294_section_50301c95",
+      "2412-15294_subsubsection_239658e0": "2412-15294_subsection_aa66d95e",
+      "2412-15294_sent_c31546a8": "2412-15294_subsubsection_239658e0",
+      "2412-15294_sent_9157216c": "2412-15294_subsubsection_239658e0",
+      "2412-15294_sent_09de175f": "2412-15294_subsubsection_239658e0",
+      "2412-15294_sent_ff8c6ad3": "2412-15294_subsubsection_239658e0",
+      "2412-15294_sent_a0b199eb": "2412-15294_subsubsection_239658e0",
+      "2412-15294_subsubsection_e6165364": "2412-15294_section_acce45f3",
+      "2412-15294_sent_2c122e85": "2412-15294_subsubsection_e6165364",
+      "2412-15294_sent_b1684d9d": "2412-15294_subsubsection_e6165364",
+      "2412-15294_sent_8eda54c8": "2412-15294_subsubsection_e6165364",
+      "2412-15294_sent_3615bf34": "2412-15294_subsubsection_e6165364",
+      "2412-15294_sent_a46626e8": "2412-15294_subsubsection_e6165364",
+      "2412-15294_subsubsection_f32c3eda": "2412-15294_subsection_aa66d95e",
+      "2412-15294_sent_0652860e": "2412-15294_subsubsection_f32c3eda",
+      "2412-15294_sent_6cb8cf55": "2412-15294_subsubsection_f32c3eda",
+      "2412-15294_sent_6858751c": "2412-15294_subsubsection_f32c3eda",
+      "2412-15294_sent_bea54e4b": "2412-15294_subsubsection_f32c3eda",
+      "2412-15294_sent_00f5ab12": "2412-15294_subsubsection_f32c3eda",
+      "2412-15294_sent_a59150a6": "2412-15294_subsubsection_f32c3eda",
+      "2412-15294_sent_c6923d3b": "2412-15294_subsubsection_f32c3eda",
+      "2412-15294_sent_f702c874": "2412-15294_subsubsection_f32c3eda",
+      "2412-15294_subsection_edee8e50": "2412-15294_section_18fbafb9",
+      "2412-15294_sent_7699562f": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_658fece7": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_51558f65": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_c636f038": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_c344df94": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_368d9ac8": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_b12bf283": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_67324b73": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_1d3eee0c": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_11df27e2": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_255edb3e": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_44e18d86": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_455729c7": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_4a67e469": "2412-15294_subsection_edee8e50",
+      "2412-15294_subsection_feb8fbab": "2412-15294_section_18fbafb9",
+      "2412-15294_sent_eb007a41": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_e4349cf4": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_132e87c8": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_435c7a15": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_5dccce21": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_78cad063": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_7f583454": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_8b64b656": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_666cb9b4": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_13125a07": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_51b04480": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_abdc2b9c": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_374826c6": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_0b5705f7": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_fd734161": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_704f497e": "2412-15294_subsection_feb8fbab",
+      "2412-15294_subsection_f2e40b1d": "2412-15294_section_18fbafb9",
+      "2412-15294_sent_9e9a9658": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_bafd96bf": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_ee27bf39": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_86dc5277": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_e0b93cbb": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_d56eb5ef": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_5a8f32dc": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_420bedde": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_2ce056aa": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_358e6f37": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_b8091c2d": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_fig_3831025e": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_fig_ee84ff6d": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_subsection_8abc9ea0": "2412-15294_section_18fbafb9",
+      "2412-15294_sent_901a239d": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_8fd6399b": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_e3fb0bd9": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_5c74d6ae": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_5f6245d6": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_4417a0f5": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_feaccd73": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_5670ae3d": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_d2b1a03e": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_45d38b34": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_d324cdce": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_1ec5677b": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_fig_76334f4f": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_fig_124def22": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_section_6f8b794f": "2412-15294_doc_root",
+      "2412-15294_sent_f1d9eb7f": "2412-15294_section_6f8b794f",
+      "2412-15294_sent_5396264a": "2412-15294_section_6f8b794f",
+      "2412-15294_sent_5e7b77bc": "2412-15294_section_6f8b794f",
+      "2412-15294_sent_72a776ad": "2412-15294_section_6f8b794f",
+      "2412-15294_sent_319c9861": "2412-15294_section_6f8b794f",
+      "2412-15294_sent_0820d040": "2412-15294_section_6f8b794f",
+      "2412-15294_sent_1610da35": "2412-15294_section_6f8b794f",
+      "2412-15294_sent_1ad10c65": "2412-15294_section_6f8b794f",
+      "2412-15294_section_acce45f3": "2412-15294_doc_root",
+      "2412-15294_subsubsection_6f7a32cd": "2412-15294_section_aed402c3",
+      "2412-15294_sent_99fdbeb4": "2412-15294_subsubsection_6f7a32cd",
+      "2412-15294_sent_18d61d3b": "2412-15294_subsubsection_6f7a32cd",
+      "2412-15294_sent_a1d510ae": "2412-15294_subsubsection_6f7a32cd",
+      "2412-15294_sent_9ce1beff": "2412-15294_subsubsection_6f7a32cd",
+      "2412-15294_sent_07e52a3d": "2412-15294_subsubsection_6f7a32cd",
+      "2412-15294_sent_46b43986": "2412-15294_subsubsection_6f7a32cd",
+      "2412-15294_sent_4601699f": "2412-15294_subsubsection_6f7a32cd",
+      "2412-15294_sent_2cc77e1f": "2412-15294_subsubsection_6f7a32cd",
+      "2412-15294_subsection_c0739dfe": "2412-15294_section_acce45f3",
+      "2412-15294_sent_b2fee75d": "2412-15294_subsection_c0739dfe",
+      "2412-15294_sent_ba8da656": "2412-15294_subsection_c0739dfe",
+      "2412-15294_sent_6f441013": "2412-15294_subsection_c0739dfe",
+      "2412-15294_sent_279e901c": "2412-15294_subsection_c0739dfe",
+      "2412-15294_sent_23a14af1": "2412-15294_subsection_c0739dfe",
+      "2412-15294_sent_eaf6383e": "2412-15294_subsection_c0739dfe",
+      "2412-15294_fig_be899c93": "2412-15294_subsection_c0739dfe",
+      "2412-15294_sent_baae3a49": "2412-15294_subsubsection_e6165364",
+      "2412-15294_paragraph_07ceac0b": "2412-15294_subsubsection_e6165364",
+      "2412-15294_sent_ec2f973f": "2412-15294_item_f31440d5",
+      "2412-15294_sent_9a892b49": "2412-15294_item_f31440d5",
+      "2412-15294_sent_fda91438": "2412-15294_item_f31440d5",
+      "2412-15294_sent_6e9274a9": "2412-15294_item_f31440d5",
+      "2412-15294_sent_f4053fee": "2412-15294_item_f31440d5",
+      "2412-15294_sent_3dfa01a6": "2412-15294_item_f31440d5",
+      "2412-15294_sent_7ed4d06d": "2412-15294_item_f31440d5",
+      "2412-15294_paragraph_8f670df2": "2412-15294_subsubsection_e6165364",
+      "2412-15294_sent_e2ed4be9": "2412-15294_item_f31440d5",
+      "2412-15294_sent_69e88228": "2412-15294_item_f31440d5",
+      "2412-15294_sent_c9440d7c": "2412-15294_item_f31440d5",
+      "2412-15294_sent_acf3eaf9": "2412-15294_item_f31440d5",
+      "2412-15294_sent_0fcb5672": "2412-15294_item_f31440d5",
+      "2412-15294_sent_5cb30ba0": "2412-15294_item_f31440d5",
+      "2412-15294_sent_809a8999": "2412-15294_item_f31440d5",
+      "2412-15294_sent_b6500cd9": "2412-15294_item_f31440d5",
+      "2412-15294_fig_95c2a057": "2412-15294_paragraph_8f670df2",
+      "2412-15294_sent_191e5185": "2412-15294_paragraph_8f670df2",
+      "2412-15294_section_18fbafb9": "2412-15294_doc_root",
+      "2412-15294_sent_6c8aa822": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_495ac402": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_6d778dcf": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_184fe378": "2412-15294_subsection_edee8e50",
+      "2412-15294_sent_506088ab": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_952c12bc": "2412-15294_subsection_feb8fbab",
+      "2412-15294_sent_564fe31f": "2412-15294_subsection_feb8fbab",
+      "2412-15294_fig_1cfb3086": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_79f4f599": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_749e010b": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_0e024219": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_49cd879d": "2412-15294_subsection_f2e40b1d",
+      "2412-15294_sent_19ddd300": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_sent_360cecab": "2412-15294_subsection_8abc9ea0",
+      "2412-15294_fig_9eb25d85": "2412-15294_subsection_8abc9ea0"
+    }
+  },
+  "merged_parents": {
+    "2412-15294_sent_5d12c20f": [
+      "2412-15294_doc_root",
+      "2412-15294_paragraph_8f670df2",
+      "2412-15294_section_e0dbeb29",
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_abstract_ce28071e": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_sent_b9862eaa": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_80619c93": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_f6564e97": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_50c24b76": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_7e0c6bf5": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_9d99f0a6": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_16bbb8b0": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_0b95ded2": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_110cde67": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_d1d2dc54": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_19aff344": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_ab076af0": [
+      "2412-15294_abstract_ce28071e"
+    ],
+    "2412-15294_sent_d88ec53a": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_section_0b79795d": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_sent_27c6e0a6": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_48395d34": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_d0469209": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_69914ddf": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_7690e886": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_6f0cf447": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_5e0bfd6b": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_3fb929f2": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_6d848dc2": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_04350fb4": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_bc11a5c2": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_ffd83a37": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_b3e4fde5": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_8722f949": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_e22b173e": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_fig_4a3691f7": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_28dcefe9": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_f1c23b0a": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_35a8c141": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_itemize_23e77d05": [
+      "2412-15294_paragraph_07ceac0b",
+      "2412-15294_paragraph_8f670df2",
+      "2412-15294_section_0b79795d",
+      "2412-15294_subsection_e9ad310d",
+      "2412-15294_subsection_fd0e72b6",
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_item_f31440d5": [
+      "2412-15294_itemize_23e77d05"
+    ],
+    "2412-15294_sent_a063f1fa": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_5bd979e5": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_abe389cd": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_e4fd33a7": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_c3c892f4": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_197ea0af": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_9083fd48": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_3c1c94e4": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_c62e3872": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_076c9e09": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_a21bc6cf": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_66ad3bea": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_32c5f54c": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_8abcf2da": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_4e03a309": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_58903a38": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_e91aee79": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_e4825ced": [
+      "2412-15294_section_0b79795d"
+    ],
+    "2412-15294_sent_7c4593c2": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_90d5d64f": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_e3bca82a": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_93369c75": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_31585298": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_a62d5280": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_section_aed402c3": [
+      "2412-15294_doc_root",
+      "2412-15294_section_acce45f3"
+    ],
+    "2412-15294_paragraph_a2cc3f00": [
+      "2412-15294_section_aed402c3"
+    ],
+    "2412-15294_sent_60a3c8f1": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_b23941be": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_6293c709": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_737768b5": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_9a3e022c": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_c2186a6d": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_e49b7107": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_5b3bc109": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_3a7e7bce": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_7bdd7cf4": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_0b417894": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_cfdc0854": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_ae14c26a": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_sent_968f3ed2": [
+      "2412-15294_paragraph_a2cc3f00"
+    ],
+    "2412-15294_paragraph_380ac03a": [
+      "2412-15294_section_aed402c3"
+    ],
+    "2412-15294_sent_6cb14230": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_sent_eca2d893": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_sent_bee1f72c": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_sent_a164e927": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_sent_ba2c6ae8": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_sent_35b68fd4": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_sent_3664de9e": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_sent_7dae7175": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_sent_e42d3104": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_fig_232c694d": [
+      "2412-15294_paragraph_380ac03a"
+    ],
+    "2412-15294_section_e0dbeb29": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_sent_f407f936": [
+      "2412-15294_section_e0dbeb29"
+    ],
+    "2412-15294_subsection_1f2e4e60": [
+      "2412-15294_section_e0dbeb29"
+    ],
+    "2412-15294_sent_ba6f544d": [
+      "2412-15294_subsection_1f2e4e60"
+    ],
+    "2412-15294_sent_2bd66eaf": [
+      "2412-15294_subsection_1f2e4e60"
+    ],
+    "2412-15294_sent_0cd5314c": [
+      "2412-15294_subsection_1f2e4e60"
+    ],
+    "2412-15294_sent_5f038aae": [
+      "2412-15294_subsection_1f2e4e60"
+    ],
+    "2412-15294_sent_2d5b845d": [
+      "2412-15294_subsection_1f2e4e60"
+    ],
+    "2412-15294_sent_6c37a6ff": [
+      "2412-15294_subsection_1f2e4e60"
+    ],
+    "2412-15294_subsection_86bc2a88": [
+      "2412-15294_section_e0dbeb29"
+    ],
+    "2412-15294_sent_91801f00": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_cbd9fba0": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_61f1df72": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_2064f360": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_eq_0d15ea43": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_2b9da74c": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_9a797ebf": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_76c02503": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_c8ec19f8": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_eq_7eec7432": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_709c5323": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_eq_6354ffd1": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_6b034343": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_937ab516": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_eq_b0fe55a7": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_753c992a": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_sent_60e52167": [
+      "2412-15294_subsection_86bc2a88"
+    ],
+    "2412-15294_section_4c3880bb": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_sent_9f46c528": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_sent_e8e4e865": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_subsection_fd0e72b6": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_sent_c70cd736": [
+      "2412-15294_subsection_fd0e72b6"
+    ],
+    "2412-15294_sent_38f8cf52": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_1b9295b4": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_a272fc97": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_02ead1a8": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_685aec21": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_c9c7a8e6": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_71786695": [
+      "2412-15294_subsection_fd0e72b6"
+    ],
+    "2412-15294_sent_1508428c": [
+      "2412-15294_subsection_fd0e72b6"
+    ],
+    "2412-15294_sent_8faf94d0": [
+      "2412-15294_subsection_fd0e72b6"
+    ],
+    "2412-15294_subsection_394922cb": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_sent_e0c529c8": [
+      "2412-15294_subsection_394922cb"
+    ],
+    "2412-15294_sent_03b07d1d": [
+      "2412-15294_subsection_394922cb"
+    ],
+    "2412-15294_subsubsection_4d619861": [
+      "2412-15294_subsection_394922cb"
+    ],
+    "2412-15294_sent_ad4c1b9a": [
+      "2412-15294_subsubsection_4d619861"
+    ],
+    "2412-15294_sent_d3af58ca": [
+      "2412-15294_subsubsection_4d619861"
+    ],
+    "2412-15294_sent_8e3a467c": [
+      "2412-15294_subsubsection_4d619861"
+    ],
+    "2412-15294_subsubsection_50d5dfc1": [
+      "2412-15294_subsection_394922cb"
+    ],
+    "2412-15294_sent_73064539": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_48c27663": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_e64eebc9": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_eb8fa84b": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_40561c0c": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_eq_955394cb": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_cfcd2ff0": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_867d3b66": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_7664ce80": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_cc576904": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_eq_b1858a84": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_sent_0da0b49d": [
+      "2412-15294_subsubsection_50d5dfc1"
+    ],
+    "2412-15294_subsubsection_4296a4ba": [
+      "2412-15294_subsection_394922cb"
+    ],
+    "2412-15294_sent_7022dcfc": [
+      "2412-15294_subsubsection_4296a4ba"
+    ],
+    "2412-15294_sent_e51cee64": [
+      "2412-15294_subsubsection_4296a4ba"
+    ],
+    "2412-15294_eq_70d6a354": [
+      "2412-15294_subsubsection_4296a4ba"
+    ],
+    "2412-15294_sent_29a39364": [
+      "2412-15294_subsubsection_4296a4ba"
+    ],
+    "2412-15294_sent_8faa0334": [
+      "2412-15294_subsubsection_4296a4ba"
+    ],
+    "2412-15294_eq_a662ee3e": [
+      "2412-15294_subsubsection_4296a4ba"
+    ],
+    "2412-15294_subsection_380dd7d9": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_sent_bcdb68cb": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_b77392d3": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_0710ec36": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_973639ad": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_81ced6b2": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_8b46a5de": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_69af666e": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_6a2fb7c3": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_eq_275c127c": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_9d874737": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_sent_60621656": [
+      "2412-15294_subsection_380dd7d9"
+    ],
+    "2412-15294_subsection_7b63dd3d": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_sent_7114e765": [
+      "2412-15294_subsection_7b63dd3d"
+    ],
+    "2412-15294_subsubsection_58ff717e": [
+      "2412-15294_subsection_7b63dd3d"
+    ],
+    "2412-15294_sent_67901f5b": [
+      "2412-15294_subsubsection_58ff717e"
+    ],
+    "2412-15294_eq_c56b097f": [
+      "2412-15294_subsubsection_58ff717e"
+    ],
+    "2412-15294_sent_4c2f9d63": [
+      "2412-15294_subsubsection_58ff717e"
+    ],
+    "2412-15294_eq_e57161cf": [
+      "2412-15294_subsubsection_58ff717e"
+    ],
+    "2412-15294_sent_5d946ac6": [
+      "2412-15294_subsubsection_58ff717e"
+    ],
+    "2412-15294_eq_adde535b": [
+      "2412-15294_subsubsection_58ff717e"
+    ],
+    "2412-15294_sent_5506bc97": [
+      "2412-15294_subsubsection_58ff717e"
+    ],
+    "2412-15294_subsubsection_a905954b": [
+      "2412-15294_subsection_7b63dd3d"
+    ],
+    "2412-15294_sent_38e947a9": [
+      "2412-15294_subsubsection_a905954b"
+    ],
+    "2412-15294_eq_41976003": [
+      "2412-15294_subsubsection_a905954b"
+    ],
+    "2412-15294_sent_3a08a763": [
+      "2412-15294_subsubsection_a905954b"
+    ],
+    "2412-15294_subsection_896ed9fc": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_sent_c365d863": [
+      "2412-15294_subsection_896ed9fc"
+    ],
+    "2412-15294_sent_54029462": [
+      "2412-15294_subsection_896ed9fc"
+    ],
+    "2412-15294_sent_bfb0030c": [
+      "2412-15294_subsection_896ed9fc"
+    ],
+    "2412-15294_subsubsection_69c99c22": [
+      "2412-15294_subsection_896ed9fc"
+    ],
+    "2412-15294_sent_5bdba733": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_sent_007d2b7f": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_sent_460a228a": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_eq_f4b3ce93": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_sent_2371b35d": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_sent_df13f9b6": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_sent_70c83d3a": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_sent_6a2a7c3a": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_eq_1f30d2ad": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_sent_a98c71a7": [
+      "2412-15294_subsubsection_69c99c22"
+    ],
+    "2412-15294_subsubsection_9fa37eae": [
+      "2412-15294_subsection_896ed9fc"
+    ],
+    "2412-15294_sent_d774e6bb": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_332e088e": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_d4aa2906": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_6bf27afd": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_2dd611f8": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_94b19ae6": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_cf1c5344": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_ee1db1a1": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_b47e112c": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_a9ce66c2": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_4a48438a": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_e3136980": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_e5345a86": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_b15176be": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_eq_f81a5ec2": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_150589ed": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_sent_7681251e": [
+      "2412-15294_subsubsection_9fa37eae"
+    ],
+    "2412-15294_subsection_cf270e40": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_sent_6d5e0bba": [
+      "2412-15294_subsection_cf270e40"
+    ],
+    "2412-15294_eq_66e0f4dc": [
+      "2412-15294_subsection_cf270e40"
+    ],
+    "2412-15294_sent_2dcec844": [
+      "2412-15294_subsection_cf270e40"
+    ],
+    "2412-15294_sent_5058f1af": [
+      "2412-15294_subsection_cf270e40"
+    ],
+    "2412-15294_sent_5e13c9f3": [
+      "2412-15294_subsection_cf270e40"
+    ],
+    "2412-15294_sent_498005d5": [
+      "2412-15294_subsection_cf270e40"
+    ],
+    "2412-15294_eq_d710924d": [
+      "2412-15294_subsection_cf270e40"
+    ],
+    "2412-15294_sent_34058ce5": [
+      "2412-15294_subsection_cf270e40"
+    ],
+    "2412-15294_subsection_e9ad310d": [
+      "2412-15294_section_4c3880bb"
+    ],
+    "2412-15294_sent_978dbb97": [
+      "2412-15294_subsection_e9ad310d"
+    ],
+    "2412-15294_sent_b8179c00": [
+      "2412-15294_subsection_e9ad310d"
+    ],
+    "2412-15294_sent_3998118f": [
+      "2412-15294_subsection_e9ad310d"
+    ],
+    "2412-15294_sent_b9d2583e": [
+      "2412-15294_subsection_e9ad310d"
+    ],
+    "2412-15294_sent_0761eff5": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_89b7dd06": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_ac79676c": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_f5db7464": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_fig_a6da4589": [
+      "2412-15294_subsection_e9ad310d"
+    ],
+    "2412-15294_section_50301c95": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_subsection_aa66d95e": [
+      "2412-15294_section_50301c95"
+    ],
+    "2412-15294_subsubsection_239658e0": [
+      "2412-15294_subsection_aa66d95e"
+    ],
+    "2412-15294_sent_c31546a8": [
+      "2412-15294_subsubsection_239658e0"
+    ],
+    "2412-15294_sent_9157216c": [
+      "2412-15294_subsubsection_239658e0"
+    ],
+    "2412-15294_sent_09de175f": [
+      "2412-15294_subsubsection_239658e0"
+    ],
+    "2412-15294_sent_ff8c6ad3": [
+      "2412-15294_subsubsection_239658e0"
+    ],
+    "2412-15294_sent_a0b199eb": [
+      "2412-15294_subsubsection_239658e0"
+    ],
+    "2412-15294_subsubsection_e6165364": [
+      "2412-15294_section_acce45f3",
+      "2412-15294_subsection_aa66d95e"
+    ],
+    "2412-15294_sent_2c122e85": [
+      "2412-15294_subsubsection_e6165364"
+    ],
+    "2412-15294_sent_b1684d9d": [
+      "2412-15294_subsubsection_e6165364"
+    ],
+    "2412-15294_sent_8eda54c8": [
+      "2412-15294_subsubsection_e6165364"
+    ],
+    "2412-15294_sent_3615bf34": [
+      "2412-15294_subsubsection_e6165364"
+    ],
+    "2412-15294_sent_a46626e8": [
+      "2412-15294_subsubsection_e6165364"
+    ],
+    "2412-15294_subsubsection_f32c3eda": [
+      "2412-15294_subsection_aa66d95e"
+    ],
+    "2412-15294_sent_0652860e": [
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_sent_6cb8cf55": [
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_sent_6858751c": [
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_sent_bea54e4b": [
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_sent_00f5ab12": [
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_sent_a59150a6": [
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_sent_c6923d3b": [
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_sent_f702c874": [
+      "2412-15294_subsubsection_f32c3eda"
+    ],
+    "2412-15294_subsection_edee8e50": [
+      "2412-15294_section_18fbafb9",
+      "2412-15294_section_50301c95"
+    ],
+    "2412-15294_sent_7699562f": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_658fece7": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_51558f65": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_c636f038": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_c344df94": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_368d9ac8": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_b12bf283": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_67324b73": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_1d3eee0c": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_11df27e2": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_255edb3e": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_44e18d86": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_455729c7": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_4a67e469": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_subsection_feb8fbab": [
+      "2412-15294_section_18fbafb9",
+      "2412-15294_section_50301c95"
+    ],
+    "2412-15294_sent_eb007a41": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_e4349cf4": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_132e87c8": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_435c7a15": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_5dccce21": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_78cad063": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_7f583454": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_8b64b656": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_666cb9b4": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_13125a07": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_51b04480": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_abdc2b9c": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_374826c6": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_0b5705f7": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_fd734161": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_704f497e": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_subsection_f2e40b1d": [
+      "2412-15294_section_18fbafb9",
+      "2412-15294_section_50301c95"
+    ],
+    "2412-15294_sent_9e9a9658": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_bafd96bf": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_ee27bf39": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_86dc5277": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_e0b93cbb": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_d56eb5ef": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_5a8f32dc": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_420bedde": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_2ce056aa": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_358e6f37": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_b8091c2d": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_fig_3831025e": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_fig_ee84ff6d": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_subsection_8abc9ea0": [
+      "2412-15294_section_18fbafb9",
+      "2412-15294_section_50301c95"
+    ],
+    "2412-15294_sent_901a239d": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_8fd6399b": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_e3fb0bd9": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_5c74d6ae": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_5f6245d6": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_4417a0f5": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_feaccd73": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_5670ae3d": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_d2b1a03e": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_45d38b34": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_d324cdce": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_1ec5677b": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_fig_76334f4f": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_fig_124def22": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_section_6f8b794f": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_sent_f1d9eb7f": [
+      "2412-15294_section_6f8b794f"
+    ],
+    "2412-15294_sent_5396264a": [
+      "2412-15294_section_6f8b794f"
+    ],
+    "2412-15294_sent_5e7b77bc": [
+      "2412-15294_section_6f8b794f"
+    ],
+    "2412-15294_sent_72a776ad": [
+      "2412-15294_section_6f8b794f"
+    ],
+    "2412-15294_sent_319c9861": [
+      "2412-15294_section_6f8b794f"
+    ],
+    "2412-15294_sent_0820d040": [
+      "2412-15294_section_6f8b794f"
+    ],
+    "2412-15294_sent_1610da35": [
+      "2412-15294_section_6f8b794f"
+    ],
+    "2412-15294_sent_1ad10c65": [
+      "2412-15294_section_6f8b794f"
+    ],
+    "2412-15294_section_acce45f3": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_subsubsection_6f7a32cd": [
+      "2412-15294_section_aed402c3"
+    ],
+    "2412-15294_sent_99fdbeb4": [
+      "2412-15294_subsubsection_6f7a32cd"
+    ],
+    "2412-15294_sent_18d61d3b": [
+      "2412-15294_subsubsection_6f7a32cd"
+    ],
+    "2412-15294_sent_a1d510ae": [
+      "2412-15294_subsubsection_6f7a32cd"
+    ],
+    "2412-15294_sent_9ce1beff": [
+      "2412-15294_subsubsection_6f7a32cd"
+    ],
+    "2412-15294_sent_07e52a3d": [
+      "2412-15294_subsubsection_6f7a32cd"
+    ],
+    "2412-15294_sent_46b43986": [
+      "2412-15294_subsubsection_6f7a32cd"
+    ],
+    "2412-15294_sent_4601699f": [
+      "2412-15294_subsubsection_6f7a32cd"
+    ],
+    "2412-15294_sent_2cc77e1f": [
+      "2412-15294_subsubsection_6f7a32cd"
+    ],
+    "2412-15294_subsection_c0739dfe": [
+      "2412-15294_section_acce45f3"
+    ],
+    "2412-15294_sent_b2fee75d": [
+      "2412-15294_subsection_c0739dfe"
+    ],
+    "2412-15294_sent_ba8da656": [
+      "2412-15294_subsection_c0739dfe"
+    ],
+    "2412-15294_sent_6f441013": [
+      "2412-15294_subsection_c0739dfe"
+    ],
+    "2412-15294_sent_279e901c": [
+      "2412-15294_subsection_c0739dfe"
+    ],
+    "2412-15294_sent_23a14af1": [
+      "2412-15294_subsection_c0739dfe"
+    ],
+    "2412-15294_sent_eaf6383e": [
+      "2412-15294_subsection_c0739dfe"
+    ],
+    "2412-15294_fig_be899c93": [
+      "2412-15294_subsection_c0739dfe"
+    ],
+    "2412-15294_sent_baae3a49": [
+      "2412-15294_subsubsection_e6165364"
+    ],
+    "2412-15294_paragraph_07ceac0b": [
+      "2412-15294_subsubsection_e6165364"
+    ],
+    "2412-15294_sent_ec2f973f": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_9a892b49": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_fda91438": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_6e9274a9": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_f4053fee": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_3dfa01a6": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_7ed4d06d": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_paragraph_8f670df2": [
+      "2412-15294_subsubsection_e6165364"
+    ],
+    "2412-15294_sent_e2ed4be9": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_69e88228": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_c9440d7c": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_acf3eaf9": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_0fcb5672": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_5cb30ba0": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_809a8999": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_sent_b6500cd9": [
+      "2412-15294_item_f31440d5"
+    ],
+    "2412-15294_fig_95c2a057": [
+      "2412-15294_paragraph_8f670df2"
+    ],
+    "2412-15294_sent_191e5185": [
+      "2412-15294_paragraph_8f670df2"
+    ],
+    "2412-15294_section_18fbafb9": [
+      "2412-15294_doc_root"
+    ],
+    "2412-15294_sent_6c8aa822": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_495ac402": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_6d778dcf": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_184fe378": [
+      "2412-15294_subsection_edee8e50"
+    ],
+    "2412-15294_sent_506088ab": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_952c12bc": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_sent_564fe31f": [
+      "2412-15294_subsection_feb8fbab"
+    ],
+    "2412-15294_fig_1cfb3086": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_79f4f599": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_749e010b": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_0e024219": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_49cd879d": [
+      "2412-15294_subsection_f2e40b1d"
+    ],
+    "2412-15294_sent_19ddd300": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_sent_360cecab": [
+      "2412-15294_subsection_8abc9ea0"
+    ],
+    "2412-15294_fig_9eb25d85": [
+      "2412-15294_subsection_8abc9ea0"
+    ]
+  }
+}

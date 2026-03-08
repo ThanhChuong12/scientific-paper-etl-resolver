@@ -1,0 +1,1912 @@
+{
+  "elements": {
+    "2412-15285_doc_root": "DOCUMENT_ROOT",
+    "2412-15285_sent_676977e1": "\\maketitle",
+    "2412-15285_abstract_ce28071e": "abstract",
+    "2412-15285_sent_7393f227": "Pretraining large language models effectively requires strategic data selection, blending and ordering.",
+    "2412-15285_sent_6411ed23": "However, key details about data mixtures especially their scalability to longer token horizons and larger model sizes remain underexplored due to limited disclosure by model developers.",
+    "2412-15285_sent_f13e377f": "To address this, we formalize the concept of two-phase pretraining and conduct an extensive systematic study on how to select and mix data to maximize model accuracies for the two phases.",
+    "2412-15285_sent_3f3cfef2": "Our findings illustrate that a two-phase approach for pretraining outperforms random data ordering and natural distribution of tokens by \\gainRO and \\gainND on average accuracies.",
+    "2412-15285_sent_51da8444": "We provide in-depth guidance on crafting optimal blends based on quality of the data source and the number of epochs to be seen.",
+    "2412-15285_sent_2c30afa7": "We propose to design blends using downsampled data at a smaller scale of 1T tokens and then demonstrate effective scaling of our approach to larger token horizon of 15T tokens and larger model size of 25B model size.",
+    "2412-15285_sent_79219177": "These insights provide a series of steps practitioners can follow to design and scale their data blends.",
+    "2412-15285_section_0b79795d": "Introduction",
+    "2412-15285_sent_cf0b1828": "\\begin{comment}",
+    "2412-15285_subsection_c076e4fd": "Motivation",
+    "2412-15285_itemize_f6fffe20": "itemize",
+    "2412-15285_item_931714f1": "item",
+    "2412-15285_sent_c8c715ba": "Existing works like Llama 3.1 highlight the effectiveness of upsampling, but not details of the exact blends and experiments.",
+    "2412-15285_sent_3718004c": "What exactly works and why/how?",
+    "2412-15285_sent_b539d04b": "Despite model and token scaling, we lack downstream accuracy on certain reasoning tasks such as mathematics, e.g. GSM8K.",
+    "2412-15285_sent_735084bf": "For these reasoning tasks, how do we upsample effectively?",
+    "2412-15285_subsection_982cda3c": "Goals \\& Challenges",
+    "2412-15285_sent_a92edb2e": "Goal: To understand the impact of different data components, and devise an effective pretraining strategy for blending and ordering data to build a state-of-the-art LLM",
+    "2412-15285_sent_7d0f6d50": "Challenges: Whatever mixing we do, we want to ensure that no tasks are hurt.",
+    "2412-15285_sent_5e454b88": "E.g.",
+    "2412-15285_sent_50a82b03": "improve GSM8K but not detriment other benchmarks | Data distributional shift: don’t want model to forget what we have learned so far",
+    "2412-15285_subsection_efa2b73f": "Specific Research Questions",
+    "2412-15285_sent_8276d1cf": "Overall: Does varying the mixture of data closer to the end of training matter?",
+    "2412-15285_sent_0f58257b": "[MAYBE] Is upsampling domain-specific data near the end of training the most effective?",
+    "2412-15285_sent_051f0771": "Does a 2-phased training approach work well?",
+    "2412-15285_sent_687ef323": "What is the optimal data mixture or blend for each training phase?",
+    "2412-15285_sent_af25c2da": "What percentage of the whole pretraining should we upsample?",
+    "2412-15285_sent_3baa1141": "What learning rate (LR) strategies should we use?",
+    "2412-15285_sent_686bb697": "How important is the quality of the data?",
+    "2412-15285_sent_9a00edd9": "(on top of the actual data source and amount of data)",
+    "2412-15285_sent_18a318ec": "Should the amount of data chosen be determined by absolute or relative (e.g. \\%) amounts or the number of epochs?",
+    "2412-15285_sent_e9d32c6d": "Do these upsampling strategies hold across different scales?",
+    "2412-15285_sent_0827fcea": "Does performance on specific evaluation tasks vary throughout the training process?",
+    "2412-15285_subsection_4504e115": "Contributions",
+    "2412-15285_sent_68e965eb": "We provide in-depth analysis and answers to all the above research questions",
+    "2412-15285_sent_d6fad4c8": "Overall, we provide a 2-phased training approach/pipeline that is optimized in terms of data mixtures (and other factors) to maximize performance on diverse evaluation benchmarks, especially certain reasoning tasks",
+    "2412-15285_sent_fd19ddde": "\\end{comment} \\begin{comment} \\todo{ LLMs, people are doing domain upsampling and figuring out blends but not clear or open-source.",
+    "2412-15285_sent_11d7c3c2": "Don't write like this: \"hence we are left wondering\" (Direct criticism of other work), but rather that there is a \"gap\", e.g. of knowledge.",
+    "2412-15285_sent_4717c2e0": "Can start with: LLMs require a lot of decision-making including data mix, pretraining strategies, etc. then directly say \"there are works on upsampling, etc. but they don't give details or sufficient investigations\" (don't say \"don't give details\" but knowledge gap, and we are filling in that gap by giving a comprehensive list of experiments and insights).",
+    "2412-15285_sent_982263a2": "Every paragraph should have one point to make.",
+    "2412-15285_sent_24551036": "First one: LLMs require a lot of data mixing, blending, pretraining strategies.",
+    "2412-15285_sent_fc65c804": "Second: there are existing works (e.g. trying to figure out data mixes and pretraining strategies) Third: knowledge gaps, and explain what is missing (X, Y, Z).",
+    "2412-15285_sent_fe8e35bb": "Fouth: how we are filling in that gap.",
+    "2412-15285_sent_c8b02341": "Unsure if we want to write that in this work we are proposing a two-phase approach.",
+    "2412-15285_sent_786f0169": "let's consider it, not 100\\% sure we can write it that way.",
+    "2412-15285_sent_39cfbee3": "but maybe say \"we explore or formally define/investigate a two-phase approach in more depth / detail\" than simply \"proposing\" (since llama-3, olmo, etc. do talk about second phase).",
+    "2412-15285_sent_9a073b8c": "refer to figure 1 when explaining the two-phase approach in natural language.",
+    "2412-15285_sent_d3b9421e": "Fifth (final): major contributions and/or insights.} \\end{comment} Large language models (LLM) are typically pretrained on large amounts of data in the order of billions (B) or trillions (T) of tokens derived from multiple data sources such as web crawl, books, papers, patents, mathematical and legal documents, and so forth~\\cite{brown2020languagemodelsfewshotlearners,parmar2024nemotron415btechnicalreport,gemmateam2024gemmaopenmodelsbased,dubey2024llama,nvidia2024nemotron4340btechnicalreport}.",
+    "2412-15285_sent_63fabf70": "To develop a state-of-the-art model, it is critical to understand the nature of these data sources and to make informed decisions about optimal data blending (how different data sources are weighed during pretraining) and training strategies.",
+    "2412-15285_sent_b9ec7bf1": "These decisions typically involve running multiple large-scale experiments to empirically investigate the optimal training data blend(s) and ordering of data.",
+    "2412-15285_fig_37deab3f": "\\begin{figure}\n\n \\includegraphics[width=1.0\\textwidth]{figures/curriculum-fig.png}\n\n \\caption{Diagram of our two phase training pipeline. Phase-1 blend encourages data diversity and phase-2 blend is focused on high quality datasets.\n\n\\end{figure}",
+    "2412-15285_sent_f71fa0ad": "Most advanced models~\\cite{gpt4-openai2024gpt4technicalreport,llama3-dubey2024llama3herdmodels} do not divulge information on the data blends that are used, nor the ablation studies informing the data mixing and ordering decisions.",
+    "2412-15285_sent_9f669ec3": "Recent works \\cite{domain-upsampling-blakeney2024doesdatasparkjoy,olmo-groeneveld-etal-2024-olmo,llama3-dubey2024llama3herdmodels,snowflake-arctic} provide high-level data blend information about a small portion of pretraining by encouraging the upsampling of certain domains towards the end.",
+    "2412-15285_sent_4df88cd5": "In general, there exists a knowledge gap regarding how to craft and choose an optimal data blend(s) for the entire training process, and the generalizability of data blends and ordering strategies to larger token horizons and model sizes.",
+    "2412-15285_sent_3aafdfbf": "\\begin{comment} In this work, we attempt to fill this knowledge gap by comprehensively investigating the impact of different data components during training, and devising an effective LLM training strategy for blending and ordering data.",
+    "2412-15285_sent_f25da8b9": "We formalize and extensively explore a two-phase approach for training shown in Figure~\\ref{fig:train_pipeline}.",
+    "2412-15285_sent_aa5f5b6b": "In phase 1, we aim to encourage diversity in data with mainly high-quality web crawl, and in phase 2, we use a comprehensive mix of all data sources with heavier amounts of high-quality (math, code, and wiki) data.",
+    "2412-15285_sent_fdb8af69": "Contributions:",
+    "2412-15285_sent_e58a4696": "A large scale and comprehensive analysis of two-phase approach",
+    "2412-15285_sent_66818267": "Quality based study at large scale and fine-grained crawl",
+    "2412-15285_sent_7a9ece48": "Showcase generalizability to longer token horizon and larger model",
+    "2412-15285_sent_624f4c9d": "We provide comprehensive details and fine-grained analyses of individual data sources to be used in both training phases, and how decisions were made to create such data blends.",
+    "2412-15285_sent_2a057711": "We find that this two-phase approach with phase-two for the last $\\approx$40\\% of training is most effective, and over-extending phase two can be detrimental. Additionally, we demonstrate the generalizability of our two-phase approach and data blending decisions to longer token horizons and model sizes.",
+    "2412-15285_sent_ad93aa23": "Further, we discover the importance of making data blend decisions based on the quality of the data sources, while also considering the number of epochs of each data source (rather than quantity alone) to prevent overfitting.",
+    "2412-15285_sent_58a9353e": "This includes a fine-grained analysis on the quality of web crawl data and how to optimally blend it.",
+    "2412-15285_sent_77c074e0": "If effectively epoch-tuned, we find that performance further improves at longer token horizons, demonstrating that the two-phase approach is also versatile and robust.",
+    "2412-15285_sent_2f80fba9": "Overall, the two-phase training approach is highly effective for LLM, but requires careful decision-making to balance data quality with diversity to maximize performance gains.",
+    "2412-15285_sent_315ca811": "\\end{comment} In this work, we address the above knowledge gap by understanding optimal data blends and ordering strategies for training LLM.",
+    "2412-15285_sent_d6ec5de1": "We formalize and extensively explore a two-phase training approach (Figure~\\ref{fig:train_pipeline}) that balances diversity and quality: phase-1 emphasizes diverse, high-quality web crawl data, while phase-2 focuses on high-quality data sources such as math, code, and wiki data.",
+    "2412-15285_sent_298e894d": "Specifically, in this work we propose to use downsampled data to prototype and explore multiple blends at a smaller scale of 1T tokens.",
+    "2412-15285_sent_4d41460d": "We craft our blends based on quality of the data source and the number of epochs to be seen during pretraining.",
+    "2412-15285_sent_0bfdc0f3": "We then demonstrate the effectiveness of our approach at a 15T token scale using the full data.",
+    "2412-15285_sent_a21973e5": "We evaluated on a comprehensive set of downstream tasking covering knowledge, reasoning, coding and math benchmarks.",
+    "2412-15285_sent_aec970ae": "Our experiments illustrate that a quality and epoch based blend is better than a blend based on natural distribution by \\gainROND and the two-phase approach is better than random ordering of data (blend is based on quality and epochs) by an average of \\gainRO across downstream tasks.",
+    "2412-15285_sent_d6c45cf5": "Furthermore, our results on downsampled data generalize across longer 15T token horizons on full data and larger model sizes, demonstrating the scalability and robustness of the two-phase approach.",
+    "2412-15285_sent_e8df8575": "We also provide a fine-grained quality analysis of web crawl data, revealing optimal blending strategies to balance diversity and quality.",
+    "2412-15285_sent_98a579ca": "We share and highlight a series of findings made to create blends and order in our two-phase approach.",
+    "2412-15285_sent_7c243c3d": "Our main contributions are: \\begin{tight_itemize}",
+    "2412-15285_sent_00839718": "\\item Formalization and large-scale evaluation of the two-phase training approach for LLMs, with actionable strategies that enable effective LLM pretraining.",
+    "2412-15285_sent_2f6a097e": "\\item Improving the understanding of data selection and blending with quality-based and epoch-based analyses of data, including web crawl.",
+    "2412-15285_sent_cabd2727": "\\item Demonstration of the scalability of blends using downsampled data at 1T to using full data at 15T tokens and larger model size of 25B.",
+    "2412-15285_section_a24c284b": "A Two-Phase Approach to Pretraining",
+    "2412-15285_sent_111eda76": "In this work, we explore a two-phased approach to pretraining: phase-1 (\\phaseone) then phase-2 (\\phasetwo).",
+    "2412-15285_sent_2b145036": "Figure~\\ref{fig:train_pipeline} demonstrates our two-phased approach.",
+    "2412-15285_sent_843fdf58": "In each phase, we explore different data blends based on the quality and number of epochs to be seen of a data source.",
+    "2412-15285_sent_871955f1": "In phase-1 (\\phaseone), we explore a general data distribution which consists of a mix of web crawl data, medium-quality data, and low amounts of high-quality data.",
+    "2412-15285_sent_7808e191": "In phase-2 (\\phasetwo), we explore a blend which includes task data and emphasizes high-quality datasets such as math, code, and high-quality web crawl (\\S\\ref{subsec:crawl_data_mix}).",
+    "2412-15285_sent_3ce4ef40": "As seen in Figure~\\ref{fig:train_pipeline}, our model sees the first general data blend during \\phaseone for the majority of training, then a different data blend focused on high quality data during the shorter \\phasetwo of training.",
+    "2412-15285_sent_9676e7d9": "The steps to create blends for \\phaseone and \\phasetwo are: 1) Downsample a data source by a factor of $f$, 2) Estimate the quality of a data source (\\S\\ref{subsec:crawl_data_mix}), 3) Estimate the epochs to be seen in the whole pretraining (\\S\\ref{subsec:epoch_results}) and finally 4) distribute the epochs appropriately in \\phaseone and \\phasetwo (\\S\\ref{sec:data-blends}).",
+    "2412-15285_sent_c1ba8cc9": "The downsampling factor $f$ is based on the final total token budget which we assume to be $15$T similar to \\citet{llama3-dubey2024llama3herdmodels}.",
+    "2412-15285_sent_17cfd140": "Hence, for us $f=1/15$ i.e for each data source, the number of tokens available for pretraining is $1/15^{th}$ of the total token in that dataset.",
+    "2412-15285_sent_a53da3a6": "Downsampling helps to observe the impact of epochs of datasets at a smaller scale of 1T tokens and then can be used to scale the blend to a longer token horizon of 15T tokens using the full data.",
+    "2412-15285_paragraph_586f0f71": "Baselines:",
+    "2412-15285_section_d575842d": "Experimental Setup",
+    "2412-15285_fig_7f9d6c5a": "\\begin{table}\n\\begin{center}\n\\scalebox{0.85}{\\begin{tabular}{@{}lr@{}}\n\nData Domain & Tokens (B) \\\\\n\nWeb Crawl & 6244.3 \\\\\nMath & 161.5\\\\\nWiki & 16.7 \\\\\nCode & 760.3 \\\\\nBooks & 776.3 \\\\\nPapers & 212.6 \\\\\n\\ccderiv & 348.3 \\\\\nMultilingual & 1457.2 \\\\\nTask Data & 6.6 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Tokens (billions) in each data domain.}\n\\end{table}",
+    "2412-15285_subsection_3615386d": "Data Sources",
+    "2412-15285_sent_febb55bc": "Our pretraining corpus spans a vast range of text data sources that cover several domains, types of data, and languages.",
+    "2412-15285_sent_954c8c83": "We broadly divide our datasets into the following categories and their token counts in billions is shown in Table~\\ref{tab:data-tokens}.",
+    "2412-15285_sent_fd8b42d9": "\\item Web Crawl: Data derived from Common Crawl (CC).",
+    "2412-15285_sent_33800b41": "We discuss the quality of this data and how to blend it in detail in \\S\\ref{subsec:crawl_data_mix}.",
+    "2412-15285_sent_2934f64d": "\\item High-Quality: This includes datasets from more specialized and professional domains such as mathematics \\cite{paster2024openwebmath,stackexchange}, code \\cite{li2023starcoder}, and Wikipedia (wiki) data.",
+    "2412-15285_sent_03dc1dfb": "\\item Medium-Quality: Data derived from books \\& patents, papers \\cite{gao2020pile800gbdatasetdiverse}, and Common Crawl derivatives (\\ccderiv) such as OpenWebText \\cite{Gokaslan2019OpenWeb}, BigScience \\cite{bigscience}, Reddit \\cite{baumgartner2020pushshiftredditdataset}, and CC-News.",
+    "2412-15285_sent_31c4f51e": "This category was determined by comparing this data to medium-quality crawl (see \\S\\ref{subsec:crawl_data_mix}).",
+    "2412-15285_sent_760357ec": "\\item Multilingual: Multilingual data (9 languages) derived from Wikipedia and Common Crawl.",
+    "2412-15285_sent_9082aa4e": "\\item Task Data: This includes data used for supervised finetuning (SFT) during the alignment phase~\\cite{toshniwal2024openmathinstruct,nvidia2024nemotron4340btechnicalreport}.",
+    "2412-15285_sent_ecbf2079": "We also include the FLAN collection~\\cite{longpre2023flan}.",
+    "2412-15285_fig_5b2e5d48": "\\begin{table}\n\\begin{center}\n\\scalebox{0.65}{\\begin{tabular}{@{}llrrrrr@{}}\n\nCategory & Domain & Blend1 & Blend2 & Blend3 & Blend4 & Blend5 \\\\\n\nWeb Crawl & - & 65.0 & 65.0 & 58.0 & 59.0 & 70.0 \\\\\n\n\\multirow{3}{*}{\\parbox[c]{1.cm}{ High \\\\ Quality}} & Math & 1.9 & 1.9 & 1.9 & 2.9 & 1.9 \\\\\n& Wiki & 0.1 & 0.1 & 0.1 & 0.1 & 0.1 \\\\\n& Code & 15.0 & 8.0 & 15.0 & 20.0 & 13.0 \\\\\n\n\\multirow{3}{*}{\\parbox[c]{1.cm}{ Medium \\\\ Quality}} & Books & 5.5 & 9.0 & 9.0 & 5.5 & 4.5 \\\\\n& Papers & 3.5 & 5.0 & 5.0 & 3.5 & 1.9 \\\\\n& \\ccderiv & 4.0 & 6.0 & 6.0 & 4.0 & 3.6 \\\\\n\nMultilingual & - & 5.0 & 5.0 & 5.0 & 5.0 & 5.0 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Phase-1 Blends (in \\%)\n\n\\end{table}",
+    "2412-15285_subsection_c1900ae1": "Data Blends for Each Phase",
+    "2412-15285_sent_bde7984a": "The final blends in \\phaseone and \\phasetwo are based on quality and epoch based ablations shown in \\S\\ref{subsec:crawl_data_mix} and \\S\\ref{subsec:epoch_results}.",
+    "2412-15285_sent_5a777622": "The insights from these studies are incorporated in Table~\\ref{tab:phase1-blends} and \\ref{tab:phase2-blends}.",
+    "2412-15285_sent_3831549e": "In \\phaseone, we encourage diversity in data by including a high percentage of web crawl data which consists of high, medium, and low-quality crawl.",
+    "2412-15285_sent_a77188ee": "We want to introduce a limited amount of high-quality data such as math, code, and wiki in \\phaseone.",
+    "2412-15285_sent_67d6dc17": "In \\phasetwo, the emphasis is primarily on high-quality datasets and only includes a limited amount of medium-quality data.",
+    "2412-15285_sent_e4c84655": "For example, in \\phasetwo, we only use high-quality crawl instead of medium or low-quality (see \\S\\ref{subsec:crawl_data_mix}).",
+    "2412-15285_sent_9ed85024": "Table~\\ref{tab:phase1-blends} details the five blends explored in \\phaseone.",
+    "2412-15285_sent_38148b89": "These blends are designed to compare the proportion of high-level categories with each other.",
+    "2412-15285_sent_d3b390c3": "The difference between $\\mathtt{Blend1}$ and $\\mathtt{Blend2}$ is that $\\mathtt{Blend2}$ has less code and more medium-quality datasets compared to $\\mathtt{Blend1}$.",
+    "2412-15285_sent_fc564f67": "$\\mathtt{Blend3}$ has less web crawl and more medium-quality datasets compared to $\\mathtt{Blend1}$.",
+    "2412-15285_sent_14c35a1d": "$\\mathtt{Blend4}$ has less web crawl and more high-quality datasets compared to $\\mathtt{Blend1}$.",
+    "2412-15285_sent_114e0293": "$\\mathtt{Blend5}$ is designed to have majority web crawl at the cost of code and medium-quality data.",
+    "2412-15285_sent_f9bf0d40": "Table~\\ref{tab:phase2-blends} outlines the five blends explored in \\phasetwo.",
+    "2412-15285_sent_dc47e6c6": "In \\phasetwo, we use more epochs and higher proportions of high-quality data such as high-quality web crawl, math, wiki, and code data.",
+    "2412-15285_sent_aff09288": "$\\mathtt{Blend3}$ has more code and less medium-quality datasets compared to $\\mathtt{Blend1}$, and $\\mathtt{Blend4}$ has more high-quality web crawl and less medium-quality datasets compared to $\\mathtt{Blend1}$.",
+    "2412-15285_sent_e805a75f": "$\\mathtt{Blend2}$ has a more balanced distribution among the data categories, while $\\mathtt{Blend5}$ upsamples math data more heavily.",
+    "2412-15285_fig_f2aec6c6": "\\begin{table}\n\\begin{center}\n\\scalebox{0.65}{\\begin{tabular}{@{}llrrrrr@{}}\n\nCategory & Domain & Blend1 & Blend2 & Blend3 & Blend4 & Blend5 \\\\\n\nWeb Crawl & - & 31.0 & 35.0 & 31.0 & 40.0 & 35.0 \\\\\n\n\\multirow{3}{*}{\\parbox[c]{1.cm}{ High \\\\ Quality}} & Math & 24.0 & 24.0 & 24.0 & 24.0 & 29.0 \\\\\n& Wiki & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\\\\n& Code & 20.0 & 25.0 & 29.0 & 20.0 & 20.0 \\\\\n\n\\multirow{3}{*}{\\parbox[c]{1.cm}{ Medium \\\\ Quality}}\n& Books & 8.0 & 4.0 & 4.0 & 4.0 & 4.0 \\\\\n& Papers & 4.0 & 2.0 & 2.0 & 2.0 & 2.0 \\\\\n& \\ccderiv & 7.0 & 4.0 & 4.0 & 4.0 & 4.0 \\\\\n\nMultilingual & - & 3.7 & 3.7 & 3.7 & 3.7 & 3.7 \\\\\n\nTask Data & - & 1.3 & 1.3 & 1.3 & 1.3 & 1.3 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Phase-2 Blends (in \\%) \n\n\\end{table}",
+    "2412-15285_subsection_0f29c8c7": "Model Specifications",
+    "2412-15285_sent_3587a33c": "We experiment using the Megatron \\cite{shoeybi2020megatronlmtrainingmultibillionparameter} model, an autoregressive causal left-to-right LLM, with the Tiktokenizer~\\cite{tiktoken}.",
+    "2412-15285_sent_58fd1995": "We downsample all our data by factor $f=1/15$.",
+    "2412-15285_sent_29b14753": "Hence, only $1/15$ of the tokens shown in Table~\\ref{tab:data-tokens} will be available for pretraining.",
+    "2412-15285_sent_6c2bba39": "We perform all our investigations using an 8 billion parameter model trained on 1 trillion total tokens.",
+    "2412-15285_sent_d545214b": "Furthermore, we test our two-phase approach by scaling along two dimensions: (1) we scale the token horizon to 1.7T tokens on a 8B model, and (2) we scale the parameters of the model to 25B and train on 1T tokens.",
+    "2412-15285_sent_9fa7c83b": "Additionally, we train a 8B model on 15T tokens on full data (not downsampled) to observe if decisions made with downsampled data scales.",
+    "2412-15285_sent_58cd3a8e": "Specifics on model architecture and hyperparameters are shared in Appendix \\ref{app:detailed_model_specs}.",
+    "2412-15285_subsection_ab363ea2": "Evaluation Suite",
+    "2412-15285_sent_127630b7": "To comprehensively assess our models, we use various benchmarks that evaluate different capabilities.",
+    "2412-15285_sent_3f4a1728": "These can be broadly divided into the following 4 categories, of which we report the final averages.",
+    "2412-15285_sent_d2b4b215": "We assess 5-shot accuracy for MMLU \\cite{hendrycks2021MMLU}, 0-shot accuracy\\footnote{We use normalized accuracy for ARC-Easy, ARC-Challenge, PIQA, HellaSwag, and OpenBookQA.} for reasoning tasks: CommonsenseQA \\cite{talmor-etal-2019-commonsenseqa}, ARC-Easy \\& Challenge \\cite{ARC-clark2018thinksolvedquestionanswering}, PIQA \\cite{PIQA-bisk2019piqareasoningphysicalcommonsense}, WinoGrande \\cite{WinoGrande-sakaguchi2019winograndeadversarialwinogradschema}, HellaSwag \\cite{zellers-etal-2019-hellaswag}, OpenBookQA \\cite{openbookQA-mihaylov-etal-2018-suit}, RACE \\cite{RACE-lai-etal-2017-race}, 0-shot accuracy for code benchmarks: HumanEval (+) \\cite{HumanEval-chen2021evaluatinglargelanguagemodels} and MBPP (+) \\cite{MBPP-austin2021programsynthesislargelanguage}, and 8-shot chain-of-thought (CoT) accuracy for GSM8K \\cite{GSM8K-cobbe2021trainingverifierssolvemath}.",
+    "2412-15285_sent_71656c74": "We also report a final overall Avg.",
+    "2412-15285_sent_badca5e5": "for most results, which is an average over all individual evaluation tasks.",
+    "2412-15285_fig_e9bbe9a4": "\\begin{table}\n\\begin{center}\n\\scalebox{0.8}{\\begin{tabular}{@{}lrrrrr@{}}\n\nExp. & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\nBASE-ND & 49.78 & 56.48 & 19.64 & 24.96 & 45.17 \\\\\nBASE-RO & 56.49 & 59.69 & 30.86 & 35.55 & 51.12 \\\\\nTwo-Phase & 56.28 & 60.34 & 40.33 & 38.33 & 52.86 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Comparison of our two-phase training approach with BASE-ND and BASE-RO.\n\n\\end{table}",
+    "2412-15285_section_bd3bfef6": "Results for Two-Phase Pretraining",
+    "2412-15285_sent_5a065416": "\\begin{tcolorbox}[colframe=black!80, colback=gray!10, coltitle=white, title=Findings, fonttitle=\\bfseries]",
+    "2412-15285_sent_5c3cfd81": "A two-phase approach for pretraining is effective.",
+    "2412-15285_sent_38ad4fb0": "Phase-1 should focus on data diversity and phase-2 on high-quality data.",
+    "2412-15285_sent_9632e160": "\\end{tcolorbox} We compare our best blends \\ponebfourptwobone \\footnote{see \\S\\ref{sec:finalizing-blends} Tab.~\\ref{tab:phase2-results} on how we select this blend and \\S\\ref{subsec:pct-upsampling} Tab.~\\ref{tab:data-upsampling-results-2} for the duration of \\phasetwo for best results.} using two-phase training with two baselines: 1) BASE-ND: the weights are determined by the tokens available in each dataset and are not based on quality, and 2) BASE-RO: the weights for all the datasets are the same in this and \\ponebfourptwobone.",
+    "2412-15285_sent_0f9e9f33": "The only difference is the order in which the data is presented during training (random or two-phased).",
+    "2412-15285_sent_b28ae232": "Table \\ref{tab:rand-vs-two-phase-result} illustrates that using a quality and epoch based blend is on average \\gainROND better than natural distribution blend (compare BASE-RO vs BASE-ND) across downstream tasks.",
+    "2412-15285_sent_45c03a11": "It also presents that using our two-phase training approach noticeably improves average accuracy by \\gainRO compared to BASE-RO and \\gainND compared to BASE-ND.",
+    "2412-15285_sent_ad0e5972": "This empirically demonstrates that the strategy of two-phase training is useful and tasks such as code and math are sensitive to the ordering of high-quality data in the second phase.",
+    "2412-15285_sent_06d5b2b2": "We scale our best blend \\ponebfourptwobone to 15T tokens and use the full dataset to train a 8B model.",
+    "2412-15285_sent_a1d4ccac": "All the previous experiments are performed on downsampled data and 1T scale.",
+    "2412-15285_sent_001e042a": "This means that the number of epochs is constant in both the runs.",
+    "2412-15285_sent_2fc9293d": "Table~\\ref{tab:15T-result} shows that blends crafted at smaller scale can generalize to longer token budgets if the quality and epochs of the datasets are maintained at scale.",
+    "2412-15285_sent_277bd070": "This shows the generalizability of our two-phase approach to pretraining as well as quality- and epoch-based approach to designing blends.",
+    "2412-15285_fig_aee45744": "\\begin{table}\n\\begin{center}\n\\scalebox{0.8}{\\begin{tabular}{@{}lrrrrr@{}}\n\nTok. & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\n1T & 56.28 & 60.34 & 40.33 & 38.33 & 52.86 \\\\\n\n15T & 70.30 & 64.11 & 64.82 & 46.38 & 59.84 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Results of our two-phase training approach with \\ponebfourptwobone for downsampled data at 1T and then complete data at 15T.\n\n\\end{table}",
+    "2412-15285_subsection_456a91a0": "Determining Blends",
+    "2412-15285_fig_06ff8401": "\\begin{figure}\n\n \\includegraphics[width=0.9\\textwidth]{figures/phase1_validation_loss.pdf}\n \\caption{Phase-1 validation loss for different \\phaseone blends.} \n\\end{figure}",
+    "2412-15285_fig_571d21ea": "\\begin{table}\n\\begin{center}\n\\scalebox{0.7}{\\begin{tabular}{@{}lcrrrrr@{}}\n\nExp. & Tokens & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\n\\phaseone-$\\mathtt{Blend1}$ & 200 & 34.72 & 52.83 & 6.14 & 16.43 & 38.81 \\\\\n\\phaseone-$\\mathtt{Blend3}$ & 200 & 36.78 & 51.97 & 6.22 & 15.18 & 38.10 \\\\\n\\phaseone-$\\mathtt{Blend4}$ & 200 & 38.70 & 53.81 & 11.30 & 18.21 & 40.48 \\\\\n\n\\phaseone-$\\mathtt{Blend1}$ & 250 & 42.51 & 54.52 & 7.51 & 16.14 & 40.35 \\\\\n\\phaseone-$\\mathtt{Blend3}$ & 250 & 40.41 & 53.87 & 8.11 & 15.62 & 39.72 \\\\\n\\phaseone-$\\mathtt{Blend4}$ & 250 & 42.76 & 54.99 & 10.16 & 19.29 & 41.66 \\\\\n\n\\phaseone-$\\mathtt{Blend1}$ & 629 & 51.93 & 57.83 & 14.94 & 22.97 & 45.28\\\\\n\\phaseone-$\\mathtt{Blend3}$ & 629 & 52.44 & 57.74 & 15.39 & 22.43 & 45.15\\\\\n\\phaseone-$\\mathtt{Blend4}$ & 629 & 52.78 & 58.11 & 18.27 & 24.24 & 46.07\\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{\\phaseone results after various token counts (billions).\n\n\\end{table}",
+    "2412-15285_sent_4985d9ef": "As discussed in \\S\\ref{sec:data-blends}, we explore five different blends for phase-1.\\footnote{More detailed evaluation results of the major experiments in this section broken down by individual reasoning, MMLU, and code benchmarks and categories can be found in \\S\\ref{app:detailed_exp_results}.} We train an 8B model on downsampled data for 1T tokens for all five blends and eliminate blends based on a separately held-out validation split.",
+    "2412-15285_sent_501c6d5f": "Fig.~\\ref{fig:phase1-val-loss} illustrates the validation loss for all five blends.",
+    "2412-15285_sent_8cb59950": "As we can see, $\\mathtt{Blend5}$ and $\\mathtt{Blend2}$ had 2.8\\% and 2.1\\% higher validation loss, respectively, relative to $\\mathtt{Blend4}$ at approx.",
+    "2412-15285_sent_c49c6e51": "250B tokens.",
+    "2412-15285_sent_af26aa8c": "Hence, we discontinue these two blends at that point.",
+    "2412-15285_sent_3e18e4d6": "Since, the validation loss of the remaining three blends was within a margin of 1\\%, we periodically evaluate their accuracy on downstream tasks.",
+    "2412-15285_sent_aade4e9e": "Table~\\ref{tab:phase1-results} shows the results of the remaining three phase-1 blends at various token counts.",
+    "2412-15285_sent_16dd282c": "At each token evaluation point -- 200B, 250B and 629B, we see that $\\mathtt{Blend3}$ is consistently worse than the other two blends.",
+    "2412-15285_sent_e1a640d5": "Hence, we eliminate this blend after 629B tokens of training.",
+    "2412-15285_sent_3f13f4af": "For this experiment, we switch from \\phaseone to \\phasetwo after $\\approx$70\\% of training, i.e the last 30\\% of training is \\phasetwo.",
+    "2412-15285_sent_e17ebf87": "In \\S\\ref{subsec:pct-upsampling}, we explore varying the percentage of \\phasetwo.",
+    "2412-15285_sent_0f9da6aa": "Results in Table~\\ref{tab:phase1-results} follow intuition since $\\mathtt{Blend4}$ has the highest amount of high-quality data and is hence better than $\\mathtt{Blend1}$ and $\\mathtt{Blend3}$.",
+    "2412-15285_sent_3951da60": "$\\mathtt{Blend3}$ has more medium-quality data at the cost of web crawl compared to $\\mathtt{Blend1}$.",
+    "2412-15285_sent_cfe08aa6": "This result confirms that books, papers, and \\ccderiv are of medium-quality compared to our high-quality datasets and our web crawl blend.",
+    "2412-15285_fig_05e64243": "\\begin{table}\n\\begin{center}\n\\scalebox{0.68}{\\begin{tabular}{@{}lrrrrr@{}}\n\nExp. & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\n\\phaseone-$\\mathtt{Blend1}$ & 55.00 & 59.12 & 20.09 & 23.56 & 46.76 \\\\\n\\phaseone-$\\mathtt{Blend4}$ & 56.25 & 59.54 & 23.43 & 27.61 & 48.40 \\\\\n\n\\poneboneptwobone & 56.04 & 60.04 & 37.00 & 36.19 & 51.88 \\\\\n\\poneboneptwobtwo & 55.88 & 60.15 & 36.85 & 35.89 & 51.84 \\\\\n\\poneboneptwobthree & 55.80 & 60.08 & 39.80 & 35.75 & 51.96 \\\\\n\\poneboneptwobfour & 56.15 & 60.26 & 36.85 & 36.30 & 51.88 \\\\\n\\poneboneptwofive & 56.49 & 60.41 & 36.92 & 34.40 & 51.65 \\\\\n\\ponebfourptwobone & 56.58 & 60.18 & 37.98 & 37.01 & 52.28 \\\\\n\\ponebfourptwobtwo & 56.89 & 60.00 & 36.62 & 36.97 & 52.10 \\\\\n\\ponebfourptwobthree & 56.10 & 60.08 & 39.27 & 35.15 & 51.78 \\\\\n\\ponebfourptwobfour & 57.03 & 59.98 & 36.85 & 36.30 & 51.93 \\\\\n\\ponebfourptwobfive & 56.92 & 60.35 & 38.29 & 34.56 & 51.77 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Evaluation results after \\phasetwo of training. \n\n\\end{table}",
+    "2412-15285_sent_03515fa5": "Finally, we explore five different blends of \\phasetwo described in Table~\\ref{tab:phase2-blends} in combination with \\phaseone-$\\mathtt{Blend1}$ and \\phaseone-$\\mathtt{Blend4}$.",
+    "2412-15285_sent_d5c44000": "Hence, we have ten different combinations of \\phaseone and \\phasetwo blends.",
+    "2412-15285_sent_ab8ff5da": "Table~\\ref{tab:phase2-results} shows the results on all ten combinations of blends.",
+    "2412-15285_sent_3ecb13d5": "We find that \\ponebfourptwobone performs the best on average.",
+    "2412-15285_sent_70624306": "Table~\\ref{tab:phase2-results} also presents the final results of \\phaseone-$\\mathtt{Blend1}$ and \\phaseone-$\\mathtt{Blend4}$ if only the \\phaseone blend was continued for 1T tokens without ever switching to \\phasetwo blends.",
+    "2412-15285_sent_51eea9a2": "It shows that switching to any of the \\phasetwo blends for training is better than continuing the \\phaseone blends for all metrics.",
+    "2412-15285_sent_00656bca": "We observe the largest absolute gains in GSM8K and code of 14.6\\% and 9.4\\%, respectively, for \\ponebfourptwobone.",
+    "2412-15285_fig_5cbe066e": "\\begin{table}\n\\begin{center}\n\\scalebox{0.6}{\\begin{tabular}{@{}lcrrrrr@{}}\n\nExp. & Tok. & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\n\\ponebfourptwobone & 1T & 56.58 & 60.18 & 37.98 & 37.01 & 52.28 \\\\\n\\ponebfourptwobone & 1.7T & 56.61 & 60.88 & 42.15 & 37.62 & 53.28 \\\\\n\\ponebfourptwobsix & 1.7T & 59.85 & 61.63 & 43.90 & 39.61 & 54.45 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{\nScaling results for 1.7T tokens vs. 1T tokens, with and without high-quality data epoch adjustment.}\n\n\\end{table}",
+    "2412-15285_subsection_bc967dc2": "Scaling",
+    "2412-15285_sent_6b060995": "Two-phase approach is scalable and robust to token horizon and model scale.",
+    "2412-15285_sent_8f3752f9": "Data blends need adjusting at longer token horizons based on epoch count to avoid high-quality data overexposure.",
+    "2412-15285_sent_236755da": "\\end{tcolorbox} We further explore scaling our best blend along two dimensions: (1) a longer token horizon of 1.7 trillion tokens and (2) larger model size of 25B parameters.",
+    "2412-15285_sent_55e6aa0f": "For a longer token horizon, we aim to assess whether the blend can be used as is or if adjustments are necessary to prevent overfitting (observed in \\S\\ref{subsec:epoch_results}).",
+    "2412-15285_sent_09c14e65": "Note that this is different from scaling to 15T token where we use the full data.",
+    "2412-15285_sent_c24d9255": "Here we still use the downsampled data and scale to 1.7T tokens and hence the epochs seen of each dataset would be higher.",
+    "2412-15285_sent_a9cb5525": "Since high number of epochs of high-quality datasets are primarily seen in \\phasetwo of pretraining, we create a new blend, \\ptwobsix\\footnote{We show comparison of $\\mathtt{Blend1}$ and $\\mathtt{Blend6}$ in Table~\\ref{tab:phase2-blend6}.}, which is an epoch-adjusted version of \\ptwobone to ensure that we do not see more than 8 epochs of certain high-quality data sources like math and task data.",
+    "2412-15285_sent_42f8fc92": "Table~\\ref{tab:1.7T-results} shows the comparison of scaling from 1T to 1.7T total tokens.",
+    "2412-15285_sent_8a376f84": "We see that \\ponebfourptwobsix is on average $2.2$\\% better than \\ponebfourptwobone, illustrating that we need to adjust our blends according to the epoch counts of high-quality data for optimal results.",
+    "2412-15285_sent_17d2c762": "Both the 1.7T models are better than 1T, demonstrating that we can still obtain higher downstream accuracies by training on more tokens, even if it means training on more than 8 epochs of high-quality data.",
+    "2412-15285_sent_80ab2499": "We also investigate if our best blend can scale to a larger model size.",
+    "2412-15285_sent_d2dc1813": "Given the high number of epochs of high-quality data in \\ponebfourptwobone, we also want to determine if a model with a larger capacity might memorize the data and overfit on it.",
+    "2412-15285_sent_54d86e97": "Figure~\\ref{fig:25B-val-loss} shows that the validation loss is always decreasing for the 25B model, indicating that there is no overfitting with \\ponebfourptwobone.",
+    "2412-15285_sent_30bb673e": "Table~\\ref{tab:25B-results} shows results for the 25B model compared to the 8B model on this data blend combination.",
+    "2412-15285_sent_724e80ad": "Understandably, the 25B model is substantially better across the board, demonstrating that the two-phase training approach and data blend combination can also scale to larger model sizes.",
+    "2412-15285_fig_4ad79a0f": "\\begin{table}\n\\begin{center}\n\\scalebox{0.8}{\\begin{tabular}{@{}crrrrr@{}}\n\nModel Size & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\n8B & 57.31 & 61.16 & 45.11 & 38.97 & 53.92 \\\\\n25B & 65.97 & 63.29 & 59.14 & 45.57 & 58.47 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{\nEvaluation results for 8B vs. 25B parameter models, using the same blend: \\ponebfourptwobone. Note that we use a maximum sequence length of 8192 (instead of 4096) for both models here.\n\n\\end{table}",
+    "2412-15285_fig_5558ea93": "\\begin{figure}\n\n \\includegraphics[width=0.9\\textwidth]{figures/25b_validation_loss.pdf}\n \\caption{Validation loss for the 25B model using two-phase training with \\ponebfourptwobone. }\n\\end{figure}",
+    "2412-15285_section_d28d2294": "Ablations",
+    "2412-15285_sent_31e337f0": "This section details quality-based data blending, epoch study and percentage of phase-2 to be conducted in the pretraining.",
+    "2412-15285_sent_b5282106": "Additional fine-grained analyses of data blends and study on learning rate schedule to be used in phase-2 is shown in Appendix \\S\\ref{app:finegrained_upsampling_exps} and \\S\\ref{app:lr_schedule}.",
+    "2412-15285_subsection_37efc826": "Quality-Based Data Blending",
+    "2412-15285_sent_0616f59e": "\\begin{tcolorbox}[colframe=black!80, colback=gray!10, coltitle=white, title=Insights, fonttitle=\\bfseries]",
+    "2412-15285_sent_15ae6baf": "Upsampling high quality and not using low quality CC data is most effective.",
+    "2412-15285_sent_2aa44870": "\\ccderiv, papers and books are similar in quality to \\ccmhq.",
+    "2412-15285_sent_5e8c0573": "\\end{tcolorbox} The data blends of our two-phase approach are mainly based on the assessment of each data source's quality.",
+    "2412-15285_sent_9a78432b": "Hence, we carry out extensive experiments to find an optimal data blend for web crawl documents.",
+    "2412-15285_sent_b0d6628b": "While previous work~\\citep{dubey2024llama,yang2024qwen2,team2024gemma} mentions that web crawl documents like Common Crawl (CC) form a large majority of their pretraining data, none of them share a recipe on how to mix different slices of CC.",
+    "2412-15285_sent_0e13caf6": "Some recent work on constructing crawl-based pretraining datasets ~\\citep{penedo2024fineweb,li2024datacomp} directly use the high quality crawl documents in pretraining but provide no specific data mixing strategy.",
+    "2412-15285_sent_3f9f4c70": "In this section, we provide comprehensive details on how to create a data blend for CC documents and use it effectively in our phase-1 and phase-2 of pretraining.",
+    "2412-15285_sent_4d0e77ec": "Additionally, we provide a quality assessment of other datasets like \\ccderiv, papers, books and our high quality datasets.",
+    "2412-15285_sent_508a0efa": "We compare them with medium, and high quality web crawl to position them optimally in our \\phaseone and \\phasetwo blends.",
+    "2412-15285_fig_5651e86e": "\\begin{table}\n\n\\resizebox{\\textwidth}{!}{\n\\begin{tabular}{ccrrrr}\n\nQuality Label & Token & $\\mathtt{CC}$-$\\mathtt{Blend1}$ & $\\mathtt{CC}$-$\\mathtt{Blend2}$ & $\\mathtt{CC}$-$\\mathtt{Blend3}$ & $\\mathtt{CC}$-$\\mathtt{Blend4}$ \\\\ \n\nHigh & 35.96\\% & 57.0 & 57.0 & 51.5 & 45.0 \\\\\nMedium-High & 8.56\\% & 25.0 & 25.0 & 23.5 & 20.0 \\\\\nMedium & 34.25\\% & 18.0 & 13.0 & \\multirow{2}{*}{23.0} & \\multirow{2}{*}{32.0} \\\\\nMedium-Low & 15.41\\% & 0.0 & 2.0 & & \\\\\nLow & 5.82\\% & 0.0 & 3.0 & 2.0 & 3.0 \\\\ \n\n\\end{tabular}\n\n\\caption{CC blends (in \\%) by quality. For $\\mathtt{CC}$-$\\mathtt{Blend3}$ and $\\mathtt{CC}$-$\\mathtt{Blend4}$, we merged the Medium and Medium-Low categories. Token column refers to the the natural distribution of tokens, i.e. percentage of total CC data that belongs to each category.\n\n\\end{table}",
+    "2412-15285_paragraph_03c324ca": "Quality-Based Blending for Web Crawl:",
+    "2412-15285_sent_d48621b9": "Each document in our web crawl data is classified into one of five quality categories: High, Medium-High, Medium, Medium-Low, and Low using the classifier from \\citet{su2024nemotroncctransformingcommoncrawl}.",
+    "2412-15285_fig_44fed58a": "\\begin{table}\n\n\\resizebox{0.88\\textwidth}{!}{\n\\begin{tabular}{lrrrrr}\n\nExp. & MMLU & Reason. & GSM8K & Code & Avg. \\\\ \n\n$\\mathtt{CC}$-$\\mathtt{Blend1}$ & 57.09 & 61.16 & 13.42 & 19.78 & 46.01 \\\\\n$\\mathtt{CC}$-$\\mathtt{Blend2}$ & 56.69 & 61.77 & 14.18 & 19.56 & 45.11 \\\\\n$\\mathtt{CC}$-$\\mathtt{Blend3}$ & 56.29 & 60.74 & 14.25 & 18.44 & 44.17 \\\\\n$\\mathtt{CC}$-$\\mathtt{Blend4}$ & 55.73 & 60.57 & 14.31 & 18.50 & 44.06 \\\\ \n\n\\end{tabular}\n\n\\caption{\\phaseone results using our various CC blends.}\n\n\\end{table}",
+    "2412-15285_sent_a07a9b00": "We investigate various blends using quality-based weighted sampling approach\\footnote{We show comparison of quality-based blending with natural token distribution-based blend in \\S\\ref{app:quality-based-blend}.} for all of web crawl data from 99 CC snapshots for our phase-1 of pretraining.",
+    "2412-15285_sent_13834676": "The idea is to upsample high and medium-quality crawl documents while avoiding a high quantity of low-quality data.",
+    "2412-15285_sent_462798c3": "The overall idea for the four web crawl blends in Table~\\ref{table: crawl_data_mixing_phase1} is to iteratively decrease the percentage of tokens from High and Medium-High and increase the tokens in the lower categories.",
+    "2412-15285_sent_5350a5e3": "The results in Table~\\ref{table: crawl_data_phase1_results}\\footnote{The average in this table is primarily based on reasoning tasks and MMLU because these blends do not have math or code data.} demonstrate that eliminating the tail-end of the web crawl data belonging to Medium-Low and Low quality categories is beneficial as opposed to to keeping them for diversity.",
+    "2412-15285_sent_7b3f81d5": "Based on these results, we choose $\\mathtt{CC}$-$\\mathtt{Blend1}$ as the final data blend for web crawl documents to be used in all our final \\phaseone blends (\\S\\ref{subsec:two-phase-results} and Table \\ref{tab:phase1-blends}).",
+    "2412-15285_sent_3e3e4f68": "For \\phasetwo, we only use web crawl data that belongs to High-quality category.",
+    "2412-15285_fig_cf8bddaa": "\\begin{table}\n\\begin{center}\n\\scalebox{0.75}{\\begin{tabular}{@{}lrrrr@{}}\n\nDataset & MMLU & Reason. & GSM8K & Avg. \\\\\n\n\\ccmq & 52.86 & 56.00 & 18.04 & 42.30 \\\\\n\\ccmhq & 53.75 & 58.09 & 18.50 & 43.45 \\\\\n\\cchq & 55.82 & 59.65 & 20.85 & 45.44 \\\\\n\nHigh Quality & 54.53 & 58.51 & 24.11 & 45.72 \\\\\n\\ccderiv & 54.47 & 58.20 & 20.14 & 44.27 \\\\\nBooks & 55.36 & 58.93 & 18.50 & 44.26 \\\\\nPapers & 54.55 & 58.65 & 19.41 & 44.20 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Results of different quality crawl and their comparison with other datasets. Since code data is not included in most of these experiments, we exclude code evaluation.\n\n\\end{table}",
+    "2412-15285_fig_a78d5ee5": "\\begin{figure}\n\n \\includegraphics[width=0.95\\textwidth]{figures/crawl_epoch.pdf}\n \\\\\n \\caption{MMLU accuracy (\\%) vs. number of epochs of high-quality crawl in the data mix.}\n\n\\end{figure}",
+    "2412-15285_paragraph_cc24020a": "Quality Estimation of Other Datasets:",
+    "2412-15285_sent_aa5c6822": "We assess how our \\ccderiv, papers, books and high quality datasets such as math, code and Wiki compare to \\ccmq,\\ccmhq and \\cchq quality crawl data.",
+    "2412-15285_sent_4e2be940": "We continue training the last checkpoint of \\phaseone-$\\mathtt{Blend4}$, for an additional 50B tokens using a data mix that consisted $66$\\% of the data being tested, mixed with $34$\\% of \\cchq.",
+    "2412-15285_sent_cf1db473": "The results in Table \\ref{tab:crawl++_papers_vs_crawl} show that \\ccderiv, papers and books datasets have similar accuracies to \\ccmhq on the majority of benchmarks, and lag behind \\cchq.",
+    "2412-15285_sent_1f2bb423": "As such, we group them under the \"medium-quality\" data category for our experiments (see \\S\\ref{subsec:data_sources}).",
+    "2412-15285_sent_e7d4bc07": "The high quality datasets have an average accuracy better than \\cchq.",
+    "2412-15285_subsection_548fae98": "Epoch-Based Analysis",
+    "2412-15285_sent_983a4c81": "We recommend 6 epochs of high-quality crawl and 8 epochs of math and task data for data mixing.",
+    "2412-15285_sent_678677c4": "\\end{tcolorbox} We take the number of epochs of high quality datasets into account while creating our \\phaseone and \\phasetwo blends.",
+    "2412-15285_sent_1a126d13": "We experiment with different numbers of epochs for high-quality crawl, math, and task data.",
+    "2412-15285_sent_0534ce40": "Since, majority of web crawl is used in \\phaseone, we pretrained an 8B model with 1T tokens, using different epochs of high-quality crawl tokens in the data mix, and evaluate each model's MMLU score.",
+    "2412-15285_sent_02cc239f": "Note that we keep the overall percentage of web crawl the same in all the experiments.",
+    "2412-15285_sent_f46be7b6": "As we can see in Figure~\\ref{fig:crawl_epoch}, increasing the number of high-quality tokens increases the MMLU score until 6 epochs.",
+    "2412-15285_sent_b71ef84d": "We primarily present MMLU score because these experiments do not include high amount of math or code data.",
+    "2412-15285_fig_abc24ca2": "\\begin{table}\n\\begin{center}\n\\scalebox{0.7}{\\begin{tabular}{@{}lcrrrrr@{}}\n\nDomain & Epochs & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\nMath & 1 & 57.06 & 60.51 & 36.47 & 33.55 & 51.49 \\\\\nMath & 4 & 57.01 & 60.32 & 38.21 & 35.20 & 51.92 \\\\\nMath & 8 & 56.58 & 60.18 & 37.98 & 37.01 & 52.28 \\\\\nMath & 12 & 56.09 & 59.69 & 38.29 & 35.70 & 51.63 \\\\\n\nTask Data & 1 & 56.37 & 59.39 & 34.50 & 30.57 & 49.84 \\\\\nTask Data & 4 & 56.57 & 59.46 & 40.18 & 35.27 & 51.53 \\\\\nTask Data & 8 & 56.58 & 60.18 & 37.98 & 37.01 & 52.28 \\\\\nTask Data & 12 & 56.77 & 59.96 & 38.44 & 36.04 & 51.93 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Results of varying the number of epochs of math and task data during \\phasetwo of training.\n\n\\end{table}",
+    "2412-15285_sent_a57cf717": "Since, majority of math and task-data is seen in \\phasetwo, Table~\\ref{tab:epoch-results} presents results for different numbers of epochs for them in \\phasetwo.",
+    "2412-15285_sent_5cd977c5": "It shows that $\\approx$ 8 epochs of math is a good balance while not sacrificing accuracy on MMLU and reasoning.",
+    "2412-15285_sent_8babfb21": "For task data, all metrics generally improve with more epochs, although there appears to be diminishing returns on several past epoch 8.",
+    "2412-15285_sent_c70de75d": "Note that 8 epochs of both math and task data corresponds to our best \\ponebfourptwobone blend combo from \\S\\ref{subsec:two-phase-results}.",
+    "2412-15285_subsection_69f064b5": "Optimal Duration of Phase-2",
+    "2412-15285_sent_b2b02b45": "Pretraining with the \\phasetwo blend for the final 40\\% gives the best results.",
+    "2412-15285_sent_d595f0d0": "\\end{tcolorbox} We investigate the percentage of phase-2 to use in the whole pretraining regime.",
+    "2412-15285_sent_923a7435": "We experiment with 0 to 50\\% of \\phasetwo in the whole of pretraining.",
+    "2412-15285_sent_79ad6262": "The longer the duration of \\phasetwo, the shorter the duration of \\phaseone.",
+    "2412-15285_sent_0281bc9c": "We use the \\ponebfourptwobone blend combination that we found best in \\S\\ref{subsec:two-phase-results}.",
+    "2412-15285_sent_0aef2ecd": "Table \\ref{tab:data-upsampling-results-2} illustrates that a higher percentage of \\phasetwo until 40\\% is better overall, especially in math and code.",
+    "2412-15285_sent_c3a66110": "Going above this, e.g. to \\phasetwo as 50\\% of training, downstream accuracies start to degrade across the board, potentially due to overfitting.",
+    "2412-15285_fig_6fa8406b": "\\begin{table}\n\\begin{center}\n\\scalebox{0.75}{\\begin{tabular}{@{}lrrrrr@{}}\n\n\\phasetwo \\% & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\n$0$ & 56.10 & 61.81 & 16.60 & 16.22 & 37.68 \\\\\n$10$ & 56.52 & 59.70 & 33.13 & 32.55 & 50.48 \\\\\n$20$ & 56.54 & 59.93 & 40.16 & 34.29 & 51.58 \\\\\n$30$ & 56.58 & 60.18 & 37.98 & 37.01 & 52.28 \\\\\n$40$ & 56.28 & 60.34 & 40.33 & 38.33 & 52.86 \\\\\n$50$ & 55.94 & 59.82 & 37.68 & 36.86 & 51.96 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Results of different durations of \\phasetwo using \\ponebfourptwobone. \n\n\\end{table}",
+    "2412-15285_section_aed402c3": "Related Work",
+    "2412-15285_sent_7386b388": "Selecting and structuring pretraining datasets is important to improve model generalization and efficiency.",
+    "2412-15285_sent_44e68154": "\\citet{llama3-dubey2024llama3herdmodels} emphasize openness and accessibility of models, \\citet{together2023redpajama,soldaini-etal-2024-dolma} assemble an open corpus of trillions of tokens for large-scale training, and \\citet{olmo-groeneveld-etal-2024-olmo} release a truly Open Language Model, including its framework, training data, and code.",
+    "2412-15285_sent_300ab623": "Studies such as \\citet{li2024datacomplm,fineweb-penedo2024the} demonstrating that refined data selection impacts model accuracies more significantly than simply the quantity of data.",
+    "2412-15285_sent_5466ddef": "But these studies are primarily aimed at CC data and they do not suggest any data mixing strategies for pretraining.",
+    "2412-15285_sent_37441324": "\\citet{parmar-etal-2024-data} provide a systematic approach to building effective LLM pretraining datasets with ablations on data attributes, and existing curation, selection, and sampling methods.",
+    "2412-15285_sent_a7fbfad0": "In our work, we provide a systematic approach to craft data blends and to order the data in pretraining.",
+    "2412-15285_sent_efd784ae": "Strategic weighting and timing of data usage can also noticeably impact model accuracies.",
+    "2412-15285_sent_fe86449f": "Techniques like domain upsampling \\cite{domain-upsampling-blakeney2024doesdatasparkjoy,llama3-dubey2024llama3herdmodels} towards the end of training have been shown to be effective.",
+    "2412-15285_sent_4ab1aeed": "\\citet{snowflake-arctic,olmo-groeneveld-etal-2024-olmo} provide details about high level blends for their pretraining process.",
+    "2412-15285_sent_8d6bc210": "In contrast, our work provides fine grained details about the data blend creation process along with actionable steps that model developers can use to develop data blends and order.",
+    "2412-15285_sent_954080a1": "Prior work \\cite{shen2023slimpajama,longpre2024pretrainer,pmlr-v162-mindermann22a,doremi-NEURIPS2023_dcba6be9,xie2023data,shao2024balanced} investigates optimizing data mixtures based on clustering methods, manually designed domain composition weights, proxy models or reference models to determine data composition weights and sample-level data selection.",
+    "2412-15285_sent_d4e396f1": "Our work primarily focuses on data ordering and scaling of data blends in pretraining and can be used in conjunction with other data sampling techniques.",
+    "2412-15285_sent_160c2a47": "Curriculum learning approaches inspired by human learning offer an ordered way to introduce data gradually to enhance model learning.",
+    "2412-15285_sent_e2b4aafe": "\\citet{martinez-etal-2023-climb,curriculum-survey,feng-etal-2024-child} investigate cognitively-motivated curriculum-based training including vocabulary, and objective curricula, and outline and the challenges and potential solutions for designing effective curricula.",
+    "2412-15285_sent_f7416fe3": "Our work shows that ordering of data based on quality in pretraining LLMs has a significant impact of downstream accuracies.",
+    "2412-15285_section_6f8b794f": "Conclusion",
+    "2412-15285_sent_b38623f1": "In conclusion, through extensive experiments, we demonstrate the effectiveness of a two-phase pretraining approach for LLM.",
+    "2412-15285_sent_62ce7c47": "For the initial training phase, a more general data distribution consisting of mainly of web crawl proves most effective, while phase two benefits from a comprehensive data blend, with additional focus on math, code, and task data.",
+    "2412-15285_sent_e7a86e31": "Phase-two for the last $\\approx$40\\% of training yields the best results, and over-extending it leads to diminishing returns.",
+    "2412-15285_sent_2e4aae53": "Increasing model size and token horizon further enhances accuracy, demonstrating the scalability of our approach.",
+    "2412-15285_sent_fd7beaae": "Importantly, we also show that considering both the quality of the data (including web crawl) and the number of epochs of each data source is crucial to attain optimal results and prevent overfitting.",
+    "2412-15285_sent_f4c77c3c": "\\begin{comment} Future work can investigate potential effects of two-phase training other than overfitting, e.g. impacts on bias \\& fairness.",
+    "2412-15285_sent_7675f9b4": "Further, it would be interesting to see how two-phase training can be applied to niche domains or applications, e.g. medicine or finance, or a multimodal setting, e.g. vision-language models (VLM).",
+    "2412-15285_section_e646e16b": "Limitations",
+    "2412-15285_sent_9cebe53f": "Some limitations of our work include our present suite of models and evaluation benchmarks.",
+    "2412-15285_sent_0a681786": "We can extend our work and show the effectiveness of two-phase pretraining approach on more LLM architectures such as Mamba~\\cite{gu2023mamba}, other hybrid SSM based architectures~\\cite{glorioso2024zamba,lieber2024jamba} and mixture of experts~\\cite{shazeer2017outrageously}.",
+    "2412-15285_sent_977d0d11": "While our evaluation benchmarks are quite comprehensive, we could potentially expand to an even broader range of evaluations, including nuanced domain-specific or interactive tasks, or more theory of mind and developmental psychology-inspired benchmarks.",
+    "2412-15285_sent_f82a15d8": "This includes assessing capabilities such as analogical reasoning \\cite{webb2023emergentanalogicalreasoninglarge}.",
+    "2412-15285_sent_9aa31ca8": "Further, our scaling experiments could be expanded. Scaling up to hundreds of billions of parameters or significantly longer training may yield additional insights.",
+    "2412-15285_sent_3365a161": "Lastly, while our work focuses on two-phase training and shows its efficacy, we can potentially investigate multi-phase training, and the impact of the order of the phases.",
+    "2412-15285_sent_fdc1e5fe": "However, we believe this is more suited for future work.",
+    "2412-15285_sent_58cafaf6": "Overall, these are directions to potentially improve and expand upon our work.",
+    "2412-15285_sent_8004dcce": "Despite these potential limitations, we feel that our current work is an insightful and useful contribution to the research community.",
+    "2412-15285_section_13f48934": "Ethical Considerations",
+    "2412-15285_sent_1e07efb1": "Our research uses publicly available and commonly used datasets in LLM development.",
+    "2412-15285_sent_d08fb1d1": "These sources, including Common Crawl, Wikipedia, and code repositories, are widely adopted in the research community.",
+    "2412-15285_sent_4ccabee4": "We examined the quality and origins of our data, prioritizing high-quality, domain-relevant data sources to improve LLM capabilities in a responsible manner.",
+    "2412-15285_sent_36ae799d": "However, web crawl data may inherently contain biases or inappropriate content despite filtering efforts.",
+    "2412-15285_sent_fe79add0": "We used established data cleaning and quality assurance procedures but acknowledge that potential biases may persist and impact model behavior in certain circumstances.",
+    "2412-15285_sent_173432a6": "We recognize that scaling models and exploring data blending strategies require significant computational resources, which may raise environmental concerns.",
+    "2412-15285_sent_004f1fb8": "To mitigate this, we focused on efficient training strategies, such as two-phase training, to improve accuracy without excessively increasing resource usage.",
+    "2412-15285_sent_e3af265a": "Future studies could benefit from exploring energy-efficient training methods to further minimize the environmental impact.",
+    "2412-15285_sent_6fea60cb": "Our models, data blends, and accompanying publication are intended solely for research purposes, with no intended real-world application without additional safety evaluations.",
+    "2412-15285_sent_b3e1e239": "We caution against deploying models based on our methods without thorough testing, as they may carry unknown risks, particularly when applied to tasks involving sensitive or personal information.",
+    "2412-15285_sent_8374d352": "Our work aims to advance the understanding of LLM training strategies, and we feel that it is an important contribution to the research community.",
+    "2412-15285_sent_fcab2141": "We encourage researchers to expand upon our work while further investigating the ethical and societal implications of LLM.",
+    "2412-15285_sent_f37c20cb": "\\bibliography{custom} \\appendix",
+    "2412-15285_sent_748df00d": "We use RoPE position embeddings \\cite{rope-paper}, RMSNorm layer normalization \\cite{RMSNorm}, with Grouped Query Attention \\cite{ainslie-etal-2023-gqa}.",
+    "2412-15285_sent_5386eff8": "The maximum sequence length is 4096.",
+    "2412-15285_sent_4a3dc3a4": "We use a global batch size of 1536, and the Adam optimizer \\cite{kingma2017adammethodstochasticoptimization} with $\\beta=(0.9,0.95)$ and $\\epsilon=1e$-$08$.",
+    "2412-15285_sent_e0cfbd89": "\\phaseone training uses cosine $LR$ decay with an initial $LR$ of $3e$-$4$ and targeted to reach a min-$LR$ of $3e$-$6$ at the end of the full training run (both phases).",
+    "2412-15285_sent_b82b91e5": "We start \\phasetwo with the intermediate $LR$ reached at the end of \\phaseone, and anneal using cosine $LR$ decay to $3e$-$6$ (\\S\\ref{app:lr_schedule}).",
+    "2412-15285_sent_e39b80c4": "Our experiments are run using up to 1024 NVIDIA H100 GPUs.",
+    "2412-15285_section_be16b462": "Detailed Two-Phase Pretraining Results (Reasoning, MMLU, Code)",
+    "2412-15285_sent_50af80f7": "Tables \\ref{tab:P2-eval-results-reasoning} to \\ref{tab:model-scaling-eval-results-MMLU-code} contain detailed evaluation results of the major experiments reported in \\S\\ref{subsec:two-phase-results} for reasoning, MMLU, and code, broken down by individual categories and benchmarks.",
+    "2412-15285_sent_f6042881": "They correspond to the results found in Tables \\ref{tab:phase2-results} to \\ref{tab:25B-results} in \\S\\ref{subsec:two-phase-results}.",
+    "2412-15285_sent_76d943a3": "Table~\\ref{tab:phase2-blend6} shows the comparison of $\\mathtt{Blend1}$ and $\\mathtt{Blend6}$ used in scaling experiments in Table~\\ref{tab:1.7T-results}.",
+    "2412-15285_sent_3bef1316": "If we use the same $\\mathtt{Blend1}$ as is and train for more number of tokens (1.7T) then the number of epochs seen of each dataset would be higher compared to 1T training.",
+    "2412-15285_fig_f8e61e81": "\\begin{table}\n\\begin{center}\n\\scalebox{0.65}{\\begin{tabular}{@{}llrr@{}}\n\nCategory & Domain & Blend1 & Blend6 \\\\\n\nWeb Crawl & - & 31.0 & 49.0 \\\\\n\n\\multirow{3}{*}{High Quality} & Math & 24.0 & 14.4 \\\\\n& Wiki & 1.0 & 0.6 \\\\\n& Code & 20.0 & 12.0 \\\\\n\n\\multirow{3}{*}{Medium Quality} & Books & 8.0 & 8.0 \\\\\n& Papers & 4.0 & 4.0 \\\\\n& \\ccderiv & 7.0 & 7.0 \\\\\n\nMultilingual & - & 3.7 & 4.2 \\\\\n\nTask Data & - & 1.3 & 0.8\\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Comparison of $\\mathtt{Blend1}$ and $\\mathtt{Blend6}$ (in \\%) used for scaling the token budget in \\S\\ref{subsec:scaling_results} and Table \\ref{tab:1.7T-results}.\n\n\\end{table}",
+    "2412-15285_section_f920fa5a": "Details of Quality-Based Data Blend",
+    "2412-15285_fig_229d7670": "\\begin{table}\n\n\\resizebox{0.6\\textwidth}{!}{\n\\begin{tabular}{lrr}\n\nQuality Label & ND & WS \\\\\n\nHigh & 0.01 & 0.04 \\\\\nMedium-High & 1.08 & 6.42 \\\\\nMedium & 7.01 & 41.83 \\\\\nMedium-Low & 26.46 & 25.09 \\\\\nLow & 64.44 & 0.00 \\\\\n\n\\end{tabular}\n\n\\caption{Data blends for CC Quality estimation experiment. The overall percentage of the Common Crawl Snapshots in our experiments is fixed at 73.3\\%.}\n\n\\end{table}",
+    "2412-15285_sent_3d2e3ee2": "We first compare a baseline blend (ND) which uses the natural distribution of tokens with a smartly constructed weighted sampling blend (WS).",
+    "2412-15285_sent_d23a5780": "ND is based on the number of tokens that belong in each category as opposed to utilizing the quality label i.e. if 59\\% of the tokens belong to Low then 59\\% of tokens seen during pretraining would belong to Low.",
+    "2412-15285_sent_7c89d5f6": "We then create a data blend (WS) based on weighted sampling of high and medium-quality tokens.",
+    "2412-15285_sent_94896fe3": "The idea is to upsample high and medium-quality crawl documents and not use the low-quality data at all.",
+    "2412-15285_sent_184bb1db": "Table~\\ref{table:crawl_data_mixing_percent} shows the token percentages that belong to each of the five quality labels for both ND and WS blends.",
+    "2412-15285_sent_f300d8b9": "Table~\\ref{table: crawl_data_mixing_comp} illustrates the results of the two models trained on the ND and WS data blends of web crawl, respectively.",
+    "2412-15285_sent_98b383e9": "We see that our data blend (WS) outperforms on most of the evaluation tasks by a large margin, and the improvement on MMLU is substantial.",
+    "2412-15285_fig_87fbf4cc": "\\begin{table}\n\n\\resizebox{\\textwidth}{!}{\n\\begin{tabular}{lcccc}\n\nData Mixing & MMLU & Reason. & GSM8K & Code \\\\\n\nND & 42.94 & 59.40 & 8.11 & 19.25 \\\\\nWS & 56.10 & 61.60 & 11.98 & 17.41 \\\\\n\n\\end{tabular}\n\n\\caption{Our WS: weighted sampling data mixing method outperforms the ND: natural distribution method.}\n\n\\end{table}",
+    "2412-15285_section_87cc3da5": "Finegrained \\phasetwo Blend Experiments",
+    "2412-15285_sent_270371e4": "We investigate fine-grained \\phasetwo blends to determine the optimal blend.",
+    "2412-15285_sent_9a535bfb": "For these experiments, we use a model trained on a \\phaseone blend for 900B tokens (10\\% \\phasetwo duration), with a linear $LR$ decay to $0$.",
+    "2412-15285_paragraph_d7e63f84": "Crawl, Math, \\& Code:",
+    "2412-15285_sent_3ad95f6e": "Table \\ref{tab:phase2-finegrained-results} demonstrates that a higher amount of math data (i.e. 30\\%) helps across the board.",
+    "2412-15285_sent_b612c549": "However, code data results are mixed, as too much code without enough math ($\\mathtt{CMC}$-$\\mathtt{B1}$) seems to hurt all non-code metrics.",
+    "2412-15285_sent_eed926df": "Comparing ($\\mathtt{CMC}$-$\\mathtt{B2}$) vs. ($\\mathtt{CMC}$-$\\mathtt{B3}$), more than 15\\% code does not add as much value, as gains saturate.",
+    "2412-15285_sent_3326450d": "Trading off crawl data for more code data also slightly hurts MMLU.",
+    "2412-15285_sent_50bb33ff": "As such, we decide that a final blend consisting of a higher amount of crawl and math with a moderate amount of code seems best overall.",
+    "2412-15285_sent_32e3df99": "This corresponds to $\\mathtt{CMC}$-$\\mathtt{B3}$ in Table \\ref{tab:phase2-finegrained-blends}, which consists of 30\\% crawl, 33\\% math, and 15\\% code.",
+    "2412-15285_paragraph_0fa34999": "Task Data:",
+    "2412-15285_sent_4edb6842": "Our FLAN data consists of a mixture of normal FLAN and FLAN-CoT (chain-of-thought) data.",
+    "2412-15285_sent_ca0b7aeb": "We compare 10 and 20 epochs of FLAN.",
+    "2412-15285_sent_0fa8ebe3": "These blends can be found in Table \\ref{tab:phase2-finegrained-blends-pt2}, with the results in Table \\ref{tab:phase2-finegrained-results}.",
+    "2412-15285_sent_1a2f35c4": "We can see that including synthetic GSM8K-train and FLAN data noticeably improves GSM8K scores while not detrimenting the other benchmarks.",
+    "2412-15285_sent_d5b0049e": "In fact, FLAN data also helps further improve MMLU and reasoning.",
+    "2412-15285_sent_11cf67e6": "20 epochs of FLAN seems better than 10 epochs overall.",
+    "2412-15285_sent_9b150a9c": "Hence, including task data for \\phasetwo of training seems to be a good idea.",
+    "2412-15285_paragraph_e5cca970": "All Data Mixture:",
+    "2412-15285_sent_5c53768b": "helps greatly with GSM8K, noticeably with coding and reasoning, while retaining accuracy on MMLU.",
+    "2412-15285_sent_ec7ff9f8": "Hence, the final \\phasetwo blends we investigate in \\S\\ref{subsec:two-phase-results} (Table \\ref{tab:phase2-blends}) are motivated by these ablations -- they are blends of all data sources, including task data, with higher proportions of math and code.",
+    "2412-15285_section_b2164bbf": "Annealing Learning Rate Schedule",
+    "2412-15285_sent_44c31b65": "We investigate different learning rate ($LR$) schedules for phase \\phasetwo.",
+    "2412-15285_sent_63441213": "Specifically, using the same \\phasetwo blend for a 10\\% duration, we try different $LR$ strategies.",
+    "2412-15285_sent_86983091": "We compare cosine vs. linear $LR$ decay functions, and also compare decaying to a final $LR$ of $0$ vs. $3e$-$6$ (1\\% of the original \\phaseone starting $LR$ of $3e$-$4$).",
+    "2412-15285_sent_86b7f20c": "Not decaying $LR$ entirely to 0 leaves room for post-training, which is likely preferable.",
+    "2412-15285_sent_6e3cbbb1": "As seen in Table \\ref{tab:LR-anneal-results}, there is a negligible difference between linear and cosine $LR$ decay, so we choose cosine decay for consistency with \\phaseone.",
+    "2412-15285_sent_f71c3f4b": "We also see that $LR$ decay to $3e$-$6$ is comparable to decaying all the way to $0$, while leaving room for post-training.",
+    "2412-15285_sent_894827bf": "Hence, our final chosen annealing strategy is cosine $LR$ decay to $3e$-$6$, which we use for our final two-phase experiments in \\S\\ref{subsec:two-phase-results}.",
+    "2412-15285_sent_cec5602a": "\\begin{center} \\scalebox{0.66}{\\begin{tabular}{@{}lccccccccc@{}} Exp.",
+    "2412-15285_sent_2b2ccdcd": "& ARC-Easy & ARC-Challenge & RACE & PIQA & WinoGrande & HellaSwag & OpenBookQA & CommonsenseQA & Avg.\\\\ \\phaseone-$\\mathtt{Blend1}$ & 75.97 & 51.19 & 36.36 & 80.96 & 67.64 & 76.23 & 44.00 & 53.07 & 59.12 \\\\ \\phaseone-$\\mathtt{Blend4}$ & 77.23 & 53.24 & 36.46 & 80.47 & 68.35 & 76.48 & 44.40 & 53.15 & 59.54 \\\\ \\poneboneptwobone & 78.32 & 51.54 & 36.75 & 79.76 & 66.54 & 76.44 & 43.80 & 61.67 & 60.04\\\\ \\poneboneptwobtwo & 78.79 & 53.07 & 35.69 & 80.79 & 67.09 & 76.52 & 43.40 & 61.18 & 60.15\\\\ \\poneboneptwobthree & 79.29 & 53.16 & 36.27 & 79.76 & 66.77 & 76.43 & 42.80 & 61.43 & 60.08 \\\\ \\poneboneptwobfour & 78.37 & 52.99 & 36.65 & 80.30 & 66.93 & 76.67 & 43.80 & 61.92 & 60.26 \\\\ \\poneboneptwofive & 79.21 & 52.56 & 36.75 & 80.63 & 67.25 & 76.64 & 44.00 & 61.83 & 60.41 \\\\ \\ponebfourptwobone & 80.30 & 54.95 & 35.50 & 79.98 & 68.35 & 76.55 & 43.80 & 56.59 & 60.18 \\\\ \\ponebfourptwobtwo & 79.92 & 54.10 & 35.50 & 80.20 & 67.96 & 76.75 & 43.80 & 56.35 & 60.00 \\\\ \\ponebfourptwobthree & 79.92 & 54.27 & 35.12 & 80.20 & 67.56 & 76.39 & 44.20 & 57.08 & 60.08 \\\\ \\ponebfourptwobfour & 79.92 & 54.27 & 35.89 & 80.47 & 67.25 & 76.79 & 43.80 & 56.18 & 59.98 \\\\ \\ponebfourptwobfive & 79.29 & 54.44 & 37.03 & 79.98 & 67.80 & 76.92 & 44.80 & 57.41 & 60.35 \\\\ \\end{tabular}} \\end{center} \\caption[]{Final reasoning evaluation results after \\phasetwo of training, broken down by individual benchmark.",
+    "2412-15285_sent_977baaca": "Corresponds to Table \\ref{tab:phase2-results} in \\S\\ref{subsec:two-phase-results}.",
+    "2412-15285_sent_23ebf30b": "\\begin{center} \\scalebox{0.70}{\\begin{tabular}{@{}lcccccccccc@{}} Exp.",
+    "2412-15285_sent_5801916e": "& \\multicolumn{5}{c}{MMLU} & \\multicolumn{5}{c}{Code} \\\\ \\cmidrule(lr){2-6} \\cmidrule(lr){7-11} & STEM & Humanities & Social Sciences & Others & Avg.",
+    "2412-15285_sent_9970780c": "& HumanEval & HumanEval+ & MBPP & MBPP+ & Avg.",
+    "2412-15285_sent_75bced7b": "\\\\ \\phaseone-$\\mathtt{Blend1}$ & 45.61 & 50.24 & 65.29 & 61.54 & 55.00 & 18.90 & 13.41 & 31.52 & 30.42 & 23.56 \\\\ \\phaseone-$\\mathtt{Blend4}$ & 48.30 & 49.88 & 67.53 & 62.79 & 56.25 & 18.90 & 16.46 & 42.80 & 32.28 & 27.61 \\\\ \\poneboneptwobone & 47.57 & 51.12 & 65.88 & 62.34 & 56.04 & 32.32 & 27.44 & 42.41 & 42.59 & 36.19 \\\\ \\poneboneptwobtwo & 48.65 & 50.41 & 65.78 & 61.67 & 55.88 & 31.71 & 26.83 & 42.41 & 42.59 & 35.89 \\\\ \\poneboneptwobthree & 47.61 & 50.69 & 65.78 & 61.96 & 55.80 & 31.10 & 25.61 & 43.97 & 42.33 & 35.75 \\\\ \\poneboneptwobfour & 48.11 & 50.84 & 65.81 & 62.76 & 56.15 & 28.66 & 25.61 & 42.80 & 42.86 & 35.59 \\\\ \\poneboneptwofive & 48.94 & 51.41 & 66.14 & 62.28 & 56.49 & 28.66 & 23.78 & 42.02 & 43.12 & 34.40 \\\\ \\ponebfourptwobone & 49.29 & 50.35 & 67.44 & 62.66 & 56.58 & 31.10 & 24.39 & 49.42 & 43.12 & 37.01 \\\\ \\ponebfourptwobtwo & 49.44 & 50.92 & 67.47 & 62.99 & 56.89 & 30.49 & 25.00 & 49.81 & 42.59 & 36.97 \\\\ \\ponebfourptwobthree & 49.19 & 49.37 & 66.88 & 62.60 & 56.10 & 27.44 & 20.73 & 48.25 & 44.18 & 36.15 \\\\ \\ponebfourptwobfour & 49.16 & 50.84 & 68.35 & 63.18 & 57.03 & 31.71 & 23.17 & 47.47 & 42.86 & 36.30 \\\\ \\ponebfourptwobfive & 49.38 & 50.86 & 68.18 & 62.60 & 56.92 & 28.66 & 20.12 & 45.53 & 43.92 & 34.56 \\\\ \\end{tabular}} \\end{center} \\caption[]{Final MMLU and code evaluation results after \\phasetwo of training, broken down by individual category/benchmark.",
+    "2412-15285_sent_e2aff184": "& ARC-Easy & ARC-Challenge & RACE & PIQA & WinoGrande & HellaSwag & OpenBookQA & CommonsenseQA & Avg.\\\\ BASE & 78.75 & 53.84 & 35.69 & 80.30 & 68.51 & 76.30 & 45.40 & 51.68 & 59.69 \\\\ Two-Phase & 80.30 & 54.95 & 35.50 & 79.98 & 68.35 & 76.55 & 43.80 & 56.59 & 60.18 \\\\ \\end{tabular}} \\end{center} \\caption[]{Reasoning evaluation results of our two-phase training approach with \\ponebfourptwobone vs. a randomized mixture of both blends across the entire 1T token training run, broken down by individual benchmark.",
+    "2412-15285_sent_012f5781": "\\\\ BASE & 50.40 & 49.67 & 66.49 & 63.08 & 56.49 & 28.66 & 25.00 & 44.36 & 44.18 & 35.55 \\\\ Two-Phase & 49.29 & 50.35 & 67.44 & 62.66 & 56.58 & 31.10 & 24.39 & 49.42 & 43.12 & 37.01 \\\\ \\end{tabular}} \\end{center} \\caption[]{MMLU and code evaluation results of our two-phase training approach with \\ponebfourptwobone vs. a randomized mixture of both blends across the entire 1T token training run, broken down by individual category/benchmark.",
+    "2412-15285_sent_e738877c": "\\begin{center} \\scalebox{0.64}{\\begin{tabular}{@{}llccccccccc@{}} Exp.",
+    "2412-15285_sent_1fbe1f3a": "& Tok.",
+    "2412-15285_sent_70271fee": "& ARC-Easy & ARC-Challenge & RACE & PIQA & WinoGrande & HellaSwag & OpenBookQA & CommonsenseQA & Avg.\\\\ \\ponebfourptwobone & 1T & 80.30 & 54.95 & 35.50 & 79.98 & 68.35 & 76.55 & 43.80 & 56.59 & 60.18 \\\\ \\ponebfourptwobone & 1.7T & 79.84 & 52.90 & 36.27 & 79.65 & 70.01 & 77.79 & 44.80 & 61.75 & 60.88 \\\\ \\ponebfourptwobsix & 1.7T & 80.09 & 55.29 & 37.03 & 80.79 & 70.09 & 78.53 & 46.00 & 60.85 & 61.63 \\\\ \\end{tabular}} \\end{center} \\caption[]{Reasoning evaluation results of scaling for 1.7T tokens vs. 1T tokens, with and without high-quality data epoch adjustment, broken down by individual benchmark.",
+    "2412-15285_sent_a835317d": "\\begin{center} \\scalebox{0.67}{\\begin{tabular}{@{}llcccccccccc@{}} Exp.",
+    "2412-15285_sent_d53c8421": "& \\multicolumn{5}{c}{MMLU} & \\multicolumn{5}{c}{Code} \\\\ \\cmidrule(lr){3-7} \\cmidrule(lr){8-12} & & STEM & Humanities & Social Sciences & Others & Avg.",
+    "2412-15285_sent_df554f8b": "\\\\ \\ponebfourptwobone & 1T & 49.29 & 50.35 & 67.44 & 62.66 & 56.58 & 31.10 & 24.39 & 49.42 & 43.12 & 37.01 \\\\ \\ponebfourptwobone & 1.7T & 51.22 & 52.41 & 68.74 & 65.47 & 58.61 & 31.10 & 25.61 & 48.25 & 45.50 & 37.62 \\\\ \\ponebfourptwobsix & 1.7T & 52.39 & 53.41 & 70.20 & 66.91 & 59.85 & 37.20 & 28.66 & 47.08 & 45.50 & 39.61 \\\\ \\end{tabular}} \\end{center} \\caption[]{MMLU and code evaluation results of scaling for 1.7T tokens vs. 1T tokens, with and without high-quality data epoch adjustment, broken down by individual category/benchmark.",
+    "2412-15285_sent_55cc3c72": "\\begin{center} \\scalebox{0.70}{\\begin{tabular}{@{}lccccccccc@{}} Model Size & ARC-Easy & ARC-Challenge & RACE & PIQA & WinoGrande & HellaSwag & OpenBookQA & CommonsenseQA & Avg.\\\\ 8B & 80.60 & 53.50 & 37.22 & 80.20 & 70.17 & 76.57 & 45.40 & 61.67 & 61.16 \\\\ 25B & 82.74 & 57.59 & 37.13 & 81.07 & 72.38 & 78.62 & 47.20 & 68.55 & 63.29 \\\\ \\end{tabular}} \\end{center} \\caption[]{Reasoning evaluation results for 8B vs. 25B parameter models, using the same blend: \\ponebfourptwobone, broken down by individual benchmark.",
+    "2412-15285_sent_fa6dd59d": "Note that we use a maximum sequence length of 8192 (instead of 4096) for both models here.",
+    "2412-15285_sent_21a60548": "\\begin{center} \\scalebox{0.70}{\\begin{tabular}{@{}lcccccccccc@{}} Model Size & \\multicolumn{5}{c}{MMLU} & \\multicolumn{5}{c}{Code} \\\\ \\cmidrule(lr){2-6} \\cmidrule(lr){7-11} & STEM & Humanities & Social Sciences & Others & Avg.",
+    "2412-15285_sent_ca3a6acf": "\\\\ 8B & 50.05 & 50.82 & 67.70 & 64.21 & 57.31 & 32.93 & 28.66 & 47.47 & 46.83 & 38.97 \\\\ 25B & 58.07 & 59.30 & 77.71 & 72.48 & 65.97 & 37.20 & 33.54 & 58.37 & 53.17 & 45.57 \\\\ \\end{tabular}} \\end{center} \\caption[]{MMLU and code evaluation results for 8B vs. 25B parameter models, using the same blend: \\ponebfourptwobone, broken down by individual category/benchmark.",
+    "2412-15285_fig_be7815f5": "\\begin{table}\n\\begin{center}\n\\scalebox{0.70}{\\begin{tabular}{@{}llrrrr@{}}\n\nCategory & Domain & $\\mathtt{CMC}$-$\\mathtt{B1}$ & $\\mathtt{CMC}$-$\\mathtt{B2}$ & $\\mathtt{CMC}$-$\\mathtt{B3}$ & \\\\\n\nWeb Crawl & - & 30 & 15 & 30 \\\\\n\n\\multirow{3}{*}{High-Quality} & Math & 23 & 33 & 33 \\\\\n& Wiki & 2 & 2 & 2 \\\\\n& Code & 25 & 30 & 15 \\\\\n\n\\multirow{3}{*}{Medium-Quality} & Books & 9 & 9 & 9 \\\\\n& Papers & 11 & 11 & 11 \\\\\n& \\ccderiv & 0 & 0 & 0 \\\\\n\nMultilingual & - & 0 & 0 & 0 \\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Finegrained $\\mathtt{CMC}$ \\phasetwo Blends (in \\%), part 1.}\n\n\\end{table}",
+    "2412-15285_fig_006ec3e6": "\\begin{table}\n\\begin{center}\n\\scalebox{0.54}{\\begin{tabular}{@{}llrrrrr@{}}\n\nCategory & Domain & $\\mathtt{CMC}$-$\\mathtt{B3}$-$\\mathtt{F10ep}$ & $\\mathtt{CMC}$-$\\mathtt{B3}$-$\\mathtt{F20ep}$ & $\\mathtt{CMC}$-$\\mathtt{B3}$-$\\mathtt{GSM8K}$ & $\\mathtt{Combo}$\\\\\n\nWeb Crawl & - & 27.1 & 24.2 & 30 & 28.3\\\\\n\n\\multirow{3}{*}{High-Quality} & Math & 33& 33 & 31 & 33\\\\\n& Wiki & 2 & 2 & 2 & 2\\\\\n& Code & 15 & 15 & 15 & 15\\\\\n\n\\multirow{3}{*}{Medium-Quality} & Books & 9 & 9 & 9 & 9\\\\\n& Papers & 11 & 11 & 11 & 11\\\\\n& \\ccderiv & 0 & 0 & 0 & 0\\\\\n\nMultilingual & - & 0 & 0 & 0 & 0\\\\\n\nTask Data & FLAN & 2.9 & 5.8 & 0 & 1\\\\\n& GSM8K & 0 & 0 & 2 & 0.7\\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Finegrained $\\mathtt{CMC}$ \\phasetwo Blends (in \\%), part 2.}\n\n\\end{table}",
+    "2412-15285_fig_024bc3d2": "\\begin{table}\n\\begin{center}\n\\scalebox{0.70}{\\begin{tabular}{@{}lrrrrr@{}}\n\nBlend/Exp. & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\n\\phaseone-only & 56.10 & 60.64 & 16.60 & 16.22 & 44.48\\\\\n$\\mathtt{CMC}$-$\\mathtt{B1}$ & 49.49 & 57.79 & 16.30 & 21.13 & 43.76\\\\\n$\\mathtt{CMC}$-$\\mathtt{B2}$ & 55.92 & 60.52 & 22.97 & 21.80 & 46.45\\\\\n$\\mathtt{CMC}$-$\\mathtt{B3}$ & 56.33 & 60.48 & 22.59 & 21.53 & 46.34\\\\\n$\\mathtt{CMC}$-$\\mathtt{B3}$-$\\mathtt{F10ep}$ & 56.45 & 62.80 & 25.70 & 21.46 & 47.89\\\\\n$\\mathtt{CMC}$-$\\mathtt{B3}$-$\\mathtt{F20ep}$ & 56.75 & 62.49 & 26.84 & 22.05 & 47.98\\\\\n$\\mathtt{CMC}$-$\\mathtt{B3}$-$\\mathtt{GSM8K}$ & 56.27 & 60.65 & 35.56 & 21.52 & 47.37\\\\\n\n$\\mathtt{CMC}$-$\\mathtt{B3}$-$\\mathtt{30\\%}$ & 56.30 & 59.61 & 32.15 & 23.51 & 47.10\\\\\n$\\mathtt{Combo}$ & 56.22 & 62.51 & 45.19 & 25.58 & 50.27\\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Results of finegrained \\phasetwo experiments. Code results here average across only HumanEval and MBPP, but not the + versions of both. Hence, they are not directly comparable with the paper results elsewhere.\n\n\\end{table}",
+    "2412-15285_fig_73e50bec": "\\begin{table}\n\\begin{center}\n\\scalebox{0.62}{\\begin{tabular}{@{}llrrrrr@{}}\n\nDecay Strategy & Final LR & MMLU & Reason. & GSM8K & Code & Avg. \\\\\n\nLinear & $0$ & 56.33 & 61.78 & 22.59 & 21.53 & 46.34\\\\\nLinear & $3e-6$ & 56.16 & 61.63 & 23.35 & 20.68 & 46.08\\\\\nCosine & $0$ & 56.25 & 61.74 & 21.91 & 21.18 & 46.19\\\\\nCosine & $3e-6$ & 56.44 & 61.79 & 23.05 & 20.75 & 46.17\\\\\n\n\\end{tabular}}\n\\end{center}\n\\caption[]{Results of different learning rate annealing strategies for \\phasetwo.\n\n\\end{table}"
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15285_sent_676977e1": "2412-15285_doc_root",
+      "2412-15285_abstract_ce28071e": "2412-15285_doc_root",
+      "2412-15285_sent_7393f227": "2412-15285_abstract_ce28071e",
+      "2412-15285_sent_6411ed23": "2412-15285_abstract_ce28071e",
+      "2412-15285_sent_f13e377f": "2412-15285_abstract_ce28071e",
+      "2412-15285_sent_3f3cfef2": "2412-15285_abstract_ce28071e",
+      "2412-15285_sent_51da8444": "2412-15285_abstract_ce28071e",
+      "2412-15285_sent_2c30afa7": "2412-15285_abstract_ce28071e",
+      "2412-15285_sent_79219177": "2412-15285_abstract_ce28071e",
+      "2412-15285_section_0b79795d": "2412-15285_doc_root",
+      "2412-15285_sent_cf0b1828": "2412-15285_section_b2164bbf",
+      "2412-15285_subsection_c076e4fd": "2412-15285_section_0b79795d",
+      "2412-15285_itemize_f6fffe20": "2412-15285_subsection_69f064b5",
+      "2412-15285_item_931714f1": "2412-15285_itemize_f6fffe20",
+      "2412-15285_sent_c8c715ba": "2412-15285_item_931714f1",
+      "2412-15285_sent_3718004c": "2412-15285_item_931714f1",
+      "2412-15285_sent_b539d04b": "2412-15285_item_931714f1",
+      "2412-15285_sent_735084bf": "2412-15285_item_931714f1",
+      "2412-15285_subsection_982cda3c": "2412-15285_section_0b79795d",
+      "2412-15285_sent_a92edb2e": "2412-15285_item_931714f1",
+      "2412-15285_sent_7d0f6d50": "2412-15285_item_931714f1",
+      "2412-15285_sent_5e454b88": "2412-15285_item_931714f1",
+      "2412-15285_sent_50a82b03": "2412-15285_item_931714f1",
+      "2412-15285_subsection_efa2b73f": "2412-15285_section_0b79795d",
+      "2412-15285_sent_8276d1cf": "2412-15285_item_931714f1",
+      "2412-15285_sent_0f58257b": "2412-15285_item_931714f1",
+      "2412-15285_sent_051f0771": "2412-15285_item_931714f1",
+      "2412-15285_sent_687ef323": "2412-15285_item_931714f1",
+      "2412-15285_sent_af25c2da": "2412-15285_item_931714f1",
+      "2412-15285_sent_3baa1141": "2412-15285_item_931714f1",
+      "2412-15285_sent_686bb697": "2412-15285_item_931714f1",
+      "2412-15285_sent_9a00edd9": "2412-15285_item_931714f1",
+      "2412-15285_sent_18a318ec": "2412-15285_item_931714f1",
+      "2412-15285_sent_e9d32c6d": "2412-15285_item_931714f1",
+      "2412-15285_sent_0827fcea": "2412-15285_item_931714f1",
+      "2412-15285_subsection_4504e115": "2412-15285_section_0b79795d",
+      "2412-15285_sent_68e965eb": "2412-15285_item_931714f1",
+      "2412-15285_sent_d6fad4c8": "2412-15285_item_931714f1",
+      "2412-15285_sent_fd19ddde": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_11d7c3c2": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_4717c2e0": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_982263a2": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_24551036": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_fc65c804": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_fe8e35bb": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_c8b02341": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_786f0169": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_39cfbee3": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_9a073b8c": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_d3b9421e": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_63fabf70": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_b9ec7bf1": "2412-15285_subsection_4504e115",
+      "2412-15285_fig_37deab3f": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_f71fa0ad": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_9f669ec3": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_4df88cd5": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_3aafdfbf": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_f25da8b9": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_aa5f5b6b": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_fdb8af69": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_e58a4696": "2412-15285_item_931714f1",
+      "2412-15285_sent_66818267": "2412-15285_item_931714f1",
+      "2412-15285_sent_7a9ece48": "2412-15285_item_931714f1",
+      "2412-15285_sent_624f4c9d": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_2a057711": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_ad93aa23": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_58a9353e": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_77c074e0": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_2f80fba9": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_315ca811": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_d6ec5de1": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_298e894d": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_4d41460d": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_0bfdc0f3": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_a21973e5": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_aec970ae": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_d6c45cf5": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_e8df8575": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_98a579ca": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_7c243c3d": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_00839718": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_2f6a097e": "2412-15285_subsection_4504e115",
+      "2412-15285_sent_cabd2727": "2412-15285_subsection_4504e115",
+      "2412-15285_section_a24c284b": "2412-15285_doc_root",
+      "2412-15285_sent_111eda76": "2412-15285_section_a24c284b",
+      "2412-15285_sent_2b145036": "2412-15285_section_a24c284b",
+      "2412-15285_sent_843fdf58": "2412-15285_section_a24c284b",
+      "2412-15285_sent_871955f1": "2412-15285_section_a24c284b",
+      "2412-15285_sent_7808e191": "2412-15285_section_a24c284b",
+      "2412-15285_sent_3ce4ef40": "2412-15285_section_a24c284b",
+      "2412-15285_sent_9676e7d9": "2412-15285_section_a24c284b",
+      "2412-15285_sent_c1ba8cc9": "2412-15285_section_a24c284b",
+      "2412-15285_sent_17cfd140": "2412-15285_section_a24c284b",
+      "2412-15285_sent_a53da3a6": "2412-15285_section_a24c284b",
+      "2412-15285_paragraph_586f0f71": "2412-15285_section_a24c284b",
+      "2412-15285_section_d575842d": "2412-15285_doc_root",
+      "2412-15285_fig_7f9d6c5a": "2412-15285_section_d575842d",
+      "2412-15285_subsection_3615386d": "2412-15285_section_d575842d",
+      "2412-15285_sent_febb55bc": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_954c8c83": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_fd8b42d9": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_33800b41": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_2934f64d": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_03dc1dfb": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_31c4f51e": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_760357ec": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_9082aa4e": "2412-15285_subsection_3615386d",
+      "2412-15285_sent_ecbf2079": "2412-15285_subsection_3615386d",
+      "2412-15285_fig_5b2e5d48": "2412-15285_subsection_3615386d",
+      "2412-15285_subsection_c1900ae1": "2412-15285_section_d575842d",
+      "2412-15285_sent_bde7984a": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_5a777622": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_3831549e": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_a77188ee": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_67d6dc17": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_e4c84655": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_9ed85024": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_38148b89": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_d3b390c3": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_fc564f67": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_14c35a1d": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_114e0293": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_f9bf0d40": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_dc47e6c6": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_aff09288": "2412-15285_subsection_c1900ae1",
+      "2412-15285_sent_e805a75f": "2412-15285_subsection_c1900ae1",
+      "2412-15285_fig_f2aec6c6": "2412-15285_subsection_c1900ae1",
+      "2412-15285_subsection_0f29c8c7": "2412-15285_doc_root",
+      "2412-15285_sent_3587a33c": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_58fd1995": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_29b14753": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_6c2bba39": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_d545214b": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_9fa7c83b": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_58cd3a8e": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_subsection_ab363ea2": "2412-15285_section_d575842d",
+      "2412-15285_sent_127630b7": "2412-15285_subsection_ab363ea2",
+      "2412-15285_sent_3f4a1728": "2412-15285_subsection_ab363ea2",
+      "2412-15285_sent_d2b4b215": "2412-15285_subsection_ab363ea2",
+      "2412-15285_sent_71656c74": "2412-15285_subsection_ab363ea2",
+      "2412-15285_sent_badca5e5": "2412-15285_subsection_ab363ea2",
+      "2412-15285_fig_e9bbe9a4": "2412-15285_subsection_ab363ea2",
+      "2412-15285_section_bd3bfef6": "2412-15285_doc_root",
+      "2412-15285_sent_5a065416": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_5c3cfd81": "2412-15285_item_931714f1",
+      "2412-15285_sent_38ad4fb0": "2412-15285_item_931714f1",
+      "2412-15285_sent_9632e160": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_0f9e9f33": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_b28ae232": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_45c03a11": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_ad0e5972": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_06d5b2b2": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_a1d4ccac": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_001e042a": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_2fc9293d": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_277bd070": "2412-15285_section_bd3bfef6",
+      "2412-15285_fig_aee45744": "2412-15285_section_bd3bfef6",
+      "2412-15285_subsection_456a91a0": "2412-15285_section_bd3bfef6",
+      "2412-15285_fig_06ff8401": "2412-15285_subsection_456a91a0",
+      "2412-15285_fig_571d21ea": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_4985d9ef": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_501c6d5f": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_8cb59950": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_c49c6e51": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_af26aa8c": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_3e18e4d6": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_aade4e9e": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_16dd282c": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_e1a640d5": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_3f13f4af": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_e17ebf87": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_0f9da6aa": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_3951da60": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_cfe08aa6": "2412-15285_subsection_456a91a0",
+      "2412-15285_fig_05e64243": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_03515fa5": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_d5c44000": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_ab8ff5da": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_3ecb13d5": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_70624306": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_51eea9a2": "2412-15285_subsection_456a91a0",
+      "2412-15285_sent_00656bca": "2412-15285_subsection_456a91a0",
+      "2412-15285_fig_5cbe066e": "2412-15285_subsection_456a91a0",
+      "2412-15285_subsection_bc967dc2": "2412-15285_section_bd3bfef6",
+      "2412-15285_sent_6b060995": "2412-15285_item_931714f1",
+      "2412-15285_sent_8f3752f9": "2412-15285_item_931714f1",
+      "2412-15285_sent_236755da": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_55e6aa0f": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_09c14e65": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_c24d9255": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_a9cb5525": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_42f8fc92": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_8a376f84": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_17d2c762": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_80ab2499": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_d2dc1813": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_54d86e97": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_30bb673e": "2412-15285_subsection_bc967dc2",
+      "2412-15285_sent_724e80ad": "2412-15285_subsection_bc967dc2",
+      "2412-15285_fig_4ad79a0f": "2412-15285_subsection_bc967dc2",
+      "2412-15285_fig_5558ea93": "2412-15285_subsection_bc967dc2",
+      "2412-15285_section_d28d2294": "2412-15285_doc_root",
+      "2412-15285_sent_31e337f0": "2412-15285_section_d28d2294",
+      "2412-15285_sent_b5282106": "2412-15285_section_d28d2294",
+      "2412-15285_subsection_37efc826": "2412-15285_section_d28d2294",
+      "2412-15285_sent_0616f59e": "2412-15285_subsection_69f064b5",
+      "2412-15285_sent_15ae6baf": "2412-15285_item_931714f1",
+      "2412-15285_sent_2aa44870": "2412-15285_item_931714f1",
+      "2412-15285_sent_5e8c0573": "2412-15285_subsection_37efc826",
+      "2412-15285_sent_9a78432b": "2412-15285_subsection_37efc826",
+      "2412-15285_sent_b0d6628b": "2412-15285_subsection_37efc826",
+      "2412-15285_sent_0e13caf6": "2412-15285_subsection_37efc826",
+      "2412-15285_sent_3f9f4c70": "2412-15285_subsection_37efc826",
+      "2412-15285_sent_4d0e77ec": "2412-15285_subsection_37efc826",
+      "2412-15285_sent_508a0efa": "2412-15285_subsection_37efc826",
+      "2412-15285_fig_5651e86e": "2412-15285_subsection_37efc826",
+      "2412-15285_paragraph_03c324ca": "2412-15285_subsection_37efc826",
+      "2412-15285_sent_d48621b9": "2412-15285_paragraph_03c324ca",
+      "2412-15285_fig_44fed58a": "2412-15285_paragraph_03c324ca",
+      "2412-15285_sent_a07a9b00": "2412-15285_paragraph_03c324ca",
+      "2412-15285_sent_13834676": "2412-15285_paragraph_03c324ca",
+      "2412-15285_sent_462798c3": "2412-15285_paragraph_03c324ca",
+      "2412-15285_sent_5350a5e3": "2412-15285_paragraph_03c324ca",
+      "2412-15285_sent_7b3f81d5": "2412-15285_paragraph_03c324ca",
+      "2412-15285_sent_3e3e4f68": "2412-15285_paragraph_03c324ca",
+      "2412-15285_fig_cf8bddaa": "2412-15285_paragraph_03c324ca",
+      "2412-15285_fig_a78d5ee5": "2412-15285_paragraph_03c324ca",
+      "2412-15285_paragraph_cc24020a": "2412-15285_subsection_37efc826",
+      "2412-15285_sent_aa5c6822": "2412-15285_paragraph_cc24020a",
+      "2412-15285_sent_4e2be940": "2412-15285_paragraph_cc24020a",
+      "2412-15285_sent_cf1db473": "2412-15285_paragraph_cc24020a",
+      "2412-15285_sent_1f2bb423": "2412-15285_paragraph_cc24020a",
+      "2412-15285_sent_e7d4bc07": "2412-15285_paragraph_cc24020a",
+      "2412-15285_subsection_548fae98": "2412-15285_section_d28d2294",
+      "2412-15285_sent_983a4c81": "2412-15285_item_931714f1",
+      "2412-15285_sent_678677c4": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_1a126d13": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_0534ce40": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_02cc239f": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_f46be7b6": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_b71ef84d": "2412-15285_subsection_548fae98",
+      "2412-15285_fig_abc24ca2": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_a57cf717": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_5cd977c5": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_8babfb21": "2412-15285_subsection_548fae98",
+      "2412-15285_sent_c70de75d": "2412-15285_subsection_548fae98",
+      "2412-15285_subsection_69f064b5": "2412-15285_section_d28d2294",
+      "2412-15285_sent_b2b02b45": "2412-15285_item_931714f1",
+      "2412-15285_sent_d595f0d0": "2412-15285_subsection_69f064b5",
+      "2412-15285_sent_923a7435": "2412-15285_subsection_69f064b5",
+      "2412-15285_sent_79ad6262": "2412-15285_subsection_69f064b5",
+      "2412-15285_sent_0281bc9c": "2412-15285_subsection_69f064b5",
+      "2412-15285_sent_0aef2ecd": "2412-15285_subsection_69f064b5",
+      "2412-15285_sent_c3a66110": "2412-15285_subsection_69f064b5",
+      "2412-15285_fig_6fa8406b": "2412-15285_subsection_69f064b5",
+      "2412-15285_section_aed402c3": "2412-15285_doc_root",
+      "2412-15285_sent_7386b388": "2412-15285_section_aed402c3",
+      "2412-15285_sent_44e68154": "2412-15285_section_aed402c3",
+      "2412-15285_sent_300ab623": "2412-15285_section_aed402c3",
+      "2412-15285_sent_5466ddef": "2412-15285_section_aed402c3",
+      "2412-15285_sent_37441324": "2412-15285_section_aed402c3",
+      "2412-15285_sent_a7fbfad0": "2412-15285_section_aed402c3",
+      "2412-15285_sent_efd784ae": "2412-15285_section_aed402c3",
+      "2412-15285_sent_fe86449f": "2412-15285_section_aed402c3",
+      "2412-15285_sent_4ab1aeed": "2412-15285_section_aed402c3",
+      "2412-15285_sent_8d6bc210": "2412-15285_section_aed402c3",
+      "2412-15285_sent_954080a1": "2412-15285_section_aed402c3",
+      "2412-15285_sent_d4e396f1": "2412-15285_section_aed402c3",
+      "2412-15285_sent_160c2a47": "2412-15285_section_aed402c3",
+      "2412-15285_sent_e2b4aafe": "2412-15285_section_aed402c3",
+      "2412-15285_sent_f7416fe3": "2412-15285_section_aed402c3",
+      "2412-15285_section_6f8b794f": "2412-15285_doc_root",
+      "2412-15285_sent_b38623f1": "2412-15285_section_6f8b794f",
+      "2412-15285_sent_62ce7c47": "2412-15285_section_6f8b794f",
+      "2412-15285_sent_e7a86e31": "2412-15285_section_6f8b794f",
+      "2412-15285_sent_2e4aae53": "2412-15285_section_6f8b794f",
+      "2412-15285_sent_fd7beaae": "2412-15285_section_6f8b794f",
+      "2412-15285_sent_f4c77c3c": "2412-15285_section_6f8b794f",
+      "2412-15285_sent_7675f9b4": "2412-15285_section_6f8b794f",
+      "2412-15285_section_e646e16b": "2412-15285_doc_root",
+      "2412-15285_sent_9cebe53f": "2412-15285_section_e646e16b",
+      "2412-15285_sent_0a681786": "2412-15285_section_e646e16b",
+      "2412-15285_sent_977d0d11": "2412-15285_section_e646e16b",
+      "2412-15285_sent_f82a15d8": "2412-15285_section_e646e16b",
+      "2412-15285_sent_9aa31ca8": "2412-15285_section_e646e16b",
+      "2412-15285_sent_3365a161": "2412-15285_section_e646e16b",
+      "2412-15285_sent_fdc1e5fe": "2412-15285_section_e646e16b",
+      "2412-15285_sent_58cafaf6": "2412-15285_section_e646e16b",
+      "2412-15285_sent_8004dcce": "2412-15285_section_e646e16b",
+      "2412-15285_section_13f48934": "2412-15285_doc_root",
+      "2412-15285_sent_1e07efb1": "2412-15285_section_13f48934",
+      "2412-15285_sent_d08fb1d1": "2412-15285_section_13f48934",
+      "2412-15285_sent_4ccabee4": "2412-15285_section_13f48934",
+      "2412-15285_sent_36ae799d": "2412-15285_section_13f48934",
+      "2412-15285_sent_fe79add0": "2412-15285_section_13f48934",
+      "2412-15285_sent_173432a6": "2412-15285_section_13f48934",
+      "2412-15285_sent_004f1fb8": "2412-15285_section_13f48934",
+      "2412-15285_sent_e3af265a": "2412-15285_section_13f48934",
+      "2412-15285_sent_6fea60cb": "2412-15285_section_13f48934",
+      "2412-15285_sent_b3e1e239": "2412-15285_section_13f48934",
+      "2412-15285_sent_8374d352": "2412-15285_section_13f48934",
+      "2412-15285_sent_fcab2141": "2412-15285_section_13f48934",
+      "2412-15285_sent_f37c20cb": "2412-15285_section_13f48934",
+      "2412-15285_sent_748df00d": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_5386eff8": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_4a3dc3a4": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_e0cfbd89": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_b82b91e5": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_sent_e39b80c4": "2412-15285_subsection_0f29c8c7",
+      "2412-15285_section_be16b462": "2412-15285_doc_root",
+      "2412-15285_sent_50af80f7": "2412-15285_section_be16b462",
+      "2412-15285_sent_f6042881": "2412-15285_section_be16b462",
+      "2412-15285_sent_76d943a3": "2412-15285_section_be16b462",
+      "2412-15285_sent_3bef1316": "2412-15285_section_be16b462",
+      "2412-15285_fig_f8e61e81": "2412-15285_section_be16b462",
+      "2412-15285_section_f920fa5a": "2412-15285_doc_root",
+      "2412-15285_fig_229d7670": "2412-15285_section_f920fa5a",
+      "2412-15285_sent_3d2e3ee2": "2412-15285_section_f920fa5a",
+      "2412-15285_sent_d23a5780": "2412-15285_section_f920fa5a",
+      "2412-15285_sent_7c89d5f6": "2412-15285_section_f920fa5a",
+      "2412-15285_sent_94896fe3": "2412-15285_section_f920fa5a",
+      "2412-15285_sent_184bb1db": "2412-15285_section_f920fa5a",
+      "2412-15285_sent_f300d8b9": "2412-15285_section_f920fa5a",
+      "2412-15285_sent_98b383e9": "2412-15285_section_f920fa5a",
+      "2412-15285_fig_87fbf4cc": "2412-15285_section_f920fa5a",
+      "2412-15285_section_87cc3da5": "2412-15285_doc_root",
+      "2412-15285_sent_270371e4": "2412-15285_section_87cc3da5",
+      "2412-15285_sent_9a535bfb": "2412-15285_section_87cc3da5",
+      "2412-15285_paragraph_d7e63f84": "2412-15285_section_87cc3da5",
+      "2412-15285_sent_3ad95f6e": "2412-15285_paragraph_d7e63f84",
+      "2412-15285_sent_b612c549": "2412-15285_paragraph_d7e63f84",
+      "2412-15285_sent_eed926df": "2412-15285_paragraph_d7e63f84",
+      "2412-15285_sent_3326450d": "2412-15285_paragraph_d7e63f84",
+      "2412-15285_sent_50bb33ff": "2412-15285_paragraph_d7e63f84",
+      "2412-15285_sent_32e3df99": "2412-15285_paragraph_d7e63f84",
+      "2412-15285_paragraph_0fa34999": "2412-15285_section_87cc3da5",
+      "2412-15285_sent_4edb6842": "2412-15285_paragraph_0fa34999",
+      "2412-15285_sent_ca0b7aeb": "2412-15285_paragraph_0fa34999",
+      "2412-15285_sent_0fa8ebe3": "2412-15285_paragraph_0fa34999",
+      "2412-15285_sent_1a2f35c4": "2412-15285_paragraph_0fa34999",
+      "2412-15285_sent_d5b0049e": "2412-15285_paragraph_0fa34999",
+      "2412-15285_sent_11cf67e6": "2412-15285_paragraph_0fa34999",
+      "2412-15285_sent_9b150a9c": "2412-15285_paragraph_0fa34999",
+      "2412-15285_paragraph_e5cca970": "2412-15285_section_87cc3da5",
+      "2412-15285_sent_5c53768b": "2412-15285_paragraph_e5cca970",
+      "2412-15285_sent_ec7ff9f8": "2412-15285_paragraph_e5cca970",
+      "2412-15285_section_b2164bbf": "2412-15285_doc_root",
+      "2412-15285_sent_44c31b65": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_63441213": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_86983091": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_86b7f20c": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_6e3cbbb1": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_f71c3f4b": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_894827bf": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_cec5602a": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_2b2ccdcd": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_977baaca": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_23ebf30b": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_5801916e": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_9970780c": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_75bced7b": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_e2aff184": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_012f5781": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_e738877c": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_1fbe1f3a": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_70271fee": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_a835317d": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_d53c8421": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_df554f8b": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_55cc3c72": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_fa6dd59d": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_21a60548": "2412-15285_section_b2164bbf",
+      "2412-15285_sent_ca3a6acf": "2412-15285_section_b2164bbf",
+      "2412-15285_fig_be7815f5": "2412-15285_section_b2164bbf",
+      "2412-15285_fig_006ec3e6": "2412-15285_section_b2164bbf",
+      "2412-15285_fig_024bc3d2": "2412-15285_section_b2164bbf",
+      "2412-15285_fig_73e50bec": "2412-15285_section_b2164bbf"
+    }
+  },
+  "merged_parents": {
+    "2412-15285_sent_676977e1": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_abstract_ce28071e": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_7393f227": [
+      "2412-15285_abstract_ce28071e"
+    ],
+    "2412-15285_sent_6411ed23": [
+      "2412-15285_abstract_ce28071e"
+    ],
+    "2412-15285_sent_f13e377f": [
+      "2412-15285_abstract_ce28071e"
+    ],
+    "2412-15285_sent_3f3cfef2": [
+      "2412-15285_abstract_ce28071e"
+    ],
+    "2412-15285_sent_51da8444": [
+      "2412-15285_abstract_ce28071e"
+    ],
+    "2412-15285_sent_2c30afa7": [
+      "2412-15285_abstract_ce28071e"
+    ],
+    "2412-15285_sent_79219177": [
+      "2412-15285_abstract_ce28071e"
+    ],
+    "2412-15285_section_0b79795d": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_cf0b1828": [
+      "2412-15285_section_0b79795d",
+      "2412-15285_section_6f8b794f",
+      "2412-15285_section_b2164bbf",
+      "2412-15285_subsection_3615386d",
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_subsection_c076e4fd": [
+      "2412-15285_section_0b79795d"
+    ],
+    "2412-15285_itemize_f6fffe20": [
+      "2412-15285_section_bd3bfef6",
+      "2412-15285_subsection_37efc826",
+      "2412-15285_subsection_4504e115",
+      "2412-15285_subsection_548fae98",
+      "2412-15285_subsection_69f064b5",
+      "2412-15285_subsection_982cda3c",
+      "2412-15285_subsection_bc967dc2",
+      "2412-15285_subsection_c076e4fd",
+      "2412-15285_subsection_efa2b73f"
+    ],
+    "2412-15285_item_931714f1": [
+      "2412-15285_itemize_f6fffe20"
+    ],
+    "2412-15285_sent_c8c715ba": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_3718004c": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_b539d04b": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_735084bf": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_subsection_982cda3c": [
+      "2412-15285_section_0b79795d"
+    ],
+    "2412-15285_sent_a92edb2e": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_7d0f6d50": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_5e454b88": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_50a82b03": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_subsection_efa2b73f": [
+      "2412-15285_section_0b79795d"
+    ],
+    "2412-15285_sent_8276d1cf": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_0f58257b": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_051f0771": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_687ef323": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_af25c2da": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_3baa1141": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_686bb697": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_9a00edd9": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_18a318ec": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_e9d32c6d": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_0827fcea": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_subsection_4504e115": [
+      "2412-15285_section_0b79795d"
+    ],
+    "2412-15285_sent_68e965eb": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_d6fad4c8": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_fd19ddde": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_11d7c3c2": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_4717c2e0": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_982263a2": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_24551036": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_fc65c804": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_fe8e35bb": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_c8b02341": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_786f0169": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_39cfbee3": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_9a073b8c": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_d3b9421e": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_63fabf70": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_b9ec7bf1": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_fig_37deab3f": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_f71fa0ad": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_9f669ec3": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_4df88cd5": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_3aafdfbf": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_f25da8b9": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_aa5f5b6b": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_fdb8af69": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_e58a4696": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_66818267": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_7a9ece48": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_624f4c9d": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_2a057711": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_ad93aa23": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_58a9353e": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_77c074e0": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_2f80fba9": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_315ca811": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_d6ec5de1": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_298e894d": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_4d41460d": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_0bfdc0f3": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_a21973e5": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_aec970ae": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_d6c45cf5": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_e8df8575": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_98a579ca": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_7c243c3d": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_00839718": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_2f6a097e": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_sent_cabd2727": [
+      "2412-15285_subsection_4504e115"
+    ],
+    "2412-15285_section_a24c284b": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_111eda76": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_2b145036": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_843fdf58": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_871955f1": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_7808e191": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_3ce4ef40": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_9676e7d9": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_c1ba8cc9": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_17cfd140": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_sent_a53da3a6": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_paragraph_586f0f71": [
+      "2412-15285_section_a24c284b"
+    ],
+    "2412-15285_section_d575842d": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_fig_7f9d6c5a": [
+      "2412-15285_section_d575842d"
+    ],
+    "2412-15285_subsection_3615386d": [
+      "2412-15285_section_d575842d"
+    ],
+    "2412-15285_sent_febb55bc": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_954c8c83": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_fd8b42d9": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_33800b41": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_2934f64d": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_03dc1dfb": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_31c4f51e": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_760357ec": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_9082aa4e": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_sent_ecbf2079": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_fig_5b2e5d48": [
+      "2412-15285_subsection_3615386d"
+    ],
+    "2412-15285_subsection_c1900ae1": [
+      "2412-15285_section_d575842d"
+    ],
+    "2412-15285_sent_bde7984a": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_5a777622": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_3831549e": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_a77188ee": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_67d6dc17": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_e4c84655": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_9ed85024": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_38148b89": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_d3b390c3": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_fc564f67": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_14c35a1d": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_114e0293": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_f9bf0d40": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_dc47e6c6": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_aff09288": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_sent_e805a75f": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_fig_f2aec6c6": [
+      "2412-15285_subsection_c1900ae1"
+    ],
+    "2412-15285_subsection_0f29c8c7": [
+      "2412-15285_doc_root",
+      "2412-15285_section_d575842d"
+    ],
+    "2412-15285_sent_3587a33c": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_58fd1995": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_29b14753": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_6c2bba39": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_d545214b": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_9fa7c83b": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_58cd3a8e": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_subsection_ab363ea2": [
+      "2412-15285_section_d575842d"
+    ],
+    "2412-15285_sent_127630b7": [
+      "2412-15285_subsection_ab363ea2"
+    ],
+    "2412-15285_sent_3f4a1728": [
+      "2412-15285_subsection_ab363ea2"
+    ],
+    "2412-15285_sent_d2b4b215": [
+      "2412-15285_subsection_ab363ea2"
+    ],
+    "2412-15285_sent_71656c74": [
+      "2412-15285_subsection_ab363ea2"
+    ],
+    "2412-15285_sent_badca5e5": [
+      "2412-15285_subsection_ab363ea2"
+    ],
+    "2412-15285_fig_e9bbe9a4": [
+      "2412-15285_subsection_ab363ea2"
+    ],
+    "2412-15285_section_bd3bfef6": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_5a065416": [
+      "2412-15285_section_bd3bfef6",
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_5c3cfd81": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_38ad4fb0": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_9632e160": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_0f9e9f33": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_b28ae232": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_45c03a11": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_ad0e5972": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_06d5b2b2": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_a1d4ccac": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_001e042a": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_2fc9293d": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_277bd070": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_fig_aee45744": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_subsection_456a91a0": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_fig_06ff8401": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_fig_571d21ea": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_4985d9ef": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_501c6d5f": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_8cb59950": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_c49c6e51": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_af26aa8c": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_3e18e4d6": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_aade4e9e": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_16dd282c": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_e1a640d5": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_3f13f4af": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_e17ebf87": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_0f9da6aa": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_3951da60": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_cfe08aa6": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_fig_05e64243": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_03515fa5": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_d5c44000": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_ab8ff5da": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_3ecb13d5": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_70624306": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_51eea9a2": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_sent_00656bca": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_fig_5cbe066e": [
+      "2412-15285_subsection_456a91a0"
+    ],
+    "2412-15285_subsection_bc967dc2": [
+      "2412-15285_section_bd3bfef6"
+    ],
+    "2412-15285_sent_6b060995": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_8f3752f9": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_236755da": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_55e6aa0f": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_09c14e65": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_c24d9255": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_a9cb5525": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_42f8fc92": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_8a376f84": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_17d2c762": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_80ab2499": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_d2dc1813": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_54d86e97": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_30bb673e": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_sent_724e80ad": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_fig_4ad79a0f": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_fig_5558ea93": [
+      "2412-15285_subsection_bc967dc2"
+    ],
+    "2412-15285_section_d28d2294": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_31e337f0": [
+      "2412-15285_section_d28d2294"
+    ],
+    "2412-15285_sent_b5282106": [
+      "2412-15285_section_d28d2294"
+    ],
+    "2412-15285_subsection_37efc826": [
+      "2412-15285_section_d28d2294"
+    ],
+    "2412-15285_sent_0616f59e": [
+      "2412-15285_subsection_37efc826",
+      "2412-15285_subsection_548fae98",
+      "2412-15285_subsection_69f064b5"
+    ],
+    "2412-15285_sent_15ae6baf": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_2aa44870": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_5e8c0573": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_sent_9a78432b": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_sent_b0d6628b": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_sent_0e13caf6": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_sent_3f9f4c70": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_sent_4d0e77ec": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_sent_508a0efa": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_fig_5651e86e": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_paragraph_03c324ca": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_sent_d48621b9": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_fig_44fed58a": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_sent_a07a9b00": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_sent_13834676": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_sent_462798c3": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_sent_5350a5e3": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_sent_7b3f81d5": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_sent_3e3e4f68": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_fig_cf8bddaa": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_fig_a78d5ee5": [
+      "2412-15285_paragraph_03c324ca"
+    ],
+    "2412-15285_paragraph_cc24020a": [
+      "2412-15285_subsection_37efc826"
+    ],
+    "2412-15285_sent_aa5c6822": [
+      "2412-15285_paragraph_cc24020a"
+    ],
+    "2412-15285_sent_4e2be940": [
+      "2412-15285_paragraph_cc24020a"
+    ],
+    "2412-15285_sent_cf1db473": [
+      "2412-15285_paragraph_cc24020a"
+    ],
+    "2412-15285_sent_1f2bb423": [
+      "2412-15285_paragraph_cc24020a"
+    ],
+    "2412-15285_sent_e7d4bc07": [
+      "2412-15285_paragraph_cc24020a"
+    ],
+    "2412-15285_subsection_548fae98": [
+      "2412-15285_section_d28d2294"
+    ],
+    "2412-15285_sent_983a4c81": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_678677c4": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_1a126d13": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_0534ce40": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_02cc239f": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_f46be7b6": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_b71ef84d": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_fig_abc24ca2": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_a57cf717": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_5cd977c5": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_8babfb21": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_sent_c70de75d": [
+      "2412-15285_subsection_548fae98"
+    ],
+    "2412-15285_subsection_69f064b5": [
+      "2412-15285_section_d28d2294"
+    ],
+    "2412-15285_sent_b2b02b45": [
+      "2412-15285_item_931714f1"
+    ],
+    "2412-15285_sent_d595f0d0": [
+      "2412-15285_subsection_69f064b5"
+    ],
+    "2412-15285_sent_923a7435": [
+      "2412-15285_subsection_69f064b5"
+    ],
+    "2412-15285_sent_79ad6262": [
+      "2412-15285_subsection_69f064b5"
+    ],
+    "2412-15285_sent_0281bc9c": [
+      "2412-15285_subsection_69f064b5"
+    ],
+    "2412-15285_sent_0aef2ecd": [
+      "2412-15285_subsection_69f064b5"
+    ],
+    "2412-15285_sent_c3a66110": [
+      "2412-15285_subsection_69f064b5"
+    ],
+    "2412-15285_fig_6fa8406b": [
+      "2412-15285_subsection_69f064b5"
+    ],
+    "2412-15285_section_aed402c3": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_7386b388": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_44e68154": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_300ab623": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_5466ddef": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_37441324": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_a7fbfad0": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_efd784ae": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_fe86449f": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_4ab1aeed": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_8d6bc210": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_954080a1": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_d4e396f1": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_160c2a47": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_e2b4aafe": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_sent_f7416fe3": [
+      "2412-15285_section_aed402c3"
+    ],
+    "2412-15285_section_6f8b794f": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_b38623f1": [
+      "2412-15285_section_6f8b794f"
+    ],
+    "2412-15285_sent_62ce7c47": [
+      "2412-15285_section_6f8b794f"
+    ],
+    "2412-15285_sent_e7a86e31": [
+      "2412-15285_section_6f8b794f"
+    ],
+    "2412-15285_sent_2e4aae53": [
+      "2412-15285_section_6f8b794f"
+    ],
+    "2412-15285_sent_fd7beaae": [
+      "2412-15285_section_6f8b794f"
+    ],
+    "2412-15285_sent_f4c77c3c": [
+      "2412-15285_section_6f8b794f"
+    ],
+    "2412-15285_sent_7675f9b4": [
+      "2412-15285_section_6f8b794f"
+    ],
+    "2412-15285_section_e646e16b": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_9cebe53f": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_sent_0a681786": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_sent_977d0d11": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_sent_f82a15d8": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_sent_9aa31ca8": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_sent_3365a161": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_sent_fdc1e5fe": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_sent_58cafaf6": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_sent_8004dcce": [
+      "2412-15285_section_e646e16b"
+    ],
+    "2412-15285_section_13f48934": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_1e07efb1": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_d08fb1d1": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_4ccabee4": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_36ae799d": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_fe79add0": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_173432a6": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_004f1fb8": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_e3af265a": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_6fea60cb": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_b3e1e239": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_8374d352": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_fcab2141": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_f37c20cb": [
+      "2412-15285_section_13f48934"
+    ],
+    "2412-15285_sent_748df00d": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_5386eff8": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_4a3dc3a4": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_e0cfbd89": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_b82b91e5": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_sent_e39b80c4": [
+      "2412-15285_subsection_0f29c8c7"
+    ],
+    "2412-15285_section_be16b462": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_50af80f7": [
+      "2412-15285_section_be16b462"
+    ],
+    "2412-15285_sent_f6042881": [
+      "2412-15285_section_be16b462"
+    ],
+    "2412-15285_sent_76d943a3": [
+      "2412-15285_section_be16b462"
+    ],
+    "2412-15285_sent_3bef1316": [
+      "2412-15285_section_be16b462"
+    ],
+    "2412-15285_fig_f8e61e81": [
+      "2412-15285_section_be16b462"
+    ],
+    "2412-15285_section_f920fa5a": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_fig_229d7670": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_sent_3d2e3ee2": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_sent_d23a5780": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_sent_7c89d5f6": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_sent_94896fe3": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_sent_184bb1db": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_sent_f300d8b9": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_sent_98b383e9": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_fig_87fbf4cc": [
+      "2412-15285_section_f920fa5a"
+    ],
+    "2412-15285_section_87cc3da5": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_270371e4": [
+      "2412-15285_section_87cc3da5"
+    ],
+    "2412-15285_sent_9a535bfb": [
+      "2412-15285_section_87cc3da5"
+    ],
+    "2412-15285_paragraph_d7e63f84": [
+      "2412-15285_section_87cc3da5"
+    ],
+    "2412-15285_sent_3ad95f6e": [
+      "2412-15285_paragraph_d7e63f84"
+    ],
+    "2412-15285_sent_b612c549": [
+      "2412-15285_paragraph_d7e63f84"
+    ],
+    "2412-15285_sent_eed926df": [
+      "2412-15285_paragraph_d7e63f84"
+    ],
+    "2412-15285_sent_3326450d": [
+      "2412-15285_paragraph_d7e63f84"
+    ],
+    "2412-15285_sent_50bb33ff": [
+      "2412-15285_paragraph_d7e63f84"
+    ],
+    "2412-15285_sent_32e3df99": [
+      "2412-15285_paragraph_d7e63f84"
+    ],
+    "2412-15285_paragraph_0fa34999": [
+      "2412-15285_section_87cc3da5"
+    ],
+    "2412-15285_sent_4edb6842": [
+      "2412-15285_paragraph_0fa34999"
+    ],
+    "2412-15285_sent_ca0b7aeb": [
+      "2412-15285_paragraph_0fa34999"
+    ],
+    "2412-15285_sent_0fa8ebe3": [
+      "2412-15285_paragraph_0fa34999"
+    ],
+    "2412-15285_sent_1a2f35c4": [
+      "2412-15285_paragraph_0fa34999"
+    ],
+    "2412-15285_sent_d5b0049e": [
+      "2412-15285_paragraph_0fa34999"
+    ],
+    "2412-15285_sent_11cf67e6": [
+      "2412-15285_paragraph_0fa34999"
+    ],
+    "2412-15285_sent_9b150a9c": [
+      "2412-15285_paragraph_0fa34999"
+    ],
+    "2412-15285_paragraph_e5cca970": [
+      "2412-15285_section_87cc3da5"
+    ],
+    "2412-15285_sent_5c53768b": [
+      "2412-15285_paragraph_e5cca970"
+    ],
+    "2412-15285_sent_ec7ff9f8": [
+      "2412-15285_paragraph_e5cca970"
+    ],
+    "2412-15285_section_b2164bbf": [
+      "2412-15285_doc_root"
+    ],
+    "2412-15285_sent_44c31b65": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_63441213": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_86983091": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_86b7f20c": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_6e3cbbb1": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_f71c3f4b": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_894827bf": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_cec5602a": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_2b2ccdcd": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_977baaca": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_23ebf30b": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_5801916e": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_9970780c": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_75bced7b": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_e2aff184": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_012f5781": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_e738877c": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_1fbe1f3a": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_70271fee": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_a835317d": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_d53c8421": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_df554f8b": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_55cc3c72": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_fa6dd59d": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_21a60548": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_sent_ca3a6acf": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_fig_be7815f5": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_fig_006ec3e6": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_fig_024bc3d2": [
+      "2412-15285_section_b2164bbf"
+    ],
+    "2412-15285_fig_73e50bec": [
+      "2412-15285_section_b2164bbf"
+    ]
+  }
+}

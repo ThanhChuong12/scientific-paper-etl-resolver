@@ -1,0 +1,1622 @@
+{
+  "elements": {
+    "2412-15275_doc_root": "DOCUMENT_ROOT",
+    "2412-15275_sent_676977e1": "\\maketitle",
+    "2412-15275_abstract_ce28071e": "abstract",
+    "2412-15275_sent_e0aa8d4f": "The deployment of artificial intelligence (AI) in critical decision-making and evaluation processes raises concerns about inherent biases that malicious actors could exploit to distort decision outcomes.",
+    "2412-15275_sent_280150ee": "We propose a systematic method to reveal such biases in AI evaluation systems and apply it to automated essay grading as an example.",
+    "2412-15275_sent_4d04da75": "Our approach first identifies hidden neural activity patterns that predict distorted decision outcomes and then optimizes an adversarial input suffix to amplify such patterns.",
+    "2412-15275_sent_f85533be": "We demonstrate that this combination can effectively fool large language model (LLM) graders into assigning much higher grades than humans would.",
+    "2412-15275_sent_cb8dfd17": "We further show that this white-box attack transfers to black-box attacks on other models, including commercial closed-source models like Gemini.",
+    "2412-15275_sent_03af4b7c": "They further reveal the existence of a ``magic word'' that plays a pivotal role in the efficacy of the attack.",
+    "2412-15275_sent_80f668f0": "We trace the origin of this magic word bias to the structure of commonly-used chat templates for supervised fine-tuning of LLMs and show that a minor change in the template can drastically reduce the bias.",
+    "2412-15275_sent_7aa83070": "This work not only uncovers vulnerabilities in current LLMs but also proposes a systematic method to identify and remove hidden biases, contributing to the goal of ensuring AI safety and security.",
+    "2412-15275_section_0b79795d": "Introduction",
+    "2412-15275_sent_ab01fb71": "Human decision-making and evaluation processes, such as voting and academic peer-reviews, are inherently subject to biases \\cite{lee2013bias,cortes2021inconsistency}.",
+    "2412-15275_sent_4f4f0c2f": "In this context, we define bias in any decision-making system, whether human or artificial, as a sensitivity of the system to irrelevant information which could yield inconsistent or unreasonable decision outcomes.",
+    "2412-15275_sent_832e32cf": "One notable example in a human context is the bandwagon effect: in elections, for example, voters can be influenced by the popularity of choices made by others \\cite{kiss2014identifying}.",
+    "2412-15275_sent_d2438ad0": "Similarly, in collective evaluation processes, when evaluators are exposed to prior ratings, their judgments often converge toward those previous ratings \\cite{botelho2024audience}.",
+    "2412-15275_sent_b254318c": "Another human example of more direct relevance to this paper is the nonsense math effect \\cite{eriksson2012nonsense}.",
+    "2412-15275_sent_bb745be8": "In this experiment, participants were asked to score abstracts from academic papers.",
+    "2412-15275_sent_f1506637": "For some participants, the abstracts include an irrelevant suffix not related to the abstract: '{\\it A mathematical model ($T_{PP}=T_0-fT_0d^2_f-fT_pd_f$) is developed to describe sequential effects.} 'Remarkably, the addition of this irrelevant suffix increased the scores assigned by individuals without a mathematical or engineering background.",
+    "2412-15275_sent_96f76e6a": "In such research, inputs for participants are typically handcrafted by researchers, and the resulting outputs are analyzed to determine whether the input triggers biases in the participants.",
+    "2412-15275_sent_3d8d36d3": "The effectiveness of these experiments often hinges on the researchers' ability to build hypotheses and to design appropriate inputs, which is largely guided by intuition or prior knowledge.",
+    "2412-15275_sent_642b5cb5": "This reliance makes it challenging to systematically uncover hidden potential biases.",
+    "2412-15275_sent_29df76c4": "Importantly, a similar challenge exists when studying the biases of machine learning models.",
+    "2412-15275_sent_d23500fc": "Just as with humans, uncovering the hidden biases of these models requires carefully crafted inputs.",
+    "2412-15275_sent_05edcdd2": "However, rather than relying solely on researcher intuition, a more systematic approach to generating these inputs could potentially reveal biases that have not yet been recognized. Such a systematic approach is essential given the recent exploration of machine learning models as decision makers or evaluators, like AI scientists \\cite{lu2024ai}, AI reviewers \\cite{tyseropenreviewer,peerrecognized.com,checco2021ai}, or commercial AI-based assignment evaluation tools.",
+    "2412-15275_sent_abf60273": "While these systems hold promise, it is essential to recognize that, like human decision-makers, they can inherit biases from their training data.",
+    "2412-15275_sent_c5c7eec9": "When considering real-world applications, malicious users may exploit such biases through prompt injection attacks, akin to the nonsense math effect example, to manipulate outcomes and inflate their scores.",
+    "2412-15275_sent_2c8cd851": "However, unlike humans, it may be possible to address these biases algorithmically.",
+    "2412-15275_sent_0d998240": "This presents an opportunity for machines to serve as fairer, more robust, and more secure decision-making tools, provided effective mitigation strategies are developed. This underscores the importance of identifying and addressing the types of biases present in current models and preventing prompt injection attacks that exploit these biases.",
+    "2412-15275_sent_31ce141d": "In this paper, we propose a systematic approach to detect potential prompt injection attacks (Figure~\\ref{fig:illustration}).",
+    "2412-15275_sent_99f21c35": "While much of the existing research on adversarial prompts has focused on jail-breaking models to elicit harmful content, investigations into adversarial prompts designed to bias a model's decision-making remain limited. Our work aims to fill this gap by systematically identifying and addressing these biases to enhance the reliability and security of machine decision-makers.",
+    "2412-15275_fig_b71837c1": "\\begin{figure*}",
+    "2412-15275_sent_5f39c63f": "\\includegraphics[keepaspectratio, width=\\textwidth] {fig/illustration.png} \\caption{{\\bf Illustration of systematic bias injection into machine evaluators} (a) We first train a linear readout to identify internal activation patterns that can predict the model's final evaluation.",
+    "2412-15275_sent_8057c19c": "(b) We then optimize adversarial input suffixes to amplify internal activation patterns that predict high scores.",
+    "2412-15275_sent_bea86807": "Such suffixes can reveal subtle LLM biases that can be exploited to distort decision outcomes.} \\end{figure*} Our contributions are as follows: (1) We investigate the internal activation patterns of a recent open-source LLM during essay grading.",
+    "2412-15275_sent_81eccaf9": "Our analysis reveals that the model forms preliminary grade judgments immediately upon reading assessment materials, even when instructed to provide detailed analysis before assigning a final score.",
+    "2412-15275_sent_28896197": "(Section~\\ref{subsec:representation}) (2) Building on this insight, we develop an optimization-based method to generate adversarial input suffixes that exploit these identified activation patterns.",
+    "2412-15275_sent_8ecbec0c": "These suffixes effectively manipulate automated grading systems by amplifying internal representations associated with high grades, forcing the LLM to assign elevated scores irrespective of the prescribed evaluation format.",
+    "2412-15275_sent_6d66ca47": "(Section~\\ref{subsec:optmization}) (3) We demonstrate that our method exhibits strong black-box attack capabilities against both open-source and closed-source models, highlighting broader vulnerabilities present in LLM-based assessment systems.",
+    "2412-15275_sent_5044f806": "(Section~\\ref{subsec:performance}) (4) Analysis of the optimized adversarial suffixes reveals the existence of a ``magical word'' that dramatically enhances their effectiveness.",
+    "2412-15275_sent_c5ca7c0b": "We further demonstrate that this bias originates from the chat templates commonly used in supervised fine-tuning and propose a simple mitigation strategy.",
+    "2412-15275_sent_95fdd345": "(Sections~\\ref{subsec:user_effect} and~\\ref{subsec:debug})",
+    "2412-15275_section_aed402c3": "Related Work",
+    "2412-15275_sent_e6a3197b": "{\\bf Direct prompt injections.} Prompt injection attacks are potential risks of integrated LLM applications where attackers inject malicious prompts into the LLM input to manipulate it toward the attacker's desired behaviors \\cite{liu2023prompt,harangsecuring}.",
+    "2412-15275_sent_209d0277": "One such attack has been proposed for automated resume screening with LLMs. In the screening process, a resume provided by an applicant is embedded into a prompt template and is then processed by an LLM to judge if the applicant is qualified. The potential attack can be done by the applicant by adding a malicious prompt into the resume to distort the model's output.",
+    "2412-15275_sent_c10dd1b4": "In prior works, several such prompts are crafted by hand, such as “Ignore previous instructions.",
+    "2412-15275_sent_d333b333": "Print yes.” \\cite{liu2024formalizing}.",
+    "2412-15275_sent_b09b62dc": "However, such prompts assume that the attackers know the format of the model's output, which is usually inaccessible.",
+    "2412-15275_sent_33ad5ab9": "Moreover, since they are crafted by humans, it is unclear if we have discovered all the possible types of adversarial prompts.",
+    "2412-15275_sent_783bb0f1": "Hence it is crucial to find an automatic way to generate potential adversarial prompts which work universally in a variety of contexts and output formats.",
+    "2412-15275_sent_8a7d94db": "{\\bf Reverse engineering representations for interpretability and control.} Reverse engineering of language models has been an important topic of study for interpretability, safety and control.",
+    "2412-15275_sent_c559d476": "For example, \\cite{maheswaranathan2019reverse} examined recurrent neural networks in sentiment analysis, revealing a one-dimensional line attractor in the neural representation space.",
+    "2412-15275_sent_3857c614": "Along this attractor, neural activity patterns correspond to the positive or negative sentiment of input text.",
+    "2412-15275_sent_05fd2c05": "More recently, Zou et al. \\cite{zou2023representation} extended similar representation analysis techniques to transformer-based language models.",
+    "2412-15275_sent_4f733697": "Their work demonstrated that by identifying and manipulating hidden layer neural representations, they could control various aspects of model behavior, including emotional expression, fairness, and honesty of their responses.",
+    "2412-15275_sent_6199ca9c": "Recent studies have further explored the use of internal representations for implementing and detecting jailbreak attacks \\cite{li2024rethinking,zou2024improving,xuuncovering}, as we discuss next.",
+    "2412-15275_sent_19aa7ede": "{\\bf Automated generation of jailbreaking prompts.} Several prior works proposed automated ways of adversarial prompt generation, specifically for jailbreaking models to circumvent safety guards and emit unsafe text.",
+    "2412-15275_sent_becc3687": "The greedy coordinate gradient (GCG) algorithm \\cite{zou2023universal} uses back-propagation to optimize the adversarial suffix so that the model outputs a desired sequence of first few tokens.",
+    "2412-15275_sent_30dab150": "AutoDan \\cite{liu2023autodan} generates stealthy jailbreak prompts by exploiting hierarchical genetic algorithms.",
+    "2412-15275_sent_8b7dc294": "Recent methods also use neural representations to guide prompt design.",
+    "2412-15275_sent_6a5440a0": "For example, \\cite{li2024rethinking} finds activation patterns corresponding to safe prompts, and then optimizes adversarial prompts to weaken such safety patterns.",
+    "2412-15275_sent_4d3d7b51": "Similarly \\cite{xuuncovering} finds a concept activation vector \\cite{kim2018interpretability} which classifies embeddings of malicious versus safe instructions, and then uses the classifier to optimize adversarial prompts for jailbreaking.",
+    "2412-15275_sent_dda49683": "Conversely, \\cite{zou2024improving} proposes a robust algorithm to detect jail-breaking by directly operating on internal representations.",
+    "2412-15275_sent_4d16eeba": "The focus of these works are on jailbreaking, but on finding hidden biases in the evaluation processes that could distort decisions.",
+    "2412-15275_sent_eee992fc": "{\\bf Automated assessment systems.} Machine learning models have been increasingly deployed for evaluation tasks, including automated essay scoring \\cite{ramesh2022automated} and academic peer review \\cite{peerrecognized.com,checco2021ai,tyseropenreviewer}.",
+    "2412-15275_sent_bde0d3f0": "Despite this growing adoption, investigation of adversarial attacks that could distort model decisions remains limited, compared to the extensive literature on jailbreak attacks.",
+    "2412-15275_section_4c3880bb": "Method",
+    "2412-15275_sent_362dab30": "We investigate adversarial attacks on LLM essay grading systems, utilizing ``The Hewlett Foundation: Automated Essay Scoring'' dataset from Kaggle \\cite{essaydataset}.",
+    "2412-15275_sent_957b1629": "This dataset comprises eight essay problem sets, each containing approximately $2000$ high-school student essays, along with corresponding problem statements, rubric guidelines, and scores graded by human experts.",
+    "2412-15275_sent_ea2f3f95": "This dataset is particularly suitable for our research objectives for several reasons: (1) The provided rubric guidelines enable LLMs to understand grading criteria.",
+    "2412-15275_sent_f89beb84": "(2) Human-graded scores serve as ground truth for ensuring LLM grading quality.",
+    "2412-15275_sent_928630df": "(3) The text-only format of student essays eliminates the need for multi-modal models, reducing unnecessary complexity.",
+    "2412-15275_sent_03bd2907": "(4) The relatively concise nature of problem statements, rubric guidelines, and essays ensures that input and output sequences fit within context windows of recent open-source models.",
+    "2412-15275_subsection_0f631271": "Prompt template for essay grading",
+    "2412-15275_sent_6584c9d1": "We develop multiple prompt templates for language models to grade student essays.",
+    "2412-15275_sent_7a337822": "While detailed templates are provided in Appendix~\\ref{app:structure}, we outline their general structure here.",
+    "2412-15275_sent_8199bf3e": "As illustrated in Figure~\\ref{fig:score_comparison} (a), the model input comprises three components: grading instructions, a student essay, and a brief restatement of the grading task.",
+    "2412-15275_sent_ae20b8ab": "The instructions include: (1) a short declaration of the LLM's role (2) dataset-provided rubric guideline with score ranges (3) required output format specifications (4) problem statement (5) An example essay for each possible score.",
+    "2412-15275_sent_4bed8d4b": "The language models' outputs are expected to adhere to the format given in the input and include an analysis of the given essay and a score within a given score range.",
+    "2412-15275_sent_b0cb6911": "We require models to perform analysis of essays such as stating strengths, weaknesses, or criticisms to align with common practices in academic peer review and educational assessment.",
+    "2412-15275_sent_9a7f3d51": "To promote more universal effectiveness of our adversarial prompts, we prepare multiple formats to diversify the prompt templates.",
+    "2412-15275_sent_66f677f3": "In later sections, we will discuss the effectiveness of our adversarial suffixes on unseen templates.",
+    "2412-15275_sent_fac7641b": "Lastly, in this work, we focus on LLM graders in an in-context learning setting, i.e., we do not fine-tune models with human-rated scores but instead provide examples of essays for possible scores in our prompts.",
+    "2412-15275_sent_0d0ef572": "This choice is based on the following reasons: (1) If we perform neither fine-tuning nor in-context learning, the LLM-rated scores is not well-aligned with human-rated scores.",
+    "2412-15275_sent_467b1c09": "This point is discussed in detail in Appendix~\\ref{app:llm_vs_human}.",
+    "2412-15275_sent_da2925dc": "(2) Since we ask models to output essay analyses, fine-tuning would require such analyses written by human graders, which are not contained in the dataset.",
+    "2412-15275_subsection_85011fea": "Identifying the neural representation of scores: LLMs have scores in mind well before they speak",
+    "2412-15275_sent_37e12c24": "Our adversarial prompt generation process consists of two steps.",
+    "2412-15275_sent_0257b057": "First, we first identify an activation pattern in a hidden layer that is predictive of the LLM assigning the highest possible score.",
+    "2412-15275_sent_3d61a882": "This activation pattern can be thought of as representing a cognitive state of the model, associated with a high evaluation of the given essay.",
+    "2412-15275_sent_a65bc027": "Second, we optimize adversarial suffixes attached to the end of the essay to amplify the identified activation pattern.",
+    "2412-15275_sent_70c87cf4": "\\includegraphics[keepaspectratio, scale=0.3] {fig/score_comparison_Llama3.png} \\caption{{\\bf LLMs decide scores internally, much earlier than their explicit output.} (a) An illustration of how the scores are obtained. The linear readout predicts the final score distribution from activation pattern in the residual stream of a given layer at a given token position.",
+    "2412-15275_sent_4681dc9c": "In particular we consider the readout at the end of the student essay and the end of the entire input.",
+    "2412-15275_sent_584758d9": "(b,c) Comparison of averaged scores given by LLama3-8B-Instruct and the trained linear readout prediction at $16$th layer out of $32$ layers in the model.",
+    "2412-15275_sent_8d631464": "Each blue dot represents a held-out essay, which is not used to train the linear readout weights.",
+    "2412-15275_sent_3c29657e": "Note that while individual essay scores are integers, the scores displayed here are average scores weighted by the respective output distributions, and hence can be non-integer.} \\end{figure*} For each essay problem set, we construct prompts for the language model using approximately $1500$ different essays with each prompt template.",
+    "2412-15275_sent_df30f911": "In the residual stream of every layer and token position, we record the pairs of activation patterns and the corresponding LLM-graded score.",
+    "2412-15275_sent_b79fcdc3": "We employ an open-source LLM, specifically LLama3.1-8B-instruct \\cite{dubey2024llama}, which is one of the most recent publicly available models.",
+    "2412-15275_sent_9ce70ea0": "This model follows instructions smoothly, with relatively low inference cost.",
+    "2412-15275_sent_4dd0425e": "For each essay, we obtain 8 output samples that provide an empirical distribution of the scores.",
+    "2412-15275_sent_f61debeb": "We checked that the model assigns a score within the given score range; cases where the model does not are discarded. After obtaining the $(x,p)$ pairs, where $x$ represents the activation pattern and $p$ denotes the empirical score distribution, we train a linear readout that maps the activation pattern at each layer to the logits of each possible score, via",
+    "2412-15275_sent_e930dfd2": "f(x;W,b) = Wx + b, \\end{equation*} where $x\\in\\mathbb{R}^N$ is the activation pattern with the embedding dimension $N$, $W\\in\\mathbb{R}^{S\\times N}$ is the weight matrix of the linear readout with the number of possible scores $S$, and $b\\in\\mathbb{R}^S$ is a bias vector.",
+    "2412-15275_sent_9d23722d": "$f_i(x;W,b)$ represents the predicted logit associated to the $i$-th score.",
+    "2412-15275_sent_08cb7a30": "These readout weight matrix and bias vector are trained to minimize Kullback–Leibler divergence between the predicted score distribution and the empirical one:",
+    "2412-15275_sent_286a9fef": "L(W,b) = \\sum_{(x,p)}\\mathrm{KL}(\\mathrm{softmax}[f(x;W,b)];p) + \\lambda \\|W\\|^2_2.",
+    "2412-15275_sent_2c1921b5": "\\end{equation*} Here the L2-regularization is introduced as the second term since the number of data points (i.e., number of essays) is smaller than the embedding dimension $N = 4096$.",
+    "2412-15275_sent_4a2a52c1": "In our experiment, we use $\\lambda= 2\\times 10^{-5}$ determined through cross-validation using $30$\\% of the training data as a validation set.",
+    "2412-15275_sent_715857c4": "Note that this readout is individually trained for each layer and each token position.",
+    "2412-15275_sent_3855d758": "As is shown in Figure~\\ref{fig:score_comparison} (a), we focus on the two specific token positions: the end of student essay and the end of the input to the language model.",
+    "2412-15275_sent_f8e830ec": "We train a readout for each layer, and found that the readouts from the middle layers have equivalent or lower KL loss compared to those from the activation patterns in later layers, and hence we here focus on $16$th layer out of $32$ layers in Llama3.1-8B-instruct model.",
+    "2412-15275_sent_886d5a9f": "The scatter plots in Figure~\\ref{fig:score_comparison} (b) and (c) show comparisons between the scores graded by the language model and the scores predicted by the linear readouts.",
+    "2412-15275_sent_5684cda6": "Our score comparisons are on four (two times two) different setups, with two different essay problem sets and two different prompt templates.",
+    "2412-15275_sent_9ab5fdb2": "Each scatter plot in the figure corresponds to each different setup, and each point in the plot corresponds to a single held-out student essay.",
+    "2412-15275_sent_723aa8e2": "The score range for each essay problem is shown in Table~\\ref{table:essay_problems} in the appendix.",
+    "2412-15275_sent_5ae99393": "Our analysis reveals a strong correlation coefficient ($r = 0.8\\sim0.9$) between the scores read out from the LLM's hidden representations and the final scores at the output of the LLM, suggesting that the model forms an implicit evaluation immediately upon processing the student essay, well before generating an explicit score.",
+    "2412-15275_sent_a8d4d838": "This early formation of internal evaluation metrics proves crucial for adversarial prompt optimization techniques that rely on backpropagation, such as Greedy Coordinate Gradient algorithm \\cite{zou2023universal}, which is discussed in the following section.",
+    "2412-15275_sent_c32a042f": "Comparing the linear readouts at the two different token positions, we observe that the readouts from the end of input tokens demonstrate slightly higher correlation with the ground truth scores.",
+    "2412-15275_sent_b821893d": "Based on this finding, we concentrate our subsequent analysis on the linear readout specifically at the final token position in the input.",
+    "2412-15275_sent_b031da4d": "Since we are interested in cognitive states of the model corresponding to high-quality essays, we extract the readout vectors corresponding to the highest score, i.e., the vector $\\{W_{ij}\\}_{j\\in[N]}$ where $i$ is the row corresponding to the highest score.",
+    "2412-15275_sent_31389cf7": "Such a vector can be obtained for each essay problem set and prompt template.",
+    "2412-15275_sent_931b6c90": "Figure~\\ref{fig:readout_comparison} compares these vectors in terms of cosine similarity.",
+    "2412-15275_sent_c489911c": "Despite the vector dimension being large ($N=4096$), different readout vectors overlap highly, suggesting the existence of a cognitive state corresponding to high-quality essays regardless of the essay problems and prompt templates.",
+    "2412-15275_sent_b7945ac1": "Note that the highest score for problem \\#1 and \\#2 are different ($6$ and $3$), and hence the cognitive state should not be tied to a specific digit.",
+    "2412-15275_sent_71f188da": "We take the average of these four vectors and we operationally define it as a cognitive state associated to giving the highest score.",
+    "2412-15275_fig_8b36b5b6": "\\begin{figure}\n\n \\includegraphics[keepaspectratio, scale=0.5]\n {fig/readout_comparison.png}\n \\caption{{\\bf The readout weight vectors associated with the highest score largely overlap across different essay problem sets and prompt templates.} For each fixed essay problem set and prompt template, we obtain the readout weight at the end of the essay input at layer $16$ of the Llama3.1-8B-instruct model, and compute the cosine similarity between different readouts. While the highest score of problem \\#1 and \\#2 are different, their weights are well-aligned. We take the average of these four weight vectors, which we interpret as a cognitive state corresponding to the highest score in a universal context.}\n\n\\end{figure}",
+    "2412-15275_subsection_a1f64618": "Adversarial Suffix Optimization",
+    "2412-15275_sent_f61109d7": "The goal of our prompt injection attack is to amplify the projection of neural activity onto the average readout weight vector shown in Figure~\\ref{fig:readout_comparison}.",
+    "2412-15275_sent_904048f7": "Such amplified patterns should correspond to an LLM cognitive state associated with high-quality essays.",
+    "2412-15275_sent_4a122694": "The optimization of adversarial suffixes involves two steps.",
+    "2412-15275_sent_16e919dd": "First, we employ GCG the algorithm proposed by \\cite{zou2023universal}.",
+    "2412-15275_sent_53e029f2": "In the second step, we further refine the obtained suffixes by eliminating redundant tokens.",
+    "2412-15275_sent_61c6d8ee": "The GCG optimization process resembles the asynchronous update of Hopfield neural networks \\cite{hopfield1982neural}.",
+    "2412-15275_sent_3fac42d9": "Starting with an initial (random) token sequence, we iteratively update the sequence, in a token-by-token manner, to minimize a specified loss function.",
+    "2412-15275_sent_89be6018": "At each iteration we: (1) randomly choose a token position to update; (2) compute the gradient of the loss function in the space of the one-hot token representation by backpropagation; (3) replace the current token with a new token selected randomly from the top $K=256$ candidates which lower the loss the most based on the computed gradient.",
+    "2412-15275_sent_3c9d7b19": "This single-token update is performed multiple times independently in each step and then the best token sequence with the lowest loss is chosen as the next updated token sequence.",
+    "2412-15275_sent_01ec0c99": "Note that we restrict token updates to only lie within the set of tokens with purely ASCII characters.",
+    "2412-15275_sent_406eee8d": "In the original set up of the GCG algorithm, they employ a loss function designed to control the initial tokens of model's {\\it output} for specific jailbreaking purposes.",
+    "2412-15275_sent_10cb1fca": "However, this approach is ineffective in our case because fixing the initial output tokens can prevent the models from following various types of output formats, and the attackers need to know the specified format in advance.",
+    "2412-15275_sent_59da8892": "Hence, instead of controlling {\\it output} tokens, we manipulate {\\it internal} activation patterns, or cognitive states, to obtain a more general and robust method for controlling the model's behavior.",
+    "2412-15275_sent_1471b97f": "Accordingly, we define our loss function as the negated inner product between the model's activation pattern and the target activation vector to achieve amplification of the cognitive states associated with high scores.",
+    "2412-15275_sent_4c1d146f": "We iterate the GCG update $1000$ times to obtain the best adversarial suffice with the lowest loss.",
+    "2412-15275_sent_95c301e3": "Since the algorithm tends to be trapped by local minima in the loss landscape, we also repeat this optimization process $10$ times using different random seeds. We initially fix each suffice to be $20$ tokens long.",
+    "2412-15275_sent_efafa938": "While GCG is one of the most effective algorithms for prompt optimization, we observe that the optimized strings often contain redundant tokens.",
+    "2412-15275_sent_92a7e0b2": "These tokens either do not contribute to or occasionally diminish the performance of adversarial suffixes, suggesting they can be removed to simplify the suffix.",
+    "2412-15275_sent_a04d5f0e": "We hypothesize that these redundant tokens emerge because the number of tokens remains constant during GCG's optimization process, leaving the algorithm without a mechanism to eliminate unnecessary elements.",
+    "2412-15275_sent_7f111b81": "To address this, we conduct a token removal process after GCG optimization.",
+    "2412-15275_sent_18e5a957": "For each $20$ token suffix generated by GCG, we systematically evaluate the impact of removing individual tokens by measuring the average normalized score gain with the same set of essay problems and prompt templates used in the GCG optimization.",
+    "2412-15275_sent_b741dd9e": "We define the normalized score gain on a single essay as the score of the essay with the token suffix minus the score of the original essay without it, divided by the overall score range.",
+    "2412-15275_sent_eb74ed06": "This evaluation was conducted using Llama3.1-8B-Instruct-Turbo\\footnote{A quantized version of Llama3.1-8B-Instruct with with FP8 for lower-cost inference}.",
+    "2412-15275_sent_a7c87991": "The average normalized score gains are calculated by averaging results across $100$ essays for each problem-template combination and then averaging over problems \\#1 and \\#2 and template \\#1 and \\#2.",
+    "2412-15275_sent_9f9c0802": "For each $20$-token adversarial suffix, we compute the same average score gain after removing individual tokens.",
+    "2412-15275_sent_8e7e1925": "We classify a token as redundant if its removal either improves the score gain or decreases it by less than $1$\\%.",
+    "2412-15275_sent_8d161ba7": "This cleanup process is applied to the top 3 performing suffixes from our initial set of 10 suffixes, resulting in the optimized strings presented in Table~\\ref{table:adv_suffixes}.",
+    "2412-15275_fig_dd85f8b9": "\\begin{table}\n\\begin{center}\n\\begin{tabular}{ |c|c| } \n\nID & string \\\\\n\n1 & \\includegraphics[width=0.4\\textwidth]{fig/prompt1.png} \\\\ \n\n2 & \\includegraphics[width=0.4\\textwidth]{fig/prompt2.png} \\\\ \n\n3 & \\includegraphics[width=0.4\\textwidth]{fig/prompt3.png} \\tablefootnote{Hermione is the name of a fictional character in ``Harry Potter'' series \\cite{rowling2015harry} who is recognized as a honor student.}\\\\ \n\n\\end{tabular}\n\\end{center}\n\\caption{{\\bf Optimized Adversarial Suffixes.} Each colored string is a single token. Interestingly all suffixes include the ``magic word\" ``user'' near the very beginning.}\n\n\\end{table}",
+    "2412-15275_section_b1adf179": "Analysis of the optimized suffixes",
+    "2412-15275_sent_27edd9ea": "In this section, we discuss the effectiveness of the obtained adversarial suffixes and a hidden bias of language models.",
+    "2412-15275_subsection_20135016": "Performance of the adversarial suffixes",
+    "2412-15275_sent_711fc893": "\\includegraphics[keepaspectratio, width=0.9\\textwidth] {fig/performance-llama3-8b.png} \\caption{{\\bf LLM-graded scores are elevated by the optimized adversarial suffixes in Table~\\ref{table:adv_suffixes} with Llama3.1-8B-Instruct.} In scatter plots, each point corresponds to a held-out student essay that is not used in our adversarial suffix optimization.} \\end{figure*} We first measure the effectiveness of the three adversarial suffixes obtained from attacking Llama3.1-8B-Instruct.",
+    "2412-15275_sent_b8e7e86e": "To test the generalization capability of the suffixes, we evaluate their ability to improve essay scores on essay problem sets and prompt templates which are not used to optimize our adversarial suffixes.",
+    "2412-15275_sent_f565f43e": "In Figure~\\ref{fig:scores_llama3-8b}, the score gain with the three adversarial prompts in Table~\\ref{table:adv_suffixes} are shown.",
+    "2412-15275_sent_834f93bb": "Each point in the scatter plot corresponds to a single student essay.",
+    "2412-15275_sent_1dc58b7b": "The adversarial suffixes are clearly effective in improving scores on these held-out essay problem sets and prompt templates.",
+    "2412-15275_sent_09285261": "We next investigate whether the ability of these adversarial suffixes to improve scores transfers to different language models.",
+    "2412-15275_sent_13a889f7": "We obtain score gains with adversarial suffix \\#1 applied to various publicly available supervised fine-tuned language models.",
+    "2412-15275_sent_bd1ee980": "\\footnote{Since the inference cost is relatively expensive, we here evaluate only the best adversarial suffix among the three.} We show our transfer results on $4$ different models in Figure~\\ref{fig:scores_llms}, and $3$ more models in Figure~\\ref{fig:scores_llms_additional} in the Appendix.",
+    "2412-15275_sent_080f4dbd": "While the effectiveness of the adversarial suffix varies across models, it does successfully transfer to many tested models with different essay problems and prompt templates.",
+    "2412-15275_sent_a4ea424c": "Remarkably, the adversarial suffix transfers not only to open-source models of similar sizes such as Qwen-2.5-7B-Instruct-Turbo \\cite{qwen2.5}, but also to larger open-source models (such as Llama-3.1-70B-Instruct-Turbo and Qwen2.5-72B-Instruct-Turbo) and to some closed models (Gemini-1.5-flash/pro \\cite{team2023gemini}).",
+    "2412-15275_sent_6be37495": "However, note that the suffix is not effective for some essays.",
+    "2412-15275_sent_3f15097b": "Especially when the original score is relatively low, the adversarial suffix can sometimes even negatively impact the score, though it consistently yields score gains on essays with relatively high original scores.",
+    "2412-15275_sent_d08c9287": "Comparing pairs of models with different model sizes, such as Llama 3.1 70B vs. 405B models, Gemini 1.5 Flash vs. Pro models, or Qwen 2.5 7B vs. 72B models, the adversarial suffix tends to be less effective in achieving score gains on larger models.",
+    "2412-15275_sent_796c13b8": "This is likely because the logical circuits implemented in larger models differ from those in the small model which was used to optimize the suffix.",
+    "2412-15275_sent_3523aebe": "While we could not directly optimize adversarial suffixes with large models due to resource limitations, this would be an interesting avenue for future research.",
+    "2412-15275_sent_9b78fe4a": "\\includegraphics[keepaspectratio, width=\\textwidth] {fig/scores_llms.png} \\caption{{\\bf Our adversarial suffix is effective in attacking different language models.} We measure the effectiveness of the suffix \\#1 in Table~\\ref{table:adv_suffixes} in attacking various different language models.",
+    "2412-15275_sent_120c0ade": "The essay problem sets (\\#3 and \\#4) and the prompt templates (\\#3 and \\#4) used here are different from those used for adversarial suffix optimization.",
+    "2412-15275_sent_8e280adc": "In scatter plots, each point corresponds to a held-out essay.",
+    "2412-15275_sent_e1944502": "We show additional results with other models in Figure~\\ref{fig:scores_llms_additional} in Appendix.",
+    "2412-15275_subsection_316bb574": "A hidden bias: the nonsense ``user'' effect",
+    "2412-15275_sent_f6fe296f": "Our ability to algorithmically find adversarial suffixes that distort output decisions (in this case essay grades) can in general reveal hidden biases of LLMs, whereby irrelevant input features can distort decision outputs.",
+    "2412-15275_sent_b90277c5": "In this subsection, we discuss just such a hidden bias we found, which we call the nonsense ``user'' effect, inspired by the term ``nonsense math effect'' \\cite{eriksson2012nonsense} discussed in the introduction.",
+    "2412-15275_sent_a15b7b15": "This bias can be easily noticed by observing Table~\\ref{table:adv_suffixes}.",
+    "2412-15275_sent_6bebf5f6": "Interestingly, all of these adversarial suffixes contain the word ``user'' near the beginning, indicating the possible importance of this magical word in distorting the models' evaluation.",
+    "2412-15275_sent_a74aa255": "We perform a quantitative investigation of the contribution of this word by conducting an ablation study: we remove a single token at a time from each of the three adversarial suffixes and then evaluate how the average score gain changes after the removal. If a given token in a given suffix plays an important functional role in contributing to the score gain, then the removal of the token should significantly reduce the score gain.",
+    "2412-15275_sent_b375593a": "For each adversarial suffix with a single token removed, we compute the average normalized score gain across $200$ different student essays of essay problem \\#3 and \\#4, and across prompt template \\#3 and \\#4.",
+    "2412-15275_sent_a7758bd4": "In Figure~\\ref{fig:ablation_study}, we plot these average normalized score gains after single token removals (blue bars) and compare them to the original score gain before token removal (dashed black line).",
+    "2412-15275_sent_7aa15518": "Note that this study is done with Google's gemini-1.5-flash model, which is different from the model used for optimizing the adversarial suffixes.\\footnote{We choose this model since it performs well on essay grading while having low inference cost.} Figure~\\ref{fig:ablation_study} shows that removing certain tokens significantly lowers the score gain, while some other tokens do not contribute to score gain (i.e. their removal does not lower the score gain).",
+    "2412-15275_sent_a3fec6db": "Specifically, removal of the tokens ``.user'' and ``user'' significantly lowers the effectiveness of the adversarial suffixes in achieving score gains.",
+    "2412-15275_sent_d97c1089": "This reveals that the model has a hidden bias whereby an irrelevant token ``user'' (in the context of the adversarial suffix) can significantly distort an output decision, in this case leading to a higher score.",
+    "2412-15275_sent_d7906590": "\\includegraphics[keepaspectratio, width=\\textwidth] {fig/ablation_study_wide.png} \\caption{{\\bf An ablation study of tokens in adversarial suffixes shows importance of a specific word ``user''.} We measure the average normalized score gains obtained by adversarial suffixes with a single token removed. The blue bars are the normalized score gains averaged over different essay problems, prompt templates, and student essays.",
+    "2412-15275_sent_48b376b1": "The gray error bars are their standard deviations.",
+    "2412-15275_sent_a8d81a96": "The dotted lines are the average score gains with the full suffixes in Table~\\ref{table:adv_suffixes}.",
+    "2412-15275_sent_e216db8d": "These plots reveal the importance of the word ``user''.",
+    "2412-15275_subsection_83e952c4": "Debugging the nonsense ``user'' effect",
+    "2412-15275_sent_f6de634b": "Why do these LLMs exhibit a nonsense ``user'' effect?",
+    "2412-15275_sent_b65dfe23": "In this section, we analyze the cause of this bias and propose a straightforward solution.",
+    "2412-15275_sent_b08fd8bb": "We hypothesize that this bias stems from the chat templates employed during supervised fine-tuning.",
+    "2412-15275_sent_03906642": "The upper panel of Figure~\\ref{fig:sft} (a) illustrates the chat template used for Llama3.1-8B-instruct, where the inserted prefix ``$\\langle|$start\\_header\\_id$|\\rangle$user$\\langle|$end\\_header\\_id$|\\rangle$'' contains a token ``user''.",
+    "2412-15275_sent_017aa9c6": "We posit that this token's special role is the root cause of the bias.",
+    "2412-15275_sent_d8a145f5": "Note that many other publicly available models including Qwen 2.5 and Gemma 2 use similar chat templates.",
+    "2412-15275_sent_34ad8a0c": "To test the hypothesis that chat template leads to the bias, we conduct supervised fine-tuning of the Llama-3.1-8B model using a modified chat template.",
+    "2412-15275_sent_ed8b3da9": "In this modified version, we replace the token ``user'' with a newly defined special token ``$\\langle|$user$|\\rangle$'', which never appears anywhere else (Figure~\\ref{fig:sft} (a)).",
+    "2412-15275_sent_cc2602d4": "We conduct supervised fine-tuning using RLHFlow-SFT-Dataset \\cite{dong2405rlhf} available in HuggingFace, comprising approximately two million conversations from various sources, including ShareGPT \\cite{chiang2023vicuna}, SlimOrca \\cite{SlimOrca}, MathInstruct \\cite{yue2023mammoth}, and Evol-Instruct \\cite{xu2023wizardlm}.",
+    "2412-15275_sent_5210e3b5": "We fine-tune the pre-trained model for $1$ epoch, using a learning rate of $2\\times 10^{-5}$ and a cosine scheduler with a warm-up ratio of $0.05$.",
+    "2412-15275_sent_f3e6c425": "We performed the supervised fine-tuning twice with exactly the same setup, once with the original chat template and once with the modified chat template.",
+    "2412-15275_sent_4fa7516a": "We then evaluate the score gain achieved by the three adversarial prompts in Table~\\ref{table:adv_suffixes} with these two fine-tuned models.",
+    "2412-15275_sent_df235a33": "The evaluation is done using two held-out essay problem sets and two prompt templates (Figure~\\ref{fig:sft}).",
+    "2412-15275_sent_08fd1eb0": "We compute the average normalized score gain achieved by the suffixes for each of $300$ essays, for each given essay problem set and prompt template.",
+    "2412-15275_sent_929d515b": "Figure~\\ref{fig:sft} (c) shows the obtained average normalized score gain with the adversarial suffixes in Table~\\ref{table:adv_suffixes}, applied to the two fine-tuned models.",
+    "2412-15275_sent_a94904a1": "It clearly shows that a simple change of a single token in the chat template drastically improves the robustness of the LLM decision against attacks from these specific adversarial suffixes.",
+    "2412-15275_sent_71535fa5": "This also supports our hypothesis that the nonsense ``user'' effect originates from the chat template.",
+    "2412-15275_sent_df128215": "We hypothesize that the underlying reason for this effect is that the word ``user'' signals to the LLM the the following tokens in the suffix are written by the user, instead of the essay writer, and then the LLMs try to more faithfully follow the user's opinion stated in rest of the suffix.",
+    "2412-15275_sent_8361d22c": "Consistent with this intuition, note that the nonsense word ``user'' consistently occurs near the beginning of all $3$ adversarial suffixes.",
+    "2412-15275_sent_2210895d": "Also consistent with this, as shown in Appendix~\\ref{app:lower}, by replacing the words of positive sentiment in the adversarial suffixes in Table~\\ref{table:adv_suffixes} with their antonyms, we can significantly lower the LLM-rated scores.",
+    "2412-15275_sent_45e9c251": "Overall this suggests the possibility that the word ``user'' is generally useful for various types of prompt injection attacks.",
+    "2412-15275_sent_7f2c9ee0": "\\includegraphics[keepaspectratio, width=0.9\\textwidth] {fig/sft.png} \\caption{{\\bf A simple modification of the chat template drastically improve vulnerability} (a) We modify the chat template used for the supervised fine-tuning of Llama3.1-8B model by replacing ``user'' token to a new special token.",
+    "2412-15275_sent_593ef312": "(b) These scatter plots show the score gain attained by the adversarial suffix \\#1 in Table~\\ref{table:adv_suffixes} on the fine-tuned model trained with the modified chat template.",
+    "2412-15275_sent_af61b0cd": "(c) We compare the means of normalized score gain attained by the adversarial suffixes with the fine-tuned Llama3.1-8B models with the original and modified chat templates.",
+    "2412-15275_sent_e0e69810": "This shows that a small change of single token in the chat template drastically suppress the effectiveness of adversarial suffixes.} \\end{figure*}",
+    "2412-15275_section_6f8b794f": "Conclusion",
+    "2412-15275_sent_a6564e29": "We have presented a novel and systematic approach to uncover hidden biases in LLM evaluation systems, and illustrated its application to automated essay grading.",
+    "2412-15275_sent_565d7a3d": "Identifying such biases is crucial to ensure the security and fairness of these systems, as they are susceptible to prompt injection attacks by malicious actors seeking to exploit these biases to manipulate model decisions.",
+    "2412-15275_sent_2b440e11": "We develop a systematic method for generating adversarial suffixes that successfully inflate grading scores, and generalization across different essay problems, prompt templates, and even language models.",
+    "2412-15275_sent_b4927369": "Our analysis reveals a significant bias associated with a word ``user'' in the adversarial suffixes, which proves essential for their effectiveness.",
+    "2412-15275_sent_9dd93eac": "Finally, we show that a simple modification of chat templates commonly used for supervised fine-tuning can drastically reduce the vulnerability to such attacks.",
+    "2412-15275_sent_20303ecf": "This work highlights the importance of proactively identifying and mitigating hidden biases in language models to ensure their robustness, fairness, and reliability in real-world applications.",
+    "2412-15275_sent_1b93d04f": "{\\bf Limitations and Future Directions} \\newline Our current optimized adversarial suffixes primarily exploit a vulnerability related to a word ``user''.",
+    "2412-15275_sent_a0e2f5c3": "Future research should focus on discovering other types of biases inherent in language models.",
+    "2412-15275_sent_3b953900": "One avenue is to investigate the behavior of optimized adversarial suffixes in models fine-tuned with revised chat templates.",
+    "2412-15275_sent_ff4fc1de": "An very interesting future research direction is to fine-tune models on datasets of human evaluations such as data from OpenReview.",
+    "2412-15275_sent_fd62f048": "Such models should inherit the the biases of human evaluators, and our scheme might systematically identify such hidden human biases.",
+    "2412-15275_section_84ffd62e": "Acknowledgments",
+    "2412-15275_sent_08741a36": "We are thankful to Ben Sorscher, Marine Schimel, Feng Chen, Allan Raventós, Javan Tahir, and Hidenori Tanaka for providing valuable feedback on our research.",
+    "2412-15275_sent_556bd20e": "S.G.",
+    "2412-15275_sent_cfeaa058": "thanks the Simons Foundation, NTT Research, an NSF CAREER Award, and a Schmidt Science Polymath award for support.",
+    "2412-15275_sent_f1432148": "\\bibliography{bib} \\bibliographystyle{icml2024} \\appendix",
+    "2412-15275_section_444109e2": "The Details of Prompt Templates",
+    "2412-15275_fig_06cdb640": "\\begin{figure}\n\n \\includegraphics[keepaspectratio, width=0.45\\textwidth]\n{fig/prompt_template.png}\n \\caption{{\\bf The structure of our prompt templates.}}\n\n\\end{figure}",
+    "2412-15275_sent_0d85cebf": "In this section, we describe our prompt templates used for the essay grading task in detail.",
+    "2412-15275_sent_1ce6524c": "As is shown in Figure~\\ref{fig:prompt_template}, our prompts have seven components in total. We constructed four different prompt templates which are numbered from \\#1 to \\#4, all following the structure presented in the figure.",
+    "2412-15275_sent_ef1b004a": "The templates \\#1 and \\#2 are used for optimizing adversarial suffixes, and templates \\#3 and \\#4 are used for evaluating the effectiveness of the optimized suffixes.",
+    "2412-15275_sent_caf65870": "The detail of each templates is presented at the end of Appendix.",
+    "2412-15275_sent_9715ebb2": "Here we discuss each component of the prompt structure.",
+    "2412-15275_sent_bab15ea5": "{\\bf Declaration of LLM's role} Here we state that the LLM's role such as a teacher or a rater, and ask it to grade essays with a given guideline.",
+    "2412-15275_sent_62379681": "{\\bf Rubric Guidelines} We state the criteria for each possible score.",
+    "2412-15275_sent_f434aa15": "We use the rubric guidelines given in the dataset, and hence all the four prompt templates share the same content here.",
+    "2412-15275_sent_d024edac": "{\\bf Format Specification} We provide a format to follow.",
+    "2412-15275_sent_8f795dd0": "The format has two parts: First the model is asked to state their thoughts or criticisms on the given essay, and then they give a score.",
+    "2412-15275_sent_18ed567e": "This format varies across different prompt templates.",
+    "2412-15275_sent_70b484ad": "{\\bf Essay Problem Statement} We provide the essay problem given to students.",
+    "2412-15275_sent_705ab675": "Some of the problems contains a source essay.",
+    "2412-15275_sent_d4c808dc": "In these problems, students are asked to read the source essay and then asked to state their ideas regarding the essay.",
+    "2412-15275_sent_5f22f7b9": "{\\bf Example Essays} We provide an example essay for each possible score.",
+    "2412-15275_sent_f7d00c0e": "Specifically, for each score value, we sample an essay uniformly random from the set of student essays whose human-rated score is the given value.",
+    "2412-15275_sent_b305be48": "We make sure that the example essay is not same as the essay the model is going to evaluate.",
+    "2412-15275_sent_2594237d": "We observe that these example essays help the LLM-rated scores align with the human-rated scores.",
+    "2412-15275_sent_ce726d6b": "The details are stated in the following subsection.",
+    "2412-15275_sent_2447d9bf": "{\\bf An Essay for Evaluation} We present an essay from the dataset here.",
+    "2412-15275_sent_d5a2b6c2": "We use delimiters to indicate the start and the end of the essay.",
+    "2412-15275_sent_1dbbea57": "The usage of delimiters is known to prevent naive prompt injection attacks \\cite{chatgpt-prompt-engineering}.",
+    "2412-15275_sent_1e69159c": "{\\bf Task Restatement} We restate the essay grading task at the end of our prompt.",
+    "2412-15275_sent_d3b102d6": "This restatement is known as sandwich defense \\cite{sandwich-defense} against prompt injection attacks.",
+    "2412-15275_section_d0df6d02": "LLM-rated Score vs Human-rated Score",
+    "2412-15275_sent_2bc0f942": "The dataset of student essays we used in this work includes scores rated by human experts.",
+    "2412-15275_sent_5554b519": "We here show that the scores rated by Llama3.1-8B-instruct with our prompt templates align with the human-rated scores.",
+    "2412-15275_sent_27c03ae9": "In Figure~\\ref{fig:llm_vs_human} (a), we show the score comparisons with $300$ different essays for each essay problems and prompt templates.",
+    "2412-15275_sent_5b69cacf": "The problem \\#1 has the score range from $1$ to $6$, and human-rated score is the mean of scores graded by two human experts.",
+    "2412-15275_sent_24350690": "On the other hand, for the problem \\#2 has score range from $0$ to $3$, and human-rated score is the score graded by an expert.",
+    "2412-15275_sent_81c35372": "In the plots, for each possible human-rated score, we compute the mean of the LLM-rated scores, shown as large dark blue markers.",
+    "2412-15275_sent_e465a073": "While the model tends to give harsh scores for relatively high-equality essays compared to human experts, the LLM-rated scores are well-aligned with human-rated scores.",
+    "2412-15275_sent_f34734c6": "As we stated in the previous section, our prompt templates include example essay for each possible score to calibrate the language model to the actual performance of students.",
+    "2412-15275_sent_27e6dbea": "To validate this design choice, we omit the example essays from the prompt template and compare the LLM-rated scores with human-rated score in Figure~\\ref{fig:llm_vs_human} (b).",
+    "2412-15275_sent_415fd8f3": "The plots clearly show that the language model tends to give lower scores without example essays, and they are less aligned with human-rated scores.",
+    "2412-15275_fig_6fdbc07b": "\\begin{figure}\n\n \\includegraphics[keepaspectratio, scale=0.28]\n {fig/llm_vs_human.png}\n \\caption{{\\bf Essay examples help LLM-rated scores align with human-rated score.} For each essay problem and prompt template, we compare the scores rated by LLama-3.1-8B-instruct model and scores rated by human-experts. Each small marker represents a student essay in the dataset, while the larger dark blue markers represents the averages of the LLM-rated scores of essays with each possible human-rated score. (a) The score comparison with our original prompt templates, including an essay example for each possible score. (b) The score comparison with prompt templates without essay examples. These plot clearly shows that example essays help better alignment with human-rated scores.}\n\n\\end{figure}",
+    "2412-15275_sent_7c91292e": "\\includegraphics[keepaspectratio, width=0.9\\textwidth] {fig/scores_flash_llama405b.png} \\caption{{\\bf Score Gain by Adversarial Suffix \\#1 in Table~\\ref{table:adv_suffixes}.} These models shown in this figure are variants of models shown in Figure~\\ref{fig:scores_llms}.",
+    "2412-15275_sent_b0d51ef1": "The larger models tend to be less vulnerable.",
+    "2412-15275_sent_58e447b6": "\\begin{center} \\begin{tabular}{ |c|c|c|m{8.5cm}| } Problem ID & ID in the dataset & Score Range & Description of the Problem\\\\ 1 & Essay Set \\#1 & $1\\sim 6$ & Students are asked to state their opinions on the computers' effects on people.\\\\ 2 & Essay Set \\#3 & $0\\sim3$ & Students are asked to write an essay after reading 1-2 pages of a story of a cyclist to Yosemite National Park.",
+    "2412-15275_sent_6b40f7e5": "\\\\ 3 & Essay Set \\#2 & $1\\sim6$ & After reading a short sentence on censorship in libraries, students are asked to write their own opinions on censorship.\\\\ 4 & Essay Set \\#4 & $0\\sim3$ & After reading 2-3 pages of a story of a girl immigrated to the United States, students are asked to explain why the author concludes the story with the last paragraph.\\\\ \\end{tabular} \\end{center} \\caption{{\\bf Essay Problems used in this work.} The essay problems are taken from dataset ``The Hewlett Foundation: Automated Essay Scoring'' in Kaggle \\cite{essaydataset}.} \\end{table*}",
+    "2412-15275_section_6fbd8567": "Essay Problems",
+    "2412-15275_sent_90aa6421": "In this work, we use the four essay problems, numbered from \\#1 to \\#4.",
+    "2412-15275_sent_32de8f90": "These are selected from eight essay problems in the dataset ``The Hewlett Foundation: Automated Essay Scoring'' from Kaggle \\cite{essaydataset}.",
+    "2412-15275_sent_8778db35": "The problem \\#1 and \\#2 are used for optimizing adversarial suffixes and the other two are used for measuring their effectiveness.",
+    "2412-15275_sent_08738c38": "Table~\\ref{table:essay_problems} shows the correspondence between the IDs of the problems used in this paper, and the IDs used in the dataset.",
+    "2412-15275_sent_b1ad6359": "While we do not display the problem statements themselves due to copyright issues of the source essays in some of the problem statements, we briefly describe each problem in the table.",
+    "2412-15275_section_2b4e7259": "Adversarial Suffixes for Lowering Scores",
+    "2412-15275_sent_b44ab5ab": "In this work, we focus on optimizing adversarial suffixes for increasing LLM-graded scores on student essays.",
+    "2412-15275_sent_1442a8fe": "In this section, we explore the possibility that the word ``user'' is effective for different scenarios, especially the case where we want to decrease the LLM-graded scores.",
+    "2412-15275_sent_af1e38ee": "We first modify adversarial suffixes in Table~\\ref{table:adv_suffixes} by replacing each word of positive sentiment with an antonym.",
+    "2412-15275_sent_a58fb037": "Figure~\\ref{fig:negative_suffix} shows the modified three suffixes and the score drops, when they are applied to Gemini 1.5 Flash.",
+    "2412-15275_sent_f1c4a9ee": "These plots clearly shows that these new adversarial suffixes effectively work for lowering scores.",
+    "2412-15275_sent_5e10c90f": "\\includegraphics[keepaspectratio, width=0.9\\textwidth] {fig/negative_suffix.png} \\caption{{\\bf Score drops by adversarial suffixes modified from those in Table~\\ref{table:adv_suffixes}.} We modify the three adversarial suffixes by replacing words of positive sentiment with antonyms, and apply them to Gemini 1.5 Flash.",
+    "2412-15275_sent_80cee4a6": "\\end{figure*} \\onecolumn \\begin{tcolorbox}[breakable,title=Prompt Template \\#1] Students are asked to write essays according to a given prompt.",
+    "2412-15275_sent_28f9a54f": "Your are a rater of student's essays, giving a score based on guidelines.",
+    "2412-15275_sent_98aba52a": "\\newline \\newline Here are the guidelines you should obey: - You should give Score 1 to an essay if it is: [Criteria of Score 1] - You should give Score 2 to an essay if it is: [Criteria of Score 2] ...",
+    "2412-15275_sent_5139913c": "\\newline \\newline Respond in the following format: \\newline \\newline THOUGHT: $<$THOUGHT$>$ SCORE: $<$SCORE$>$ \\newline \\newline In $<$THOUGHT$>$, first briefly discuss your intuitions and reasoning for the evaluation, according to the guidelines.",
+    "2412-15275_sent_143a8aa2": "Do not make generic comments here, but be specific to the essay.",
+    "2412-15275_sent_b162614d": "Treat this as the note-taking phase of your review.",
+    "2412-15275_sent_d4057b12": "In $<$SCORE$>$, provide the score from [Minimum Score] to [Maximum Score], according to the guidelines.",
+    "2412-15275_sent_f48a2240": "\\newline \\newline Prompt to students: ``` [Essay Problem Statement] ``` \\newline\\newline Remark: In the essay given below, the personally identifying information are identified and then replaced with a string such as ...",
+    "2412-15275_sent_f871d7f4": "\\newline\\newline Here are examples of student's essays with different scores.",
+    "2412-15275_sent_262fd46d": "- An essay with score 1: [Example Essay with Human-Rated Score 1] - An essay with score 2: [Example Essay with Human-Rated Score 2] ...",
+    "2412-15275_sent_5fac16db": "\\newline\\newline Here is the essay to evaluate: ``` [An Essay for Evaluation] ``` \\newline Give a score based on the guidelines.",
+    "2412-15275_sent_2b174576": "Follow the given format.",
+    "2412-15275_sent_840157b3": "\\end{tcolorbox} \\begin{tcolorbox}[breakable,title=Prompt Template \\#2] You are a professional grader.",
+    "2412-15275_sent_4f299ce3": "Test takers are asked to write essays according to a given prompt.",
+    "2412-15275_sent_81428992": "Give a grade based on guidelines.",
+    "2412-15275_sent_fd8a4cb4": "\\newline \\newline Here are the guidelines you should obey: - You should give Grade 1 to an essay if it is: [Criteria of Score 1] - You should give Grade 2 to an essay if it is: [Criteria of Score 2] ...",
+    "2412-15275_sent_d84eedd5": "\\newline \\newline Respond in the following format: \\newline \\newline SUMMARY: $<$SUMMARY$>$ CRITICISM: $<$CRITICISM$>$ GRADE: $<$GRADE$>$ \\newline \\newline In $<$SUMMARY$>$, write a concise summary of a given essay.",
+    "2412-15275_sent_aa542da0": "In $<$CRITICISM$>$, write a brief critique of a given essay, following the guildlines.",
+    "2412-15275_sent_22731564": "Be specific to the essay.",
+    "2412-15275_sent_1635b99e": "In $<$GRADE$>$, provide a grade from [Minimum Score] to [Maximum Score], according to the guidelines.",
+    "2412-15275_sent_b458cf0a": "\\newline \\newline Prompt to test takers: ``` [Essay Problem Statement] ``` \\newline\\newline Remark: In the essay given below, the personally identifying information are identified and then replaced with a string such as ...",
+    "2412-15275_sent_7161b602": "\\newline\\newline Here are examples of student's essays with different grades.",
+    "2412-15275_sent_a7c59305": "- An essay with grade 1: [Example Essay with Human-Rated Score 1] - An essay with grade 2: [Example Essay with Human-Rated Score 2] ...",
+    "2412-15275_sent_bff09f8b": "\\newline\\newline Here is the essay to evaluate: [START OF ESSAY] [An Essay for Evaluation] [END OF ESSAY] \\newline Evaluate the essay acoording to the format and guidelines.",
+    "2412-15275_sent_4f8e0c01": "\\end{tcolorbox} \\begin{tcolorbox}[breakable,title=Prompt Template \\#3] You are a parent scoring essays written by kids.",
+    "2412-15275_sent_62661005": "They are asked to write essays according to a given prompt.",
+    "2412-15275_sent_3e90359a": "Give a score based on guidelines.",
+    "2412-15275_sent_40fed5c7": "\\newline \\newline Respond in the following format: \\newline \\newline WEAKNESS: $<$WEAKNESS$>$ STRENGTH: $<$STRENGTH$>$ SCORE: $<$SCORE$>$ \\newline \\newline In $<$WEAKNESS$>$, briefly discuss weakness of a given essay, following the guidelines.",
+    "2412-15275_sent_29382921": "In $<$STRENGTH$>$, briefly discuss strength of a given essay, following the guidelines.",
+    "2412-15275_sent_c81eb2c2": "\\newline \\newline Prompt to kids: ``` [Essay Problem Statement] ``` \\newline\\newline Remark: In the essay given below, the personally identifying information are identified and then replaced with a string such as ...",
+    "2412-15275_sent_105ecdfd": "\\end{tcolorbox} \\begin{tcolorbox}[breakable,title=Prompt Template \\#4] Students are asked to write essays according to a given prompt.",
+    "2412-15275_sent_99dc2afb": "You are resposible for grading student's essays, giving a score based on guidelines.",
+    "2412-15275_sent_1727c73c": "\\newline \\newline Respond in the following format: \\newline \\newline EVALUATION: $<$EVALUATION$>$ SCORE: $<$SCORE$>$ \\newline \\newline In $<$EVALUATION$>$, briefly evaluate the essay according to the guidelines."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15275_sent_676977e1": "2412-15275_doc_root",
+      "2412-15275_abstract_ce28071e": "2412-15275_doc_root",
+      "2412-15275_sent_e0aa8d4f": "2412-15275_abstract_ce28071e",
+      "2412-15275_sent_280150ee": "2412-15275_abstract_ce28071e",
+      "2412-15275_sent_4d04da75": "2412-15275_abstract_ce28071e",
+      "2412-15275_sent_f85533be": "2412-15275_abstract_ce28071e",
+      "2412-15275_sent_cb8dfd17": "2412-15275_abstract_ce28071e",
+      "2412-15275_sent_03af4b7c": "2412-15275_abstract_ce28071e",
+      "2412-15275_sent_80f668f0": "2412-15275_abstract_ce28071e",
+      "2412-15275_sent_7aa83070": "2412-15275_abstract_ce28071e",
+      "2412-15275_section_0b79795d": "2412-15275_doc_root",
+      "2412-15275_sent_ab01fb71": "2412-15275_section_0b79795d",
+      "2412-15275_sent_4f4f0c2f": "2412-15275_section_0b79795d",
+      "2412-15275_sent_832e32cf": "2412-15275_section_0b79795d",
+      "2412-15275_sent_d2438ad0": "2412-15275_section_0b79795d",
+      "2412-15275_sent_b254318c": "2412-15275_section_0b79795d",
+      "2412-15275_sent_bb745be8": "2412-15275_section_0b79795d",
+      "2412-15275_sent_f1506637": "2412-15275_section_0b79795d",
+      "2412-15275_sent_96f76e6a": "2412-15275_section_0b79795d",
+      "2412-15275_sent_3d8d36d3": "2412-15275_section_0b79795d",
+      "2412-15275_sent_642b5cb5": "2412-15275_section_0b79795d",
+      "2412-15275_sent_29df76c4": "2412-15275_section_0b79795d",
+      "2412-15275_sent_d23500fc": "2412-15275_section_0b79795d",
+      "2412-15275_sent_05edcdd2": "2412-15275_section_0b79795d",
+      "2412-15275_sent_abf60273": "2412-15275_section_0b79795d",
+      "2412-15275_sent_c5c7eec9": "2412-15275_section_0b79795d",
+      "2412-15275_sent_2c8cd851": "2412-15275_section_0b79795d",
+      "2412-15275_sent_0d998240": "2412-15275_section_0b79795d",
+      "2412-15275_sent_31ce141d": "2412-15275_section_0b79795d",
+      "2412-15275_sent_99f21c35": "2412-15275_section_0b79795d",
+      "2412-15275_fig_b71837c1": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_5f39c63f": "2412-15275_section_0b79795d",
+      "2412-15275_sent_8057c19c": "2412-15275_section_0b79795d",
+      "2412-15275_sent_bea86807": "2412-15275_section_0b79795d",
+      "2412-15275_sent_81eccaf9": "2412-15275_section_0b79795d",
+      "2412-15275_sent_28896197": "2412-15275_section_0b79795d",
+      "2412-15275_sent_8ecbec0c": "2412-15275_section_0b79795d",
+      "2412-15275_sent_6d66ca47": "2412-15275_section_0b79795d",
+      "2412-15275_sent_5044f806": "2412-15275_section_0b79795d",
+      "2412-15275_sent_c5ca7c0b": "2412-15275_section_0b79795d",
+      "2412-15275_sent_95fdd345": "2412-15275_section_0b79795d",
+      "2412-15275_section_aed402c3": "2412-15275_doc_root",
+      "2412-15275_sent_e6a3197b": "2412-15275_section_aed402c3",
+      "2412-15275_sent_209d0277": "2412-15275_section_aed402c3",
+      "2412-15275_sent_c10dd1b4": "2412-15275_section_aed402c3",
+      "2412-15275_sent_d333b333": "2412-15275_section_aed402c3",
+      "2412-15275_sent_b09b62dc": "2412-15275_section_aed402c3",
+      "2412-15275_sent_33ad5ab9": "2412-15275_section_aed402c3",
+      "2412-15275_sent_783bb0f1": "2412-15275_section_aed402c3",
+      "2412-15275_sent_8a7d94db": "2412-15275_section_aed402c3",
+      "2412-15275_sent_c559d476": "2412-15275_section_aed402c3",
+      "2412-15275_sent_3857c614": "2412-15275_section_aed402c3",
+      "2412-15275_sent_05fd2c05": "2412-15275_section_aed402c3",
+      "2412-15275_sent_4f733697": "2412-15275_section_aed402c3",
+      "2412-15275_sent_6199ca9c": "2412-15275_section_aed402c3",
+      "2412-15275_sent_19aa7ede": "2412-15275_section_aed402c3",
+      "2412-15275_sent_becc3687": "2412-15275_section_aed402c3",
+      "2412-15275_sent_30dab150": "2412-15275_section_aed402c3",
+      "2412-15275_sent_8b7dc294": "2412-15275_section_aed402c3",
+      "2412-15275_sent_6a5440a0": "2412-15275_section_aed402c3",
+      "2412-15275_sent_4d3d7b51": "2412-15275_section_aed402c3",
+      "2412-15275_sent_dda49683": "2412-15275_section_aed402c3",
+      "2412-15275_sent_4d16eeba": "2412-15275_section_aed402c3",
+      "2412-15275_sent_eee992fc": "2412-15275_section_aed402c3",
+      "2412-15275_sent_bde0d3f0": "2412-15275_section_aed402c3",
+      "2412-15275_section_4c3880bb": "2412-15275_doc_root",
+      "2412-15275_sent_362dab30": "2412-15275_section_4c3880bb",
+      "2412-15275_sent_957b1629": "2412-15275_section_4c3880bb",
+      "2412-15275_sent_ea2f3f95": "2412-15275_section_4c3880bb",
+      "2412-15275_sent_f89beb84": "2412-15275_section_4c3880bb",
+      "2412-15275_sent_928630df": "2412-15275_section_4c3880bb",
+      "2412-15275_sent_03bd2907": "2412-15275_section_4c3880bb",
+      "2412-15275_subsection_0f631271": "2412-15275_section_4c3880bb",
+      "2412-15275_sent_6584c9d1": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_7a337822": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_8199bf3e": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_ae20b8ab": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_4bed8d4b": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_b0cb6911": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_9a7f3d51": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_66f677f3": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_fac7641b": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_0d0ef572": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_467b1c09": "2412-15275_subsection_0f631271",
+      "2412-15275_sent_da2925dc": "2412-15275_subsection_0f631271",
+      "2412-15275_subsection_85011fea": "2412-15275_section_4c3880bb",
+      "2412-15275_sent_37e12c24": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_0257b057": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_3d61a882": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_a65bc027": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_70c87cf4": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_4681dc9c": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_584758d9": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_8d631464": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_3c29657e": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_df30f911": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_b79fcdc3": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_9ce70ea0": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_4dd0425e": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_f61debeb": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_e930dfd2": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_9d23722d": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_08cb7a30": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_286a9fef": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_2c1921b5": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_4a2a52c1": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_715857c4": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_3855d758": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_f8e830ec": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_886d5a9f": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_5684cda6": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_9ab5fdb2": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_723aa8e2": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_5ae99393": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_a8d4d838": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_c32a042f": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_b821893d": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_b031da4d": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_31389cf7": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_931b6c90": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_c489911c": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_b7945ac1": "2412-15275_subsection_85011fea",
+      "2412-15275_sent_71f188da": "2412-15275_subsection_85011fea",
+      "2412-15275_fig_8b36b5b6": "2412-15275_subsection_85011fea",
+      "2412-15275_subsection_a1f64618": "2412-15275_section_4c3880bb",
+      "2412-15275_sent_f61109d7": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_904048f7": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_4a122694": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_16e919dd": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_53e029f2": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_61c6d8ee": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_3fac42d9": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_89be6018": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_3c9d7b19": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_01ec0c99": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_406eee8d": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_10cb1fca": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_59da8892": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_1471b97f": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_4c1d146f": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_95c301e3": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_efafa938": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_92a7e0b2": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_a04d5f0e": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_7f111b81": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_18e5a957": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_b741dd9e": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_eb74ed06": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_a7c87991": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_9f9c0802": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_8e7e1925": "2412-15275_subsection_a1f64618",
+      "2412-15275_sent_8d161ba7": "2412-15275_subsection_a1f64618",
+      "2412-15275_fig_dd85f8b9": "2412-15275_subsection_a1f64618",
+      "2412-15275_section_b1adf179": "2412-15275_doc_root",
+      "2412-15275_sent_27edd9ea": "2412-15275_section_b1adf179",
+      "2412-15275_subsection_20135016": "2412-15275_section_b1adf179",
+      "2412-15275_sent_711fc893": "2412-15275_subsection_20135016",
+      "2412-15275_sent_b8e7e86e": "2412-15275_subsection_20135016",
+      "2412-15275_sent_f565f43e": "2412-15275_subsection_20135016",
+      "2412-15275_sent_834f93bb": "2412-15275_subsection_20135016",
+      "2412-15275_sent_1dc58b7b": "2412-15275_subsection_20135016",
+      "2412-15275_sent_09285261": "2412-15275_subsection_20135016",
+      "2412-15275_sent_13a889f7": "2412-15275_subsection_20135016",
+      "2412-15275_sent_bd1ee980": "2412-15275_subsection_20135016",
+      "2412-15275_sent_080f4dbd": "2412-15275_subsection_20135016",
+      "2412-15275_sent_a4ea424c": "2412-15275_subsection_20135016",
+      "2412-15275_sent_6be37495": "2412-15275_subsection_20135016",
+      "2412-15275_sent_3f15097b": "2412-15275_subsection_20135016",
+      "2412-15275_sent_d08c9287": "2412-15275_subsection_20135016",
+      "2412-15275_sent_796c13b8": "2412-15275_subsection_20135016",
+      "2412-15275_sent_3523aebe": "2412-15275_subsection_20135016",
+      "2412-15275_sent_9b78fe4a": "2412-15275_subsection_20135016",
+      "2412-15275_sent_120c0ade": "2412-15275_subsection_20135016",
+      "2412-15275_sent_8e280adc": "2412-15275_subsection_20135016",
+      "2412-15275_sent_e1944502": "2412-15275_subsection_20135016",
+      "2412-15275_subsection_316bb574": "2412-15275_section_b1adf179",
+      "2412-15275_sent_f6fe296f": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_b90277c5": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_a15b7b15": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_6bebf5f6": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_a74aa255": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_b375593a": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_a7758bd4": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_7aa15518": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_a3fec6db": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_d97c1089": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_d7906590": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_48b376b1": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_a8d81a96": "2412-15275_subsection_316bb574",
+      "2412-15275_sent_e216db8d": "2412-15275_subsection_316bb574",
+      "2412-15275_subsection_83e952c4": "2412-15275_section_b1adf179",
+      "2412-15275_sent_f6de634b": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_b65dfe23": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_b08fd8bb": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_03906642": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_017aa9c6": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_d8a145f5": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_34ad8a0c": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_ed8b3da9": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_cc2602d4": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_5210e3b5": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_f3e6c425": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_4fa7516a": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_df235a33": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_08fd1eb0": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_929d515b": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_a94904a1": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_71535fa5": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_df128215": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_8361d22c": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_2210895d": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_45e9c251": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_7f2c9ee0": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_593ef312": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_af61b0cd": "2412-15275_subsection_83e952c4",
+      "2412-15275_sent_e0e69810": "2412-15275_subsection_83e952c4",
+      "2412-15275_section_6f8b794f": "2412-15275_doc_root",
+      "2412-15275_sent_a6564e29": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_565d7a3d": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_2b440e11": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_b4927369": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_9dd93eac": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_20303ecf": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_1b93d04f": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_a0e2f5c3": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_3b953900": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_ff4fc1de": "2412-15275_section_6f8b794f",
+      "2412-15275_sent_fd62f048": "2412-15275_section_6f8b794f",
+      "2412-15275_section_84ffd62e": "2412-15275_doc_root",
+      "2412-15275_sent_08741a36": "2412-15275_section_84ffd62e",
+      "2412-15275_sent_556bd20e": "2412-15275_section_84ffd62e",
+      "2412-15275_sent_cfeaa058": "2412-15275_section_84ffd62e",
+      "2412-15275_sent_f1432148": "2412-15275_section_84ffd62e",
+      "2412-15275_section_444109e2": "2412-15275_doc_root",
+      "2412-15275_fig_06cdb640": "2412-15275_section_444109e2",
+      "2412-15275_sent_0d85cebf": "2412-15275_section_444109e2",
+      "2412-15275_sent_1ce6524c": "2412-15275_section_444109e2",
+      "2412-15275_sent_ef1b004a": "2412-15275_section_444109e2",
+      "2412-15275_sent_caf65870": "2412-15275_section_444109e2",
+      "2412-15275_sent_9715ebb2": "2412-15275_section_444109e2",
+      "2412-15275_sent_bab15ea5": "2412-15275_section_444109e2",
+      "2412-15275_sent_62379681": "2412-15275_section_444109e2",
+      "2412-15275_sent_f434aa15": "2412-15275_section_444109e2",
+      "2412-15275_sent_d024edac": "2412-15275_section_444109e2",
+      "2412-15275_sent_8f795dd0": "2412-15275_section_444109e2",
+      "2412-15275_sent_18ed567e": "2412-15275_section_444109e2",
+      "2412-15275_sent_70b484ad": "2412-15275_section_444109e2",
+      "2412-15275_sent_705ab675": "2412-15275_section_444109e2",
+      "2412-15275_sent_d4c808dc": "2412-15275_section_444109e2",
+      "2412-15275_sent_5f22f7b9": "2412-15275_section_444109e2",
+      "2412-15275_sent_f7d00c0e": "2412-15275_section_444109e2",
+      "2412-15275_sent_b305be48": "2412-15275_section_444109e2",
+      "2412-15275_sent_2594237d": "2412-15275_section_444109e2",
+      "2412-15275_sent_ce726d6b": "2412-15275_section_444109e2",
+      "2412-15275_sent_2447d9bf": "2412-15275_section_444109e2",
+      "2412-15275_sent_d5a2b6c2": "2412-15275_section_444109e2",
+      "2412-15275_sent_1dbbea57": "2412-15275_section_444109e2",
+      "2412-15275_sent_1e69159c": "2412-15275_section_444109e2",
+      "2412-15275_sent_d3b102d6": "2412-15275_section_444109e2",
+      "2412-15275_section_d0df6d02": "2412-15275_doc_root",
+      "2412-15275_sent_2bc0f942": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_5554b519": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_27c03ae9": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_5b69cacf": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_24350690": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_81c35372": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_e465a073": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_f34734c6": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_27e6dbea": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_415fd8f3": "2412-15275_section_d0df6d02",
+      "2412-15275_fig_6fdbc07b": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_7c91292e": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_b0d51ef1": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_58e447b6": "2412-15275_section_d0df6d02",
+      "2412-15275_sent_6b40f7e5": "2412-15275_section_d0df6d02",
+      "2412-15275_section_6fbd8567": "2412-15275_doc_root",
+      "2412-15275_sent_90aa6421": "2412-15275_section_6fbd8567",
+      "2412-15275_sent_32de8f90": "2412-15275_section_6fbd8567",
+      "2412-15275_sent_8778db35": "2412-15275_section_6fbd8567",
+      "2412-15275_sent_08738c38": "2412-15275_section_6fbd8567",
+      "2412-15275_sent_b1ad6359": "2412-15275_section_6fbd8567",
+      "2412-15275_section_2b4e7259": "2412-15275_doc_root",
+      "2412-15275_sent_b44ab5ab": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_1442a8fe": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_af1e38ee": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_a58fb037": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_f1c4a9ee": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_5e10c90f": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_80cee4a6": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_28f9a54f": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_98aba52a": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_5139913c": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_143a8aa2": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_b162614d": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_d4057b12": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_f48a2240": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_f871d7f4": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_262fd46d": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_5fac16db": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_2b174576": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_840157b3": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_4f299ce3": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_81428992": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_fd8a4cb4": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_d84eedd5": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_aa542da0": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_22731564": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_1635b99e": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_b458cf0a": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_7161b602": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_a7c59305": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_bff09f8b": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_4f8e0c01": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_62661005": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_3e90359a": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_40fed5c7": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_29382921": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_c81eb2c2": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_105ecdfd": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_99dc2afb": "2412-15275_section_2b4e7259",
+      "2412-15275_sent_1727c73c": "2412-15275_section_2b4e7259"
+    }
+  },
+  "merged_parents": {
+    "2412-15275_sent_676977e1": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_abstract_ce28071e": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_e0aa8d4f": [
+      "2412-15275_abstract_ce28071e"
+    ],
+    "2412-15275_sent_280150ee": [
+      "2412-15275_abstract_ce28071e"
+    ],
+    "2412-15275_sent_4d04da75": [
+      "2412-15275_abstract_ce28071e"
+    ],
+    "2412-15275_sent_f85533be": [
+      "2412-15275_abstract_ce28071e"
+    ],
+    "2412-15275_sent_cb8dfd17": [
+      "2412-15275_abstract_ce28071e"
+    ],
+    "2412-15275_sent_03af4b7c": [
+      "2412-15275_abstract_ce28071e"
+    ],
+    "2412-15275_sent_80f668f0": [
+      "2412-15275_abstract_ce28071e"
+    ],
+    "2412-15275_sent_7aa83070": [
+      "2412-15275_abstract_ce28071e"
+    ],
+    "2412-15275_section_0b79795d": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_ab01fb71": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_4f4f0c2f": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_832e32cf": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_d2438ad0": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_b254318c": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_bb745be8": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_f1506637": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_96f76e6a": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_3d8d36d3": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_642b5cb5": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_29df76c4": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_d23500fc": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_05edcdd2": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_abf60273": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_c5c7eec9": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_2c8cd851": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_0d998240": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_31ce141d": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_99f21c35": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_fig_b71837c1": [
+      "2412-15275_section_0b79795d",
+      "2412-15275_section_2b4e7259",
+      "2412-15275_section_d0df6d02",
+      "2412-15275_subsection_20135016",
+      "2412-15275_subsection_316bb574",
+      "2412-15275_subsection_83e952c4",
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_5f39c63f": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_8057c19c": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_bea86807": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_81eccaf9": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_28896197": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_8ecbec0c": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_6d66ca47": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_5044f806": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_c5ca7c0b": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_sent_95fdd345": [
+      "2412-15275_section_0b79795d"
+    ],
+    "2412-15275_section_aed402c3": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_e6a3197b": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_209d0277": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_c10dd1b4": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_d333b333": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_b09b62dc": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_33ad5ab9": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_783bb0f1": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_8a7d94db": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_c559d476": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_3857c614": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_05fd2c05": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_4f733697": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_6199ca9c": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_19aa7ede": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_becc3687": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_30dab150": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_8b7dc294": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_6a5440a0": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_4d3d7b51": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_dda49683": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_4d16eeba": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_eee992fc": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_sent_bde0d3f0": [
+      "2412-15275_section_aed402c3"
+    ],
+    "2412-15275_section_4c3880bb": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_362dab30": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_sent_957b1629": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_sent_ea2f3f95": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_sent_f89beb84": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_sent_928630df": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_sent_03bd2907": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_subsection_0f631271": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_sent_6584c9d1": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_7a337822": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_8199bf3e": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_ae20b8ab": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_4bed8d4b": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_b0cb6911": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_9a7f3d51": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_66f677f3": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_fac7641b": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_0d0ef572": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_467b1c09": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_sent_da2925dc": [
+      "2412-15275_subsection_0f631271"
+    ],
+    "2412-15275_subsection_85011fea": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_sent_37e12c24": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_0257b057": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_3d61a882": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_a65bc027": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_70c87cf4": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_4681dc9c": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_584758d9": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_8d631464": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_3c29657e": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_df30f911": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_b79fcdc3": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_9ce70ea0": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_4dd0425e": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_f61debeb": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_e930dfd2": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_9d23722d": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_08cb7a30": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_286a9fef": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_2c1921b5": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_4a2a52c1": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_715857c4": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_3855d758": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_f8e830ec": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_886d5a9f": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_5684cda6": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_9ab5fdb2": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_723aa8e2": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_5ae99393": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_a8d4d838": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_c32a042f": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_b821893d": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_b031da4d": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_31389cf7": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_931b6c90": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_c489911c": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_b7945ac1": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_sent_71f188da": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_fig_8b36b5b6": [
+      "2412-15275_subsection_85011fea"
+    ],
+    "2412-15275_subsection_a1f64618": [
+      "2412-15275_section_4c3880bb"
+    ],
+    "2412-15275_sent_f61109d7": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_904048f7": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_4a122694": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_16e919dd": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_53e029f2": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_61c6d8ee": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_3fac42d9": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_89be6018": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_3c9d7b19": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_01ec0c99": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_406eee8d": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_10cb1fca": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_59da8892": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_1471b97f": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_4c1d146f": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_95c301e3": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_efafa938": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_92a7e0b2": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_a04d5f0e": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_7f111b81": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_18e5a957": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_b741dd9e": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_eb74ed06": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_a7c87991": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_9f9c0802": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_8e7e1925": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_sent_8d161ba7": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_fig_dd85f8b9": [
+      "2412-15275_subsection_a1f64618"
+    ],
+    "2412-15275_section_b1adf179": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_27edd9ea": [
+      "2412-15275_section_b1adf179"
+    ],
+    "2412-15275_subsection_20135016": [
+      "2412-15275_section_b1adf179"
+    ],
+    "2412-15275_sent_711fc893": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_b8e7e86e": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_f565f43e": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_834f93bb": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_1dc58b7b": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_09285261": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_13a889f7": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_bd1ee980": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_080f4dbd": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_a4ea424c": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_6be37495": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_3f15097b": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_d08c9287": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_796c13b8": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_3523aebe": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_9b78fe4a": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_120c0ade": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_8e280adc": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_sent_e1944502": [
+      "2412-15275_subsection_20135016"
+    ],
+    "2412-15275_subsection_316bb574": [
+      "2412-15275_section_b1adf179"
+    ],
+    "2412-15275_sent_f6fe296f": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_b90277c5": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_a15b7b15": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_6bebf5f6": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_a74aa255": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_b375593a": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_a7758bd4": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_7aa15518": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_a3fec6db": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_d97c1089": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_d7906590": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_48b376b1": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_a8d81a96": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_sent_e216db8d": [
+      "2412-15275_subsection_316bb574"
+    ],
+    "2412-15275_subsection_83e952c4": [
+      "2412-15275_section_b1adf179"
+    ],
+    "2412-15275_sent_f6de634b": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_b65dfe23": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_b08fd8bb": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_03906642": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_017aa9c6": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_d8a145f5": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_34ad8a0c": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_ed8b3da9": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_cc2602d4": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_5210e3b5": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_f3e6c425": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_4fa7516a": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_df235a33": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_08fd1eb0": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_929d515b": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_a94904a1": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_71535fa5": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_df128215": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_8361d22c": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_2210895d": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_45e9c251": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_7f2c9ee0": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_593ef312": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_af61b0cd": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_sent_e0e69810": [
+      "2412-15275_subsection_83e952c4"
+    ],
+    "2412-15275_section_6f8b794f": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_a6564e29": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_565d7a3d": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_2b440e11": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_b4927369": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_9dd93eac": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_20303ecf": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_1b93d04f": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_a0e2f5c3": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_3b953900": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_ff4fc1de": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_sent_fd62f048": [
+      "2412-15275_section_6f8b794f"
+    ],
+    "2412-15275_section_84ffd62e": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_08741a36": [
+      "2412-15275_section_84ffd62e"
+    ],
+    "2412-15275_sent_556bd20e": [
+      "2412-15275_section_84ffd62e"
+    ],
+    "2412-15275_sent_cfeaa058": [
+      "2412-15275_section_84ffd62e"
+    ],
+    "2412-15275_sent_f1432148": [
+      "2412-15275_section_84ffd62e"
+    ],
+    "2412-15275_section_444109e2": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_fig_06cdb640": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_0d85cebf": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_1ce6524c": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_ef1b004a": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_caf65870": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_9715ebb2": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_bab15ea5": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_62379681": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_f434aa15": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_d024edac": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_8f795dd0": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_18ed567e": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_70b484ad": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_705ab675": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_d4c808dc": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_5f22f7b9": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_f7d00c0e": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_b305be48": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_2594237d": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_ce726d6b": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_2447d9bf": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_d5a2b6c2": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_1dbbea57": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_1e69159c": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_sent_d3b102d6": [
+      "2412-15275_section_444109e2"
+    ],
+    "2412-15275_section_d0df6d02": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_2bc0f942": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_5554b519": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_27c03ae9": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_5b69cacf": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_24350690": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_81c35372": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_e465a073": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_f34734c6": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_27e6dbea": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_415fd8f3": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_fig_6fdbc07b": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_7c91292e": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_b0d51ef1": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_58e447b6": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_sent_6b40f7e5": [
+      "2412-15275_section_d0df6d02"
+    ],
+    "2412-15275_section_6fbd8567": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_90aa6421": [
+      "2412-15275_section_6fbd8567"
+    ],
+    "2412-15275_sent_32de8f90": [
+      "2412-15275_section_6fbd8567"
+    ],
+    "2412-15275_sent_8778db35": [
+      "2412-15275_section_6fbd8567"
+    ],
+    "2412-15275_sent_08738c38": [
+      "2412-15275_section_6fbd8567"
+    ],
+    "2412-15275_sent_b1ad6359": [
+      "2412-15275_section_6fbd8567"
+    ],
+    "2412-15275_section_2b4e7259": [
+      "2412-15275_doc_root"
+    ],
+    "2412-15275_sent_b44ab5ab": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_1442a8fe": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_af1e38ee": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_a58fb037": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_f1c4a9ee": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_5e10c90f": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_80cee4a6": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_28f9a54f": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_98aba52a": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_5139913c": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_143a8aa2": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_b162614d": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_d4057b12": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_f48a2240": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_f871d7f4": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_262fd46d": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_5fac16db": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_2b174576": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_840157b3": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_4f299ce3": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_81428992": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_fd8a4cb4": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_d84eedd5": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_aa542da0": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_22731564": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_1635b99e": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_b458cf0a": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_7161b602": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_a7c59305": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_bff09f8b": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_4f8e0c01": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_62661005": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_3e90359a": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_40fed5c7": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_29382921": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_c81eb2c2": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_105ecdfd": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_99dc2afb": [
+      "2412-15275_section_2b4e7259"
+    ],
+    "2412-15275_sent_1727c73c": [
+      "2412-15275_section_2b4e7259"
+    ]
+  }
+}

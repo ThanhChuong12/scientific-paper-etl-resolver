@@ -1,0 +1,1207 @@
+{
+  "elements": {
+    "2412-15307_doc_root": "DOCUMENT_ROOT",
+    "2412-15307_sent_676977e1": "\\maketitle",
+    "2412-15307_abstract_ce28071e": "abstract",
+    "2412-15307_sent_9d0dd933": "The traditional interpretation of Intravascular Ultrasound (IVUS) images during Percutaneous Coronary Intervention (PCI) is a time-consuming process that often lacks consistency due to its reliance on the expertise and subjective judgment of physicians.",
+    "2412-15307_sent_5d3bf069": "Additionally, the collection and integration of IVUS data across multiple hospital systems are significantly constrained by regulatory restrictions and privacy concerns, posing challenges to collaborative analysis and model development.",
+    "2412-15307_sent_6d1599f7": "To establish a consistent and efficient method for IVUS image segmentation and enhance plaque detection during PCI procedures, a parallel 2D U-Net model with a multi-stage segmentation architecture has been developed. The model leverages a federated learning algorithm, enabling collaborative data analysis across multiple healthcare institutions while maintaining data privacy.",
+    "2412-15307_sent_d16d0a51": "Plaque segmentation is achieved by identifying and subtracting the External Elastic Membrane (EEM) and lumen areas.",
+    "2412-15307_sent_e55021e6": "To optimize processing efficiency, polar coordinates are generated from Cartesian coordinates during the preprocessing stage, ensuring precise segmentation and improving computational performance in distributed medical imaging workflows.",
+    "2412-15307_sent_2a67a40e": "The model demonstrates effective plaque identification, achieving a Dice Similarity Coefficient (DSC) of 0.706, and accurately detects circular boundaries in real-time.",
+    "2412-15307_sent_13ee42ca": "Through collaboration with domain experts, the IVUS segmentation system provides enhanced plaque burden interpretation via precise quantitative parameter measurements.",
+    "2412-15307_sent_6a32ef15": "Future improvements may include integrating advanced federated learning methods to further enhance model performance.",
+    "2412-15307_sent_250be962": "This technology is highly adaptable and suitable for environments where sensitive and distributed data are prevalent.",
+    "2412-15307_sent_dfce16f3": "Expanding the number of participating institutions and datasets could further optimize outcomes, enabling hospitals to achieve greater success in medical imaging and intervention.",
+    "2412-15307_section_0b79795d": "Introduction",
+    "2412-15307_sent_924a1dd5": "An invasive imaging modality such as the Intravascular Ultrasound (IVUS) image is used to evaluate Coronary Artery Diseases (CAD) and the severity of lesion stenosis \\cite{CHO2024132543}.",
+    "2412-15307_sent_effff309": "The leading cause of coronary artery diseases is atherosclerosis.",
+    "2412-15307_sent_f83933aa": "Atherosclerosis is the buildup of plaque, composed of collagen, fat, calcium, cholesterol, macrophages, and microvessels \\cite{STONE20202289,Saito2024}.",
+    "2412-15307_sent_a91e12c8": "With the accumulation of plaque and the thickening and extension of atheroma, the lumen area becomes narrow, decreasing the amount of oxygen-rich blood that could pass through.",
+    "2412-15307_sent_f24c1325": "Insufficient oxygen causes coronary artery ischemia.",
+    "2412-15307_sent_3faf505e": "When cardiovascular intervention with intravascular imaging is performed, images of the plaque morphology, burden, and detailed treatment strategies are provided \\cite{HUANG2023102922}.",
+    "2412-15307_sent_dc4c767c": "Because the accumulation of plaque narrows the coronary artery, intravascular imaging is essential to estimate the plaque's location, thickness, length, and burden \\cite{Li2021IVUSSeg}.",
+    "2412-15307_sent_87e3e9bb": "IVUS provides 2D grayscale images of vessel wall structures in 360 degrees, offering real-time imaging during surgery at video-rate speed without the need for contrast, as compared to Optical Coherence Tomography (OCT) \\cite{9844289,Hui2017IVUS}.",
+    "2412-15307_sent_2f256457": "Despite its advantages, IVUS generates low-resolution grayscale images with indistinct borders, as illustrated in Figure \\ref{fig:RelatedWork Canny Edge Detection.}.",
+    "2412-15307_sent_2d5ee615": "This low resolution, common in ultrasonography, makes diagnosis more challenging.",
+    "2412-15307_sent_05fe4404": "Plaque regions on IVUS images are typically identified manually by doctors using their naked eyes, relying heavily on extensive experience and professional knowledge.",
+    "2412-15307_sent_e24eceda": "However, this traditional approach carries the risk of misjudgment due to the inherent subjectivity and complexity of the process.",
+    "2412-15307_sent_aa2c30a0": "This paper applied image segmentation technology to patients' IVUS images.",
+    "2412-15307_sent_bac1c105": "The multi-stage IVUS image segmentation models mark the positions of the External Elastic Membrane (EEM), the lumen area, and the plaque, respectively.",
+    "2412-15307_sent_41010c1f": "However, because of security concerns, cross-hospital medical data cannot be easily exchanged \\cite{Liu_Chen_Zhao_Yu_Liu_Bao_Jiang_Nie_Xu_Yang_2022,Yan2021FL}.",
+    "2412-15307_sent_a8518f33": "Therefore, the \"federated learning\" algorithm is proposed to address these issues and solve the cross-hospital data problem.",
+    "2412-15307_sent_8b7f3b7e": "The federated learning framework is successfully proposed to enable all cross-hospital institutions to create win-win results.",
+    "2412-15307_sent_9d34e0fd": "It improves the feasibility of implementation.",
+    "2412-15307_sent_3823bf40": "The designed model is an indispensable and effective segmentation tool in the surgical process.",
+    "2412-15307_sent_4083c25a": "Contribution: Our main contributions can be summarized as follows:",
+    "2412-15307_itemize_129f33ad": "itemize",
+    "2412-15307_item_099db1c2": "item",
+    "2412-15307_sent_7e3bd839": "A model for automatic IVUS segmentation is proposed to highlight plaque borders and locations in arteries.",
+    "2412-15307_sent_b8a29da0": "The model can provide spatial information and improve image readability.",
+    "2412-15307_sent_366c6b5e": "In diagnosis, the proposed method is intended to overcome the difficulty of detecting circular boundaries (Figure \\ref{fig:RelatedWork Canny Edge Detection.}) for improving the treatment efficiency by area segmentation models.",
+    "2412-15307_sent_20357231": "Data are preprocessed with coordinate conversions, and lumen and EEM areas are segmented with parallel U-Net models.",
+    "2412-15307_sent_42c2f9ef": "The plaques are identified by subtracting both locations from one another.",
+    "2412-15307_sent_08aea327": "Moreover, the proposed federated learning architecture significantly diagnoses and classifies plaques based on intravascular ultrasound images.",
+    "2412-15307_sent_ce95547b": "The system gives all inter-hospital institutions a win-win situation and makes implementation easier.",
+    "2412-15307_sent_d5502bfa": "Additionally, it can estimate the volume of the lesion area based on the position of the external elastic membrane, lumen, and plaque.",
+    "2412-15307_sent_bd4b4ce1": "It's essential for effective segmentation during surgery.",
+    "2412-15307_fig_7ff2841f": "\\begin{figure}\n\n \\begin{subfigure}[c]{0.47\\linewidth}\n\n \\includegraphics[scale=0.26]{figures/f_ivus_sample.pdf}\n \\caption{Original 2D IVUS image}\n \\end{subfigure}\n \\begin{subfigure}[c]{0.47\\linewidth}\n\n \\includegraphics[scale=0.26]{figures/f_cannyEdgeDetection.pdf}\n \\caption{Result of edge detection}\n \\end{subfigure}\n\n\\caption{Fragmentary boundaries after edge detection on IVUS images}\n\n\\end{figure}",
+    "2412-15307_fig_10df7b46": "\\begin{figure}\n\n\\includegraphics[scale=0.24]{figures/FLFramework_aaai.pdf}\n\\caption{Federated learning framework among multi-hospitals.}\n\n\\end{figure} ",
+    "2412-15307_section_a7f20481": "Related Works",
+    "2412-15307_sent_fd392f53": "Convolutional Neural Networks (CNNs) have been widely employed in diverse image analysis applications \\cite{Saito2024}, demonstrating robust performance in numerous studies.",
+    "2412-15307_sent_7f9fc4fa": "With GPU acceleration, the high computational demands of CNNs become manageable, enabling real-time predictions.",
+    "2412-15307_sent_8876bb0d": "Hou et al. \\cite{Hou2020MultiStage} introduced a three-stage network for kidney tumor segmentation, utilizing a low-resolution model to locate the Volume of Interest (VOI) from down-sampled CT images \\cite{MIN2022PlaqueSeverity}.",
+    "2412-15307_sent_ee632622": "Subsequently, a full-resolution model and a tumor refinement model extracted precise kidney and tumor boundaries from full-resolution CT images \\cite{OPLAB2022kidney}.",
+    "2412-15307_sent_3d6cd752": "Similarly, Liu et al. \\cite{Liu2020Pancreas} employed fully FCNs to tackle the challenging task of pancreas segmentation in CT images.",
+    "2412-15307_sent_fe064b47": "Advancements in computational power have enabled the creation of sophisticated models that maintain high efficiency.",
+    "2412-15307_sent_80012379": "Among these, the encoder-decoder framework U-Net has demonstrated exceptional performance in various biomedical segmentation tasks.",
+    "2412-15307_sent_79d1807f": "Building on this foundation, the U-Net++ model introduces a nested structure with varying depths \\cite{Zhou2020Unetplus,doi:10.1177/01617346221114137}, allowing multi-scope feature fusion.",
+    "2412-15307_sent_e608b3ea": "This innovative design significantly enhances segmentation accuracy, particularly in complex biomedical imaging applications.",
+    "2412-15307_sent_c6194098": "The first federated learning algorithm was proposed in \\cite{McMahan2017FedAvg}, in which a model of next-word suggestions was created in Gboard, and a collaborative learning algorithm was developed. Multiple clients can learn a global model without exchanging data \\cite{Hao2020FL}.",
+    "2412-15307_sent_37cdd4c1": "In several fields, federated learning has been demonstrated as an advantageous method for solving tasks on large amounts of data.",
+    "2412-15307_sent_7faad439": "Kumar et al. \\cite{Kumar2021FL} integrated blockchain technology with federated learning to identify confirmed COVID-19 cases using Computed Tomography (CT) images during the global spread of the pandemic.",
+    "2412-15307_sent_d1c6b164": "Similarly, Zhang et al. \\cite{Zhang2021FL} introduced a dynamic fusion-based federated learning approach for detecting positive COVID-19 cases.",
+    "2412-15307_sent_af47edff": "In the industrial domain, federated learning has been employed to develop robust central models while ensuring data privacy \\cite{Zhao2021FL}.",
+    "2412-15307_sent_0797018d": "Summary: Theoretically, federated learning can train models on multiple datasets without transferring data, but it is not easy practically.",
+    "2412-15307_sent_32bb5eae": "Based on recent studies, federated learning has been applied in the classification of MRI and CT images and has yielded outstanding results; however, image segmentation on IVUS images has yet to achieve significant results.",
+    "2412-15307_sent_561db273": "Despite the importance of considering all aspects, federated learning still needs a comprehensive framework.",
+    "2412-15307_sent_cf93ecea": "Regarding the scarcity and sensitivity of medical data, this study proposes a lightweight deep-learning segmentation model for identifying plaques on IVUS images in real time based on a federated learning framework.",
+    "2412-15307_sent_f14a6fd2": "Assuming that each local dataset has a limited volume of data and IVUS images have a low resolution, it is more difficult to identify them than MRIs and CTs.",
+    "2412-15307_sent_5018a51b": "Nevertheless, the IVUS has a low resolution, and plaque is usually unclear.",
+    "2412-15307_sent_404297ea": "Therefore, a multi-stage strategy is appropriate.",
+    "2412-15307_sent_fbd664d7": "This study proposes a multi-stage training process for developing a lightweight IVUS segmentation model.",
+    "2412-15307_sent_c8fa55ce": "Segmentation provides spatial information about the EEM, lumen areas, and plaques, which is very useful.",
+    "2412-15307_sent_a96534c4": "In further applications, an automatic real-time segmentation model can provide valuable messages to doctors for processing IVUS images during clinical surgery.",
+    "2412-15307_section_9eb0d44a": "Proposed Methods",
+    "2412-15307_subsection_67a52f06": "Ethical Approval",
+    "2412-15307_sent_6e0bb9a4": "The protocol and the request for a waiver of informed consent for retrospective data collection and the use of existing biosamples (REC No. 2021-05-002B) were approved during the 136th meeting of the Institutional Review Board of Taipei Veterans General Hospital on May 14, 2021.",
+    "2412-15307_sent_b6be52fd": "In accordance with Good Clinical Practice guidelines and applicable government laws and regulations, all experiments were conducted under the oversight of the committee.",
+    "2412-15307_sent_7e55e58a": "Written informed consent from participants was not required for this study.",
+    "2412-15307_sent_e4ba5bad": "A federated learning framework is proposed for plaque segmentation on distributed IVUS datasets, utilizing self-designed U-Net models.",
+    "2412-15307_sent_c63c67ab": "The procedures of the federated learning framework are illustrated in Figure \\ref{fig: Methods FL Procedure.}.",
+    "2412-15307_sent_e7c8b520": "In this framework, local models are aggregated into a global model ($W_G$) using the FedAvg algorithm \\cite{McMahan2017FedAvg}.",
+    "2412-15307_sent_89fa9392": "The client repeatedly exchanges model weights ($W_j$) with the server, a process referred to as \"communication.\" The framework is tested with N clients, where N represents the number of participants in the federated learning environment.",
+    "2412-15307_sent_9f4dc711": "This study involves a limited number of participating clients ($N=3$).",
+    "2412-15307_sent_93481a56": "Local clients implement the proposed U-Net architecture with consistent hyperparameter settings across the federated learning framework.",
+    "2412-15307_eq_bf7c8a1a": "\\begin{equation}\n\n w_{G} \\leftarrow \\sum_{j=1}^{N}{\\frac{D_{j}}{D} \\ w_{j}},\n\\end{equation}",
+    "2412-15307_sent_cb007fa1": "where $D$ represents the total dataset, while $D_{j}$ denotes the proportion of data held by client $j$ relative to the total dataset ($D$).",
+    "2412-15307_sent_e3ea111e": "In Algorithm \\ref{alg: FedAVG}, the global model is denoted by $w_{G}$, and the model weights of each client are represented by $w_{j}$.",
+    "2412-15307_sent_ec004ee4": "The server aggregates all received parameters from clients to generate an updated global model, $w_{G}^{r+1}$, as the iteration $r$ increases.",
+    "2412-15307_sent_e2f97ac8": "Once the server model is updated, it is broadcast to all local clients, instructing them to retrain using their local datasets ($D_j$).",
+    "2412-15307_sent_78f8a73c": "After completing local training, each client sends their updated model parameters ($w_{j}^{r+1}$) back to the server.",
+    "2412-15307_sent_d49d313a": "This process continues until the training program concludes or no further performance improvements are observed. \\newcommand{\\algrule}[1][.2pt]{\\vskip.5\\baselineskip\\hrule height #1\\vskip.5\\baselineskip} \\algnewcommand\\algorithmicinparalleldo{in parallel do} \\algdef{S}[FOR]{ForParallel}[1]{\\algorithmicfor\\ #1\\ \\algorithmicinparalleldo}",
+    "2412-15307_fig_dbddf71a": "\\begin{algorithm}\n\n\\caption{FedAvg \\cite{McMahan2017FedAvg}}\n\n \\begin{algorithmic}[1]\n \\Require{\n Number of communication rounds $R$,\\newline\n Number of local epochs $E$,\\newline\n Local minibatch size $B$,\\newline\n Learning rate $\\eta$\n\n \\Ensure{Global Model $W_G$}\n \\algrule\n\n \\Function{SERVERPROCESS}{}\\Comment{Run on the server}\n \\State initialize $w_{0}$\n \\State $S$ $\\leftarrow$ (a set of $N$ clients)\n \\For{each round $r$ from $1$ to $R$}\n \\ForParallel{each client $j \\in S$}\n \\State $w_{j}^{r+1} \\leftarrow \\text{CLIENTUPDATE}(j, w, E)$\n \\EndFor\n \\State $w_{G}^{r+1} \\leftarrow \\sum_{j \\in S}{\\frac{D_{j}}{D} \\ w_{j}^{r+1}}$\n \\EndFor\n \\EndFunction\n \\\\\n \\Function{CLIENTUPDATE}{$j, w, E$}\\Comment{Run on client $j$}\n \\State $\\mathcal{B} \\leftarrow$ (split $D_j$ into batches of size $B$)\n \\For{each local epoch $e$ from $1$ to $E$}\n \\For{batch $b \\in \\mathcal{B}$}\n \\State $w \\leftarrow w - \\eta \\triangledown l(w,b)$\n \\EndFor\n \\EndFor\n \\State return $w$ to server\n \\EndFunction\n \\end{algorithmic}\n\\end{algorithm}",
+    "2412-15307_subsection_5226bfc5": "Parallel Model Architecture and Data Coordinate Conversion",
+    "2412-15307_sent_601c8363": "Physicians locate the plaque burden area within the cardiovascular by observing the EEM border and lumen border because plaque grows between those two areas.",
+    "2412-15307_sent_beef9a2d": "To simulate the diagnostic process, the plaque segmentation task is divided into two stages.",
+    "2412-15307_sent_676d15cd": "The first step generates segmentation masks for each input image by identifying the EEM and lumen areas.",
+    "2412-15307_sent_721ce9ce": "The next step involves subtracting the segmentation masks of the EEM and lumen areas to form a plaque mask.",
+    "2412-15307_sent_1f4a73ba": "A two-stage procedure is performed sequentially to determine the plaque burden.",
+    "2412-15307_sent_983358bd": "Thus, the federated learning framework is used to train the model.",
+    "2412-15307_sent_7bc4f677": "In each hospital, the diagram shows the overall process and details (Figure \\ref{fig: Methods system process.}).",
+    "2412-15307_sent_d16a22ce": "Coordinate systems for plane images include Cartesian and polar systems.",
+    "2412-15307_sent_10b2e910": "Cartesian coordinates, being the most intuitive for human interpretation, allow for straightforward observation of spatial relationships and preserve object shapes, making them highly effective for image analysis.",
+    "2412-15307_sent_cb601e48": "Plaque detection is commonly performed using Cartesian coordinate images due to their ease of interpretation, where each pixel is defined by two indices, such as (x, y).",
+    "2412-15307_sent_a536522e": "In this study, IVUS frames were extracted from the Digital Imaging and Communications in Medicine (DICOM) raw cross-sectional view in Cartesian coordinates.",
+    "2412-15307_sent_f89815a6": "All images and masks utilized in the proposed deep learning model are formatted in a 512×512 shape, with both inputs and outputs processed in Cartesian coordinates.",
+    "2412-15307_sent_51365aa0": "This ensures consistency and compatibility throughout the analysis pipeline.",
+    "2412-15307_sent_6f94a935": "In polar coordinates, images present differently than in Cartesian coordinates.",
+    "2412-15307_sent_f4ef412c": "Each pixel is defined by its distance from a reference point and its angle relative to a reference direction.",
+    "2412-15307_sent_1dad6d56": "Cross-sectional views of vessels appear approximately circular in this coordinate system.",
+    "2412-15307_sent_3403b3de": "Cartesian coordinate images and masks can be transformed into polar coordinates to incorporate angular information \\cite{CHO2021polar}.",
+    "2412-15307_sent_d3c6188d": "Assuming the center of the original image as the reference point, the radius of the largest circle is set to 256 pixels, and polar coordinates are sampled every 0.5 degrees for precision.",
+    "2412-15307_sent_f5015b9a": "In the resulting polar images, the horizontal axis represents the angle ($\\theta$), and the vertical axis denotes the distance ($r$) from the pixel to the center.",
+    "2412-15307_sent_3e6dab3f": "This transformation produces images sized 256×720 pixels, approximately 70\\% of the original size.",
+    "2412-15307_sent_7f2713e5": "As shown by Cho et al. \\cite{CHO2021polar}, converting IVUS images from Cartesian to polar coordinates allows for angle-wise plaque classification, enabling accurate determination of plaque orientation.",
+    "2412-15307_sent_725a59bf": "Medical images were collected in the DICOM format, representing cardiovascular structures in three dimensions.",
+    "2412-15307_sent_a2b4e2a5": "This study employs two-dimensional frames represented in both Cartesian and polar coordinate systems.",
+    "2412-15307_sent_c56b3b8d": "Figure \\ref{fig: IVUS images in polar coordinate system.} illustrates an IVUS frame, its EEM mask, and its lumen mask converted to polar coordinates.",
+    "2412-15307_sent_18db5fdc": "The transformation filters out the background from the corners of the original image and reveals how boundaries change when viewed from different angles in the converted images.",
+    "2412-15307_fig_c8be675c": "\\begin{figure}\n\n\\includegraphics[scale=0.26]{figures/systemprocess.pdf}\n\\caption{Proposed parallel plaque segmentation diagram. }\n\n\\end{figure} ",
+    "2412-15307_fig_34f4af21": "\\begin{figure}\n\n\\includegraphics[scale=0.27]{figures/IVUS_polar.pdf}\n\\caption{(A) Original 2D IVUS image (B) EEM mask (C) lumen mask in polar coordinate system.}\n\n\\end{figure} ",
+    "2412-15307_section_4829262c": "Experiments",
+    "2412-15307_subsection_745163ae": "Implementation Parameter and Environment",
+    "2412-15307_sent_541d55ea": "This study employs a deep learning model implemented using Python 3.9.2 and the open-source machine learning framework PyTorch v1.8.0.",
+    "2412-15307_sent_52e39dbe": "Computational processes are accelerated with an Nvidia GeForce RTX 2070 Super graphics card featuring an 8 GB frame buffer.",
+    "2412-15307_sent_982f3716": "The model training utilizes a hybrid loss function that combines Cinary Cross-Entropy Loss (BCELoss) and Dice Similarity Coefficient Loss (DSCLoss).",
+    "2412-15307_sent_8645e2da": "The DSC value measures the similarity between two images.",
+    "2412-15307_sent_65945972": "To calculate the values between the DSC, use Equation \\ref{eqn_DiceScore}, where the annotated and output segmentation masks are denoted by A and B.",
+    "2412-15307_sent_b14b057d": "This formula represents twice the intersection of the Region of Interest (ROI) compared to the sum of the ROIs in the two masks.",
+    "2412-15307_sent_f684dc52": "The coefficient is 1 when the segmentation mask perfectly matches the ground truth mask; however, it becomes 0 if it does not match any pixels.",
+    "2412-15307_sent_69b5efa7": "According to the above definition, the Dice similarity coefficient is precisely the harmonic mean of precision and recall, which can also be expressed as Equation \\ref{eqn_DiceScoreHarmonic}.",
+    "2412-15307_sent_9c6659f1": "The segmentation model is trained using a combined loss function.",
+    "2412-15307_sent_c1e2cec1": "This loss function combines the BCELoss and DSCLoss see Equation \\ref{eqn: Hybrid loss function}.",
+    "2412-15307_sent_fa601ea4": "A segmented image can be regarded as a classification of each pixel.",
+    "2412-15307_sent_7399d4ea": "The parameters $\\omega$ and $1 - \\omega$ are weights of the above two terms in our loss function, and both are set to 0.5.",
+    "2412-15307_eq_7e5c58f3": "\\begin{equation}\n\n \\text{DSC}=\\frac{2\\times |A\\cap B|}{|A|+|B|}\n\\end{equation}",
+    "2412-15307_eq_2fe0b027": "\\begin{equation}\n\n \\text{DSC} = 2 \\times \\frac{\\text{Recall} \\times \\text{Precision}}{\\text{Recall} + \\text{Precision}}\n\\end{equation}",
+    "2412-15307_eq_f8da51be": "\\begin{equation}\n\n \\text{Loss value}= \\omega \\times \\text{BCELoss} + (1 - \\omega) \\times \\text{DSCLoss}\n\\end{equation}",
+    "2412-15307_sent_8f4b4d30": "Model updates are performed using the Adaptive Moment Estimation (Adam) optimizer with a learning rate of 1.00e-5, and L2 regularization is applied to prevent overfitting by incorporating a regularization term.",
+    "2412-15307_sent_7018f276": "Due to computational constraints, all experiments are conducted with a batch size of 4.",
+    "2412-15307_sent_48413423": "To evaluate model performance, five-fold cross-validation is employed, partitioning the dataset into five independent folds at the patient level, ensuring a balanced distribution of patients.",
+    "2412-15307_sent_c237539b": "For the federated learning setup, the dataset is divided into three folds, each assigned to a local client (Fig. \\ref{fig: Methods FL Procedure.}).",
+    "2412-15307_sent_b9039f79": "Model training is conducted for 10 communication rounds, with each local client performing 1 epoch of training per round.",
+    "2412-15307_sent_8fe38032": "This setup enables collaborative construction of a global model across distributed datasets.",
+    "2412-15307_subsection_61727e81": "Dataset Description",
+    "2412-15307_sent_32920bf3": "The IVUS dataset (IRB: 2021-05-002B) was collected from three independent hospitals, Taipei Veterans General Hospital (TVGH), Taichung Veterans General Hospital (VGHTC), and Kaohsiung Veterans General Hospital (VGHKS), Taiwan.",
+    "2412-15307_sent_b9b1ae75": "A total of 151 individuals that undergo PCI and IVUS were included in the study.",
+    "2412-15307_sent_f70cafa0": "An IVUS mechanical system (OptiCross HD, 60 MHz Coronary Imaging Catheters, Boston Scientific Corporation) equipped with a 60 MHz wideband transducer collects raw data in DICOM format.",
+    "2412-15307_sent_e24b809b": "Two physicians blinded to the participant information annotated approximately 87,505 frames of 2-dimensional images from 151 individuals.",
+    "2412-15307_sent_8e27085f": "A cardiovascular is annotated within the target length indicated by the white line in the longitudinal view, which is the narrowing range of the lumen area owing to plaque growth as shown in Figure \\ref{fig: cardiovascular in the longitudinal view.}.",
+    "2412-15307_sent_4023e19f": "Each adjacent frame is approximately 3 mm apart.",
+    "2412-15307_sent_992b2103": "There are a certain number of frames depending on the length of the cardiovascular system.",
+    "2412-15307_sent_8af21329": "There are two classes in total, and each frame is annotated at the pixel level; class \"0\" for the non-region-of-interest area and class \"1\" for the region-of-interest area, which include the EEM, lumen, or plaque burden areas.",
+    "2412-15307_sent_7afa8798": "To assess the inter-observer variability for the EEM, lumen, and plaque burden area, two independent domain experts (doctors or cardiologists), evaluated 3,000 randomly selected images.",
+    "2412-15307_sent_edc324fc": "In Table \\ref{tab: Inter-observer agreement}, the DSC is calculated for the inter-observer image analysis.",
+    "2412-15307_sent_bc23dc2a": "The consensus between the two analysts determines the final annotations, and a senior expert resolves conflicts.",
+    "2412-15307_sent_426358f2": "Despite the conflicting opinions, there was an excellent inter-observer agreement between the two cardiologists for the EEM area annotations (DSC $0.753$), lumen area annotations (DSC $0.793$), and plaque burden index annotations (DSC $0.778$).",
+    "2412-15307_fig_09692eda": "\\begin{figure}\n\n\\includegraphics[scale=0.25]{figures/IVUS_in_longitudinal_view.pdf}\n\\caption{Cardiovascular appearance in the longitudinal view.}\n\n\\end{figure} ",
+    "2412-15307_fig_0eea87ca": "\\begin{table}\n \\newcommand{\\tabincell}[2]{\\begin{tabular}{@{}#1@{}}#2\\end{tabular}}\n \\caption{Comparison of Segmentation Results for EEM, Lumen, and Plaque Burden Between the Proposed Model and Expert Annotations (DSC).}\n\n \\renewcommand{\\arraystretch}{1.3}\n \\begin{tabular}{p{6em}p{3.5em}p{3.5em}p{6em}}\n \\noalign{skip}\n \\bfseries \\tabincell{l}{} &\n \\bfseries \\tabincell{c} EEM &\n \\bfseries \\tabincell{c} Lumen &\n \\bfseries \\tabincell{c} Plaque Burden Index\\\\\n \\noalign{skip}\n Expert Annotations & {0.753} & {0.793} & {0.778}\\\\\n Proposed Approach & {0.890} & {0.877} & {0.706}\\\\\n\n \\end{tabular}\n\\end{table}",
+    "2412-15307_subsection_d4bad3bf": "Experimental Results and Analyses",
+    "2412-15307_sent_d2231cf3": "Plaque in the cardiovascular system can obstruct ultrasound reflections, causing blood vessels to appear unclear on IVUS images.",
+    "2412-15307_sent_6fdcf9b1": "This results in manually annotating IVUS images becoming a time-consuming and labor-intensive process.",
+    "2412-15307_sent_51bc12f5": "Analysts must often rely on their expertise and experience to infer boundaries that are unclear or disconnected. Even among highly trained professionals, interpretations of the same image may vary, leading to non-identical annotations.",
+    "2412-15307_sent_a56b58a7": "According to Table \\ref{tab: Inter-observer agreement}, two independent domain experts evaluated the same dataset, achieving Dice similarity coefficients of approximately 0.778 for the plaque burden index and 0.753 to 0.793 for the EEM and lumen.",
+    "2412-15307_sent_bb96a0f5": "These results demonstrate excellent inter-observer agreement, highlighting the consistency of expert evaluations despite the inherent challenges.",
+    "2412-15307_sent_942808c4": "Quantitative indices demonstrate Dice similarity coefficients for segmenting the EEM, lumen, and plaque burden.",
+    "2412-15307_sent_5ccfd6cc": "The proposed parallel deep learning models were evaluated using five-fold cross-validation to segment these structures across different image coordinates.",
+    "2412-15307_sent_fb40adad": "Key performance metrics, including Dice similarity coefficient, recall, and precision, were assessed. For EEM and lumen segmentation with coordinate conversion processing, the model achieved metrics exceeding 0.877, indicating high accuracy.",
+    "2412-15307_sent_51a0a4f3": "Conversely, plaque segmentation resulted in metrics around 0.706, closely matching the results of domain experts and highlighting the increased complexity involved in accurately identifying plaque boundaries.",
+    "2412-15307_sent_9dd4bfbf": "Model inference time was also considered, emphasizing the need for real-time IVUS image segmentation during surgical procedures.",
+    "2412-15307_sent_08208d25": "An efficient model not only supports real-time operations but also enhances the framework's overall efficiency for deep learning tasks and federated learning applications, demonstrating its versatility and practical utility.",
+    "2412-15307_subsubsection_0b953ed2": "Plaque Segmentation Results:",
+    "2412-15307_sent_1a044443": "The first and second columns display five consecutive frames along with their corresponding annotation masks.",
+    "2412-15307_sent_01c729fc": "The third and last columns show the segmentation results obtained using Cartesian and polar coordinate methods, respectively.",
+    "2412-15307_sent_35562d48": "Both methods demonstrate comparable performance for these frames, achieving DSC scores of approximately 0.89.",
+    "2412-15307_sent_f3a2c625": "However, the Cartesian coordinate method exhibits notable signal loss on the right and left sides of the IVUS image, particularly in the fourth quadrant.",
+    "2412-15307_sent_ed99f0ef": "This results in indentations on the left and right sides of the predicted segmentation outcomes.",
+    "2412-15307_sent_976e8707": "Artifacts result in boundaries that appear concave inward.",
+    "2412-15307_sent_c0051bf3": "While the polar coordinate method may produce jagged edges, the contours remain sharp and well-defined, minimizing the impact of such artifacts.",
+    "2412-15307_sent_87dcb538": "Consequently, segmentation using polar coordinates delivers superior and more accurate results compared to other methods.",
+    "2412-15307_fig_c18705d2": "\\begin{figure}\n\n\\includegraphics[scale=0.20]{figures/SegmentationResults.pdf}\n\\caption{Segmentation results of Cartesian system and polar coordinate conversion with post-processing.}\n\n\\end{figure} ",
+    "2412-15307_subsubsection_4df72b0b": "Consistency Evaluation Between Manual and Automatic Measurements:",
+    "2412-15307_eq_93b7d73a": "\\begin{equation}\n\n \\begin{aligned}\n \\text{Plaque Burden Index} &= \\frac{\\text{EEM Area} - \\text{Lumen Area}}{\\text{EEM Area}}\\\\\\\\\n &= \\frac{\\text{Plaque Area}}{\\text{EEM Area}}\\\\\n \\end{aligned}\n\\end{equation}\\\\",
+    "2412-15307_sent_4827e8ae": "This study utilized 87,505 IVUS frames from 151 patients collected across three hospitals (TVGH, VGHTC, and VGHKS).",
+    "2412-15307_sent_289b3ec9": "The dataset was divided into 135 cases (78,749 frames) for training and 16 cases (8,756 frames) for global verification.",
+    "2412-15307_sent_51e34d20": "A single patient could contribute multiple frames, resulting in a non-independent dataset.",
+    "2412-15307_sent_55f4d6d1": "The plaque burden index, defined by the EEM, lumen, and plaque areas as shown in Equation \\ref{eqn: Plaque Burden Index}, quantifies vascular blockage.",
+    "2412-15307_sent_2d058c9a": "Lower index values complicate plaque identification and influence training due to data distribution variations.",
+    "2412-15307_sent_8ad79173": "Risk thresholds of 50\\% and 70\\% classify cardiovascular disease risk, with indices below 50\\% indicating low risk and above 70\\% signifying high risk \\cite{10.1001/jamacardio.2023.2731}.",
+    "2412-15307_sent_68333b59": "Table \\ref{table: description N=3 IID} summarizes dataset characteristics for federated learning with balanced and similar distributions.",
+    "2412-15307_sent_8414534e": "Figures \\ref{figpolarBAPlot} and \\ref{fig_cart BA-Plot} present the Bland-Altman analysis comparing quantitative indicators estimated by the global model, utilizing Cartesian and polar coordinate conversions, with evaluations from domain experts, including doctors and radiologists.",
+    "2412-15307_sent_5ebdfb80": "Each data point represents a patient case, with the horizontal axis showing the average of two measurements and the vertical axis depicting their difference.",
+    "2412-15307_sent_26a154ad": "A blue line represents the mean difference, while red lines indicate the 1.96 standard deviations from the mean, forming the 95\\% confidence interval. Figure \\ref{fig_cart BA-Plot} shows the comparison between the Cartesian segmentation method and expert annotations, whereas Figure \\ref{figpolarBAPlot} illustrates the results for the polar segmentation method.",
+    "2412-15307_sent_f7c1473b": "All indicators demonstrate mean differences close to zero, suggesting minimal bias.",
+    "2412-15307_sent_7dc56bfc": "Most data points lie within the confidence intervals and show no discernible patterns, indicating strong agreement between the methods.",
+    "2412-15307_sent_5bbbb98c": "However, in several subplots, data points below the blue line represent negative differences, while those above indicate positive differences caused by discrepancies between predictions and expert measurements.",
+    "2412-15307_sent_b4fa816d": "A few data points fall outside the confidence intervals, potentially due to imbalanced data collection.",
+    "2412-15307_sent_783594e7": "The dataset contains relatively few extreme cases with high or low indicator values, causing the deep learning models to predict values closer to the dataset's mean.",
+    "2412-15307_sent_841ae3bb": "To overcome cross-hospital data sharing challenges, a federated learning algorithm was introduced, enabling collaborative model development while maintaining data privacy.",
+    "2412-15307_sent_20a39851": "This framework delivers mutual benefits to participating institutions and enhances feasibility.",
+    "2412-15307_sent_ba3af6d9": "The proposed model is an effective and indispensable segmentation tool, essential for surgical procedures.",
+    "2412-15307_fig_a8591b98": "\\begin{table}\n\n\\caption{Descriptions of local datasets (balanced datasets with similar data distributions).}\n\n\\renewcommand{\\arraystretch}{1.3}\n \\begin{tabular}{\n>{\\arraybackslash}p{2.8cm}\n>{\\arraybackslash}p{1.2cm}\n>{\\arraybackslash}p{1.2cm}\n>{\\arraybackslash}p{1.2cm}}\n\n \\multicolumn{4}{r}{(\\# of Frames / \\# of Cases)}\\\\\n\n Plaque Burden Index Distribution & Dataset 1& Dataset 2 & Dataset 3\\\\\n\n Low ($<$ 50) & \\phantom{0}6,039 / 10 & \\phantom{0}7,907 / 15 & \\phantom{0}7,864 / 14\\\\\n Moderate (50 $\\sim$ 70) & 16,592 / 31 & 15,737 / 27 & 15,851 / 26\\\\\n High ($>$ 70) & \\phantom{0}3,411 / \\phantom{0}4 & \\phantom{0}2,714 / \\phantom{0}3 & \\phantom{0}2,634 / \\phantom{0}5\\\\\n (Total) & 26,042 / 45 & 26,358 / 45 & 26,349 / 45\\\\\n\n \\\\\\\\\n\\end{tabular}\n\\end{table}",
+    "2412-15307_fig_b71837c1": "\\begin{figure*}",
+    "2412-15307_sent_4eec2be1": "\\begin{multicols}{3} \\begin{subfigure}{0.32\\textwidth} \\includegraphics[width=1\\linewidth]{figures/polar_Plaque_area_BAPlot.pdf} \\caption{Plaque Area} \\end{subfigure} \\begin{subfigure}{0.32\\textwidth} \\includegraphics[width=1\\linewidth]{figures/polar_Plaque_volume_BAPlot.pdf} \\caption{Plaque Volume} \\end{subfigure} \\begin{subfigure}{0.32\\textwidth} \\includegraphics[width=1\\linewidth]{figures/polar_Burden_Index_BAPlot.pdf} \\caption{Plaque Burden Index} \\end{subfigure} \\end{multicols} \\caption{Bland-Altman plot of quantitative indicators for plaque estimation comparing the global model with the polar coordinate conversion to domain experts' measurements.} \\end{figure*}",
+    "2412-15307_sent_b601ff46": "\\begin{multicols}{3} \\begin{subfigure}{0.33\\textwidth} \\includegraphics[width=1\\linewidth]{figures/cart_Plaque_area_BAPlot.pdf} \\caption{Plaque Area} \\end{subfigure} \\begin{subfigure}{0.33\\textwidth} \\includegraphics[width=1\\linewidth]{figures/cart_Plaque_volume_BAPlot.pdf} \\caption{Plaque Volume} \\end{subfigure} \\begin{subfigure}{0.33\\textwidth} \\includegraphics[width=1\\linewidth]{figures/cart_Burden_Index_BAPlot.pdf} \\caption{Plaque Burden Index} \\end{subfigure} \\end{multicols} \\caption{Bland-Altman plot of quantitative indicators for plaque estimation comparing the global model with Cartesian coordinate conversion to domain experts' measurements.} \\end{figure*} \\begin{comment}",
+    "2412-15307_sent_a84d0071": "\\caption{Five-fold cross-validation of image segmentation in Cartesian coordinates.} \\begin{tabular}{ >{\\arraybackslash}m{0.1\\textwidth} >{\\arraybackslash}m{0.1\\textwidth} >{\\arraybackslash}m{0.2\\textwidth} >{\\arraybackslash}m{0.2\\textwidth} >{\\arraybackslash}m{0.2\\textwidth}} & & DSC & Recall & Precision\\\\ \\multirow{3}{*}{Fold 1} & EEM & 0.8901 & 0.8945 & 0.9045\\\\ & Lumen & 0.8761 & 0.8823 & 0.8866\\\\ & Plaque & 0.7023 & 0.7272 & 0.7211\\\\ \\multirow{3}{*}{Fold 2} & EEM & 0.8940 & 0.8881 & 0.9125\\\\ & Lumen & 0.8881 & 0.8960 & 0.8922\\\\ & Plaque & 0.7178 & 0.7186 & 0.7510\\\\ \\multirow{3}{*}{Fold 3} & EEM & 0.8872 & 0.9026 & 0.8875\\\\ & Lumen & 0.8745 & 0.8771 & 0.8906\\\\ & Plaque & 0.6630 & 0.7107 & 0.6651\\\\ \\multirow{3}{*}{Fold 4} & EEM & 0.8748 & 0.8785 & 0.8904\\\\ & Lumen & 0.8582 & 0.8747 & 0.8636\\\\ & Plaque & 0.6727 & 0.6928 & 0.6976\\\\ \\multirow{3}{*}{Fold 5} & EEM & 0.8851 & 0.9028 & 0.8862\\\\ & Lumen & 0.8810 & 0.8893 & 0.8885\\\\ & Plaque & 0.7142 & 0.7552 & 0.7177\\\\ \\\\ \\end{tabular} \\end{table*} \\end{comment} \\begin{comment}",
+    "2412-15307_sent_3ab970c7": "\\caption{Five-fold cross-validation of image segmentation in polar coordinates without post-processing.} \\begin{tabular}{ >{\\arraybackslash}m{0.1\\textwidth} >{\\arraybackslash}m{0.1\\textwidth} >{\\arraybackslash}m{0.2\\textwidth} >{\\arraybackslash}m{0.2\\textwidth} >{\\arraybackslash}m{0.2\\textwidth}} & & DSC & Recall & Precision\\\\ \\multirow{3}{*}{Fold 1} & EEM & 0.8713 & 0.8502 & 0.9121\\\\ & Lumen & 0.8700 & 0.8641 & 0.8913\\\\ & Plaque & 0.6790 & 0.6749 & 0.7222\\\\ \\multirow{3}{*}{Fold 2} & EEM & 0.8729 & 0.8440 & 0.9184\\\\ & Lumen & 0.8842 & 0.8748 & 0.9050\\\\ & Plaque & 0.6940 & 0.6775 & 0.7498\\\\ \\multirow{3}{*}{Fold 3} & EEM & 0.8685 & 0.8500 & 0.9059\\\\ & Lumen & 0.8709 & 0.8586 & 0.9004\\\\ & Plaque & 0.6431 & 0.6558 & 0.6824\\\\ \\multirow{3}{*}{Fold 4} & EEM & 0.8479 & 0.8027 & 0.9203\\\\ & Lumen & 0.8473 & 0.8536 & 0.8652\\\\ & Plaque & 0.6282 & 0.5908 & 0.7223\\\\ \\multirow{3}{*}{Fold 5} & EEM & 0.8644 & 0.8440 & 0.9059\\\\ & Lumen & 0.8718 & 0.8601 & 0.9002\\\\ & Plaque & 0.6838 & 0.6844 & 0.7272\\\\ \\\\ \\end{tabular} \\end{table*} \\end{comment} \\begin{comment}",
+    "2412-15307_sent_5f37fdfd": "\\caption{Five-fold cross-validation of image segmentation in polar coordinates with post-processing.} \\begin{tabular}{ >{\\arraybackslash}m{0.1\\textwidth} >{\\arraybackslash}m{0.1\\textwidth} >{\\arraybackslash}m{0.2\\textwidth} >{\\arraybackslash}m{0.2\\textwidth} >{\\arraybackslash}m{0.2\\textwidth}} & & DSC & Recall & Precision\\\\ \\multirow{3}{*}{Fold 1} & EEM & 0.8908 & 0.9192 & 0.8812\\\\ & Lumen & 0.8766 & 0.8869 & 0.8810\\\\ & Plaque & 0.7166 & 0.7702 & 0.7048\\\\ \\multirow{3}{*}{Fold 2} & EEM & 0.9001 & 0.8982 & 0.9132\\\\ & Lumen & 0.8888 & 0.9027 & 0.8863\\\\ & Plaque & 0.7301 & 0.7309 & 0.7596\\\\ \\multirow{3}{*}{Fold 3} & EEM & 0.8940 & 0.9136 & 0.8889\\\\ & Lumen & 0.8814 & 0.8851 & 0.8931\\\\ & Plaque & 0.6820 & 0.7323 & 0.6785\\\\ \\multirow{3}{*}{Fold 4} & EEM & 0.8782 & 0.8976 & 0.8774\\\\ & Lumen & 0.8593 & 0.8754 & 0.8655\\\\ & Plaque & 0.6789 & 0.6972 & 0.7044\\\\ \\multirow{3}{*}{Fold 5} & EEM & 0.8856 & 0.9170 & 0.8737\\\\ & Lumen & 0.8783 & 0.8981 & 0.8740\\\\ & Plaque & 0.7197 & 0.7682 & 0.7155\\\\ \\\\ \\end{tabular} \\end{table*} \\end{comment}",
+    "2412-15307_section_eed9474f": "Discussion",
+    "2412-15307_sent_026c6242": "IVUS provides low-resolution grayscale images with vague borders, making diagnosis particularly challenging.",
+    "2412-15307_sent_8c267a97": "For junior doctors, identifying plaque regions based solely on professional experience and knowledge can be difficult.",
+    "2412-15307_sent_bf26d8e7": "Additionally, data collection and analysis across multi-hospital systems face significant regulatory and privacy challenges, necessitating the development of algorithms with decentralized architectures.",
+    "2412-15307_sent_12cb137b": "This study introduces a two-stage deep-learning method for automatic plaque segmentation on IVUS images within a federated learning framework.",
+    "2412-15307_sent_4ae77501": "The segmentation process involves converting images from Cartesian to polar coordinates, achieving Dice similarity coefficients of approximately 0.890 for EEM, 0.877 for lumen, and 0.706 for plaque burden areas.",
+    "2412-15307_sent_d583094d": "Preprocessing includes coordinate conversions, and segmentation of the lumen and EEM areas is performed using parallel U-Net models.",
+    "2412-15307_sent_584500ff": "Plaque regions are determined by subtracting the segmented locations of the lumen and EEM.",
+    "2412-15307_sent_49368b58": "This approach significantly enhances spatial information and improves image readability.",
+    "2412-15307_sent_fdd6e159": "The smaller size of the converted polar images reduces the number of model parameters from approximately 933k to 721k, optimizing both parameter efficiency and input dimensions while utilizing fewer computing resources.",
+    "2412-15307_sent_5dea95f4": "Although post-processing slightly increases computational time due to coordinate conversion, the polar coordinate method delivers superior segmentation performance.",
+    "2412-15307_sent_df17d369": "Additionally, this study employs a federated learning framework to segment 60-MHz IVUS images.",
+    "2412-15307_sent_44c92d88": "The proposed area segmentation model improves treatment effectiveness and efficiency by alleviating the challenges of detecting circular boundaries.",
+    "2412-15307_sent_54f30862": "Plaque borders and locations within the arteries are automatically highlighted, providing valuable insights for clinical decision-making.",
+    "2412-15307_sent_dc54143d": "The limitations of this study are briefly outlined. Each local dataset contains a limited volume of data, and some IVUS images lack high resolution, with most plaques appearing unclear.",
+    "2412-15307_sent_9856a239": "The federated learning framework was tested on only three clients due to the limited number of distributed datasets.",
+    "2412-15307_sent_9f7dd7e7": "Furthermore, all clients had equal amounts and similar distributions of IVUS images, whereas real-world scenarios often involve unbalanced datasets with distinct distributions across clients.",
+    "2412-15307_sent_bfd35fdb": "The lower resolution of 20MHz or 40MHz IVUS images further complicates patient identification across different clinics.",
+    "2412-15307_sent_c5ef7124": "Another significant challenge is the segmentation of images for model training, which requires a substantial number of annotated images, a considerable obstacle for federated learning frameworks.",
+    "2412-15307_section_6f8b794f": "Conclusion",
+    "2412-15307_sent_2a2b6759": "This study highlights practical methodologies and case studies on the IVUS segmentation system and federated learning framework, demonstrating significant real-world medical applications that are adaptable and scalable within decentralized AI systems: 1) Cardiovascular Disease Diagnosis and Treatment: The system accurately identifies and segments arterial structures, including the external elastic membrane, lumen, and plaque borders.",
+    "2412-15307_sent_f4decd1e": "This aids in diagnosing atherosclerosis and assessing plaque stability, which are essential for preventing heart attacks and strokes.",
+    "2412-15307_sent_ed6f9ef7": "2) Surgical Planning: Precise segmentation provides interventional cardiologists with accurate spatial and volumetric data, supporting procedures such as stent placement and angioplasty.",
+    "2412-15307_sent_5bb472ae": "3) Cross-Hospital Collaboration: Utilizing federated learning, hospitals can collaboratively train models on IVUS datasets without sharing sensitive patient data.",
+    "2412-15307_sent_d38e12a2": "This approach facilitates multi-center studies and ensures model generalization across diverse populations.",
+    "2412-15307_sent_7d90d02c": "4) Enhanced Image Analysis: Enhanced image readability and spatial information allow clinicians to interpret IVUS images more accurately, reducing diagnostic errors and improving patient outcomes, even when working with a limited number of imaging datasets.",
+    "2412-15307_sent_e9fd9ee7": "5) Personalized Medicine: The integration of demographic and patient-specific data enables the creation of personalized cardiovascular disease risk profiles, allowing for tailored treatment plans and preventive strategies.",
+    "2412-15307_sent_32aed54d": "6) Broader Medical Applications: The federated learning framework is adaptable to other imaging modalities, such as CT, MRI, and ultrasound.",
+    "2412-15307_sent_f775860a": "This expands its utility to fields like oncology, neurology, and prenatal care, particularly where sensitive and distributed data are prevalent.",
+    "2412-15307_sent_feff6d13": "The focus remains on delivering practical, actionable solutions ready for real-world implementation.",
+    "2412-15307_section_84ffd62e": "Acknowledgments",
+    "2412-15307_sent_3c4105b4": "This work was partially supported by Academia Sinica and the National Science and Technology Council, Taiwan, under Grants 3012-C3901, 113-2221-E-002-183-MY2, 113-2321-B-075-006, and 112-2221-E-001-024-MY2.",
+    "2412-15307_sent_d9d4c8f5": "The contributions of the participants to this research are also deeply acknowledged, including Prof. Frank Yeong-Sung Lin, Prof. Yennun Huang, Mr. Tzu-Lung Sun, Dr. Wen-Lieng Lee, Dr. Feng-Yu Kuo, Dr. Tse-Min Lu, and others.",
+    "2412-15307_sent_43a145eb": "Their support and collaboration have been invaluable to the success of this study."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15307_sent_676977e1": "2412-15307_doc_root",
+      "2412-15307_abstract_ce28071e": "2412-15307_doc_root",
+      "2412-15307_sent_9d0dd933": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_5d3bf069": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_6d1599f7": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_d16d0a51": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_e55021e6": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_2a67a40e": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_13ee42ca": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_6a32ef15": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_250be962": "2412-15307_abstract_ce28071e",
+      "2412-15307_sent_dfce16f3": "2412-15307_abstract_ce28071e",
+      "2412-15307_section_0b79795d": "2412-15307_doc_root",
+      "2412-15307_sent_924a1dd5": "2412-15307_section_0b79795d",
+      "2412-15307_sent_effff309": "2412-15307_section_0b79795d",
+      "2412-15307_sent_f83933aa": "2412-15307_section_0b79795d",
+      "2412-15307_sent_a91e12c8": "2412-15307_section_0b79795d",
+      "2412-15307_sent_f24c1325": "2412-15307_section_0b79795d",
+      "2412-15307_sent_3faf505e": "2412-15307_section_0b79795d",
+      "2412-15307_sent_dc4c767c": "2412-15307_section_0b79795d",
+      "2412-15307_sent_87e3e9bb": "2412-15307_section_0b79795d",
+      "2412-15307_sent_2f256457": "2412-15307_section_0b79795d",
+      "2412-15307_sent_2d5ee615": "2412-15307_section_0b79795d",
+      "2412-15307_sent_05fe4404": "2412-15307_section_0b79795d",
+      "2412-15307_sent_e24eceda": "2412-15307_section_0b79795d",
+      "2412-15307_sent_aa2c30a0": "2412-15307_section_0b79795d",
+      "2412-15307_sent_bac1c105": "2412-15307_section_0b79795d",
+      "2412-15307_sent_41010c1f": "2412-15307_section_0b79795d",
+      "2412-15307_sent_a8518f33": "2412-15307_section_0b79795d",
+      "2412-15307_sent_8b7f3b7e": "2412-15307_section_0b79795d",
+      "2412-15307_sent_9d34e0fd": "2412-15307_section_0b79795d",
+      "2412-15307_sent_3823bf40": "2412-15307_section_0b79795d",
+      "2412-15307_sent_4083c25a": "2412-15307_section_0b79795d",
+      "2412-15307_itemize_129f33ad": "2412-15307_section_0b79795d",
+      "2412-15307_item_099db1c2": "2412-15307_itemize_129f33ad",
+      "2412-15307_sent_7e3bd839": "2412-15307_item_099db1c2",
+      "2412-15307_sent_b8a29da0": "2412-15307_item_099db1c2",
+      "2412-15307_sent_366c6b5e": "2412-15307_item_099db1c2",
+      "2412-15307_sent_20357231": "2412-15307_item_099db1c2",
+      "2412-15307_sent_42c2f9ef": "2412-15307_item_099db1c2",
+      "2412-15307_sent_08aea327": "2412-15307_item_099db1c2",
+      "2412-15307_sent_ce95547b": "2412-15307_item_099db1c2",
+      "2412-15307_sent_d5502bfa": "2412-15307_item_099db1c2",
+      "2412-15307_sent_bd4b4ce1": "2412-15307_item_099db1c2",
+      "2412-15307_fig_7ff2841f": "2412-15307_section_0b79795d",
+      "2412-15307_fig_10df7b46": "2412-15307_section_0b79795d",
+      "2412-15307_section_a7f20481": "2412-15307_doc_root",
+      "2412-15307_sent_fd392f53": "2412-15307_section_a7f20481",
+      "2412-15307_sent_7f9fc4fa": "2412-15307_section_a7f20481",
+      "2412-15307_sent_8876bb0d": "2412-15307_section_a7f20481",
+      "2412-15307_sent_ee632622": "2412-15307_section_a7f20481",
+      "2412-15307_sent_3d6cd752": "2412-15307_section_a7f20481",
+      "2412-15307_sent_fe064b47": "2412-15307_section_a7f20481",
+      "2412-15307_sent_80012379": "2412-15307_section_a7f20481",
+      "2412-15307_sent_79d1807f": "2412-15307_section_a7f20481",
+      "2412-15307_sent_e608b3ea": "2412-15307_section_a7f20481",
+      "2412-15307_sent_c6194098": "2412-15307_section_a7f20481",
+      "2412-15307_sent_37cdd4c1": "2412-15307_section_a7f20481",
+      "2412-15307_sent_7faad439": "2412-15307_section_a7f20481",
+      "2412-15307_sent_d1c6b164": "2412-15307_section_a7f20481",
+      "2412-15307_sent_af47edff": "2412-15307_section_a7f20481",
+      "2412-15307_sent_0797018d": "2412-15307_section_a7f20481",
+      "2412-15307_sent_32bb5eae": "2412-15307_section_a7f20481",
+      "2412-15307_sent_561db273": "2412-15307_section_a7f20481",
+      "2412-15307_sent_cf93ecea": "2412-15307_section_a7f20481",
+      "2412-15307_sent_f14a6fd2": "2412-15307_section_a7f20481",
+      "2412-15307_sent_5018a51b": "2412-15307_section_a7f20481",
+      "2412-15307_sent_404297ea": "2412-15307_section_a7f20481",
+      "2412-15307_sent_fbd664d7": "2412-15307_section_a7f20481",
+      "2412-15307_sent_c8fa55ce": "2412-15307_section_a7f20481",
+      "2412-15307_sent_a96534c4": "2412-15307_section_a7f20481",
+      "2412-15307_section_9eb0d44a": "2412-15307_doc_root",
+      "2412-15307_subsection_67a52f06": "2412-15307_section_9eb0d44a",
+      "2412-15307_sent_6e0bb9a4": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_b6be52fd": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_7e55e58a": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_e4ba5bad": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_c63c67ab": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_e7c8b520": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_89fa9392": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_9f4dc711": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_93481a56": "2412-15307_subsection_67a52f06",
+      "2412-15307_eq_bf7c8a1a": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_cb007fa1": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_e3ea111e": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_ec004ee4": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_e2f97ac8": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_78f8a73c": "2412-15307_subsection_67a52f06",
+      "2412-15307_sent_d49d313a": "2412-15307_subsection_67a52f06",
+      "2412-15307_fig_dbddf71a": "2412-15307_subsection_67a52f06",
+      "2412-15307_subsection_5226bfc5": "2412-15307_section_9eb0d44a",
+      "2412-15307_sent_601c8363": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_beef9a2d": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_676d15cd": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_721ce9ce": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_1f4a73ba": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_983358bd": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_7bc4f677": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_d16a22ce": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_10b2e910": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_cb601e48": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_a536522e": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_f89815a6": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_51365aa0": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_6f94a935": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_f4ef412c": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_1dad6d56": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_3403b3de": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_d3c6188d": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_f5015b9a": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_3e6dab3f": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_7f2713e5": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_725a59bf": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_a2b4e2a5": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_c56b3b8d": "2412-15307_subsection_5226bfc5",
+      "2412-15307_sent_18db5fdc": "2412-15307_subsection_5226bfc5",
+      "2412-15307_fig_c8be675c": "2412-15307_subsection_5226bfc5",
+      "2412-15307_fig_34f4af21": "2412-15307_subsection_5226bfc5",
+      "2412-15307_section_4829262c": "2412-15307_doc_root",
+      "2412-15307_subsection_745163ae": "2412-15307_section_4829262c",
+      "2412-15307_sent_541d55ea": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_52e39dbe": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_982f3716": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_8645e2da": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_65945972": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_b14b057d": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_f684dc52": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_69b5efa7": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_9c6659f1": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_c1e2cec1": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_fa601ea4": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_7399d4ea": "2412-15307_subsection_745163ae",
+      "2412-15307_eq_7e5c58f3": "2412-15307_subsection_745163ae",
+      "2412-15307_eq_2fe0b027": "2412-15307_subsection_745163ae",
+      "2412-15307_eq_f8da51be": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_8f4b4d30": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_7018f276": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_48413423": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_c237539b": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_b9039f79": "2412-15307_subsection_745163ae",
+      "2412-15307_sent_8fe38032": "2412-15307_subsection_745163ae",
+      "2412-15307_subsection_61727e81": "2412-15307_section_4829262c",
+      "2412-15307_sent_32920bf3": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_b9b1ae75": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_f70cafa0": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_e24b809b": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_8e27085f": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_4023e19f": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_992b2103": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_8af21329": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_7afa8798": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_edc324fc": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_bc23dc2a": "2412-15307_subsection_61727e81",
+      "2412-15307_sent_426358f2": "2412-15307_subsection_61727e81",
+      "2412-15307_fig_09692eda": "2412-15307_subsection_61727e81",
+      "2412-15307_fig_0eea87ca": "2412-15307_subsection_61727e81",
+      "2412-15307_subsection_d4bad3bf": "2412-15307_section_4829262c",
+      "2412-15307_sent_d2231cf3": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_6fdcf9b1": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_51bc12f5": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_a56b58a7": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_bb96a0f5": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_942808c4": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_5ccfd6cc": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_fb40adad": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_51a0a4f3": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_9dd4bfbf": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_08208d25": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_subsubsection_0b953ed2": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_sent_1a044443": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_sent_01c729fc": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_sent_35562d48": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_sent_f3a2c625": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_sent_ed99f0ef": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_sent_976e8707": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_sent_c0051bf3": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_sent_87dcb538": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_fig_c18705d2": "2412-15307_subsubsection_0b953ed2",
+      "2412-15307_subsubsection_4df72b0b": "2412-15307_subsection_d4bad3bf",
+      "2412-15307_eq_93b7d73a": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_4827e8ae": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_289b3ec9": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_51e34d20": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_55f4d6d1": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_2d058c9a": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_8ad79173": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_68333b59": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_8414534e": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_5ebdfb80": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_26a154ad": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_f7c1473b": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_7dc56bfc": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_5bbbb98c": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_b4fa816d": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_783594e7": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_841ae3bb": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_20a39851": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_ba3af6d9": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_fig_a8591b98": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_fig_b71837c1": "2412-15307_section_84ffd62e",
+      "2412-15307_sent_4eec2be1": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_b601ff46": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_a84d0071": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_3ab970c7": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_sent_5f37fdfd": "2412-15307_subsubsection_4df72b0b",
+      "2412-15307_section_eed9474f": "2412-15307_doc_root",
+      "2412-15307_sent_026c6242": "2412-15307_section_eed9474f",
+      "2412-15307_sent_8c267a97": "2412-15307_section_eed9474f",
+      "2412-15307_sent_bf26d8e7": "2412-15307_section_eed9474f",
+      "2412-15307_sent_12cb137b": "2412-15307_section_eed9474f",
+      "2412-15307_sent_4ae77501": "2412-15307_section_eed9474f",
+      "2412-15307_sent_d583094d": "2412-15307_section_eed9474f",
+      "2412-15307_sent_584500ff": "2412-15307_section_eed9474f",
+      "2412-15307_sent_49368b58": "2412-15307_section_eed9474f",
+      "2412-15307_sent_fdd6e159": "2412-15307_section_eed9474f",
+      "2412-15307_sent_5dea95f4": "2412-15307_section_eed9474f",
+      "2412-15307_sent_df17d369": "2412-15307_section_eed9474f",
+      "2412-15307_sent_44c92d88": "2412-15307_section_eed9474f",
+      "2412-15307_sent_54f30862": "2412-15307_section_eed9474f",
+      "2412-15307_sent_dc54143d": "2412-15307_section_eed9474f",
+      "2412-15307_sent_9856a239": "2412-15307_section_eed9474f",
+      "2412-15307_sent_9f7dd7e7": "2412-15307_section_eed9474f",
+      "2412-15307_sent_bfd35fdb": "2412-15307_section_eed9474f",
+      "2412-15307_sent_c5ef7124": "2412-15307_section_eed9474f",
+      "2412-15307_section_6f8b794f": "2412-15307_doc_root",
+      "2412-15307_sent_2a2b6759": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_f4decd1e": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_ed6f9ef7": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_5bb472ae": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_d38e12a2": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_7d90d02c": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_e9fd9ee7": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_32aed54d": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_f775860a": "2412-15307_section_6f8b794f",
+      "2412-15307_sent_feff6d13": "2412-15307_section_6f8b794f",
+      "2412-15307_section_84ffd62e": "2412-15307_doc_root",
+      "2412-15307_sent_3c4105b4": "2412-15307_section_84ffd62e",
+      "2412-15307_sent_d9d4c8f5": "2412-15307_section_84ffd62e",
+      "2412-15307_sent_43a145eb": "2412-15307_section_84ffd62e"
+    }
+  },
+  "merged_parents": {
+    "2412-15307_sent_676977e1": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_abstract_ce28071e": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_sent_9d0dd933": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_5d3bf069": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_6d1599f7": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_d16d0a51": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_e55021e6": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_2a67a40e": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_13ee42ca": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_6a32ef15": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_250be962": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_sent_dfce16f3": [
+      "2412-15307_abstract_ce28071e"
+    ],
+    "2412-15307_section_0b79795d": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_sent_924a1dd5": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_effff309": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_f83933aa": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_a91e12c8": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_f24c1325": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_3faf505e": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_dc4c767c": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_87e3e9bb": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_2f256457": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_2d5ee615": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_05fe4404": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_e24eceda": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_aa2c30a0": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_bac1c105": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_41010c1f": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_a8518f33": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_8b7f3b7e": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_9d34e0fd": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_3823bf40": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_sent_4083c25a": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_itemize_129f33ad": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_item_099db1c2": [
+      "2412-15307_itemize_129f33ad"
+    ],
+    "2412-15307_sent_7e3bd839": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_sent_b8a29da0": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_sent_366c6b5e": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_sent_20357231": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_sent_42c2f9ef": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_sent_08aea327": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_sent_ce95547b": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_sent_d5502bfa": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_sent_bd4b4ce1": [
+      "2412-15307_item_099db1c2"
+    ],
+    "2412-15307_fig_7ff2841f": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_fig_10df7b46": [
+      "2412-15307_section_0b79795d"
+    ],
+    "2412-15307_section_a7f20481": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_sent_fd392f53": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_7f9fc4fa": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_8876bb0d": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_ee632622": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_3d6cd752": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_fe064b47": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_80012379": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_79d1807f": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_e608b3ea": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_c6194098": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_37cdd4c1": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_7faad439": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_d1c6b164": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_af47edff": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_0797018d": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_32bb5eae": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_561db273": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_cf93ecea": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_f14a6fd2": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_5018a51b": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_404297ea": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_fbd664d7": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_c8fa55ce": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_sent_a96534c4": [
+      "2412-15307_section_a7f20481"
+    ],
+    "2412-15307_section_9eb0d44a": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_subsection_67a52f06": [
+      "2412-15307_section_9eb0d44a"
+    ],
+    "2412-15307_sent_6e0bb9a4": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_b6be52fd": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_7e55e58a": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_e4ba5bad": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_c63c67ab": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_e7c8b520": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_89fa9392": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_9f4dc711": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_93481a56": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_eq_bf7c8a1a": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_cb007fa1": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_e3ea111e": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_ec004ee4": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_e2f97ac8": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_78f8a73c": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_sent_d49d313a": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_fig_dbddf71a": [
+      "2412-15307_subsection_67a52f06"
+    ],
+    "2412-15307_subsection_5226bfc5": [
+      "2412-15307_section_9eb0d44a"
+    ],
+    "2412-15307_sent_601c8363": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_beef9a2d": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_676d15cd": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_721ce9ce": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_1f4a73ba": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_983358bd": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_7bc4f677": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_d16a22ce": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_10b2e910": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_cb601e48": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_a536522e": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_f89815a6": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_51365aa0": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_6f94a935": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_f4ef412c": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_1dad6d56": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_3403b3de": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_d3c6188d": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_f5015b9a": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_3e6dab3f": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_7f2713e5": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_725a59bf": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_a2b4e2a5": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_c56b3b8d": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_sent_18db5fdc": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_fig_c8be675c": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_fig_34f4af21": [
+      "2412-15307_subsection_5226bfc5"
+    ],
+    "2412-15307_section_4829262c": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_subsection_745163ae": [
+      "2412-15307_section_4829262c"
+    ],
+    "2412-15307_sent_541d55ea": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_52e39dbe": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_982f3716": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_8645e2da": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_65945972": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_b14b057d": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_f684dc52": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_69b5efa7": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_9c6659f1": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_c1e2cec1": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_fa601ea4": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_7399d4ea": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_eq_7e5c58f3": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_eq_2fe0b027": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_eq_f8da51be": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_8f4b4d30": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_7018f276": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_48413423": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_c237539b": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_b9039f79": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_sent_8fe38032": [
+      "2412-15307_subsection_745163ae"
+    ],
+    "2412-15307_subsection_61727e81": [
+      "2412-15307_section_4829262c"
+    ],
+    "2412-15307_sent_32920bf3": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_b9b1ae75": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_f70cafa0": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_e24b809b": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_8e27085f": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_4023e19f": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_992b2103": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_8af21329": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_7afa8798": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_edc324fc": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_bc23dc2a": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_sent_426358f2": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_fig_09692eda": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_fig_0eea87ca": [
+      "2412-15307_subsection_61727e81"
+    ],
+    "2412-15307_subsection_d4bad3bf": [
+      "2412-15307_section_4829262c"
+    ],
+    "2412-15307_sent_d2231cf3": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_6fdcf9b1": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_51bc12f5": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_a56b58a7": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_bb96a0f5": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_942808c4": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_5ccfd6cc": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_fb40adad": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_51a0a4f3": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_9dd4bfbf": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_08208d25": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_subsubsection_0b953ed2": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_sent_1a044443": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_sent_01c729fc": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_sent_35562d48": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_sent_f3a2c625": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_sent_ed99f0ef": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_sent_976e8707": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_sent_c0051bf3": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_sent_87dcb538": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_fig_c18705d2": [
+      "2412-15307_subsubsection_0b953ed2"
+    ],
+    "2412-15307_subsubsection_4df72b0b": [
+      "2412-15307_subsection_d4bad3bf"
+    ],
+    "2412-15307_eq_93b7d73a": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_4827e8ae": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_289b3ec9": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_51e34d20": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_55f4d6d1": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_2d058c9a": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_8ad79173": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_68333b59": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_8414534e": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_5ebdfb80": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_26a154ad": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_f7c1473b": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_7dc56bfc": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_5bbbb98c": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_b4fa816d": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_783594e7": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_841ae3bb": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_20a39851": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_ba3af6d9": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_fig_a8591b98": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_fig_b71837c1": [
+      "2412-15307_section_84ffd62e",
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_4eec2be1": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_b601ff46": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_a84d0071": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_3ab970c7": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_sent_5f37fdfd": [
+      "2412-15307_subsubsection_4df72b0b"
+    ],
+    "2412-15307_section_eed9474f": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_sent_026c6242": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_8c267a97": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_bf26d8e7": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_12cb137b": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_4ae77501": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_d583094d": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_584500ff": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_49368b58": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_fdd6e159": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_5dea95f4": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_df17d369": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_44c92d88": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_54f30862": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_dc54143d": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_9856a239": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_9f7dd7e7": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_bfd35fdb": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_sent_c5ef7124": [
+      "2412-15307_section_eed9474f"
+    ],
+    "2412-15307_section_6f8b794f": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_sent_2a2b6759": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_f4decd1e": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_ed6f9ef7": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_5bb472ae": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_d38e12a2": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_7d90d02c": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_e9fd9ee7": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_32aed54d": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_f775860a": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_sent_feff6d13": [
+      "2412-15307_section_6f8b794f"
+    ],
+    "2412-15307_section_84ffd62e": [
+      "2412-15307_doc_root"
+    ],
+    "2412-15307_sent_3c4105b4": [
+      "2412-15307_section_84ffd62e"
+    ],
+    "2412-15307_sent_d9d4c8f5": [
+      "2412-15307_section_84ffd62e"
+    ],
+    "2412-15307_sent_43a145eb": [
+      "2412-15307_section_84ffd62e"
+    ]
+  }
+}

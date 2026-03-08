@@ -1,0 +1,2088 @@
+{
+  "elements": {
+    "2412-15287_doc_root": "DOCUMENT_ROOT",
+    "2412-15287_sent_676977e1": "\\maketitle",
+    "2412-15287_section_0b79795d": "Introduction",
+    "2412-15287_sent_6f4559ff": "An effective method for improving the performance of large language models (LLMs) is to leverage additional computation at inference-time: various works ~\\citep{lightman2023lets,wu2024empirical,kumar2024training,hosseini2024v} have shown that by using search, re-ranking, multi-turn revision, and more generally, any approach that makes use of more tokens and inference-time compute, the performance of LLMs on various tasks can be significantly improved---so much that investing in improving inference-time computation might prove more beneficial than increasing model pre-training compute~\\citep{snell2024scaling}.",
+    "2412-15287_sent_9876725c": "Despite this promise, existing work largely considers using inference-time computation as an optional post-hoc design choice, after conventional pre-training and fine-tuning.",
+    "2412-15287_sent_5ad967fa": "However, decoupling training and inference-time computation is not optimal; for example, if we knew that an LLM is allowed to make multiple attempts to solve a math problem, then it may be better to fine-tune it to explore diverse problem-solving strategies, rather than simply generating the candidates that represent the model's best attempt at solving the problem.",
+    "2412-15287_sent_a629fde1": "Within the context of reasoning problems, these performance gains may be significant, as LLMs often fail due to their inability to draw complex inferences about the input and their internal knowledge \\citep{chen2024more}.",
+    "2412-15287_sent_387ddfde": "We argue that the effectiveness of inference-time computation can be substantially increased by explicitly considering the inference procedure during training.",
+    "2412-15287_sent_b1a51ccb": "We study this inference-aware fine-tuning paradigm using the Best-of-N (BoN) inference strategy, where the LLM generates multiple candidate responses, and a verifier selects the best one according to some scoring function~\\citep{cobbe2021gsm8k}.",
+    "2412-15287_sent_813638c5": "When this verifier is the ground-truth scoring function, BoN is equivalent to pass@N, a widely-used method for inference-time compute scaling \\citep{brown2024largelanguagemonkeysscaling}.",
+    "2412-15287_sent_dd6cbb94": "In contrast with traditional fine-tuning methods such as supervised fine-tuning (SFT) or reinforcement learning (RL), which are agnostic to the inference strategy used at test-time, our inference-aware (BoN-aware) methods directly optimize the performance of the BoN policy, and lead to significantly improved BoN performance at test time.",
+    "2412-15287_sent_bde94562": "Our work makes several key contributions to the understanding and optimization of batch-of-neighbors (BoN) inference.",
+    "2412-15287_sent_f31f0f31": "(1) We formally define the inference-aware and BoN-aware problem setting, recognizing the crucial role of the inference strategy during training.",
+    "2412-15287_sent_6eb10e99": "(2) We establish a co-scaling behavior for BoN, quantifying the inherent trade-off between exploration and exploitation governed by the temperature ($T$) and the number of samples ($N$).",
+    "2412-15287_sent_4644ae14": "This analysis directly informs the design and optimization of our BoN-aware algorithms.",
+    "2412-15287_sent_23813a60": "By understanding how these interactions influence performance, we can effectively tune these parameters to achieve an optimal balance between exploration and exploitation in both our supervised and reinforcement learning settings.",
+    "2412-15287_sent_84ae7fec": "(3) We develop a BoN-aware supervised fine-tuning algorithm that aligns the target distribution with the BoN policy distribution.",
+    "2412-15287_sent_7c8b3f61": "(4) We extend our method to a general BoN-aware RL framework, enabling the policy to learn and solve downstream tasks under the BoN inference strategy.",
+    "2412-15287_sent_09594d9d": "To further enhance BoN-aware fine-tuning, we devise specialized algorithms inspired by methods optimizing pass@$N$ accuracy, which promote implicit exploration and connect with established self-supervised learning techniques, particularly in scenarios where the environment reward can be used for verification.",
+    "2412-15287_sent_7f1071b3": "(5) Empirically, our experiments demonstrate the effectiveness of BoN-aware fine-tuning in terms of improved performance and inference-time compute.",
+    "2412-15287_sent_71293f77": "In particular, we show that our methods improve the Bo32 performance of Gemma 2B on Hendrycks MATH from $26.8\\%$ to $30.8\\%$, and pass@$32$ from $60.0\\%$ to $67.0\\%$, as well as the pass@16 on HumanEval from $61.6\\%$ to $67.1\\%$.",
+    "2412-15287_section_d570e86c": "Inference-Aware Fine-Tuning: A Case Study with Best-of-N",
+    "2412-15287_sent_5c59b84e": "Standard fine-tuning methods typically train LLMs to produce the best response for a given prompt.",
+    "2412-15287_sent_0110d941": "In LLM fine-tuning, a model (or policy) is trained via supervised fine-tuning~(SFT), by maximizing the likelihood w.r.t.",
+    "2412-15287_sent_dc6661c6": "ground-truth data.",
+    "2412-15287_sent_861a8cb3": "Formally, we search for a policy ${\\pi: \\gX \\mapsto \\Delta_{\\gY}}$ that maximizes the likelihood $\\expect*{x\\sim P, y\\sim \\pi^*(y|x)}{\\log \\pi\\rbr{y|x}}$, where here, $\\gX$ and $\\gY$ are the space of prompts and outputs of an LLM, $P$ is the prompt distribution, and $\\pi^*$ is a distribution of expert responses.",
+    "2412-15287_sent_0a4395a2": "Alternatively, the policy can be fine-tuned via reinforcement learning~(RL) ~\\citep{schulman2017proximal}: $ \\max_{\\pi \\in \\Pi} \\expect*{x\\sim P, y\\sim \\pi(x)}{R(x,y)}, $ to align the LLM's behaviors with the reward function $R(x, y)$.",
+    "2412-15287_sent_a728c24e": "While popular, these methods have not taken the LLM's inference-time strategies into the account.",
+    "2412-15287_sent_f226edb8": "Inference-Aware Fine-Tuning.",
+    "2412-15287_sent_4dacf110": "To address the gap between how LLMs are trained and how they are used at inference time, we develop inference-aware fine-tuning.",
+    "2412-15287_sent_9b72bce6": "During inference, the learned policy $\\pi$ is often not directly used; rather some inference strategy $I: \\Pi \\times \\gX \\mapsto \\Delta_{\\gY}$ is applied to it.",
+    "2412-15287_sent_bb3765df": "For example, $I$ can be the BoN strategy, which samples multiple candidate responses, and selects the best using the score function of some verifier; or $I$ might be a search mechanism \\citep{lightman2023lets} or self-correction~\\citep{kumar2024training}.",
+    "2412-15287_sent_dfc16b11": "To account for this inference strategy $I$, we alter the objective SFT and RL objectives to be ``aware\" of the inference strategy:",
+    "2412-15287_eq_2c848218": "\\begin{equation}\n&\\max_{\\pi\\in \\Pi}\\,\\, \\expect*{x\\sim P, y\\sim \\pi^*(y|x)}{\\log I(\\pi, x)\\rbr{y}}, \\text{ and} \\tag{Inference-Aware SFT}\\\\\n\n &\\max_{\\pi \\in \\Pi}J(\\pi) \n :=\n \\expect*{x\\sim P, y \\sim I(\\pi, x)}{R(x,y)},\n \\tag{Inference-Aware RL}\n\\end{equation}",
+    "2412-15287_sent_2fa91366": "Indeed, \\ref{eq:iaft-sft} and \\ref{eq:iaft-rl} are aware of the strategy $I$.",
+    "2412-15287_sent_14bb08c6": "In what follows, we focus on the case where the inference strategy is BoN (i.e., $I\\equiv\\text{BoN}$), in both the SFT and RL setups.",
+    "2412-15287_sent_7ab86798": "As we will later see, this brings about new algorithms for training the policy.",
+    "2412-15287_paragraph_e4c8c5ab": "BoN-Aware Problem Formulation.",
+    "2412-15287_sent_77e6e2b9": "We begin by defining the BoN strategy.",
+    "2412-15287_sent_7d2b255a": "This inference strategy samples $N$ resposnes from a model with some temperature $T$, and then selects the best one, based on some verifier score.",
+    "2412-15287_sent_bb929a61": "Formally, the BoN inference policy can be written as:",
+    "2412-15287_eq_74e9999d": "\\begin{equation}\nI(\\pi,x)(y)\n =\n \\pibon(y | x; \\pi, r, N, T)\n := \n \\arg\\max_{y' \\in \\brk[c]*{y_1, \\hdots, y_N}} r(x,y'), \\; \\mathrm{s.t.}\\; y_i \\overset{T}{\\sim} \\pi(\\cdot | x), x \\in \\gX,\n\\end{equation}",
+    "2412-15287_sent_e63ad71a": "where $\\overset{T}{\\sim}$ is a sample with temperature $T$, and $r: \\gX \\times \\gY \\mapsto \\sR$ is a verifier score\\footnote{The verifier score $r$ and the true reward $R$ can be related, or even equal, yet we do not make that assumption here.",
+    "2412-15287_sent_0557c512": "Usually, $r$ is a model trained to predict $R$, and therefore serves as a proxy of the true reward.}.",
+    "2412-15287_sent_86da522a": "In what follows, when $r, N, T$ are clear from context, we write $\\pibon(y | x; \\pi)$.",
+    "2412-15287_sent_65630df1": "We see that the above strategy defines a class of BoN policies that is different from the learned policy $\\pi$, demonstrating the gap between training and inference.",
+    "2412-15287_sent_56839fcb": "We inject this class of BoN polices into the \\ref{eq:iaft-sft} and \\ref{eq:iaft-rl} frameworks to derive the instantiation of inference-aware fine-tuning.",
+    "2412-15287_sent_5176aaca": "\\begin{wrapfigure}{r}{0.4\\textwidth} \\includegraphics[width=1.0\\linewidth]{images/T-N-opt.png} \\caption{ The relationship between the optimal number of samples ($N^*$) and optimal temperature ($T^*$) in BoN.",
+    "2412-15287_sent_0eec8457": "The size of each marker at a given ($T, N$) coordinate indicates the frequency of problems for which the ($T, N$) pair resulted in the best BoN performance.",
+    "2412-15287_sent_122f88b9": "The plot reveals ``easier\" problems have small $(T^*,N^*)$, while ``harder\" problems require a larger $(T^*,N^*)$ for exploration.} \\end{wrapfigure} Besides closing the gap between training and inference and mitigating potential discrepancies between the verifier score $r$ and true reward $R$, BoN policies provide further benefits.",
+    "2412-15287_sent_ac229b28": "The BoN mechanism introduces implicit exploration during training, bypassing the computational burden of explicit exploration~\\citep{cen2024value}.",
+    "2412-15287_sent_c939d8e3": "Selecting the best of $N$ samples allows the base policy to explore output variations, inducing a controlled exploration that can lead to more robust and generalizable policies, particularly in scaling behavior w.r.t.\\ temperature $T$ and number of samples $N$.",
+    "2412-15287_sent_de344782": "Optimizing the BoN policy class is notoriously difficult due to the non-differentiability of the $\\argmax$ operator.",
+    "2412-15287_sent_c1c1ba03": "Although several differentiable top-$k$ operators~\\citep{cuturi2019differentiable,xie2020differentiable} might be exploited in $\\pibon$, they induce approximation error, and more importantly, increase the computational cost dramatically.",
+    "2412-15287_sent_6be7bc71": "In our work, we derive a variational formulation of the learning problem w.r.t.\\ $\\pibon$ without top-$k$ operators, allowing us to construct novel algorithms for inference-aware BoN, using both standard supervised imitation learning (\\Cref{section: bon imitation}) and RL (\\Cref{section: bon rl}).",
+    "2412-15287_sent_eb8a813a": "Exploration-Exploitation with BoN Sampling.",
+    "2412-15287_sent_859f90fc": "BoN sampling offers a natural mechanism for balancing exploration and exploitation in response generation.",
+    "2412-15287_sent_6f409764": "Adding BoN inference to the base model effectively explore the diverse possibilities within the model's output space while also exploiting its knowledge to generate high-quality candidates.",
+    "2412-15287_sent_bd271ad6": "This exploration-exploitation trade-off is crucial for solving various tasks and improving generalizability.",
+    "2412-15287_sent_8dd43f20": "To quantify such a trade-off, we empirically verify the implicit exploration and exploitation properties of BoN.",
+    "2412-15287_sent_8ef373bf": "We do this by revealing optimal co-scaling w.r.t.\\ temperature~$T$ and number of samples~$N$.",
+    "2412-15287_sent_13703db3": "Specifically, for a fixed base policy $\\pi$, at any prompt $x \\in \\gX$ there is an optimal temperature $T^*(x)$ and optimal number of samples $N^*(x)$ which maximize performance of BoN:",
+    "2412-15287_eq_48330082": "\\begin{equation*}",
+    "2412-15287_sent_bd63fc66": "N^*(x; \\pi),\\!",
+    "2412-15287_sent_04461145": "T^*(x; \\pi) \\!\\in\\!",
+    "2412-15287_sent_5660658d": "\\arg\\max_{N, T} \\expect*{y \\sim \\pibon(y | x; \\pi, r, N, T)}{R(x,y}.",
+    "2412-15287_sent_cec38567": "\\end{equation*} To understand the connection between $N^*(x)$ and $T^*(x)$, we assess the performance of Gemma~2B~\\citep{gemmateam2024gemma2improvingopen} on the MATH benchmark \\citep{hendrycksmath2021}, when applying the BoN inference strategy.",
+    "2412-15287_sent_3ab3241a": "\\Cref{fig:co-scaling} shows empirical frequencies of problems, when varying $T^*(x)$ and $N^*(x)$ (larger marker size signifies higher frequency).",
+    "2412-15287_sent_8449e1a8": "The figure depicts a tradeoff between $T$ and $N$, reminiscent of the exploration-expoitation trade-off.",
+    "2412-15287_sent_c2a29742": "When $T^*(x)$ is small, any $N$ is optimal (and particularly also a small $N$).",
+    "2412-15287_sent_149cc345": "These ``easier'' problems do not require heavy exploration (small $T^*)$ and can therefore be more exploitative (small $N^*)$.",
+    "2412-15287_sent_77ee5fad": "On the other hand, as $T^*$ increases, the base policy $\\pi$ becomes more stochastic, resulting in more diversity and exploration.",
+    "2412-15287_sent_5be99c64": "These more ``difficult'' problems, require more exploration (larger $T^*$), hence less exploitation (larger $N^*$).",
+    "2412-15287_sent_a50d308a": "Indeed, in such cases, the distribution of $N^*$ shifts to high values.",
+    "2412-15287_sent_38851487": "Our results suggest a tradeoff between exploration and exploitation, and further motivates the BoN-aware setup, which can account for this tradeoff uniformly across all samples.",
+    "2412-15287_sent_8167dfd2": "\\Cref{fig:co-scaling} also uncovers a cost-effective recipe for adjusting $T$ and $N$ for optimal BoN performance: we can learn how to fine-tune the model for better inference by simply adjusting these accessible parameters.",
+    "2412-15287_sent_bf7ee2cc": "However, it is important to note that relying solely on model selection has limitations.",
+    "2412-15287_sent_ad725fb3": "While this approach offers a computationally inexpensive way to improve BoN's inference-time performance, it may not fully capture the nuances of the LLM's behavior.",
+    "2412-15287_sent_d1e6ae81": "With sufficient computational resources, general BoN-aware fine-tuning can further unlock performance gains by directly training the LLM to optimize for the exploration-exploitation trade-off of the BoN inference process.",
+    "2412-15287_section_6d3a2c17": "Supervised BoN-Aware Fine-Tuning",
+    "2412-15287_sent_f924c616": "We begin by developing the BoN-aware SFT framework.",
+    "2412-15287_sent_868d3130": "Under this setting we assume we do not have access to the true reward, and only wish to maximize the likelihood of a dataset of expert examples.",
+    "2412-15287_sent_78fea5fa": "Recall the definition of the BoN policy $\\pibon$ in \\Cref{eq:bon}.",
+    "2412-15287_sent_d1498e02": "The \\ref{eq:iaft-sft} version of BoN is:",
+    "2412-15287_eq_6ca66ad1": "\\begin{equation}\n\\max_{\\pi \\in \\Pi}\\,\\, \\expect*{(x, y)\\sim \\Dcal}{\\log \\pibon(y | x; \\pi)},\n\\end{equation}",
+    "2412-15287_sent_e6387598": "A major difficulty in solving \\Cref{eq: bon_sft} is the non-differentiability of the $\\argmax$ operator in the BoN procedure.",
+    "2412-15287_sent_a7cd806a": "To address this, we can use the variational approximation of $\\pibon$~(see Section \\ref{sec:bon_var})",
+    "2412-15287_eq_5ad640c6": "\\begin{equation}\n\n \\pibon(y|x) \\propto \\brk[s]*{\\pi (y|x) \\cdot\\exp\\rbr{\\lambda_N Q_{\\pi}(x, y)}}, \n\\end{equation}",
+    "2412-15287_sent_7bbf0b4c": "where $Q_{\\pi}\\rbr{x,y} = \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{r(x, y)\\geq r(x, y')}}$ is the expected win-rate over base policy $\\pi$, characterizing the probability for which a response $y$ outperforms the responses generated by the base over the verifier score $r$.",
+    "2412-15287_sent_ebfcda38": "The constant $\\lambda_N>0$ is a solution of a 1D-search problem \\citep{gui2024bonbon} (see details in \\Cref{appendix: variation approximation of bon}).",
+    "2412-15287_sent_7662caed": "It can be shown that $\\lambda_N$ is monotonically increasing in $N$, and $\\lambda_N \\propto N$ approximately for large $N$.",
+    "2412-15287_sent_d853eeab": "Plugging the variational form of \\Cref{eq: variational form} into \\Cref{eq: bon_sft} yields:",
+    "2412-15287_eq_3027297e": "\\begin{equation}\n&\\max_{\\pi\\in \\Pi}\\EE_{(x,y)\\sim\\Dcal}\\sbr{\\log \\pibon(y|x)}:= \\EE_{(x,y)\\sim\\Dcal}\\sbr{\\underbrace{\\log \\pi\\rbr{y|x}}_{\\text{Likelihood}} \\!\\ +\\ \\! \\underbrace{\\lambda_N\\cdot Q_{\\pi}\\rbr{x,y} \\!-\\! \\log Z_{\\pi}(x)}_{\\text{Inference-Awareness}}},\\\\\n & \\text{where} \\quad Z_{\\pi}(x) = \\EE_{\\pi(y|x)}\\sbr{\\exp\\rbr{ \\lambda_N \\cdot Q_{\\pi}\\rbr{x,y}}} \\text{is the partition function}. \\nonumber\n\\end{equation}",
+    "2412-15287_sent_4b95f4dc": "The above optimization problem reveals two term.",
+    "2412-15287_sent_0c1ecaf2": "While the first term tries to push the base policy $\\pi$ into maximizing the likelihood of the data, the second term regularizes the policy to be more exploratory by increasing the data win rate over the policy.",
+    "2412-15287_sent_3be2b263": "This in turn accounts for the sampling in BoN.",
+    "2412-15287_sent_23834a70": "For data efficiency when estimating the win rate $Q_{\\pi}\\rbr{x,y}$ we leverage a common practice in modeling pairwise preferences \\citep{rafailov2023direct} to approximate the win rate with its ``softened'' counterpart: $Q_{\\pi}\\rbr{x,y} \\approx \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\sigma\\rbr{r(x, y) - r(x, y')}}$, where $\\sigma$ is the sigmoid function.",
+    "2412-15287_sent_ea531f87": "Next, we exploit properties of policy gradient \\citep{sutton1999policy} and the gradient of energy-based policies \\citep{rafailov2024direct} to derive the gradient for \\Cref{eq:bonref_mle} (see Appendix \\ref{appendix:lem1} for proof): \\begin{lemma}[BoN-SFT] The gradient of \\Cref{eq:bonref_mle} w.r.t.",
+    "2412-15287_sent_6abaf386": "LLM parameters $\\theta\\in\\Theta$ of $\\pi$ is given by $\\EE_{(x, y)\\sim \\Dcal}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}} - \\EE_{x\\sim \\Dcal, y\\sim \\pibon\\rbr{\\cdot|x}}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}}$, where",
+    "2412-15287_eq_b98380ea": "\\begin{equation}\n\\nabla_{\\theta} f\\rbr{x, y;\\theta} \\!:=\\! \\nabla_{\\theta} \\log \\pitheta\\rbr{y|x} + \\lambda_N\\cdot\\EE_{y'\\sim \\pitheta}\\sbr{\\nabla_{\\theta}\\log \\pitheta\\rbr{y'|x} \\!\\cdot\\! \\sigma \\rbr{r(x, y)- r(x, y')}}.\n\\end{equation}",
+    "2412-15287_sent_46cbcb6d": "\\end{lemma} Our formulation circumvents the non-differentiability of the BoN distribution, allowing solution of BoN-SFT via standard gradient-ascent algorithms.",
+    "2412-15287_sent_3f4c4502": "The individual terms of the gradient imply the following: (1) $\\pi$ clones the expert behavior by maximizing its likelihood over $\\mathcal D$; (2) it aligns with the verifier score ranking, which assigns a high win-rate to the expert over the base; (3) it avoids over-fitting by limiting its likelihood over the BoN sample; and (4) it maintains overall response quality by reducing the win rate between its best and average samples.",
+    "2412-15287_section_3dab21fa": "BoN-Aware Fine-Tuning Using Reinforcement Learning",
+    "2412-15287_sent_8dc3be3e": "Training LLMs that are amenable to BoN sampling can be framed within the RL paradigm, which trains an agent (LLM) that optimizes its actions within an environment.",
+    "2412-15287_sent_b3be3f2e": "In this context, the LLM generates N responses (candidates actions) for a given prompt (contexts).",
+    "2412-15287_sent_aab46d5b": "A separate macro agent (verifier) selects the candidate deemed most suitable according to a predefined criterion (e.g., probability of success).",
+    "2412-15287_sent_750f166f": "This action is then deployed to the environment, yielding a reward (e.g., task completion).",
+    "2412-15287_sent_21193ea2": "The key challenge in training this agent lies in achieving two objectives simultaneously: (i) Enhancing agent's exploration capabilities to generate diverse candidates that cover the space of potential solutions and align with the verifier's preferences; (ii) Maximizing the environment reward of the final response.",
+    "2412-15287_sent_75add804": "Motivated by this observation, we utilize RL for BoN-aware fine-tuning, enabling the development of more robust and adaptable LLMs. A schematic of the BoN-Aware RL framework is shown in \\Cref{fig:bon_schematic}.",
+    "2412-15287_sent_7011dd6f": "The BoN-Aware RL problem takes the following form:",
+    "2412-15287_eq_69d7df02": "\\begin{equation}\n\\max_{\\pi \\in \\Pi} J(\\pi) \n :=\n \\expect*{x\\sim P, y\\sim \\pibon(\\cdot|x; \\pi, r, N, T)}{R(x,y)}.\n\\end{equation}",
+    "2412-15287_sent_0603d717": "We train the BoN policy $\\pibon$ (paramterized by $\\pi$) to attain a high environment reward.",
+    "2412-15287_sent_5f2b8d46": "Apart from enabling better exploration, using the environment reward $R(x,y)$ in BoN-RL allows the base policy to tolerate potential errors in the verifier $r(x,y)$.",
+    "2412-15287_sent_9b5c162e": "We first develop a general algorithm for solving the BoN-aware RL problem.",
+    "2412-15287_sent_53e560bb": "We then study an important subclass which assumes a binary reward, a common feature of many reasoning problems (e.g., math, code).",
+    "2412-15287_sent_9c653f5d": "\\includegraphics[width=1.0\\linewidth]{images/bon_schematic.pdf} \\caption{ {BoN-Aware RL fine-tuning, where $N$ independent samples are first drawn from base $\\pi$ and ranked by the verifier $r$.",
+    "2412-15287_sent_ef162ca8": "The BoN policy then optimizes the environment reward of the BoN samples (Lemma~\\ref{lem: bon-rl})}.} \\end{figure*} We begin with deriving a gradient estimator to the objective in \\Cref{eq: bon optimality}.",
+    "2412-15287_sent_e1854bce": "Exploiting the connection between the BoN policy and its energy-based policy counterpart in \\Cref{eq:pi_bon_soln}, and using derivations analogous to those in Lemma~\\ref{lem:sft_pg_bon}, we compute the gradient of $J(\\theta)$, which leads to a REINFORCE-style algorithm~\\citep{williams1992reinforce} (see Appendix \\ref{appendix:lem2} for proof): \\begin{lemma}[BoN-RL] The gradient of \\Cref{eq: bon optimality} w.r.t.",
+    "2412-15287_sent_1638f54c": "LLM parameters $\\theta\\in\\Theta$ of $\\pi$ is given by",
+    "2412-15287_eq_2b961f64": "\\begin{equation}\n\\nabla_{\\theta} J(\\theta) = \\EE_{x\\sim\\Dcal, y\\sim \\pibon(\\cdot|x)}\\sbr{\\nabla_{\\theta} \\log\\pi_{\\theta}\\rbr{x, y}\\cdot \\left(R(x,y) - b(x)\\right)},\n\\end{equation}",
+    "2412-15287_sent_0137f876": "where $b(x) = \\EE_{y\\sim \\pibon(\\cdot|x)}[R(x,y)]$ is a baseline for variance reduction~\\citep{schulman2015high}.",
+    "2412-15287_sent_71b6f911": "\\end{lemma} This formulation resembles the standard REINFORCE gradient with the main difference of drawing samples from the BoN policy (instead from the base policy $\\pi$).",
+    "2412-15287_sent_c3ff3815": "This allows one to solve BoN-RL via actor-critic methods \\citep{Sutton09b}.",
+    "2412-15287_sent_aaaad018": "In practice, one can replace $b(x)$ with a learned value baseline $b_{\\psi}(x)$ parameterized by $\\psi$, for which $\\psi$ is updated by gradient descent w.r.t.\\ the critic value loss.",
+    "2412-15287_sent_0bda2676": "While BoN-RL inherits the benefits of verifier alignment from BoN-SFT, and can be viewed as a reward-weighted variant of the popular STaR method \\citep{zelikman2022star}, generally it can be rather sample inefficient (especially when $N$ is large), as estimating both the value function $b(x)$ and the policy gradient in BoN-RL require samples from the BoN distribution.",
+    "2412-15287_sent_ff5124b2": "See \\Cref{appendix: extensions} for a discussion on alleviation using BoN distillation \\citep{sessa2024bond}.",
+    "2412-15287_paragraph_f4279332": "BoN-RL with Binary Reward and Verifier.",
+    "2412-15287_sent_daddf795": "However, many domains admit binary success/failure metrics (e.g., reasoning tasks, math, coding) which allow an efficient gradient estimator, obviating the need for value estimation.",
+    "2412-15287_sent_3ff835f2": "Specifically, with a binary reward known to the verifier, i.e., ${R(x,y)=r(x,y)\\in\\{0,1\\}}$, Theorem~1 of \\citet{sessa2024bond} implies the following closed-form solution of the BoN policy $\\pibon$:",
+    "2412-15287_eq_bab5aab7": "\\begin{equation}\n\n\\pibon(y|x) = \\begin{cases} \n\\pi(y|x) \\cdot P_{\\text{fail}}(x)^{N-1} & \\text{if } R(x,y) = 0\\\\\n\\frac{\\pi(y|x)}{1-P_{\\text{fail}}(x)} \\cdot \\left(1 - P_{\\text{fail}}(x)^N\\right) & \\text{if } R(x,y) = 1\\\\ \n\\end{cases},\\,\\,\n\\end{equation}",
+    "2412-15287_sent_d563b3d4": "where $P_{\\text{fail}}(x):=\\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{R(x, y')=0}}$ is the fraction of problems on which the base policy $\\pi$ is incorrect.",
+    "2412-15287_sent_1d1f7257": "Under the binary assumption, $\\pibon$ is a weighted distribution of the base policy $\\pi$, whose importance sampling ratio depends on the its failure probability $P_{\\text{fail}}(x)$.",
+    "2412-15287_sent_73561109": "Introducing this closed form of $\\pibon$ to Lemma~\\ref{lem: bon-rl}, we obtain the following policy gradient (see Appendix \\ref{appendix:lem3} for proof): \\begin{lemma}[BoN-RLB] Assume $R(x,y) \\in\\{0,1\\}$.",
+    "2412-15287_sent_875abc21": "The gradient of \\Cref{eq: bon optimality} w.r.t.",
+    "2412-15287_eq_0fae73fa": "\\begin{equation}\n \\EE_{x\\sim\\Dcal}\\bigg[\\EE_{y\\sim \\pibon, R=1}\\left[\\nabla_{\\theta} \\log \\pitheta(y|x)\\right] \\cdot g^+_N(P_\\text{fail}(x)) -\\EE_{y\\sim \\pibon, R=0}\\left[\\nabla_{\\theta} \\log \\pitheta(y|x)\\right]\\cdot g^-(P_\\text{fail}(x))\\bigg],\\nonumber\n\\end{equation}",
+    "2412-15287_sent_5bc87290": "where the positive and negative sample-dependent weights are given by",
+    "2412-15287_eq_1c08adfe": "\\begin{equation}\n g^+_N(p) = \\frac{N \\cdot p^{N-1}}{1 - p^N}, \\quad g^-(p) = \\frac{N\\cdot p}{1 - p}.\n\\end{equation}",
+    "2412-15287_sent_8d7f30f1": "\\end{lemma} Lemma \\ref{lem:eq:pg+bonrlb} not only reveals an efficient policy gradient estimator for binary reward, but more importantly demonstrates how BoN-RLB balances positive and negative examples in its gradient update.",
+    "2412-15287_sent_427c8c54": "It proposes novel way to re-weigh BoN-RLB's training examples, which prioritizes harder examples (as $P_\\text{fail}(x)\\rightarrow 1$) by giving their positive samples exponentially more influence and aggressively redistributing log likelihood away from incorrect responses.",
+    "2412-15287_sent_e697bf6b": "The significance of this asymmetric weighting scheme is that it infuses implicit exploration capabilities to the base policy.",
+    "2412-15287_sent_f7b66f6c": "As \\citet{tajwar2024preference} observed, when the model reduces the likelihood of negative responses, it shifts that probability mass towards a mode of the learned policy – essentially reinforcing existing successful strategies (exploitation).",
+    "2412-15287_sent_c392f2cc": "However, if these high-likelihood regions later produce errors, the resulting negative gradient redistributes this mass again, pushing the model to explore other potential solutions.",
+    "2412-15287_sent_3695a34f": "This iterative process of concentrating probability mass and subsequent redistribution through negative gradients drives a form of exploration: as long as the model can produce correct solutions, it need not devote most of its sampling budget $N$ on that but can also explore more diverse solutions.",
+    "2412-15287_paragraph_f3e43140": "Positive-only Weighting.",
+    "2412-15287_sent_b55775a0": "Although we have illustrated the benefits of an asymmetric weighting scheme in BoN-RLB for exploration, training with both positive and negative examples may be infeasible (e.g., in a data-limited online RL system that only records positive examples).",
+    "2412-15287_sent_ba01d5b0": "To tackle this, we apply a change of measure to Lemma \\ref{lem:eq:pg+bonrlb} with the BoN distribution to derive a policy gradient that only involves positive examples (see Appendix \\ref{appendix:coro1} for proof): \\begin{corollary}[BoN-RLB(P)] Assume $R(x,y) \\in\\{0,1\\}$.",
+    "2412-15287_sent_aa7fa6fe": "LLM parameters $\\theta\\in\\Theta$ of $\\pi$ is given by $\\EE_{x\\sim\\Dcal}[\\EE_{y\\sim \\pibon, R=1}[\\nabla_{\\theta} \\log \\pitheta(y|x)] \\cdot \\overline g^+_N(P_\\text{fail}(x))]$, where $\\overline{g}^+_N(p):=\\frac{N\\cdot p^{N - 1}\\cdot\\left(1-p\\right)}{\\left(1-p^{N}\\right)}$.",
+    "2412-15287_sent_021e4bfb": "\\end{corollary} Notice that the weighting $\\overline{g}^+(p, N)$ is monotonically increasing in $p\\in[0,1]$ and lies within $[0, 1]$ for any $N$.",
+    "2412-15287_sent_728cb150": "Using this gradient update, BoN-RLB(P) resembles a weighted version of BoN-STaR (see Remark \\ref{remark:bon_star} in the appendix), where it clones positive examples generated by the current BoN policy and up-weights the more difficult ones, where $P_\\text{fail}(x)$ is close to $1$.",
+    "2412-15287_sent_66007e2a": "\\caption{ Summary of Our Best-of-N-Aware Fine-Tuning Methods} \\begin{tabular}{|l|c|c|c|c|c|c|} \\multirow{2}{*}{Method} & \\multirow{2}{*}{\\parbox{1.5cm}{ Offline \\\\ Data}} & \\multirow{2}{*}{\\parbox{1.5cm}{ Reward \\\\ (R)}} & \\multirow{2}{*}{\\parbox{1.5cm}{ Verifier \\\\ (R$\\neq$r)}} &\\multirow{2}{*}{\\parbox{1.5cm}{ Binary \\\\ (R=r)}} & \\multirow{2}{*}{\\parbox{1.5cm}{ Positive \\\\ Only}} & \\multirow{2}{*}{\\parbox{1.5cm}{ Closed \\\\ Form}} \\\\ & & & & & & \\\\ \\rowcolor[rgb]{.95,.95,.95} BoN-SFT & \\greencheckmark & \\redcross & \\greencheckmark & \\redcross & \\greencheckmark & \\redcross \\\\ \\rowcolor[rgb]{.95,.95,.95} BoN-RL-V & \\redcross & \\greencheckmark & \\greencheckmark & \\greencheckmark & \\redcross & \\redcross \\\\ \\rowcolor[rgb]{.97,.97,.97} BoN-RL-S & \\redcross & \\greencheckmark & \\redcross & \\greencheckmark & \\redcross & \\redcross \\\\ \\rowcolor[rgb]{.95,.95,.95} BoN-RLB & \\redcross & \\greencheckmark & \\redcross & \\greencheckmark & \\redcross & \\greencheckmark \\\\ \\rowcolor[rgb]{.97,.97,.97} BoN-RLB(P) & \\redcross & \\greencheckmark & \\redcross & \\greencheckmark & \\greencheckmark & \\greencheckmark \\\\ \\end{tabular} \\end{table*} Table \\ref{table:bon_methods} summarizes different BoN-aware fine-tuning methods including: (1) {BoN-SFT} from Lemma \\ref{lem:sft_pg_bon}, (2) BoN-RL from Lemma \\ref{lem: bon-rl} with a verifier, {BoN-RL-V}, (3) BoN-RL with environment reward as verifier, {BoN-RL-S}, (4) BoN-RLB from Lemma \\ref{lem:eq:pg+bonrlb}, and (5) {BoN-RLB(P)} from Corollary \\ref{corollary:rlbonb-plus}.",
+    "2412-15287_sent_0f1fe574": "These methods are designed to leverage the BoN selection strategy during model fine-tuning, under different settings mentioned in Sections \\ref{section: bon imitation} and \\ref{section: bon rl}.",
+    "2412-15287_sent_c0d48b0c": "BoN-SFT uses expert data but doesn't involve explicit reward learning.",
+    "2412-15287_sent_1a1a1871": "It relies on a verifier to select the best output and only trains with positive examples.",
+    "2412-15287_sent_0383cc74": "BoN-RL-V and BoN-RL-S employ RL to optimize BoN performance, with the former using a verifier for response selection while the latter relying solely on a reward signal. BoN-RLB and BoN-RLB(P) also utilize RL on the special case of binary reward feedback ($R=r\\in\\{0,1\\}$).",
+    "2412-15287_sent_7dea3a89": "They both have closed-form solutions, which can lead to more efficient learning.",
+    "2412-15287_sent_3fac2e77": "BoN-RLB(P) only learns from positive examples, which might be beneficial for (e.g., safety-critical) situations where collecting negative data is difficult.",
+    "2412-15287_section_4829262c": "Experiments",
+    "2412-15287_sent_11cf69cd": "In this section we address the following questions: (1) Can we quantify the co-scaling relationship between the BoN number of samples $N$ and temperature $T$, enabling joint optimization of these parameters?",
+    "2412-15287_sent_66c0236e": "(2) Do inference-aware fine-tuning methods (SFT and RL) enhance the effectiveness of BoN sampling?",
+    "2412-15287_sent_bead52c9": "(3) Do these improvements generalize across problem domains and BoN settings?",
+    "2412-15287_subsection_8716abdb": "Co-scaling Analysis of Sample Size $N$ and Temperature $T$ in BoN",
+    "2412-15287_sent_6cf17fcf": "We study the co-scaling behaviors of BoN and pass@$N$ performance over varying $N$ and $T$ by experimenting pre-trained Gemma 2B and 9B models on the Hendrycks MATH benchmark~\\citep{hendrycksmath2021}.",
+    "2412-15287_sent_49597501": "Our experiments showed consistent co-scaling behaviors across different model sizes, therefore we summarize the results of 2B model below and include the 9B findings in \\Cref{app:additional_scaling}.",
+    "2412-15287_sent_82dd640b": "As illustrated in \\Cref{fig:scaling} (\\Cref{fig:scaling2}, \\Cref{fig:bon_pass_at_k_combined_small_9b} in \\Cref{app:additional_scaling}), pass@$N$ consistently increases with higher $N$, as commonly observed \\citep{brown2024largelanguagemonkeysscaling}.",
+    "2412-15287_sent_53bbeeb2": "Our analysis suggests that this relationship can be captured by a power-law function of the following form: $pass@N(T) \\approx \\exp(a(T)N^{b(T)})$, where the parameters $a(T)$ and $b(T)$ are temperature-dependent and derived by fitting the model to data at a specific temperature $T$.",
+    "2412-15287_sent_200e0ad1": "Further analysis of this scaling behavior (detailed in Appendix~\\ref{app:additional_scaling}) indicates that there is a strong positive correlation between the optimal temperature and $N$, which aligns with the intuition that larger $N$ benefits from broader exploration (higher $T$), while smaller $N$ favors focused exploitation (constant $T$).",
+    "2412-15287_sent_0d8c9e83": "This relationship is straightforward, as there are no verifier errors in the selection of best responses.",
+    "2412-15287_sent_cda47f1d": "Our experiments demonstrate an intriguing relationship between BoN accuracy, $T$, and $N$.",
+    "2412-15287_sent_45d42803": "We find that lower temperatures generally yield better BoN accuracy.",
+    "2412-15287_sent_3f2fe044": "Furthermore, BoN accuracy generally decreases as $N$ increases, but degrades more rapidly with higher temperatures.With larger $N$ and $T$, the increased randomness in the base policy inherently generates more ``bad'' samples (with poor accuracy).",
+    "2412-15287_sent_6167d7fc": "This phenomenon suggests that the verifier is sensitive to noise and may mistakenly select random outputs generated at higher temperatures as the best responses due to misalignment with the true reward (Type II error).",
+    "2412-15287_sent_d20b808c": "Conversely, at very low temperatures, BoN accuracy improves with $N$, indicating the algorithm remains in an exploitation phase.",
+    "2412-15287_sent_a3c1613d": "Optimal performance is observed at moderate $N$ values, striking a balance between exploration and exploitation.",
+    "2412-15287_fig_a4db4461": "\\begin{figure}\n\n\\includegraphics[width=0.9\\linewidth]{images/bon_pass_at_k_combined_small.png}\n\n\\caption{ BoN and pass@$N$ performance of Gemma 2B policy and reward models w.r.t. varying $N$ and $T$. pass@$N$ monotonically improves with $N$; BoN shows inflection points as $N$ increases. \nColored dashed lines denote predictions of scaling functions; black dashed lines in BoN plot denote the last inflection points.}\n\n\\end{figure}",
+    "2412-15287_subsection_0ac94fe0": "Inference-aware Fine-tuning with BoN Sampling",
+    "2412-15287_paragraph_592de6a6": "Experimental setup.",
+    "2412-15287_sent_628e5ffc": "We study 2B and 9B Gemma 2 models \\citep{gemmateam2024gemma2improvingopen} on canonical mathematical problem-solving and code generation benchmarks.",
+    "2412-15287_sent_6b2e4a14": "For math, we train and evaluate on Hendrycks MATH benchmark~\\citep{hendrycksmath2021}, and additionally evaluate on two held-out math benchmarks: Functional MATH \\citep{srivastava2024functional} and MathOdyssey \\citep{fang2024mathodyssey}.",
+    "2412-15287_sent_1e751e84": "For coding, we train on MBPP \\citep{austin2021program}, and evaluate on HumanEval \\citep{chen2021evaluating}.",
+    "2412-15287_sent_545507d1": "More details of our experiments can be found in \\Cref{appendix:bon_ft_details}.",
+    "2412-15287_sent_9792b072": "Our main evaluation metrics are BoN and pass@N accuracies, i.e. the accuracies of the policies defined in \\Cref{eq:bon} with a learned verifier and ground-truth reward respectively.",
+    "2412-15287_sent_a3617746": "For math, we consider both metrics, using a learned verifier for BoN, and for coding, we consider only pass@$N$ because test-case feedback is usually available.",
+    "2412-15287_sent_f8a73893": "We benchmark our proposed methods BoN-SFT, BoN-RL-V, BoN-RL-S, BoN-RLB, and BoN-RLB(P) against several baselines: (1) STaR from Remark \\ref{remark:bon_star}, which uses self-training over correctly generated responses; (2) RL \\citep{lee2023rlaif} with verifier feedback (RL-V); (3) RL with environment feedback (RL-S); (4) standard SFT of the base policy (SFT, $N'=1$); and (5) BoN with the pre-trained model (Base model).",
+    "2412-15287_sent_7f078c10": "We denote by ($N'$, $T'$) and ($N$, $T$) the number of samples and temperature used in training and evaluation, respectively.",
+    "2412-15287_sent_581edb11": "We use $T=T'=1.0$ unless specified otherwise.",
+    "2412-15287_sent_cebe66ee": "Similar to co-scaling, our experiments show similar trends with 2B and 9B models, therefore we summarize that of the 2B model below and defer the 9B results to \\Cref{app:additional_exp}.",
+    "2412-15287_fig_b6e910de": "\\begin{figure}\n\n \\includegraphics[width=\\linewidth]{images/sft_sxs.pdf}\n \\caption{ BoN Accuracy and pass@$N$ accuracy for BoN-SFT with Gemma 2B models.}\n\n\\end{figure}",
+    "2412-15287_sent_3d1b1fcb": "BoN-aware supervised fine-tuning.",
+    "2412-15287_sent_cef70d1c": "We first evaluate the BoN and pass@$N$ performance of offline SFT methods, including BoN-SFT with various $N'$, and base SFT ($N'=1$), with results shown in Figure~\\ref{fig:sft}.",
+    "2412-15287_sent_c91e7553": "We find that base SFT significantly degrades upon the base model, indicating that it causes overfitting or lack of generalization.",
+    "2412-15287_sent_58734423": "BoN-SFT is able to improve the BoN accuracy significantly, especially with increasing $N'$.",
+    "2412-15287_sent_49548c52": "We find that BoN-SFT with $N'=32$ achieves the best performance for both BoN accuracy and pass@$N$, suggesting that it is able to produce both high-quality and exploratory responses.",
+    "2412-15287_sent_ce1a9129": "To improve substantively over the base model, we next turn to RL, which should be more effective by virtue of being on-policy.",
+    "2412-15287_fig_dc1140c9": "\\begin{figure}\n\n \\begin{subfigure}{0.56\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bon_only_n32_bon.pdf}\n \\caption{ Comparison of different methods.}\n\n \\end{subfigure}~\n \\begin{subfigure}{0.44\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bonrl_v_bon.pdf}\n \\caption{ {BoN-RL-V with various $N^\\prime$ values.}}\n\n \\end{subfigure}\n \\caption{ BoN accuracy on BoN-RL methods and comparisons with baselines, with Gemma 2B models on MATH.}\n\n\\end{figure}",
+    "2412-15287_paragraph_4a4c80e0": "BoN-RL-V improves BoN Accuracy.",
+    "2412-15287_sent_0e8998ed": "Our BoN RL algorithm, BoN-RL-V, with $N' = 32$, significantly outperforms several baselines (Figure~\\ref{sub:bo32}).",
+    "2412-15287_sent_3185ac61": "Specifically, it boosts the Bo-32 accuracy of our base model from $26.8\\%$ to $30.8\\%$.",
+    "2412-15287_sent_e8ad1a0d": "As expected, the inference-unaware RL-V method performs poorly, likely due to common reward hacking issues \\citep{jinnai2024regularized}.",
+    "2412-15287_sent_073e53df": "We also find that training with the same verifier used as test-time is critical - our other proposed inference-aware methods that use the environment reward instead of the verifier (BoN-RL-S and BoN-RLB) show improvement over the base model but are substantially worse than BoN-RL-V.",
+    "2412-15287_sent_91d871af": "We plot the performance of BoN-RL-V with different training $N'$ in Figure~\\ref{sub:bonrlv}, and observed the best performance when training with $32$ samples ($N' = 32$).",
+    "2412-15287_sent_2e57da30": "Interestingly, although the gains are more pronounced at higher $N$ values, training with large $N'$ leads to consistent improvements across all $N = 1$ to $32$.",
+    "2412-15287_sent_f27e06ae": "This suggests that RL-BoN-V not only optimizes the specific BoN setting it was trained on, but also generalizes to other BoN configurations, including large improvements on direct $N=1$ accuracy (from $22\\%$ to $26\\%$).",
+    "2412-15287_sent_82332e6e": "We hypothesize that the RL-BoN-V method significantly enhances BoN accuracy by effectively exploring a larger sample space during training.",
+    "2412-15287_sent_6166dc4d": "Training with a large $N'$ allows the base policy to explore a wider range of responses to generate higher-quality responses, similar to how effective exploration in RL leads to better performance and generalization across different scenarios.",
+    "2412-15287_fig_866c55b8": "\\begin{figure}\n\n \\begin{subfigure}{0.44\\linewidth}\n \\includegraphics[width=\\linewidth]{images/pass_n_only_n32_pass_at_k.pdf}\n \\caption{ MATH.}\n\n \\end{subfigure}~\n \\begin{subfigure}{0.44\\linewidth}\n\n \\includegraphics[width=\\linewidth]{images/humaneval_pk_2b.pdf}\n \\caption{ HumanEval.}\n\n \\end{subfigure}\n \\caption{ pass@$N$ of BoN-RL methods with binary reward as verifier, with Gemma 2B models. }\n\n\\end{figure}",
+    "2412-15287_sent_db6337ab": "BoN-RL-S, BoN-RLB, and BoN-RLB(P) improve pass@$N$.",
+    "2412-15287_sent_be5473db": "We next analyze the pass@$N$ performance of various methods on math and coding benchmarks, aiming to understand how different training approaches impact the models' ability to generate diverse and correct solutions.",
+    "2412-15287_sent_577fc0e1": "As shown in Figure~\\ref{fig:pass_n}, our inference-aware methods designed to explicitly optimize pass@$N$ during training (BoN-RL-S, BoN-RLB, or BoN-RLB(P)) can lead to better test-time pass@N across both domains, highlighting the importance of directly considering the desired evaluation metric during training.",
+    "2412-15287_sent_4369659e": "Notably, in the MATH domain (Figure~\\ref{sub:pass32}), BoN-RL-S significantly improves the pass@$32$ of Gemma 2B from $60.0\\%$ to $67.0\\%$.",
+    "2412-15287_sent_1d3bbfc8": "This suggests that by encouraging the model to explore a wider range of solution strategies during training, we can substantially enhance its ability to generate correct answers.",
+    "2412-15287_sent_ca8c9895": "Conversely, standard RL with $N'=1$ slightly degrades pass@$32$, indicating that over-optimizing for immediate performance can actually hinder the model's exploration capabilities and limit its overall problem-solving ability.",
+    "2412-15287_sent_4a583bb4": "Interestingly, BoN-RL-V does not significantly improve pass@$N$, likely because its training objective focuses on robustness to a verifier, which may not perfectly align with generating diverse correct solutions.",
+    "2412-15287_sent_0c32092c": "Similar trends are observed on coding benchmarks (Figure~\\ref{sub:humaneval_pass_at_k}), where pass@$N$-aware methods, particularly BoN-RLBP, significantly outperform the base model, increasing the pass@$16$ performance of Gemma 2B from $61.6\\%$ to $67.1\\%$.",
+    "2412-15287_sent_b5f9242d": "Again, standard RL fine-tuning ($N'=1$) negatively impacts performance, reducing pass@$16$ to $59.8\\%$, demonstrating the downsides of solely focusing on reward maximization during training Generalization of BoN-RL to held-out benchmarks and other temperatures.",
+    "2412-15287_sent_decf7ace": "To further assess the generalization capabilities of our BoN aware fine-tuned models, we evaluate their performance on two challenging, held-out benchmarks: Functional MATH() \\citep{srivastava2024functional} and MathOdyssey \\citep{fang2024mathodyssey}.",
+    "2412-15287_sent_423221f7": "As shown in Figure~\\ref{fig:pass_n_math_2b_held_out}, our fine-tuned models demonstrate clear improvements on both benchmarks.",
+    "2412-15287_sent_eff4b0a2": "Our BoN-aware policies also generalize well to different sampling settings.",
+    "2412-15287_sent_bfbdfe3c": "As shown in Figure \\ref{fig:temp_generalization}, BoN-RL-V (trained with $T^\\prime=1.0$) consistently outperform the base model across all evaluation temperatures ($T\\in\\{0.1, 1.0, 1.5\\}$).",
+    "2412-15287_sent_f34c32f1": "Similarly, BoN-RL-S show superior performance for pass@$N$ at all temperatures, with increasing gains at higher temperatures.",
+    "2412-15287_sent_8d8572ca": "This highlights the benefits of broader exploration, even after BoN-aware training.",
+    "2412-15287_sent_dde6d024": "For BoN-accuracy, lower temperatures favored both models, but BoN-RL-V consistently excelled, particularly at lower temperatures, demonstrating its generalizability across different exploration-exploitation regimes.",
+    "2412-15287_sent_b8907cda": "Furthermore, BoN-RL-V show greater resilience to accuracy degradation at higher temperatures, suggesting an enhanced ability to adapt to verifier failure modes and mitigate Type-II errors.",
+    "2412-15287_fig_2d6dd78a": "\\begin{figure}\n\n \\begin{subfigure}{0.46\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bonrls_pass_at_k_math_1745_2b.pdf}\n \\caption{ Functional MATH().}\n\n \\end{subfigure} ~\n \\begin{subfigure}{0.46\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bonrls_pass_at_k_ody_2b.pdf}\n \\caption{ MathOdyssey.}\n\n \\end{subfigure} \n \\caption{ pass@$N$ of BoN-RL and baselines on held-out benchmarks with Gemma 2B models.}\n\n\\end{figure}",
+    "2412-15287_fig_b02a3ad8": "\\begin{figure}\n\n \\begin{subfigure}{0.4\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bon_rl_v_temp.pdf}\n \\caption{ BoN Accuracy}\n \\end{subfigure}\n \\quad\\quad\n \\begin{subfigure}{0.4\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bon_rl_s_temp.pdf} \n \\caption{ pass@$N$}\n \\end{subfigure}\n \\caption{ BoN and pass@$N$ over non-training temperatures. BoN-RL with verifier and exact reward (solid lines) are trained with fixed temperature 1.0. Dashed lines show the base model (Gemma 2B), and solid lines show the finetuned model.\n\n\\end{figure}",
+    "2412-15287_section_aed402c3": "Related Work",
+    "2412-15287_sent_36ac0a54": "Large language models (LLMs) can leverage inference-time computation to improve the quality of their generated outputs~\\citep{welleck2024decoding}, particularly on reasoning tasks.",
+    "2412-15287_sent_699e033a": "One common approach is to use chain-of-thought~\\citep{wei2022chain}, where the model generates a step-by-step rationale before generating the final output.",
+    "2412-15287_sent_7e00cdb8": "Another useful approach that can be combined with chain-of-thought is Best-of-N rejection sampling~\\citep{charniak2005coarse,stiennon2020learning}, which is our focus in this work.",
+    "2412-15287_sent_073a5721": "In Best-of-N, we generate multiple candidate outputs from an LLM and select the best output.",
+    "2412-15287_sent_07cc5434": "BoN re-ranking can be done either using oracle information, such as checking final answers for solving math problems, which is also known as pass@$N$~\\citep{chen2021evaluating}, or learned verifiers~\\citep{cobbe2021gsm8k,lightman2023lets,hosseini2024v,zhang2024generative}.",
+    "2412-15287_sent_6a81b3a6": "Recent work also empirically analyzes strategies that optimally trade off additional test-time compute for improved performance~\\citep{wu2024empirical,snell2024scaling}.",
+    "2412-15287_sent_3f9a2b84": "Closely related to our approach is prior work that fine-tunes LLMs to improve their self-correction capabilities~\\citep{kumar2024training,snell2024scaling} or search capabilities on planning tasks~\\citep{gandhi2024stream,lehnert2024beyond}, which allows for more efficient scaling with test-time compute.",
+    "2412-15287_sent_1351e659": "By contrast, our work focuses on inference-aware fine-tuning that directly optimizes for Best-of-N performance, instead of an intermediate capability that be used at test-time.",
+    "2412-15287_sent_df082720": "To make an LLM amenable to test-time scaling, techniques like STaR \\citep{zelikman2022star} or ReST$^{\\text{EM}}$~\\citep{singh2023beyond} have been employed to fine-tune the model using on-policy data.",
+    "2412-15287_sent_84e4308d": "This process leverages BoN sampling to iteratively generate better responses, and fine-tunes on this curated data, for which the LLM learns to improve its proposal distribution, effectively increasing the likelihood of generating high-quality outputs during inference.",
+    "2412-15287_sent_2a1be1cb": "Finally, our work is related to recent work on leveraging tree search to enhance decision-making in reinforcement learning \\citep{dalal2021improve}.",
+    "2412-15287_sent_84ae4f96": "A key challenge in both BoN sampling and tree search lies in mitigating the impact of imperfect value estimation.",
+    "2412-15287_sent_d478f8a5": "\\citet{dalal2021improve} address this in tree search by penalizing actions leading to states with high $Q$-value error, effectively making inference more pessimistic for out-of-distribution samples.",
+    "2412-15287_sent_dcf12361": "In contrast, in this work we tackle verifier error in BoN not by altering inference, but rather by incorporating it directly into training.",
+    "2412-15287_sent_e6eb9340": "Our BoN-aware methods learn to generate responses robust to these errors, aligning training with BoN inference.",
+    "2412-15287_sent_96fdfb02": "Furthermore, our BoN framework generalizes conceptually to tree search, with the verifier acting as an approximate $Q$-function, and training optimizing policy robustness to its errors.",
+    "2412-15287_section_6f8b794f": "Conclusion",
+    "2412-15287_sent_e9d4023d": "We introduced inference-aware fine-tuning, a novel paradigm that bridges the gap between training and inference for LLMs. Specifically for the Best-of-N inference strategy, we discovered a co-scaling law for BoN that guides the optimization of temperature and sample size, developed a gamut of fine-tuning algorithms that handle various imitation learning and reinforcement learning settings, training LLMs to generate diverse and high-quality outputs tailored for BoN inference, demonstrated the efficacy of these methods by significantly improving on BoN accuracy and pass@$N$ on the standard MATH reasoning benchmark over state-of-the-art baselines, highlighting the robustness and generalizability of our approaches across various BoN configurations.",
+    "2412-15287_sent_0c7be435": "Our work exemplified how BoN-aware fine-tuning learns a meta-strategy, which interleaves best responses with more diverse responses that might be better suited for BoN sampling.",
+    "2412-15287_sent_c18be262": "These findings underscore the potential of inference-aware fine-tuning to unlock previously undiscovered capabilities in LLMs through aligning training methodologies with inference-time compute strategies.",
+    "2412-15287_sent_8664a27b": "Future work includes extending this framework to incorporate more complex, inference algorithms (e.g., reasoning, critique-and-revise, MCTS), developing contextual BoN-aware algorithms that can generalize to various tasks, investigating the interplay between the co-scaling of temperature, sample size, and BoN-aware fine-tuning, and applying our algorithms to more larger-scale problems.",
+    "2412-15287_sent_b7b5f025": "\\bibliography{main} \\appendix",
+    "2412-15287_section_119c332e": "Theoretical Derivations",
+    "2412-15287_subsection_12ff9fbb": "Variational Approximation of BoN",
+    "2412-15287_sent_43d60d77": "We assume that the verifier score $r(x, y)$ is unique for all $x, y$, and the base model $\\pi$ has a finite set of possible outcomes for each context \\citep{beirami2024theoretical}.",
+    "2412-15287_sent_dec73f05": "\\begin{proposition}[Theorem 2 in~\\citet{gui2024bonbon}] With negligible error, one may effectively approximate $\\pibon$ as the solution to the following optimization problem:",
+    "2412-15287_eq_ca46ff37": "\\begin{equation}\n\\pibon\\rbr{y|x} \\!\\in\\! \\argmax_{\\mu\\rbr{\\cdot|x}\\in\\Delta_{\\mathcal Y}} \\EE_{y\\sim \\mu}\\sbr{Q_{\\pi}\\rbr{x,y}} \\!-\\! \\frac{1}{\\lambda_N} KL\\rbr{\\mu||\\pi}(x),\n\\end{equation}",
+    "2412-15287_sent_0b6e7e9b": "where $Q_{\\pi}\\rbr{x,y} = \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{r(x, y)\\geq r(x, y')}}$ is the expected win-rate over $\\pi$, and",
+    "2412-15287_eq_37d8c0da": "\\begin{equation}\n \\frac{({\\lambda_N} - 1)\\exp\\rbr{{\\lambda_N} + 1}}{\\exp\\rbr{{\\lambda_N} - 1}} - \\log\\rbr{\\frac{\\exp{\\lambda_N} -1}{\\lambda_N}} = \\log N-\\frac{N-1}{N},\n\\end{equation}",
+    "2412-15287_sent_8dd300a1": "through $\\lambda_N$ scaling sub-linearly with BoN number of samples $N$.",
+    "2412-15287_sent_e6f3d60c": "\\end{proposition} We can show the optimal solution to \\Cref{eq:pi_bon_soln} has a closed form $\\pibon^* \\propto \\brk[s]*{\\pi\\cdot\\exp\\rbr{\\lambda_N Q_{\\pi}}}(y|x)$.",
+    "2412-15287_sent_6dd817cf": "This can also be revealed by viewing \\Cref{eq:pi_bon_soln} as the variational form of Bayes' rule~\\citep{williams1980bayesian,zellner1988optimal,zhu2014bayesian,dai2016provable}, whose optimal solution is the posterior.",
+    "2412-15287_sent_438d1864": "This implies $\\pibon$ can be represented by an exponential-twisting policy \\citep{gerber1993option} over base policy $\\pi$ with energy function $\\lambda_N \\cdot Q_{\\pi}(y,x)$, partition function $Z_{\\pi}(x) = \\EE_{\\pi(y|x)}\\sbr{\\exp\\rbr{ \\lambda_N \\cdot Q_{\\pi}\\rbr{x,y}}}$, and an appropriate $\\lambda_N$ from~\\Cref{eq:lambda_n}.",
+    "2412-15287_sent_3513ee1d": "In this section we will provide proofs for the technical results in this paper.",
+    "2412-15287_subsection_0df1dc66": "Proof of Lemma \\ref{lem:sft_pg_bon}",
+    "2412-15287_sent_abf92953": "Therorem 2 of \\cite{gui2024bonbon} shows that, with negligible error, one may effectively approximate $\\pibon$ as the solution to the following optimization problem:",
+    "2412-15287_sent_05f88450": "where $Q_{\\pi}\\rbr{x,y} = \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{r(x, y)\\geq r(x, y')}}$ is the expected win-rate over $\\pi$, and this yields the variational form ${\\pibon \\propto \\brk[s]*{\\pi\\cdot\\exp\\rbr{\\lambda_N Q_{\\pi}}}(y|x)}$.",
+    "2412-15287_sent_9f731d72": "Plugging the variational form of $\\pibon$ into (\\ref{eq: bon_sft}) yields the learning problem for $\\pi$:",
+    "2412-15287_eq_3237302d": "\\begin{equation}\n&\\max_{\\pi\\in \\Pi}\\EE_{(x,y)\\sim\\Dcal}\\sbr{\\log \\pibon(y|x)}:= \\EE_{(x,y)\\sim\\Dcal}\\sbr{\\underbrace{\\log \\pi\\rbr{y|x}}_{\\text{Likelihood}} \\!+\\! \\underbrace{\\lambda_N\\cdot Q_{\\pi}\\rbr{x,y} \\!-\\! \\log Z_{\\pi}(x)}_{\\text{Inference-Awareness}}},\n\\end{equation}",
+    "2412-15287_sent_a9c742e9": "Taking gradient of this objective function over $\\theta\\in\\Theta$ implies",
+    "2412-15287_eq_8e3a09d3": "\\begin{equation}\n\\begin{split}\n&\\nabla_\\theta \\EE_{(x,y)\\sim\\Dcal}\\sbr{\\log \\pitheta\\rbr{y|x} \\!+\\! \\lambda_N\\cdot Q_{\\pitheta}\\rbr{x,y} \\!-\\! \\log Z_{\\pitheta}(x)}\\\\\n=&\\EE_{(x,y)\\sim\\Dcal}\\sbr{\\nabla_\\theta \\log \\pitheta\\rbr{y|x}} \\!+\\! \\lambda_N\\cdot\\nabla_\\theta\\EE_{(x,y)\\sim\\Dcal}\\sbr{ Q_{\\pitheta}\\rbr{x,y}} \\!-\\! \\nabla_\\theta\\EE_{x\\sim\\Dcal}\\sbr{\\log Z_{\\pitheta}(x)}\\\\\n=&\\EE_{(x,y)\\sim\\Dcal}\\sbr{\\nabla_\\theta \\log \\pitheta\\rbr{y|x}} \\!+\\! \\lambda_N\\cdot \\EE_{(x,y)\\sim\\Dcal}\\sbr{\\EE_{y'\\sim \\pitheta}\\sbr{\\nabla_\\theta\\log\\pitheta(y'|x)\\cdot\\sigma\\rbr{r(x, y) - r(x, y')}}}\\\\\n&\\!-\\! \\EE_{x\\sim\\Dcal}\\sbr{\\nabla_\\theta\\log \\EE_{\\pitheta(y|x)}\\sbr{\\exp\\rbr{ \\lambda_N \\cdot Q_{\\pitheta}\\rbr{x,y}}}}\\\\\n=&\\EE_{(x,y)\\sim\\Dcal}\\sbr{\\nabla_\\theta \\log \\pitheta\\rbr{y|x}} \\!+\\! \\lambda_N\\cdot \\EE_{(x,y)\\sim\\Dcal}\\sbr{\\EE_{y'\\sim \\pitheta}\\sbr{\\nabla_\\theta\\log\\pitheta(y'|x)\\cdot\\sigma\\rbr{r(x, y) - r(x, y')}}}\\\\\n&\\!-\\! \\EE_{x\\sim\\Dcal}\\sbr{\\frac{\\EE_{\\pitheta(y|x)}\\sbr{\\nabla_\\theta\\log\\pitheta(y|x)\\cdot\\exp\\rbr{ \\lambda_N \\cdot Q_{\\pitheta}\\rbr{x,y}}}+\\EE_{\\pitheta(y|x)}\\sbr{\\nabla_\\theta\\exp\\rbr{ \\lambda_N \\cdot Q_{\\pitheta}\\rbr{x,y}}}}{ \\EE_{\\pitheta(y|x)}\\sbr{\\exp\\rbr{ \\lambda_N \\cdot Q_{\\pitheta}\\rbr{x,y}}}}}.\n\\end{split}\n\\end{equation}",
+    "2412-15287_sent_df640b4a": "This further implies that",
+    "2412-15287_eq_6b2cb63c": "\\begin{equation}\n\\begin{split}\n&\\nabla_\\theta \\, \\EE_{(x,y)\\sim\\Dcal}\\sbr{\\log \\pitheta\\rbr{y|x} \\!+\\! \\lambda_N\\cdot Q_{\\pitheta}\\rbr{x,y} \\!-\\! \\log Z_{\\pitheta}(x)}\\\\\n=& \\EE_{(x,y)\\sim\\Dcal}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}} - \\EE_{x\\sim\\Dcal}\\sbr{\\EE_{\\pitheta(y|x)}\\sbr{\\frac{\\exp\\rbr{ \\lambda_N \\cdot Q_{\\pitheta}\\rbr{x,y}}}{\\EE_{\\pitheta(y|x)}\\sbr{\\exp\\rbr{ \\lambda_N \\cdot Q_{\\pitheta}\\rbr{x,y}}}}\\cdot {\\nabla_{\\theta} f\\rbr{x, y;\\theta}}}},\n\\end{split}\n\\end{equation}",
+    "2412-15287_sent_57726cf1": "through collecting terms from the above expression and recalling the definition of $\\nabla_{\\theta} f\\rbr{x, y;\\theta}$ as",
+    "2412-15287_eq_9bf11e33": "\\begin{equation}\n\\begin{split}\n&\\nabla_\\theta \\, \\EE_{(x,y)\\sim\\Dcal}\\sbr{\\log \\pitheta\\rbr{y|x} \\!+\\! \\lambda_N\\cdot Q_{\\pitheta}\\rbr{x,y} \\!-\\! \\log Z_{\\pitheta}(x)}\\\\\n=&\\EE_{(x,y)\\sim\\Dcal}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}}-\\EE_{x\\sim \\Dcal, y\\sim \\pibon}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}},\n\\end{split}\n\\end{equation}",
+    "2412-15287_sent_f0ddc324": "completing the proof of this lemma.",
+    "2412-15287_sent_ca44ec35": "Recall the RL objective function",
+    "2412-15287_sent_dae8dc38": "Applying the REINFORCE trick \\citep{Sutton09a} to this problem over the BoN policy class and using the analgous argument from the proof of Lemma \\ref{lem:sft_pg_bon}, we have the following expression for the policy gradient:",
+    "2412-15287_eq_1a0180f3": "\\begin{equation}\n\\begin{split}\n&\\EE_{y\\sim \\pibon(\\cdot|x), x\\sim \\Dcal}\\sbr{\\nabla_{\\theta} \\log \\pibon(y|x) \\cdot R(x,y)}\\\\\n=&\\EE_{x\\sim\\Dcal, y\\sim\\pibon(\\cdot|x)}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}\\cdot R(x,y)}-\\EE_{x\\sim \\Dcal, y\\sim \\pibon}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}}\\cdot \\EE_{y\\sim \\pibon(\\cdot|x), x\\sim \\Dcal}\\sbr{ R(x,y)}\\\\\n=& \\EE_{x\\sim\\Dcal, y\\sim \\pibon(\\cdot|x)}\\sbr{\\nabla_{\\theta} f_{\\theta}\\rbr{x, y}\\cdot \\left(R(x,y) - b(x)\\right)}\\\\\n=& \\EE_{x\\sim\\Dcal, y\\sim \\pibon(\\cdot|x)}\\sbr{\\nabla_{\\theta} \\log\\pi_{\\theta}\\rbr{y|x}\\cdot \\left(R(x,y) - b(x)\\right)},\n\\end{split}\n\\end{equation}",
+    "2412-15287_sent_fe7cefe7": "the last equality is due to the fact that $y\\sim\\pibon$ will always has a win-rate of $1$, i.e., $Q_{\\pitheta}(x,y) = 1$ almost surely, for $y\\sim\\pibon(\\cdot|x)$.",
+    "2412-15287_sent_ba0ca3fb": "This completes the proof of this lemma.",
+    "2412-15287_sent_90ee7685": "Using the log-likelihood trick, and plugging in the BoN distribution from \\Cref{eq:bon_binary}, the gradient of \\Cref{eq: bon optimality} can be computed as",
+    "2412-15287_eq_97674f2b": " \\begin{equation}\n&\\EE_{y\\sim \\pibon(\\cdot|x), x\\sim \\Dcal}\\sbr{\\nabla_\\theta \\log \\pibon(y|x) \\cdot R(x,y)}= \\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=1, x\\sim \\Dcal}\\sbr{\\nabla_\\theta \\log \\pibon(y|x)}\\nonumber\\\\\n =& \\EE_{x\\sim \\Dcal}\\bigg[\\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=1, }\\big[\\nabla_\\theta \\log \\pi_\\theta(y|x)\\big] + (1 - \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{R(x, y')=0}}^N)\\nabla_\\theta\\log \\frac{1 - \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{R(x, y')=0}}^N}{1-\\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{R(x, y')=0}}} \\bigg] \\nonumber \\\\\n =& \\EE_{x\\sim \\Dcal}\\bigg[\\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=1}\\big[\\nabla_\\theta \\log \\pi_\\theta(y|x)\\big] - \\frac{1 - \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{R(x, y')=0}}^N}{1- \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{R(x, y')=0}}}\\EE_{y'\\sim \\pi}\\left[\\nabla_\\theta \\log \\pi_\\theta(y'|x)\\cdot\\one_{R(x, y')=1}\\right] \\nonumber\\\\\n &\\quad + \\EE_{y'\\sim \\pi}\\sbr{\\nabla_\\theta \\log \\pi_\\theta(y'|x)\\cdot\\one_{R(x, y')=1}}\\cdot N\\cdot \\EE_{y'\\sim \\pi\\rbr{\\cdot|x}}\\sbr{\\one_{R(x, y')=0}}^{N-1}\\bigg]\\nonumber\\\\\n =&\\EE_{x\\sim\\Dcal}\\bigg[\\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=1}\\left[\\nabla_\\theta \\log \\pi_\\theta(y|x)\\right] \\cdot \\frac{NI_{\\text{ref}}(x)^{N-1}(1 - I_{\\text{ref}}(x) )}{1-I_{\\text{ref}}(x)^N}\\bigg].\\nonumber\\\\\n =&\\EE_{x\\sim\\Dcal}\\bigg[\\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=1}\\left[\\nabla_\\theta \\log \\pi_\\theta(y|x)\\right] \\cdot \\frac{N\\cdot I_{\\text{ref}}(x)^{N - 1}}{1-I_{\\text{ref}}(x)^{N}}\\nonumber\\\\\n &\\qquad\\qquad -\\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=0}\\left[\\nabla_\\theta \\log \\pi_\\theta(y|x)\\right]\\cdot\\frac{N\\cdot I_{\\text{ref}}(x)}{1-I_{\\text{ref}}(x)}\\bigg]\\nonumber\n\\end{equation}",
+    "2412-15287_subsection_d4f7076b": "Proof of Corollary \\ref{corollary:rlbonb-plus}",
+    "2412-15287_sent_c269796a": "Using the log-likelihood trick, and plugging in the BoN distribution from \\Cref{eq:bon_binary}, the gradient of problem \\Cref{eq: bon optimality} can be computed as",
+    "2412-15287_eq_01341522": " \\begin{equation}\n \\begin{split}\n &\\EE_{x\\sim\\Dcal}\\bigg[\\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=1}\\left[\\nabla_\\theta \\log \\pi_\\theta(y|x)\\right] \\cdot \\frac{N\\cdot I_{\\text{ref}}(x)^{N - 1}}{1-I_{\\text{ref}}(x)^{N}} -\\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=0}\\left[\\nabla_\\theta \\log \\pi_\\theta(y|x)\\right]\\cdot\\frac{N\\cdot I_{\\text{ref}}(x)}{1-I_{\\text{ref}}(x)}\\bigg]\\\\\n =&\\EE_{x\\sim\\Dcal}\\bigg[\\EE_{y\\sim \\pibon(\\cdot|x), R(x,y)=1}\\left[\\nabla_\\theta \\log \\pi_\\theta(y|x)\\right] \\cdot \\frac{NI_{\\text{ref}}(x)^{N-1}(1 - I_{\\text{ref}}(x) )}{1-I_{\\text{ref}}(x)^N}\\bigg].\n\\end{split}\n \\end{equation}",
+    "2412-15287_section_c23e3836": "Pseudo-code and Implementation Details",
+    "2412-15287_sent_3c676479": "Pseudo-code for all our SFT and RL methods is presented in \\Cref{alg: bon-sft,alg: bon-rlbp,alg: bon-rlb,alg: bon-rl}.",
+    "2412-15287_sent_073bf51f": "Our implementation follows the standard use of an anchor policy, updated using exponential moving average.",
+    "2412-15287_sent_da7bf239": "The policy is trained via BoN-aware losses, with additional KL divergence loss to the anchor policy.",
+    "2412-15287_sent_56ff802c": "\\Cref{tab:hparams} shows the hyper-parameters used for all of our experiments.",
+    "2412-15287_sent_2704caa2": "We use linear annealing for the KL-coefficient.",
+    "2412-15287_sent_0e0b77ab": "For all our RL experiments, we use a value baselines to reduce variance of our reward estimates.",
+    "2412-15287_sent_5654a06f": "We normalize our advantage estimates w.r.t.",
+    "2412-15287_sent_4c0377bc": "the batch.",
+    "2412-15287_sent_56d5604f": "For BoN-RLB the value network estimates $P_{\\text{fail}}(x)$.",
+    "2412-15287_sent_80c207c2": "We add additional clipping of the coefficients $g_N^+, g_N^-$ by clipping the value estimates for $P_{\\text{fail}}$.",
+    "2412-15287_fig_e05fdb74": "\\begin{table}\n\\caption{ Hyperparameters used in experiments.}\n\n\\begin{tabular}{ll}\n\nHyperparameter & Value \\\\ \nOptimizer & AdamW \\\\\nLearning rate policy & 3e-6 \\\\\nPolicy warmup steps & 100 \\\\\nLearning rate value & 1e-5 \\\\\nAnchor EMA & 0.01 \\\\\nTraining steps & 2500 \\\\\nBatch size & 32 \\\\\nSampling temperature & 1.0 \\\\\nKL coefficient anneal steps & 2500 \\\\\nKL coefficient anneal range & $1.0\\to0.075$ \\\\\nKL coefficient anneal delay & 10 \\\\\nClipping values for $P_{\\text{fail}}$ & $\\brk[c]*{0.01, 0.99} $ \\\\\n\n\\end{tabular}\n\\end{table}",
+    "2412-15287_fig_4e837394": "\\begin{algorithm}\n\\begin{algorithmic}[1]\n \\State Input: Verifier score $r$, environment reward $R$, expert dataset $\\mathcal{D}$\n \\For{$t = 1, 2, \\hdots$}\n \\State Sample a batch of prompts and solutions $\\{x_i,y_i\\}_{i=1}^{B}$ from the expert data $\\mathcal{D}$.\n \\For{$i = 1, \\hdots, B$}\n \\State Sample $N$ responses $\\brk[c]*{y_{i,j}}_{j=1}^{N}$ from $\\pitheta(\\cdot|x_i)$.\n \\State Select the BoN response $y_i^* = \\argmax_{j} r(x_i, y_{i,j})$.\n \\State Compute the gradient $\\nabla_{\\theta} f_{\\theta}(x_i, y_i)$ using \\Cref{eq:nabla_f}.\n \\EndFor\n \\State Update $\\theta$ by following the gradient in \\Cref{lem:sft_pg_bon} at learning rate $\\alpha > 0$, i.e.,\n \\begin{equation}\n\\theta\\leftarrow \\theta + \\alpha \\left(\\frac{1}{N}\\sum_{i=1}^N\\sbr{\\nabla_{\\theta} f\\rbr{x_i, y_i;\\theta}} - \\sbr{\\nabla_{\\theta} f\\rbr{x_i, y_i^*;\\theta}}\\right)\n\\end{equation}\n \\EndFor\n\\end{algorithmic}\n \\caption{ BoN-SFT}\n\n\\end{algorithm}",
+    "2412-15287_fig_91a87b3a": "\\begin{algorithm}\n\\begin{algorithmic}[1]\n \\State Input: Environment reward $R$, dataset $\\mathcal{D}$\n \\For{$t = 1, 2, \\hdots$}\n \\State Sample a batch of prompts $\\{x_i\\}_{i=1}^{B}$ from $\\mathcal{D}$.\n \\For{$i = 1, \\hdots, B$}\n \\State Sample $N$ responses $\\brk[c]*{y_{i,j}}_{j=1}^{N}$ from $\\pitheta(\\cdot|x_i)$.\n \\State Sample rewards for all candidate responses $\\{R(x_i, y_i)\\}_{i=1}^N$ from environment.\n \\State Select the BoN response $y_i^* = \\argmax_{j} R(x_i, y_{i,j})$.\n\n \\State Empirically estimate the base failure probability for each $x_i$, $i\\in\\{1,\\ldots,B\\}$,\n \\begin{equation}\n\\widehat{P}_{\\text{fail}}(x_i):=\\frac{1}{N}\\sum_{j=1}^N\\one_{R(x_i, y_{i,j})=0}.\n\\end{equation}\n \\EndFor\n \\State Update $\\theta$ by following the gradient in Corollary \\ref{corollary:rlbonb-plus} at learning rate $\\alpha > 0$, i.e.,\n \\begin{equation}\n\\theta\\leftarrow \\theta + \\alpha \\left(\\frac{1}{B}\\sum_{i=1}^B \\nabla_{\\theta} \\log \\pitheta(y_i^{*,+}|x_i) \\cdot \\overline{g}^+(P_\\text{fail}(x_i), N)\n\\right)\n\\end{equation}\n where $y_i^{*,+}$ represents the BoN sample that achieves a reward of $1$.\n \\EndFor\n\\end{algorithmic}\n \\caption{ BoN-RLB(P)}\n\n\\end{algorithm}",
+    "2412-15287_fig_1c406a20": "\\begin{algorithm}\n\\begin{algorithmic}[1]\n \\State Input: Environment reward $R$, dataset $\\mathcal{D}$\n \\For{$t = 1, 2, \\hdots$}\n \\State Sample a batch of prompts $\\{x_i\\}_{i=1}^{B}$ from $\\mathcal{D}$.\n \\For{$i = 1, \\hdots, B$}\n \\State Sample $N$ responses $\\brk[c]*{y_{i,j}}_{j=1}^{N}$ from $\\pitheta(\\cdot|x_i)$.\n \\State Sample rewards for all candidate responses $\\{R(x_i, y_i)\\}_{i=1}^N$ from environment.\n \\State Select the BoN response $y_i^* = \\argmax_{j} R(x_i, y_{i,j})$.\n\n \\State Empirically estimate the base failure probability for each $x_i$, $i\\in\\{1,\\ldots,B\\}$,\n \\begin{equation}\n\\widehat{P}_{\\text{fail}}(x_i):=\\frac{1}{N}\\sum_{j=1}^N\\one_{R(x_i, y_{i,j})=0}.\n\\end{equation}\n \\EndFor\n \\State Update $\\theta$ by following the gradient in Lemma \\ref{lem:eq:pg+bonrlb} at learning rate $\\alpha > 0$, i.e.,\n \\begin{equation}\n\\theta\\leftarrow \\theta + \\alpha \\left(\\frac{1}{B}\\sum_{i=1}^B \\nabla_{\\theta} \\log \\pitheta(y_i^{*,+}|x_i) \\cdot g^+(P_\\text{fail}(x_i), N) -\\nabla_{\\theta} \\log \\pitheta(y^{*,-}|x_i)\\cdot g^-(P_\\text{fail}(x_i))\n\\right)\n\\end{equation}\n where $y_i^{*,+}$, $y_i^{*,-}$ represent the BoN samples that achieve rewards of $1$ and $0$ respectively.\n \\EndFor\n\\end{algorithmic}\n \\caption{ BoN-RLB}\n\n\\end{algorithm}",
+    "2412-15287_fig_0dbf4ade": "\\begin{algorithm}\n\\begin{algorithmic}[1]\n \\State Input: Verifier score $r$, environment reward $R$, dataset $\\mathcal{D}$\n \\For{$t = 1, 2, \\hdots$}\n \\State Sample a batch of prompts $\\{x_i\\}_{i=1}^{B}$ from $\\mathcal{D}$.\n \\For{$i = 1, \\hdots, B$}\n \\State Sample $N$ responses $\\brk[c]*{y_{i,j}}_{j=1}^{N}$ from $\\pitheta(\\cdot|x_i)$.\n \\State Select the BoN response $y_i^* = \\argmax_{j} r(x_i, y_{i,j})$. \n \\State (If environment reward $R$ is available to the BoN algorithm, we replace verifier $r$ with that.)\n \\State Sample the reward $R(x_i, y_i^*)$ from environment.\n \\State Compute the gradient $\\nabla_{\\theta} f_{\\theta}(x_i, y_i)$ using \\Cref{eq:nabla_f}.\n \\EndFor\n \\State Update $\\theta$ by following the gradient in Lemma \\ref{lem: bon-rl} at learning rate $\\alpha > 0$, i.e.,\n \\begin{equation}\n\\theta\\leftarrow \\theta + \\alpha \\left(\\frac{1}{B}\\sum_{i=1}^B\\nabla_{\\theta} f_{\\theta}\\rbr{x_i, y_i^*}\\cdot \\left(R(x_i,y_i^*) - b(x_i)\\right)\\right)\n\\end{equation}\n where $b_{\\psi}(x_i), i = 1, \\hdots, B$ is a learned baseline value function of $\\pibon$, i.e., \n \\begin{equation}\n\\psi^*\\in\\argmin_\\psi \\frac{1}{B}\\sum_{i=1}^B[R(x_i,y_i^*) - b_\\psi(x_i)]^2\n\\end{equation}\n \\State Update value estimate $\\psi$ using the current environment reward target and BoN policy trajectories.\n \\EndFor\n\\end{algorithmic}\n \\caption{ BoN-RL}\n\n\\end{algorithm}",
+    "2412-15287_subsection_357d53a1": "Analysis of Bon-RLB Weights",
+    "2412-15287_sent_c27ae79e": "The shifting balance between $g^+_N(p)$ and $g^-(p)$ with varying $p$ directly reflects the exploration-exploitation trade-off.",
+    "2412-15287_sent_3f6c7891": "As $p$ approaches 1, signifying very difficult problems, both $g^+_N(p)$ and $g^-(p)$ increase, but $g^+_N(p)$ rises more dramatically, especially for larger values of $N$.",
+    "2412-15287_sent_881c559c": "This sharp increase in $g^+_N(p)$ highlights the algorithm's increasing emphasis on learning from the few correct responses that are available in challenging scenarios.",
+    "2412-15287_sent_a639a567": "The effect is amplified by larger sample sizes: the more attempts are made, the more valuable the scarce successes become.",
+    "2412-15287_sent_b83245a5": "The $\\overline{g}^+_N(p)$ weight, used when only positive feedback is available, exhibits a similar upward trend with $p$ but with a less pronounced increase.",
+    "2412-15287_sent_bc87a0a0": "This more moderate behavior can be attributed to the subtraction term in its formula, which tempers the influence of the positive samples and promotes a more balanced learning approach.",
+    "2412-15287_sent_b23d2e7b": "Finally, the potentially very large values of $g^+_N(p)$ for hard problems and larger $N$ introduce challenges for estimation.",
+    "2412-15287_sent_907d9fcc": "These high weights amplify the impact of individual positive samples, making the training more vulnerable to noise and potentially hindering convergence to a stable optimal policy.",
+    "2412-15287_sent_e1e0cc3e": "This underscores the need for techniques like gradient clipping or regularization to mitigate the destabilizing effects of high weight values and ensure robust learning, or alternatively, using $\\overline{g}^+_N(p)$ with Corollary~\\ref{corollary:rlbonb-plus} to ensure boundness of the gradient weights.",
+    "2412-15287_section_d46699ae": "Algorithmic Extensions",
+    "2412-15287_subsection_828fcdf0": "Entropy-regularized RL",
+    "2412-15287_sent_4846a8fe": "We would like to study an entropy-regularized RL problem for the $\\pibon$ policy.",
+    "2412-15287_sent_0323bce4": "Recall that generally in entropy-regularized RL, we solve",
+    "2412-15287_eq_21419a62": "\\begin{equation}\n \\max_{\\pi(\\cdot|x)\\in\\Delta}\\,\\, \\EE_{x\\sim \\Dcal}\\big[\\EE_{y\\sim \\pi(\\cdot|x)}\\sbr{R(x,y)}-\\beta\\cdot KL(\\pi||\\pi_\\beta)(x)\\big],\n\\end{equation}",
+    "2412-15287_sent_3ac5bdd6": "where $R(x,y)$ is the environment reward (that is not necessarily identical to the verifier score model), $\\pi_\\beta$ is a baseline policy, and $\\beta>0$ is the weight for the KL regularization term.",
+    "2412-15287_sent_61a72be0": "Using the consistency condition of KL-regularized MDP, solving for the optimal policy of this problem is equivalent to finding a solution pair of $V$ and $\\pi\\in\\Delta$ of the following equation:",
+    "2412-15287_eq_fa4407d9": "\\begin{equation}\n V(x) = R(x,y) + \\beta\\log\\pi_\\beta(y|x) - \\beta\\log\\pi(y|x),\\,\\,\\forall x\\in\\Dcal,\\,\\,\\forall y\n\\end{equation}",
+    "2412-15287_sent_86eda4b6": "Now, we further parameterize the policy variable $\\pi$ with the BoN policy $\\pibon$, then with the sufficiency part of the consistency condition one can show that $\\pibon$ is an optimal RL policy of \\Cref{eq:rl} if there exists a pair of $V$ and $\\pi$ that satisfies the following equation",
+    "2412-15287_eq_33ca01af": "\\begin{equation}\n V(x) = R(x,y) + \\beta\\log\\pi_\\beta(y|x) - \\beta\\left(\\log \\pi(y|x)+\\lambda_N \\cdot Q_{\\pi}\\rbr{y, x}-\\log{Z_{\\pi}(x)}\\right),\\,\\,\\forall x\\in\\Dcal,\\,\\,\\forall y\n\\end{equation}",
+    "2412-15287_sent_86d45c51": "There are two ways to approximately find the solution in \\Cref{eq:bon_consistency}.",
+    "2412-15287_sent_0e8281a6": "The first way is to reformulate the above equation with a condition that equates the values between any pairwise states and outputs $(x,y,y')$:",
+    "2412-15287_eq_a8644492": "\\begin{equation}\n R(x,y') + \\beta\\log\\frac{\\pi_\\beta(y'|x)}{\\pi(y'|x)} +\\beta\\lambda_N \\cdot Q_{\\pi}\\rbr{y', x} = R(x,y) + \\beta\\log\\frac{\\pi_\\beta(y|x)}{\\pi(y|x)}+\\beta\\lambda_N \\cdot Q_{\\pi}\\rbr{y, x},\\,\\,\\forall x\\in\\Dcal,\\,\\,\\forall y, y'.\n\\end{equation}",
+    "2412-15287_sent_a13fbb56": "Suppose one have access to pairwise labels in the data-set, then this formulation eliminates any terms that are independent to $y$ and circumvents the need of solving for the value function $V$.",
+    "2412-15287_sent_5274988e": "One may approximately solve \\Cref{eq:bon_consistency_2} by minimizing the following $\\ell_2$ loss:",
+    "2412-15287_eq_31d6da6b": "\\begin{equation}\n\\begin{split}\n\\min_{\\pi\\in\\Delta} &\\EE_{(x,y,y')\\in\\Dcal}\\sbr{(g(x,y;\\pi)-(g(x,y';\\pi))^2},\\\\\n& g(x,y;\\pi):= R(x,y) + \\beta\\log\\frac{\\pi_\\beta(y|x)}{\\pi(y|x)} +\\beta\\lambda_N \\cdot Q_{\\pi}\\rbr{y, x}.\n\\end{split}\n\\end{equation}",
+    "2412-15287_sent_4b14813b": "This formulation is similar to that in IPO \\citep{azar2024general}.",
+    "2412-15287_sent_c64bbee5": "However, unlike IPO, where the term $g(x,y;\\pi)$ is linear in the logits of $\\pi$ and therefore one can show that its $\\ell_2$ minimization problem has a unique solution, in this case $g(x,y;\\pi)$ also depends on $Q_{\\pi}$, which is a function of $\\pi$ (and thus a nonlinear function of its logits), preventing us from drawing similar conclusions that the $\\ell_2$ minimization problem has a unique solution.",
+    "2412-15287_sent_e4bb6834": "Therefore, even if one can exactly solve this $\\ell_2$ minimization problem (and make the loss zero), there is no guarantee that the solution policy $\\pi^*$ corresponds to the base policy of an optimal $\\pibon$ policy to the KL-regularized RL problem.",
+    "2412-15287_sent_2a10cde3": "For the second approach, consider the following linear programming reformulation of \\Cref{eq:bon_consistency}:",
+    "2412-15287_eq_69369c70": "\\begin{equation}\n \\begin{split}\n &\\min_{V,\\pi\\in\\Delta} \\EE_{x\\in\\Dcal}[V(x)]\\\\\n \\text{s.t. }& V(x) \\geq R(x,y) + \\beta\\log\\pi_\\beta(y|x) - \\beta\\left(\\log \\pi(y|x)+\\lambda_N \\cdot Q_{\\pi}\\rbr{y, x}-\\log{Z_{\\pi}(x)}\\right),\\,\\,\\forall x\\in\\Dcal,\\,\\,\\forall y\n \\end{split}\n\\end{equation}",
+    "2412-15287_sent_fb7f1b67": "Since the inequality constraint is a convex function in $\\pi$ and an affine function in $V$, by strong duality it has the following equivalent Lagrangian-dual formulation:",
+    "2412-15287_eq_ee0b4d65": "\\begin{equation}\n\\begin{split}\n &\\max_{\\kappa(\\cdot,\\cdot)\\geq 0}\\min_{V,\\pi\\in\\Delta} \\EE_{(x,y)\\in\\Dcal}\\left[V(x)+\\kappa(x,y)\\cdot\\left( R(x,y) + \\beta\\frac{\\pi_\\beta(y|x)}{\\pi(y|x)} - \\beta\\left(\\lambda_N \\cdot Q_{\\pi}\\rbr{y, x}-\\log{Z_{\\pi}(x)}-V(x)\\right)\\right)\\right]\\\\\n =&\\max_{\\kappa(\\cdot,\\cdot)\\geq 0}\\min_{V} \\EE_{\\Dcal}\\big[(1-\\kappa(x,y))\\cdot V(x)+\\kappa(x,y)\\cdot ( R(x,y) + \\beta\\cdot\\pi_\\beta(y|x))\\big]-\\max_{\\pi\\in\\Delta}\\EE_{\\Dcal}\\left[\\kappa(x,y)\\cdot\\log\\pibon(y|x;\\pi)\\right]\n \\end{split}\n\\end{equation}",
+    "2412-15287_sent_48e90f16": "This formulation can be viewed as an weighted-SFT approach that iteratively updates (i) the base policy $\\pi$ that maximizes the likelihood of $\\pibon$ over data $\\Dcal$, weighted with importance weights $\\kappa(x,y)$, and (ii) the importance weight function $\\kappa$ itself.",
+    "2412-15287_sent_4f3c25af": "Here, the value function $V(x)$ is simply an auxiliary variable.",
+    "2412-15287_subsection_81593851": "Improved Efficiency with BoN Distillation",
+    "2412-15287_sent_fe640af9": "While Lemma~\\ref{lem:sft_pg_bon} provides a recipe for training a base policy to adapt to the BoN inference strategy, a key challenge lies in the computational cost and data inefficiency associated with BoN sampling, especially when $N$ is large.",
+    "2412-15287_sent_b7371980": "Particularly, each gradient update requires generating $N$ samples from the current base policy, which can be prohibitively expensive.",
+    "2412-15287_sent_f8e49205": "Furthermore, using these samples solely for a single gradient update may deem wasteful.",
+    "2412-15287_sent_f4c5fb0b": "To alleviate this issue, leveraging the recent advances in BoN Distillation (BoND) \\citep{sessa2024bond}, an RLHF algorithm that distills BoN behaviors into a standard LLM, we approximate the BoN distribution of the current $\\pi$.",
+    "2412-15287_sent_94c229ee": "This results in an iterative, two-step procedure.",
+    "2412-15287_sent_5d020ca5": "First, we estimate a BoND policy $\\pi_{\\text{BoND}}$ (parameterized by weights $\\phi$) of $\\pi$ by solving the distribution-matching problem: $\\min_{\\phi} \\mathbb E_{x\\sim\\mathcal D}[\\text{KL}(\\pi_{\\phi}||\\pibon)(x)]$, where the backward-KL metric induces quantile-based advantage and mode-seeking behaviors to $\\pi_{\\text{BoND}}$.",
+    "2412-15287_sent_b88d213b": "Utilizing the variational form $\\pibon(y|x)\\propto \\pi\\cdot\\exp\\rbr{\\lambda_N Q_{\\pi}}(y|x)$, this problem can be further reformulated as",
+    "2412-15287_eq_71547f4c": "\\begin{equation}\n\n\\pi_{\\text{BoND}}(y|x)\\in\\arg\\max_{\\phi}\\,\\, \\mathbb E_{x\\sim\\mathcal D}[ \\mathbb E_{y\\sim \\pi_{\\phi}(\\cdot|x)}[Q_{\\pi}(y,x)]-\\frac{1}{\\lambda_N}\\text{KL}(\\pi_{\\phi}||\\pi)(x) ].\n\\end{equation}",
+    "2412-15287_sent_d16400a4": "Second, equipped with the BoND policy, we change the gradient of Lemma~\\ref{lem:sft_pg_bon} with the approximate gradient $\\EE_{(x, y)\\sim \\Dcal}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}} - \\EE_{x\\sim \\Dcal, y\\sim \\pi_{\\text{BoND}}\\rbr{\\cdot|x}}\\sbr{\\nabla_{\\theta} f\\rbr{x, y;\\theta}}$.",
+    "2412-15287_sent_3c17f262": "In general, this approach is also well-connected with Contrastive Divergence \\citep{carreira2005contrastive} in energy-based learning, which promotes the idea of approximately sample from the current target distribution ($\\pibon$ in our case).",
+    "2412-15287_sent_eb02bcdb": "It shows that the learning algorithm can still converge to an optimum w.r.t.",
+    "2412-15287_sent_9bfdc2d8": "the original objective function as long as the gradient estimated by the approximate samples still points at an ascending direction.",
+    "2412-15287_subsection_fbc3c628": "Connection to STaR",
+    "2412-15287_sent_100676a0": "Consider the popular STaR method \\citep{zelikman2022star} applied for training $\\pibon$, which updates $\\theta$ by following the reward-weighted gradient:",
+    "2412-15287_eq_0457328b": "\\begin{equation}\n\\qquad &\\EE_{x\\sim\\Dcal, y\\sim\\pibon(\\cdot|x)}\\left[\\nabla_{\\theta} \\log \\pitheta(y|x) \\cdot R(x,y) \\right].\n\\end{equation}",
+    "2412-15287_sent_f9ed3562": "Notice that the policy gradient of BoN-RL is a sum of two terms: $\\nabla_\\theta J(\\theta)=g_1(\\theta) + g_2(\\theta)$, where $g_1(\\theta)=\\EE_{x\\sim\\Dcal, y\\sim\\pibon(\\cdot|x)}\\left[\\nabla_{\\theta} \\log \\pitheta(y|x) \\cdot R(x,y) \\right]$ is equivalent to that of BoN-STaR, updating $\\pi$ via weighted supervised fine-tuning over the responses and the rewards obtained by the current BoN policy, and $g_2(\\theta)= \\EE_{x\\sim\\Dcal, y\\sim\\pibon(\\cdot|x)}\\left[\\nabla_{\\theta} (\\lambda_N Q_{\\pi} - \\text{log$\\EE_{\\pi}$exp}(\\lambda_N Q_{\\pi}))(x,y) \\cdot R(x,y) \\right] $ accounts for the gradient effect of the importance sampling term $(\\exp\\lambda_N Q_{\\pi}/Z_{\\pi})(x,y)$ between $\\pi$ and $\\pibon$, emphasizing on how much it can improve the reward.",
+    "2412-15287_sent_e0746261": "The additional $g_2(\\theta)$ component makes BoN-RL amenable to the distributional shifts introduced by the BoN procedure, enabling the base policy to be adept at utilizing the BoN exploration mechanism to optimize the reward.",
+    "2412-15287_section_1c8ac169": "Experimental Details",
+    "2412-15287_subsection_6d812800": "Additional Scaling Results with Gemma 9B verifier and policy models",
+    "2412-15287_fig_a97e790e": "\\begin{figure}\n\n\\begin{subfigure}{.5\\textwidth}\n\n \\includegraphics[width=\\linewidth]{images/pass_at_k_exponent.png}\n \\caption{ pass@$N$}\n\n\\end{subfigure}\n\\begin{subfigure}{.5\\textwidth}\n\n \\includegraphics[width=\\linewidth]{images/N_star_vs_T.png}\n \\caption{ BoN}\n\n\\end{subfigure}\n\n\\caption{ Scaling of exponent w.r.t temperature in pass@$N$ and optimal $N$ w.r.t. temperature in BoN. Dashed curves denote in-training predictions, stars denote extrapolation values for the corresponding temperatures. \n\n\\end{figure}",
+    "2412-15287_sent_9b57e484": "Similar to Gemma2B co-scaling experiments, for Gemma 9B co-scaling, we present additional results in Figure \\ref{fig:scaling2}.",
+    "2412-15287_sent_89f16d57": "We analyze the optimal exponent $b^*(T)$ w.r.t different temperatures (see co-scaling in \\Cref{sec:experiment}) and find that a power law functional form can explain the relationship very accurately, achieving very low extrapolation error for pass@$N$ and BoN, i.e., $2.75e-05$ and $2.87$, respectively.",
+    "2412-15287_sent_e183fcc6": "Results for pass@$N$ suggest that exponent can be accurately predicted from just temperature.",
+    "2412-15287_sent_199682a9": "We also inspect how optimal $N^*$ scales with $T$ in BoN.",
+    "2412-15287_sent_d6b2accd": "We fit a power law function plus a linear term which accurately predicts optimal $N$ for unseen temperatures.",
+    "2412-15287_sent_29341ccf": "Predictions of the fitted model can be used to achieve close to optimal performance, achieving less than $0.001$ point drop in BoN performance.",
+    "2412-15287_sent_fd596304": "This suggests that our predictive model makes accurate predictions that keeps the optimal performance.",
+    "2412-15287_paragraph_b37847b3": "Generalization of scaling predictions.",
+    "2412-15287_sent_b02ac876": "For MajorityVoting algorithm, we use MC estimation to simulate different sample sizes.",
+    "2412-15287_sent_e290fbaf": "We use the same functional form used for co-scaling experiments in \\Cref{sec:experiment} for MajorityVoting.",
+    "2412-15287_sent_06070593": "Our results remark the strong generalization performance of our predictive models across different LLMs (both policy and reward models) and inference algorithms.",
+    "2412-15287_sent_b14b6bb0": "The same power-law function with a linear trend term applies well to both BoN and MajorityVoting.",
+    "2412-15287_sent_a352b346": "While we use unbiased estimates for pass@$N$ and BoN, we use MC estimation for MajorityVoting which leads to less smooth curves and slightly lower prediction performance.",
+    "2412-15287_fig_3cc2e2a1": "\\begin{table}\n\\begin{center}\n\n\\begin{tabular}{ c|c|c|c| } \n& pass@$N$ & BoN & MajorityVoting \\\\\n\n Gemma-9B & 0.986 & 0.989 & 0.89 \\\\ \n\n Gemma-2B & 0.998 & 0.998 & 0.784 \\\\\n\n\\end{tabular}\n\n\\caption{ R-squared values for different language models and inference algorithms.}\n\n\\end{center}\n\\end{table}",
+    "2412-15287_paragraph_d6001cbb": "Gemma 9B Results.",
+    "2412-15287_sent_59166386": "Using Gemma-9B improves both pass@$N$ and BoN significantly compared to Gemma-2B.",
+    "2412-15287_sent_64568632": "We observe that the gap between using large temperatures (0.7 or 1.0) and very small temperatures (0.1) also increased. While Gemma-2B showed very strong reward model overoptimization for larger $N$ and temperatures, we see a lesser overoptimization for Gemma-9B models.",
+    "2412-15287_fig_6a006aaa": "\\begin{figure}\n\n \\includegraphics[width=\\linewidth]{images/bon_pass_at_k_combined_small_9b.png}\n \\caption{ pass@$N$ (left) and BoN (right) performance for Gemma-9B. While curves show similar shape as Gemma-2B models, overall performance is globally improved and overoptimization is reduced.}\n\n\\end{figure}",
+    "2412-15287_subsection_483ed7fe": "Details of BoN-aware Fine-tuning Experiments",
+    "2412-15287_sent_6275728b": "For the MATH benchmark, we trained the Gemma 2B and 9B models with the Hendrycks MATH dataset.",
+    "2412-15287_sent_a75c57fc": "Following \\citet{lightman2023lets}, we augment the original $7500$ MATH training problems with $4500$ problems from the test set, evaluating performance on the remaining $500$ problems.",
+    "2412-15287_sent_bdc0cb15": "In the supervised setting, we leverage a larger Gemini~1.5 Flash model~\\citep{geminiteam2024gemini} to generate MATH solutions with answers and steps ($32$ candidates for each of the MATH problems), sub-sampling only the correct responses and distilling knowledge into the Gemma 2B model.",
+    "2412-15287_sent_49b783ba": "In the RL setting, we use a binary environment reward denoting whether the model's answer matches the ground truth answer.",
+    "2412-15287_sent_4356a299": "The verifier used in all BoN experiments is a separate pre-trained Gemma 2B model that predicts the probability of a correct response given the prompt.",
+    "2412-15287_sent_5eff04c6": "The verifier is trained with the data collected from the Gemini 1.5 Flash model.",
+    "2412-15287_sent_4186c588": "Alternatively, to benchmark our models on code generation, we train on MBPP \\citep{austin2021program} and evaluate on the HumanEval benchmark \\citep{chen2021evaluating}, following the standard procedures delineated in \\citet{kumar2024training}.",
+    "2412-15287_subsection_98572a8b": "Additional BoN-aware Fine-tuning Results",
+    "2412-15287_sent_37412388": "We now present additional results on BoN-aware fine-tuning (both SFT and RL).",
+    "2412-15287_subsubsection_c1cb05e2": "Hendrycks MATH with Gemma 9B",
+    "2412-15287_fig_757bfc8e": "\\begin{figure}\n\n \\begin{subfigure}{0.42\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bonrlv_bon_math9b.pdf}\n \\caption{ BoN}\n\n \\end{subfigure}\n ~\n \\begin{subfigure}{0.42\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bonrls_pass_at_k_math_9b.pdf}\n \\caption{ pass@$N$}\n\n \\end{subfigure} \n \\caption{ BoN and pass@$N$ Accuracy Results on Hendrycks MATH with Gemma 9B.}\n\n\\end{figure}",
+    "2412-15287_sent_cde00ba4": "We additionally benchmark a larger model, Gemma 2 9B, on Hendrycks MATH, with results shown in Figure~\\ref{fig:math_9b}.",
+    "2412-15287_sent_61456644": "We observe that, similar to the trends of the experiments run with the Gemma 2B counterpart, BoN-RL-V achieves the best BoN performance, while BoN-RL-S achieves the best pass@$N$ performance, with both substantially improving over the base model.",
+    "2412-15287_subsubsection_155e2af1": "Held-out math benchmarks with Gemma 9B",
+    "2412-15287_fig_b094c337": "\\begin{figure}\n\n \\begin{subfigure}{0.42\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bonrls_pass_at_k_math1745_9b.pdf}\n \\caption{ Functional MATH().}\n\n \\end{subfigure} ~\n \\begin{subfigure}{0.42\\linewidth}\n \\includegraphics[width=\\linewidth]{images/bonrls_pass_at_k_ody_9b.pdf}\n \\caption{ MathOdyssey.}\n\n \\end{subfigure} \n \\caption{ pass@$N$ of BoN-RL and baselines on held-out benchmarks with Gemma 9B models.}\n\n\\end{figure}",
+    "2412-15287_sent_e4424ab8": "To evaluate the generalization capabilities of our BoN-aware finetuned models, we additionally evaluate on two completely held-out and challenging benchmarks, Functional MATH() \\citep{srivastava2024functional} and MathOdyssey \\citep{fang2024mathodyssey}.",
+    "2412-15287_sent_6c67c96b": "We present the results of these held-out benchmarks with 9B models in Figure \\ref{fig:pass_n_math_9b_held_out}, and observe that our fine-tuned models improve on both BoN and pass@$N$ for these held-out benchmarks similarly as in the case of Gemma 2B.",
+    "2412-15287_subsubsection_d3e79290": "pass@N Accuracy with Different Training Samples, with Gemma 2B",
+    "2412-15287_fig_0733c283": "\\begin{figure}\n\n\\includegraphics[width=0.42\\linewidth]{images/pass_n_only_n16_pass_at_k.pdf}\n \\caption{ pass@$N$ of various methods with $N'=16$}\n\n\\end{figure}",
+    "2412-15287_sent_5aebeefa": "Similar to the experiments in Figure \\ref{sub:pass32}, our BoN-RL-S, BoN-RLB, and BoN-RLB(P) models also demonstrate superior performance over the baseline methods in pass@$N$ evaluations with $N'=16$ (Figure \\ref{sub:pass16}).",
+    "2412-15287_sent_3fb1a6bd": "In this case, STaR performs the worst ($55\\%$ in pass@$32$) as it fails to (i) utilize negative samples in training for implicit exploration (unlike BoN-RLB, $60\\%$ pass@$32$), (ii) re-weight samples based on difficulty, prioritizing learning from challenging problems and avoiding overfitting to simpler ones (unlike BoN-RLB(P), $60\\%$ pass@$32$), and (iii) account for the importance sampling factor between the base policy and the BoN policy (unlike BoN-RL-S, $58\\%$ pass@$32$).",
+    "2412-15287_sent_c0446306": "BoN-RLB and BoN-RLB(P) are superior to BoN-RL-S on $N'=16$ (Figure~\\ref{sub:pass16}), but worse on $N'=32$ (Figure~\\ref{sub:pass32}), suggesting that they suffer from instability with increasing $N'$.",
+    "2412-15287_sent_a90a5548": "This is potentially due to the following observations: (i) The asymmetry between the positive ($g^+$) and negative ($g^-$) weights in BoN-RLB increases with $N'$, destabilizing its learning at larger $N'$ values; (ii) RL-BoN-S utilizes the variational approximation of $\\pibon$ in its gradient update, introducing approximation errors that may cause its sub-optimal performance (relative to a stable instance of BoN-RLB trained at $N'=16$); BoN-RLB(P) only uses positive samples, which inherits the shortcomings of STaR (lack of implicit exploration), yet it re-balances the examples with the difficulty of the problems.",
+    "2412-15287_sent_da60039c": "Overall, it leads to consistent yet mild performance degradation over BoN-RLB.",
+    "2412-15287_subsubsection_fbb50c75": "Comparing BoN-RL with Base-BoN Distillation Baselines, with Gemma 2B",
+    "2412-15287_sent_3c4ea053": "We consider various alternative methods to improve Gemma 2B BoN accuracy through various data generation methods.",
+    "2412-15287_sent_d7024830": "We distill the Gemma 2B model using these datasets and compare to the base Gemma 2B model and our BoN-RL-V method.",
+    "2412-15287_sent_34c323f9": "We consider the following four distillation benchmarks (all run over Hendrycks MATH):",
+    "2412-15287_enumerate_d546f16a": "enumerate",
+    "2412-15287_item_e2e951d3": "item",
+    "2412-15287_sent_57124dfd": "Base-BoN-SFT: In this method we generate a dataset of the best of $N=16$ samples for each example in the dataset.",
+    "2412-15287_sent_9cd743c2": "We use the best sample as target to distill Gemma~2B.",
+    "2412-15287_sent_43b5b65d": "Base-All-SFT: We use the full range of $N=16$ samples as targets.",
+    "2412-15287_sent_0253a126": "This dataset is used to distill Gemma~2B to the average effective sample of the base model.",
+    "2412-15287_sent_3b825240": "Base-Weighted-SFT: Similar to Base-All-SFT, we sample $N=16$ samples for each example.",
+    "2412-15287_sent_3658d7d8": "We then re-sample $N=16$ examples (from these samples, with repetition), weighted according to verifier scores.",
+    "2412-15287_sent_19b0e002": "This dataset is used to distill Gemma~2B to the average effective sample, weighted by verifier scores.",
+    "2412-15287_sent_d0d4d020": "Base-Maj-SFT: We use majority voting over $N=16$ samples to select a target.",
+    "2412-15287_sent_fed5a265": "We distill Gemma~2B to predict the majority voted target.",
+    "2412-15287_sent_577b64d6": "We show the BoN accuracy results of these methods in Figure 10.",
+    "2412-15287_sent_ae29dde1": "While the aforementioned baselines do improve BoN performance over the Base Gemma 2B model, they are still out-performed by our BoN-RL-V method, indicating the value of utilizing the inference BoN strategy explicitly during training.",
+    "2412-15287_fig_d0a4e590": "\\begin{figure}\n\n \\includegraphics[width=0.5\\linewidth]{images/bonrlv_vs_baselines_bon_math_2b.pdf}\n \\caption{ BoN Accuracy on MATH comparing Base Gemma 2B and BoN RL-V with other fine-tuning techniques: (1) BoN-SFT: Distillation of BoN sample for N=16; (2) All-SFT: Distillation of all N=16 samples (i.e., average sample); (3) Weighted-SFT: Distillation of all N=16 samples by average re-sampling w.r.t. verifier scores; and (4) Maj-SFT: Distillation of majority voting strategy.} \n\\end{figure}",
+    "2412-15287_fig_f8e611be": "\\begin{figure}\n\n \\includegraphics[width=0.5\\linewidth]{images/bonrls_BoN_bon_mathb_2b.pdf}\n \\caption{ Plots show BoN accuracy under verifier-reward mismatch using Gemma 2B on MATH. During training verifier was used for BoN. On test, environment reward was used as verifier of the BoN strategy, inducing a mismatch in verifiers.}\n\n\\end{figure}"
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15287_sent_676977e1": "2412-15287_doc_root",
+      "2412-15287_section_0b79795d": "2412-15287_doc_root",
+      "2412-15287_sent_6f4559ff": "2412-15287_section_0b79795d",
+      "2412-15287_sent_9876725c": "2412-15287_section_0b79795d",
+      "2412-15287_sent_5ad967fa": "2412-15287_section_0b79795d",
+      "2412-15287_sent_a629fde1": "2412-15287_section_0b79795d",
+      "2412-15287_sent_387ddfde": "2412-15287_section_0b79795d",
+      "2412-15287_sent_b1a51ccb": "2412-15287_section_0b79795d",
+      "2412-15287_sent_813638c5": "2412-15287_section_0b79795d",
+      "2412-15287_sent_dd6cbb94": "2412-15287_section_0b79795d",
+      "2412-15287_sent_bde94562": "2412-15287_section_0b79795d",
+      "2412-15287_sent_f31f0f31": "2412-15287_section_0b79795d",
+      "2412-15287_sent_6eb10e99": "2412-15287_section_0b79795d",
+      "2412-15287_sent_4644ae14": "2412-15287_section_0b79795d",
+      "2412-15287_sent_23813a60": "2412-15287_section_0b79795d",
+      "2412-15287_sent_84ae7fec": "2412-15287_section_0b79795d",
+      "2412-15287_sent_7c8b3f61": "2412-15287_section_0b79795d",
+      "2412-15287_sent_09594d9d": "2412-15287_section_0b79795d",
+      "2412-15287_sent_7f1071b3": "2412-15287_section_0b79795d",
+      "2412-15287_sent_71293f77": "2412-15287_section_0b79795d",
+      "2412-15287_section_d570e86c": "2412-15287_doc_root",
+      "2412-15287_sent_5c59b84e": "2412-15287_section_d570e86c",
+      "2412-15287_sent_0110d941": "2412-15287_section_d570e86c",
+      "2412-15287_sent_dc6661c6": "2412-15287_section_d570e86c",
+      "2412-15287_sent_861a8cb3": "2412-15287_section_d570e86c",
+      "2412-15287_sent_0a4395a2": "2412-15287_section_d570e86c",
+      "2412-15287_sent_a728c24e": "2412-15287_section_d570e86c",
+      "2412-15287_sent_f226edb8": "2412-15287_section_d570e86c",
+      "2412-15287_sent_4dacf110": "2412-15287_section_d570e86c",
+      "2412-15287_sent_9b72bce6": "2412-15287_section_d570e86c",
+      "2412-15287_sent_bb3765df": "2412-15287_section_d570e86c",
+      "2412-15287_sent_dfc16b11": "2412-15287_section_d570e86c",
+      "2412-15287_eq_2c848218": "2412-15287_section_d570e86c",
+      "2412-15287_sent_2fa91366": "2412-15287_section_d570e86c",
+      "2412-15287_sent_14bb08c6": "2412-15287_section_d570e86c",
+      "2412-15287_sent_7ab86798": "2412-15287_section_d570e86c",
+      "2412-15287_paragraph_e4c8c5ab": "2412-15287_section_d570e86c",
+      "2412-15287_sent_77e6e2b9": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_7d2b255a": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_bb929a61": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_eq_74e9999d": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_e63ad71a": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_0557c512": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_86da522a": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_65630df1": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_56839fcb": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_5176aaca": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_0eec8457": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_122f88b9": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_ac229b28": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_c939d8e3": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_de344782": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_c1c1ba03": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_6be7bc71": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_eb8a813a": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_859f90fc": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_6f409764": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_bd271ad6": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_8dd43f20": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_8ef373bf": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_13703db3": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_eq_48330082": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_bd63fc66": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_04461145": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_5660658d": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_cec38567": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_3ab3241a": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_8449e1a8": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_c2a29742": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_149cc345": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_77ee5fad": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_5be99c64": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_a50d308a": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_38851487": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_8167dfd2": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_bf7ee2cc": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_ad725fb3": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_sent_d1e6ae81": "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_section_6d3a2c17": "2412-15287_doc_root",
+      "2412-15287_sent_f924c616": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_868d3130": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_78fea5fa": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_d1498e02": "2412-15287_section_6d3a2c17",
+      "2412-15287_eq_6ca66ad1": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_e6387598": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_a7cd806a": "2412-15287_section_6d3a2c17",
+      "2412-15287_eq_5ad640c6": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_7bbf0b4c": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_ebfcda38": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_7662caed": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_d853eeab": "2412-15287_section_6d3a2c17",
+      "2412-15287_eq_3027297e": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_4b95f4dc": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_0c1ecaf2": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_3be2b263": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_23834a70": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_ea531f87": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_6abaf386": "2412-15287_section_6d3a2c17",
+      "2412-15287_eq_b98380ea": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_46cbcb6d": "2412-15287_section_6d3a2c17",
+      "2412-15287_sent_3f4c4502": "2412-15287_section_6d3a2c17",
+      "2412-15287_section_3dab21fa": "2412-15287_doc_root",
+      "2412-15287_sent_8dc3be3e": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_b3be3f2e": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_aab46d5b": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_750f166f": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_21193ea2": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_75add804": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_7011dd6f": "2412-15287_section_3dab21fa",
+      "2412-15287_eq_69d7df02": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_0603d717": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_5f2b8d46": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_9b5c162e": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_53e560bb": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_9c653f5d": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_ef162ca8": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_e1854bce": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_1638f54c": "2412-15287_paragraph_f4279332",
+      "2412-15287_eq_2b961f64": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_0137f876": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_71b6f911": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_c3ff3815": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_aaaad018": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_0bda2676": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_ff5124b2": "2412-15287_section_3dab21fa",
+      "2412-15287_paragraph_f4279332": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_daddf795": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_3ff835f2": "2412-15287_paragraph_f4279332",
+      "2412-15287_eq_bab5aab7": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_d563b3d4": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_1d1f7257": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_73561109": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_875abc21": "2412-15287_paragraph_f3e43140",
+      "2412-15287_eq_0fae73fa": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_5bc87290": "2412-15287_paragraph_f4279332",
+      "2412-15287_eq_1c08adfe": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_8d7f30f1": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_427c8c54": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_e697bf6b": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_f7b66f6c": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_c392f2cc": "2412-15287_paragraph_f4279332",
+      "2412-15287_sent_3695a34f": "2412-15287_paragraph_f4279332",
+      "2412-15287_paragraph_f3e43140": "2412-15287_section_3dab21fa",
+      "2412-15287_sent_b55775a0": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_ba01d5b0": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_aa7fa6fe": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_021e4bfb": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_728cb150": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_66007e2a": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_0f1fe574": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_c0d48b0c": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_1a1a1871": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_0383cc74": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_7dea3a89": "2412-15287_paragraph_f3e43140",
+      "2412-15287_sent_3fac2e77": "2412-15287_paragraph_f3e43140",
+      "2412-15287_section_4829262c": "2412-15287_doc_root",
+      "2412-15287_sent_11cf69cd": "2412-15287_section_4829262c",
+      "2412-15287_sent_66c0236e": "2412-15287_section_4829262c",
+      "2412-15287_sent_bead52c9": "2412-15287_section_4829262c",
+      "2412-15287_subsection_8716abdb": "2412-15287_section_4829262c",
+      "2412-15287_sent_6cf17fcf": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_49597501": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_82dd640b": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_53bbeeb2": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_200e0ad1": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_0d8c9e83": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_cda47f1d": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_45d42803": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_3f2fe044": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_6167d7fc": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_d20b808c": "2412-15287_subsection_8716abdb",
+      "2412-15287_sent_a3c1613d": "2412-15287_subsection_8716abdb",
+      "2412-15287_fig_a4db4461": "2412-15287_subsection_8716abdb",
+      "2412-15287_subsection_0ac94fe0": "2412-15287_section_4829262c",
+      "2412-15287_paragraph_592de6a6": "2412-15287_subsection_0ac94fe0",
+      "2412-15287_sent_628e5ffc": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_6b2e4a14": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_1e751e84": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_545507d1": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_9792b072": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_a3617746": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_f8a73893": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_7f078c10": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_581edb11": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_cebe66ee": "2412-15287_paragraph_592de6a6",
+      "2412-15287_fig_b6e910de": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_3d1b1fcb": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_cef70d1c": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_c91e7553": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_58734423": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_49548c52": "2412-15287_paragraph_592de6a6",
+      "2412-15287_sent_ce1a9129": "2412-15287_paragraph_592de6a6",
+      "2412-15287_fig_dc1140c9": "2412-15287_paragraph_592de6a6",
+      "2412-15287_paragraph_4a4c80e0": "2412-15287_subsection_0ac94fe0",
+      "2412-15287_sent_0e8998ed": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_3185ac61": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_e8ad1a0d": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_073e53df": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_91d871af": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_2e57da30": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_f27e06ae": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_82332e6e": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_6166dc4d": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_fig_866c55b8": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_db6337ab": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_be5473db": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_577fc0e1": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_4369659e": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_1d3bbfc8": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_ca8c9895": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_4a583bb4": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_0c32092c": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_b5f9242d": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_decf7ace": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_423221f7": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_eff4b0a2": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_bfbdfe3c": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_f34c32f1": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_8d8572ca": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_dde6d024": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_sent_b8907cda": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_fig_2d6dd78a": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_fig_b02a3ad8": "2412-15287_paragraph_4a4c80e0",
+      "2412-15287_section_aed402c3": "2412-15287_doc_root",
+      "2412-15287_sent_36ac0a54": "2412-15287_section_aed402c3",
+      "2412-15287_sent_699e033a": "2412-15287_section_aed402c3",
+      "2412-15287_sent_7e00cdb8": "2412-15287_section_aed402c3",
+      "2412-15287_sent_073a5721": "2412-15287_section_aed402c3",
+      "2412-15287_sent_07cc5434": "2412-15287_section_aed402c3",
+      "2412-15287_sent_6a81b3a6": "2412-15287_section_aed402c3",
+      "2412-15287_sent_3f9a2b84": "2412-15287_section_aed402c3",
+      "2412-15287_sent_1351e659": "2412-15287_section_aed402c3",
+      "2412-15287_sent_df082720": "2412-15287_section_aed402c3",
+      "2412-15287_sent_84e4308d": "2412-15287_section_aed402c3",
+      "2412-15287_sent_2a1be1cb": "2412-15287_section_aed402c3",
+      "2412-15287_sent_84ae4f96": "2412-15287_section_aed402c3",
+      "2412-15287_sent_d478f8a5": "2412-15287_section_aed402c3",
+      "2412-15287_sent_dcf12361": "2412-15287_section_aed402c3",
+      "2412-15287_sent_e6eb9340": "2412-15287_section_aed402c3",
+      "2412-15287_sent_96fdfb02": "2412-15287_section_aed402c3",
+      "2412-15287_section_6f8b794f": "2412-15287_doc_root",
+      "2412-15287_sent_e9d4023d": "2412-15287_section_6f8b794f",
+      "2412-15287_sent_0c7be435": "2412-15287_section_6f8b794f",
+      "2412-15287_sent_c18be262": "2412-15287_section_6f8b794f",
+      "2412-15287_sent_8664a27b": "2412-15287_section_6f8b794f",
+      "2412-15287_sent_b7b5f025": "2412-15287_section_6f8b794f",
+      "2412-15287_section_119c332e": "2412-15287_doc_root",
+      "2412-15287_subsection_12ff9fbb": "2412-15287_section_119c332e",
+      "2412-15287_sent_43d60d77": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_sent_dec73f05": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_eq_ca46ff37": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_0b6e7e9b": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_eq_37d8c0da": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_sent_8dd300a1": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_sent_e6f3d60c": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_sent_6dd817cf": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_sent_438d1864": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_sent_3513ee1d": "2412-15287_subsection_12ff9fbb",
+      "2412-15287_subsection_0df1dc66": "2412-15287_section_119c332e",
+      "2412-15287_sent_abf92953": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_05f88450": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_9f731d72": "2412-15287_subsection_0df1dc66",
+      "2412-15287_eq_3237302d": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_a9c742e9": "2412-15287_subsection_0df1dc66",
+      "2412-15287_eq_8e3a09d3": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_df640b4a": "2412-15287_subsection_0df1dc66",
+      "2412-15287_eq_6b2cb63c": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_57726cf1": "2412-15287_subsection_0df1dc66",
+      "2412-15287_eq_9bf11e33": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_f0ddc324": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_ca44ec35": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_dae8dc38": "2412-15287_subsection_0df1dc66",
+      "2412-15287_eq_1a0180f3": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_fe7cefe7": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_ba0ca3fb": "2412-15287_subsection_0df1dc66",
+      "2412-15287_sent_90ee7685": "2412-15287_subsection_0df1dc66",
+      "2412-15287_eq_97674f2b": "2412-15287_subsection_0df1dc66",
+      "2412-15287_subsection_d4f7076b": "2412-15287_section_119c332e",
+      "2412-15287_sent_c269796a": "2412-15287_subsection_d4f7076b",
+      "2412-15287_eq_01341522": "2412-15287_subsection_d4f7076b",
+      "2412-15287_section_c23e3836": "2412-15287_doc_root",
+      "2412-15287_sent_3c676479": "2412-15287_section_c23e3836",
+      "2412-15287_sent_073bf51f": "2412-15287_section_c23e3836",
+      "2412-15287_sent_da7bf239": "2412-15287_section_c23e3836",
+      "2412-15287_sent_56ff802c": "2412-15287_section_c23e3836",
+      "2412-15287_sent_2704caa2": "2412-15287_section_c23e3836",
+      "2412-15287_sent_0e0b77ab": "2412-15287_section_c23e3836",
+      "2412-15287_sent_5654a06f": "2412-15287_section_c23e3836",
+      "2412-15287_sent_4c0377bc": "2412-15287_section_c23e3836",
+      "2412-15287_sent_56d5604f": "2412-15287_section_c23e3836",
+      "2412-15287_sent_80c207c2": "2412-15287_section_c23e3836",
+      "2412-15287_fig_e05fdb74": "2412-15287_section_c23e3836",
+      "2412-15287_fig_4e837394": "2412-15287_section_c23e3836",
+      "2412-15287_fig_91a87b3a": "2412-15287_section_c23e3836",
+      "2412-15287_fig_1c406a20": "2412-15287_section_c23e3836",
+      "2412-15287_fig_0dbf4ade": "2412-15287_section_c23e3836",
+      "2412-15287_subsection_357d53a1": "2412-15287_section_c23e3836",
+      "2412-15287_sent_c27ae79e": "2412-15287_subsection_357d53a1",
+      "2412-15287_sent_3f6c7891": "2412-15287_subsection_357d53a1",
+      "2412-15287_sent_881c559c": "2412-15287_subsection_357d53a1",
+      "2412-15287_sent_a639a567": "2412-15287_subsection_357d53a1",
+      "2412-15287_sent_b83245a5": "2412-15287_subsection_357d53a1",
+      "2412-15287_sent_bc87a0a0": "2412-15287_subsection_357d53a1",
+      "2412-15287_sent_b23d2e7b": "2412-15287_subsection_357d53a1",
+      "2412-15287_sent_907d9fcc": "2412-15287_subsection_357d53a1",
+      "2412-15287_sent_e1e0cc3e": "2412-15287_subsection_357d53a1",
+      "2412-15287_section_d46699ae": "2412-15287_doc_root",
+      "2412-15287_subsection_828fcdf0": "2412-15287_section_d46699ae",
+      "2412-15287_sent_4846a8fe": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_0323bce4": "2412-15287_subsection_828fcdf0",
+      "2412-15287_eq_21419a62": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_3ac5bdd6": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_61a72be0": "2412-15287_subsection_828fcdf0",
+      "2412-15287_eq_fa4407d9": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_86eda4b6": "2412-15287_subsection_828fcdf0",
+      "2412-15287_eq_33ca01af": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_86d45c51": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_0e8281a6": "2412-15287_subsection_828fcdf0",
+      "2412-15287_eq_a8644492": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_a13fbb56": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_5274988e": "2412-15287_subsection_828fcdf0",
+      "2412-15287_eq_31d6da6b": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_4b14813b": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_c64bbee5": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_e4bb6834": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_2a10cde3": "2412-15287_subsection_828fcdf0",
+      "2412-15287_eq_69369c70": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_fb7f1b67": "2412-15287_subsection_828fcdf0",
+      "2412-15287_eq_ee0b4d65": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_48e90f16": "2412-15287_subsection_828fcdf0",
+      "2412-15287_sent_4f3c25af": "2412-15287_subsection_828fcdf0",
+      "2412-15287_subsection_81593851": "2412-15287_section_d46699ae",
+      "2412-15287_sent_fe640af9": "2412-15287_subsection_81593851",
+      "2412-15287_sent_b7371980": "2412-15287_subsection_81593851",
+      "2412-15287_sent_f8e49205": "2412-15287_subsection_81593851",
+      "2412-15287_sent_f4c5fb0b": "2412-15287_subsection_81593851",
+      "2412-15287_sent_94c229ee": "2412-15287_subsection_81593851",
+      "2412-15287_sent_5d020ca5": "2412-15287_subsection_81593851",
+      "2412-15287_sent_b88d213b": "2412-15287_subsection_81593851",
+      "2412-15287_eq_71547f4c": "2412-15287_subsection_81593851",
+      "2412-15287_sent_d16400a4": "2412-15287_subsection_81593851",
+      "2412-15287_sent_3c17f262": "2412-15287_subsection_81593851",
+      "2412-15287_sent_eb02bcdb": "2412-15287_subsection_81593851",
+      "2412-15287_sent_9bfdc2d8": "2412-15287_subsection_81593851",
+      "2412-15287_subsection_fbc3c628": "2412-15287_section_d46699ae",
+      "2412-15287_sent_100676a0": "2412-15287_subsection_fbc3c628",
+      "2412-15287_eq_0457328b": "2412-15287_subsection_fbc3c628",
+      "2412-15287_sent_f9ed3562": "2412-15287_subsection_fbc3c628",
+      "2412-15287_sent_e0746261": "2412-15287_subsection_fbc3c628",
+      "2412-15287_section_1c8ac169": "2412-15287_doc_root",
+      "2412-15287_subsection_6d812800": "2412-15287_section_1c8ac169",
+      "2412-15287_fig_a97e790e": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_9b57e484": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_89f16d57": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_e183fcc6": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_199682a9": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_d6b2accd": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_29341ccf": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_fd596304": "2412-15287_subsection_6d812800",
+      "2412-15287_paragraph_b37847b3": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_b02ac876": "2412-15287_paragraph_b37847b3",
+      "2412-15287_sent_e290fbaf": "2412-15287_paragraph_b37847b3",
+      "2412-15287_sent_06070593": "2412-15287_paragraph_b37847b3",
+      "2412-15287_sent_b14b6bb0": "2412-15287_paragraph_b37847b3",
+      "2412-15287_sent_a352b346": "2412-15287_paragraph_b37847b3",
+      "2412-15287_fig_3cc2e2a1": "2412-15287_paragraph_b37847b3",
+      "2412-15287_paragraph_d6001cbb": "2412-15287_subsection_6d812800",
+      "2412-15287_sent_59166386": "2412-15287_paragraph_d6001cbb",
+      "2412-15287_sent_64568632": "2412-15287_paragraph_d6001cbb",
+      "2412-15287_fig_6a006aaa": "2412-15287_paragraph_d6001cbb",
+      "2412-15287_subsection_483ed7fe": "2412-15287_section_1c8ac169",
+      "2412-15287_sent_6275728b": "2412-15287_subsection_483ed7fe",
+      "2412-15287_sent_a75c57fc": "2412-15287_subsection_483ed7fe",
+      "2412-15287_sent_bdc0cb15": "2412-15287_subsection_483ed7fe",
+      "2412-15287_sent_49b783ba": "2412-15287_subsection_483ed7fe",
+      "2412-15287_sent_4356a299": "2412-15287_subsection_483ed7fe",
+      "2412-15287_sent_5eff04c6": "2412-15287_subsection_483ed7fe",
+      "2412-15287_sent_4186c588": "2412-15287_subsection_483ed7fe",
+      "2412-15287_subsection_98572a8b": "2412-15287_section_1c8ac169",
+      "2412-15287_sent_37412388": "2412-15287_subsection_98572a8b",
+      "2412-15287_subsubsection_c1cb05e2": "2412-15287_subsection_98572a8b",
+      "2412-15287_fig_757bfc8e": "2412-15287_subsubsection_c1cb05e2",
+      "2412-15287_sent_cde00ba4": "2412-15287_subsubsection_c1cb05e2",
+      "2412-15287_sent_61456644": "2412-15287_subsubsection_c1cb05e2",
+      "2412-15287_subsubsection_155e2af1": "2412-15287_subsection_98572a8b",
+      "2412-15287_fig_b094c337": "2412-15287_subsubsection_155e2af1",
+      "2412-15287_sent_e4424ab8": "2412-15287_subsubsection_155e2af1",
+      "2412-15287_sent_6c67c96b": "2412-15287_subsubsection_155e2af1",
+      "2412-15287_subsubsection_d3e79290": "2412-15287_subsection_98572a8b",
+      "2412-15287_fig_0733c283": "2412-15287_subsubsection_d3e79290",
+      "2412-15287_sent_5aebeefa": "2412-15287_subsubsection_d3e79290",
+      "2412-15287_sent_3fb1a6bd": "2412-15287_subsubsection_d3e79290",
+      "2412-15287_sent_c0446306": "2412-15287_subsubsection_d3e79290",
+      "2412-15287_sent_a90a5548": "2412-15287_subsubsection_d3e79290",
+      "2412-15287_sent_da60039c": "2412-15287_subsubsection_d3e79290",
+      "2412-15287_subsubsection_fbb50c75": "2412-15287_subsection_98572a8b",
+      "2412-15287_sent_3c4ea053": "2412-15287_subsubsection_fbb50c75",
+      "2412-15287_sent_d7024830": "2412-15287_subsubsection_fbb50c75",
+      "2412-15287_sent_34c323f9": "2412-15287_subsubsection_fbb50c75",
+      "2412-15287_enumerate_d546f16a": "2412-15287_subsubsection_fbb50c75",
+      "2412-15287_item_e2e951d3": "2412-15287_enumerate_d546f16a",
+      "2412-15287_sent_57124dfd": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_9cd743c2": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_43b5b65d": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_0253a126": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_3b825240": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_3658d7d8": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_19b0e002": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_d0d4d020": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_fed5a265": "2412-15287_item_e2e951d3",
+      "2412-15287_sent_577b64d6": "2412-15287_subsubsection_fbb50c75",
+      "2412-15287_sent_ae29dde1": "2412-15287_subsubsection_fbb50c75",
+      "2412-15287_fig_d0a4e590": "2412-15287_subsubsection_fbb50c75",
+      "2412-15287_fig_f8e611be": "2412-15287_subsubsection_fbb50c75"
+    }
+  },
+  "merged_parents": {
+    "2412-15287_sent_676977e1": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_section_0b79795d": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_sent_6f4559ff": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_9876725c": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_5ad967fa": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_a629fde1": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_387ddfde": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_b1a51ccb": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_813638c5": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_dd6cbb94": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_bde94562": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_f31f0f31": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_6eb10e99": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_4644ae14": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_23813a60": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_84ae7fec": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_7c8b3f61": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_09594d9d": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_7f1071b3": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_sent_71293f77": [
+      "2412-15287_section_0b79795d"
+    ],
+    "2412-15287_section_d570e86c": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_sent_5c59b84e": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_0110d941": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_dc6661c6": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_861a8cb3": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_0a4395a2": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_a728c24e": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_f226edb8": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_4dacf110": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_9b72bce6": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_bb3765df": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_dfc16b11": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_eq_2c848218": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_2fa91366": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_14bb08c6": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_7ab86798": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_paragraph_e4c8c5ab": [
+      "2412-15287_section_d570e86c"
+    ],
+    "2412-15287_sent_77e6e2b9": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_7d2b255a": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_bb929a61": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_eq_74e9999d": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_e63ad71a": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_0557c512": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_86da522a": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_65630df1": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_56839fcb": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_5176aaca": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_0eec8457": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_122f88b9": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_ac229b28": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_c939d8e3": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_de344782": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_c1c1ba03": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_6be7bc71": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_eb8a813a": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_859f90fc": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_6f409764": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_bd271ad6": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_8dd43f20": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_8ef373bf": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_13703db3": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_eq_48330082": [
+      "2412-15287_paragraph_e4c8c5ab",
+      "2412-15287_paragraph_f3e43140",
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_bd63fc66": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_04461145": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_5660658d": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_cec38567": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_3ab3241a": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_8449e1a8": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_c2a29742": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_149cc345": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_77ee5fad": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_5be99c64": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_a50d308a": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_38851487": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_8167dfd2": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_bf7ee2cc": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_ad725fb3": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_sent_d1e6ae81": [
+      "2412-15287_paragraph_e4c8c5ab"
+    ],
+    "2412-15287_section_6d3a2c17": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_sent_f924c616": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_868d3130": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_78fea5fa": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_d1498e02": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_eq_6ca66ad1": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_e6387598": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_a7cd806a": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_eq_5ad640c6": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_7bbf0b4c": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_ebfcda38": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_7662caed": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_d853eeab": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_eq_3027297e": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_4b95f4dc": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_0c1ecaf2": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_3be2b263": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_23834a70": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_ea531f87": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_6abaf386": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_eq_b98380ea": [
+      "2412-15287_section_6d3a2c17",
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_46cbcb6d": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_sent_3f4c4502": [
+      "2412-15287_section_6d3a2c17"
+    ],
+    "2412-15287_section_3dab21fa": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_sent_8dc3be3e": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_b3be3f2e": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_aab46d5b": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_750f166f": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_21193ea2": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_75add804": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_7011dd6f": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_eq_69d7df02": [
+      "2412-15287_section_3dab21fa",
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_0603d717": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_5f2b8d46": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_9b5c162e": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_53e560bb": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_9c653f5d": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_ef162ca8": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_e1854bce": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_1638f54c": [
+      "2412-15287_paragraph_f4279332",
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_eq_2b961f64": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_0137f876": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_71b6f911": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_c3ff3815": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_aaaad018": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_0bda2676": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_ff5124b2": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_paragraph_f4279332": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_daddf795": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_3ff835f2": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_eq_bab5aab7": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_d563b3d4": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_1d1f7257": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_73561109": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_875abc21": [
+      "2412-15287_paragraph_f3e43140",
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_eq_0fae73fa": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_5bc87290": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_eq_1c08adfe": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_8d7f30f1": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_427c8c54": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_e697bf6b": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_f7b66f6c": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_c392f2cc": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_sent_3695a34f": [
+      "2412-15287_paragraph_f4279332"
+    ],
+    "2412-15287_paragraph_f3e43140": [
+      "2412-15287_section_3dab21fa"
+    ],
+    "2412-15287_sent_b55775a0": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_ba01d5b0": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_aa7fa6fe": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_021e4bfb": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_728cb150": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_66007e2a": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_0f1fe574": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_c0d48b0c": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_1a1a1871": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_0383cc74": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_7dea3a89": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_sent_3fac2e77": [
+      "2412-15287_paragraph_f3e43140"
+    ],
+    "2412-15287_section_4829262c": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_sent_11cf69cd": [
+      "2412-15287_section_4829262c"
+    ],
+    "2412-15287_sent_66c0236e": [
+      "2412-15287_section_4829262c"
+    ],
+    "2412-15287_sent_bead52c9": [
+      "2412-15287_section_4829262c"
+    ],
+    "2412-15287_subsection_8716abdb": [
+      "2412-15287_section_4829262c"
+    ],
+    "2412-15287_sent_6cf17fcf": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_49597501": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_82dd640b": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_53bbeeb2": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_200e0ad1": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_0d8c9e83": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_cda47f1d": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_45d42803": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_3f2fe044": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_6167d7fc": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_d20b808c": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_sent_a3c1613d": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_fig_a4db4461": [
+      "2412-15287_subsection_8716abdb"
+    ],
+    "2412-15287_subsection_0ac94fe0": [
+      "2412-15287_section_4829262c"
+    ],
+    "2412-15287_paragraph_592de6a6": [
+      "2412-15287_subsection_0ac94fe0"
+    ],
+    "2412-15287_sent_628e5ffc": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_6b2e4a14": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_1e751e84": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_545507d1": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_9792b072": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_a3617746": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_f8a73893": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_7f078c10": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_581edb11": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_cebe66ee": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_fig_b6e910de": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_3d1b1fcb": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_cef70d1c": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_c91e7553": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_58734423": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_49548c52": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_sent_ce1a9129": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_fig_dc1140c9": [
+      "2412-15287_paragraph_592de6a6"
+    ],
+    "2412-15287_paragraph_4a4c80e0": [
+      "2412-15287_subsection_0ac94fe0"
+    ],
+    "2412-15287_sent_0e8998ed": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_3185ac61": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_e8ad1a0d": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_073e53df": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_91d871af": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_2e57da30": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_f27e06ae": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_82332e6e": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_6166dc4d": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_fig_866c55b8": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_db6337ab": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_be5473db": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_577fc0e1": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_4369659e": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_1d3bbfc8": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_ca8c9895": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_4a583bb4": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_0c32092c": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_b5f9242d": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_decf7ace": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_423221f7": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_eff4b0a2": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_bfbdfe3c": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_f34c32f1": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_8d8572ca": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_dde6d024": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_sent_b8907cda": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_fig_2d6dd78a": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_fig_b02a3ad8": [
+      "2412-15287_paragraph_4a4c80e0"
+    ],
+    "2412-15287_section_aed402c3": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_sent_36ac0a54": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_699e033a": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_7e00cdb8": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_073a5721": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_07cc5434": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_6a81b3a6": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_3f9a2b84": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_1351e659": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_df082720": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_84e4308d": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_2a1be1cb": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_84ae4f96": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_d478f8a5": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_dcf12361": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_e6eb9340": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_sent_96fdfb02": [
+      "2412-15287_section_aed402c3"
+    ],
+    "2412-15287_section_6f8b794f": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_sent_e9d4023d": [
+      "2412-15287_section_6f8b794f"
+    ],
+    "2412-15287_sent_0c7be435": [
+      "2412-15287_section_6f8b794f"
+    ],
+    "2412-15287_sent_c18be262": [
+      "2412-15287_section_6f8b794f"
+    ],
+    "2412-15287_sent_8664a27b": [
+      "2412-15287_section_6f8b794f"
+    ],
+    "2412-15287_sent_b7b5f025": [
+      "2412-15287_section_6f8b794f"
+    ],
+    "2412-15287_section_119c332e": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_subsection_12ff9fbb": [
+      "2412-15287_section_119c332e"
+    ],
+    "2412-15287_sent_43d60d77": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_sent_dec73f05": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_eq_ca46ff37": [
+      "2412-15287_subsection_0df1dc66",
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_sent_0b6e7e9b": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_eq_37d8c0da": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_sent_8dd300a1": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_sent_e6f3d60c": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_sent_6dd817cf": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_sent_438d1864": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_sent_3513ee1d": [
+      "2412-15287_subsection_12ff9fbb"
+    ],
+    "2412-15287_subsection_0df1dc66": [
+      "2412-15287_section_119c332e"
+    ],
+    "2412-15287_sent_abf92953": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_05f88450": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_9f731d72": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_eq_3237302d": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_a9c742e9": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_eq_8e3a09d3": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_df640b4a": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_eq_6b2cb63c": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_57726cf1": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_eq_9bf11e33": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_f0ddc324": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_ca44ec35": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_dae8dc38": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_eq_1a0180f3": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_fe7cefe7": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_ba0ca3fb": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_sent_90ee7685": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_eq_97674f2b": [
+      "2412-15287_subsection_0df1dc66"
+    ],
+    "2412-15287_subsection_d4f7076b": [
+      "2412-15287_section_119c332e"
+    ],
+    "2412-15287_sent_c269796a": [
+      "2412-15287_subsection_d4f7076b"
+    ],
+    "2412-15287_eq_01341522": [
+      "2412-15287_subsection_d4f7076b"
+    ],
+    "2412-15287_section_c23e3836": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_sent_3c676479": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_073bf51f": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_da7bf239": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_56ff802c": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_2704caa2": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_0e0b77ab": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_5654a06f": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_4c0377bc": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_56d5604f": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_80c207c2": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_fig_e05fdb74": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_fig_4e837394": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_fig_91a87b3a": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_fig_1c406a20": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_fig_0dbf4ade": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_subsection_357d53a1": [
+      "2412-15287_section_c23e3836"
+    ],
+    "2412-15287_sent_c27ae79e": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_sent_3f6c7891": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_sent_881c559c": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_sent_a639a567": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_sent_b83245a5": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_sent_bc87a0a0": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_sent_b23d2e7b": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_sent_907d9fcc": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_sent_e1e0cc3e": [
+      "2412-15287_subsection_357d53a1"
+    ],
+    "2412-15287_section_d46699ae": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_subsection_828fcdf0": [
+      "2412-15287_section_d46699ae"
+    ],
+    "2412-15287_sent_4846a8fe": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_0323bce4": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_eq_21419a62": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_3ac5bdd6": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_61a72be0": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_eq_fa4407d9": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_86eda4b6": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_eq_33ca01af": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_86d45c51": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_0e8281a6": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_eq_a8644492": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_a13fbb56": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_5274988e": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_eq_31d6da6b": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_4b14813b": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_c64bbee5": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_e4bb6834": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_2a10cde3": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_eq_69369c70": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_fb7f1b67": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_eq_ee0b4d65": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_48e90f16": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_sent_4f3c25af": [
+      "2412-15287_subsection_828fcdf0"
+    ],
+    "2412-15287_subsection_81593851": [
+      "2412-15287_section_d46699ae"
+    ],
+    "2412-15287_sent_fe640af9": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_b7371980": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_f8e49205": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_f4c5fb0b": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_94c229ee": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_5d020ca5": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_b88d213b": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_eq_71547f4c": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_d16400a4": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_3c17f262": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_eb02bcdb": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_sent_9bfdc2d8": [
+      "2412-15287_subsection_81593851"
+    ],
+    "2412-15287_subsection_fbc3c628": [
+      "2412-15287_section_d46699ae"
+    ],
+    "2412-15287_sent_100676a0": [
+      "2412-15287_subsection_fbc3c628"
+    ],
+    "2412-15287_eq_0457328b": [
+      "2412-15287_subsection_fbc3c628"
+    ],
+    "2412-15287_sent_f9ed3562": [
+      "2412-15287_subsection_fbc3c628"
+    ],
+    "2412-15287_sent_e0746261": [
+      "2412-15287_subsection_fbc3c628"
+    ],
+    "2412-15287_section_1c8ac169": [
+      "2412-15287_doc_root"
+    ],
+    "2412-15287_subsection_6d812800": [
+      "2412-15287_section_1c8ac169"
+    ],
+    "2412-15287_fig_a97e790e": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_9b57e484": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_89f16d57": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_e183fcc6": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_199682a9": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_d6b2accd": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_29341ccf": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_fd596304": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_paragraph_b37847b3": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_b02ac876": [
+      "2412-15287_paragraph_b37847b3"
+    ],
+    "2412-15287_sent_e290fbaf": [
+      "2412-15287_paragraph_b37847b3"
+    ],
+    "2412-15287_sent_06070593": [
+      "2412-15287_paragraph_b37847b3"
+    ],
+    "2412-15287_sent_b14b6bb0": [
+      "2412-15287_paragraph_b37847b3"
+    ],
+    "2412-15287_sent_a352b346": [
+      "2412-15287_paragraph_b37847b3"
+    ],
+    "2412-15287_fig_3cc2e2a1": [
+      "2412-15287_paragraph_b37847b3"
+    ],
+    "2412-15287_paragraph_d6001cbb": [
+      "2412-15287_subsection_6d812800"
+    ],
+    "2412-15287_sent_59166386": [
+      "2412-15287_paragraph_d6001cbb"
+    ],
+    "2412-15287_sent_64568632": [
+      "2412-15287_paragraph_d6001cbb"
+    ],
+    "2412-15287_fig_6a006aaa": [
+      "2412-15287_paragraph_d6001cbb"
+    ],
+    "2412-15287_subsection_483ed7fe": [
+      "2412-15287_section_1c8ac169"
+    ],
+    "2412-15287_sent_6275728b": [
+      "2412-15287_subsection_483ed7fe"
+    ],
+    "2412-15287_sent_a75c57fc": [
+      "2412-15287_subsection_483ed7fe"
+    ],
+    "2412-15287_sent_bdc0cb15": [
+      "2412-15287_subsection_483ed7fe"
+    ],
+    "2412-15287_sent_49b783ba": [
+      "2412-15287_subsection_483ed7fe"
+    ],
+    "2412-15287_sent_4356a299": [
+      "2412-15287_subsection_483ed7fe"
+    ],
+    "2412-15287_sent_5eff04c6": [
+      "2412-15287_subsection_483ed7fe"
+    ],
+    "2412-15287_sent_4186c588": [
+      "2412-15287_subsection_483ed7fe"
+    ],
+    "2412-15287_subsection_98572a8b": [
+      "2412-15287_section_1c8ac169"
+    ],
+    "2412-15287_sent_37412388": [
+      "2412-15287_subsection_98572a8b"
+    ],
+    "2412-15287_subsubsection_c1cb05e2": [
+      "2412-15287_subsection_98572a8b"
+    ],
+    "2412-15287_fig_757bfc8e": [
+      "2412-15287_subsubsection_c1cb05e2"
+    ],
+    "2412-15287_sent_cde00ba4": [
+      "2412-15287_subsubsection_c1cb05e2"
+    ],
+    "2412-15287_sent_61456644": [
+      "2412-15287_subsubsection_c1cb05e2"
+    ],
+    "2412-15287_subsubsection_155e2af1": [
+      "2412-15287_subsection_98572a8b"
+    ],
+    "2412-15287_fig_b094c337": [
+      "2412-15287_subsubsection_155e2af1"
+    ],
+    "2412-15287_sent_e4424ab8": [
+      "2412-15287_subsubsection_155e2af1"
+    ],
+    "2412-15287_sent_6c67c96b": [
+      "2412-15287_subsubsection_155e2af1"
+    ],
+    "2412-15287_subsubsection_d3e79290": [
+      "2412-15287_subsection_98572a8b"
+    ],
+    "2412-15287_fig_0733c283": [
+      "2412-15287_subsubsection_d3e79290"
+    ],
+    "2412-15287_sent_5aebeefa": [
+      "2412-15287_subsubsection_d3e79290"
+    ],
+    "2412-15287_sent_3fb1a6bd": [
+      "2412-15287_subsubsection_d3e79290"
+    ],
+    "2412-15287_sent_c0446306": [
+      "2412-15287_subsubsection_d3e79290"
+    ],
+    "2412-15287_sent_a90a5548": [
+      "2412-15287_subsubsection_d3e79290"
+    ],
+    "2412-15287_sent_da60039c": [
+      "2412-15287_subsubsection_d3e79290"
+    ],
+    "2412-15287_subsubsection_fbb50c75": [
+      "2412-15287_subsection_98572a8b"
+    ],
+    "2412-15287_sent_3c4ea053": [
+      "2412-15287_subsubsection_fbb50c75"
+    ],
+    "2412-15287_sent_d7024830": [
+      "2412-15287_subsubsection_fbb50c75"
+    ],
+    "2412-15287_sent_34c323f9": [
+      "2412-15287_subsubsection_fbb50c75"
+    ],
+    "2412-15287_enumerate_d546f16a": [
+      "2412-15287_subsubsection_fbb50c75"
+    ],
+    "2412-15287_item_e2e951d3": [
+      "2412-15287_enumerate_d546f16a"
+    ],
+    "2412-15287_sent_57124dfd": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_9cd743c2": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_43b5b65d": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_0253a126": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_3b825240": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_3658d7d8": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_19b0e002": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_d0d4d020": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_fed5a265": [
+      "2412-15287_item_e2e951d3"
+    ],
+    "2412-15287_sent_577b64d6": [
+      "2412-15287_subsubsection_fbb50c75"
+    ],
+    "2412-15287_sent_ae29dde1": [
+      "2412-15287_subsubsection_fbb50c75"
+    ],
+    "2412-15287_fig_d0a4e590": [
+      "2412-15287_subsubsection_fbb50c75"
+    ],
+    "2412-15287_fig_f8e611be": [
+      "2412-15287_subsubsection_fbb50c75"
+    ]
+  }
+}

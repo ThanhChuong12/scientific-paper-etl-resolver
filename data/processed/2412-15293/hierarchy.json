@@ -1,0 +1,2675 @@
+{
+  "elements": {
+    "2412-15293_doc_root": "DOCUMENT_ROOT",
+    "2412-15293_sent_89eb4585": "\\maketitle \\doublespacing \\begin{center} { Eric Yanchenko\\footnote{Global Connectivity Program, Akita International University}, Kaoru Irie\\footnote{Faculty of Economics, The University of Tokyo} and Shonosuke Sugasawa\\footnote{Faculty of Economics, Keio University} \\end{center} \\begin{center} {\\bf Abstract} \\end{center} Shrinkage priors are a popular Bayesian paradigm to handle sparsity in high-dimensional regression.",
+    "2412-15293_sent_c4bd516c": "Still limited, however, is a flexible class of shrinkage priors to handle grouped sparsity, where covariates exhibit some natural grouping structure.",
+    "2412-15293_sent_971f2934": "This paper proposes a novel extension of the $R^2$-induced Dirichlet Decomposition (R2D2) prior to accommodate grouped variable selection in linear regression models.",
+    "2412-15293_sent_24f6a5c3": "The proposed method, called Group R2D2 prior, employs a Dirichlet prior distribution on the coefficient of determination for each group, allowing for a flexible and adaptive shrinkage that operates at both group and individual variable levels.",
+    "2412-15293_sent_6f17c6d6": "This approach improves the original R2D2 prior to handle grouped predictors, providing a balance between within-group dependence and group-level sparsity.",
+    "2412-15293_sent_f3449457": "To facilitate efficient computation, we develop an efficient Markov Chain Monte Carlo algorithm.",
+    "2412-15293_sent_c4d9fb81": "Through simulation studies and real-data analysis, we demonstrate that our method outperforms traditional shrinkage priors in terms of both estimation accuracy, inference and prediction.",
+    "2412-15293_sent_dfe3553f": "{\\bf Key words}: Dirichlet distribution; grouped variable selection; logistic normal distribution",
+    "2412-15293_section_0b79795d": "Introduction",
+    "2412-15293_sent_7fe23c35": "Shrinkage priors are a popular Bayesian tool to handle sparsity in high-dimensional regression settings, and ever since the Horseshoe prior \\citep{carvalho2009handling}, have garnered significant research attention.",
+    "2412-15293_sent_f3a0ac78": "One area, however, where they have yet to be fully exploited is in grouped regression.",
+    "2412-15293_sent_b815d146": "In this setting, the covariates possess some natural grouping structure which can potentially be leveraged to improve inference and prediction.",
+    "2412-15293_sent_eb021c78": "To fix ideas, we give three examples where group structure naturally arises.",
+    "2412-15293_sent_13920403": "First, consider a neuroimaging application where the response variable $\\boldsymbol{y}$ is the change in brain activity for each neuron after some stimulus \\citep[e.g.,][]{denti2023horseshoe}.",
+    "2412-15293_sent_ce7ac2fb": "If the number of neurons is large, we may endow the mean vector $\\bbeta$ with a shrinkage prior to encode the {\\it a priori} belief that many neurons are unaffected by the stimulus, while some may show a large change.",
+    "2412-15293_sent_8c71b6d2": "Since different regions of the brain, based on either brain function or spatial location, provide a natural grouping structure, leveraging this information in the prior distribution of the mean vector can improve the inference on $\\bbeta$ as compared to a vanilla shrinkage prior.",
+    "2412-15293_sent_da96e32e": "Next, network-valued data also provide opportunities for group shrinkage priors.",
+    "2412-15293_sent_2251192e": "For example, influence maximization (IM) \\citep{kempe2003maximizing,li2018influence} is the problem of activating a small set of seed nodes to maximize the influence spread on the network.",
+    "2412-15293_sent_d3a86fec": "Recently, \\cite{yanchenko2023bopim} proposed a Bayesian optimization solution to the IM problem which can leverage shrinkage priors, where each node corresponds to a coefficient $\\beta_j$.",
+    "2412-15293_sent_442cfae7": "Since networks often exhibit community structure with nodes clustered together \\citep{girvan2002community,fortunato2010community}, group shrinkage priors can improve performance.",
+    "2412-15293_sent_eea128e2": "Finally, in economics, covariate grouping may come from multi-level predictor variables which lead to many dummy variables that correspond to a single covariate.",
+    "2412-15293_sent_72ce1317": "In addition to grouping structure that arises from domain knowledge of the predictor variables, there is also a known structure that can be leveraged in, e.g., generalized additive models \\citep{xu2016bayesian}.",
+    "2412-15293_sent_a0213098": "Here, the basis functions corresponding to each spline can be considered as a group.",
+    "2412-15293_sent_f073eb50": "By using shrinkage priors with grouping, if an entire group of covariates are unimportant, their effect estimates will be simultaneously shrunk.",
+    "2412-15293_sent_1da16ddb": "As there are many relevant applications for grouped-shrinkage regression, there have been several contributions to the literature.",
+    "2412-15293_sent_228bed3c": "First, many articles are based on the Bayesian group LASSO \\citep{raman2009bayesian,casella2010penalized,xu2015bayesian}.",
+    "2412-15293_sent_d07155c5": "As \\cite{tibshirani1996regression} notes in his seminal paper, the maximum likelihood estimate of the LASSO can be considered as the Bayesian posterior mode with Laplace prior distribution on the regression coefficients.",
+    "2412-15293_sent_3476237e": "Thus, endowing the $\\beta_j$'s with a Laplace prior was coined the Bayesian LASSO.",
+    "2412-15293_sent_79d3dea7": "This can easily be extended to the grouped regression setting if we let $\\bbeta=(\\bbeta_1^{\\top},\\dots,\\bbeta_G^{\\top})^{\\top}$ where $\\bbeta_g$ are the coefficients for group $g\\in\\{1,\\dots,G\\}$, then a prior of the form",
+    "2412-15293_eq_9b0a2c48": "\\begin{equation}\n\\pi(\\bbeta_g)\n\\propto \\exp\\left\\{-\\frac{\\lambda}{\\sigma}\\|\\bbeta_g\\|_2\\right\\}\n\\end{equation}",
+    "2412-15293_sent_c203194a": "is the multivariate extension of the Laplace distribution and induces a grouped LASSO prior on $\\bbeta$ \\citep{xu2015bayesian}.",
+    "2412-15293_sent_67c37903": "Additionally, \\cite{xu2016bayesian} proposed an extension of the Horseshoe prior to the grouped setting.",
+    "2412-15293_sent_ac13a00d": "More recently, \\cite{boss2023group} proposed the group inverse-gamma gamma (GIGG) prior as a novel global-local shrinkage prior for the grouped regression setting.",
+    "2412-15293_sent_324aea3e": "In this proposal, the variance of each regression coefficient is comprised of three components.",
+    "2412-15293_sent_4ba83d7e": "The first component is a global variance, endowed with a Half-Cauchy prior distribution, which is shared by all coefficients and controls the overall variability.",
+    "2412-15293_sent_58f19dc4": "The second is the group-specific variance parameter to shrink the relative contribution of each group.",
+    "2412-15293_sent_c0e38d60": "The $G$ group-specific variances are given gamma prior distributions.",
+    "2412-15293_sent_6d000d41": "The last is a local term, with inverse-gamma prior distribution, to allow for individual coefficients to exhibit a strong signal. While hitherto not applied to the grouped regression setting, the R2D2 prior \\citep{zhang2022bayesian} has shown great promise in sparse regression settings thanks to its excellent empirical and theoretical properties.",
+    "2412-15293_sent_c7fa6701": "Setting a prior distribution on a Bayesian coefficient-of-determination ($R^2$) induces distributions on the global and local variance components.",
+    "2412-15293_sent_e94f871b": "In particular, if $\\beta_j\\sim\\mathsf{Normal}(0,\\sigma^2\\phi_jW)$ and $\\sum_{j=1}^p \\phi_j=1$, then the Bayesian $R^2$ is",
+    "2412-15293_eq_1a196c60": "\\begin{equation}\nR^2=\\frac{W}{W+1}.\n\\end{equation}",
+    "2412-15293_sent_dce6e208": "Thus, a beta prior distribution on $R^2$ induces a Beta-prime distribution on $W$, the global variance parameter, while the local parameters $\\phi_j$'s apportion the variance to each coefficient.",
+    "2412-15293_sent_5575e35c": "Originally proposed in the high-dimension regression setting, the approach has been extended to generalized linear models \\citep{yanchenko2024r2d2,aguilar2023intuitive} and spatial models \\citep{yanchenko2024spatial}.",
+    "2412-15293_sent_c48e9717": "In this work, we leverage the R2D2 paradigm to develop a novel prior framework for the high-dimensional, grouped linear regression setting.",
+    "2412-15293_sent_5d0793e3": "We begin by deriving both a global measure of $R^2$ to quantify the overall model fit, as well as group-specific $R^2$'s to measure the relative contribution of each group of coefficients to the overall fit.",
+    "2412-15293_sent_d56979d4": "These measures extend the global-local shrinkage framework to include group-level sources of variation.",
+    "2412-15293_sent_b240eea6": "Placing a Dirichlet distribution on the group-specific and global $R^2$ induces (dependent) Beta-prime distributions on the global and group-specific variance parameters.",
+    "2412-15293_sent_032aadd6": "Both the Dirichlet distribution and logistic normal distribution \\citep{aguilar2024generalized} are considered to allocate the variance to the local components.",
+    "2412-15293_sent_5f23028b": "Finally, we derive an efficient MCMC sampler for posterior approximation and show the proposed method outperforms the current state-of-the-art on simulated and real-world datasets.",
+    "2412-15293_sent_d7604bce": "The layout of the paper is as follows.",
+    "2412-15293_sent_c177fc7e": "We start by presenting the proposed method in Section \\ref{sec:method} and discuss its computational properties in Section \\ref{sec:comp}.",
+    "2412-15293_sent_9debe123": "We demonstrate its performance on simulated and real-world data in Sections \\ref{sec:sim} and \\ref{sec:real}, respectively, while Section \\ref{sec:conc} shares concluding thoughts.",
+    "2412-15293_section_2f18df61": "Group R2D2 Prior",
+    "2412-15293_subsection_cc745ea0": "Linear regression model",
+    "2412-15293_sent_ff7d4af5": "We consider the following linear regression model:",
+    "2412-15293_eq_2b1a7ca5": "\\begin{equation}\nY_i=\\bx^{\\top}_i\\bbeta+\\varepsilon_i, \\ \\ \\ \\ \\ \\varepsilon_i\\stackrel{\\text{iid}}{\\sim} \\mathsf{Normal}(0, \\sigma^2), \\ \\ \\ \\ \\ i=1,\\ldots,n,\n\\end{equation}",
+    "2412-15293_sent_5cbc3728": "where $Y_i$ is the response, $\\bx_i$ is a $p$-dimensional vector of explanatory variables, $\\bbeta$ is the $p$-dimensional coefficient vector, and $\\epsilon_i$ is the error term.",
+    "2412-15293_sent_7bec6d66": "For simplicity, we assume that the responses are centered, so that the model in (\\ref{eq:model}) does not require an intercept term.",
+    "2412-15293_sent_938e075b": "We consider the scenario where there is a known grouping structure in the regression coefficients.",
+    "2412-15293_sent_b09aee7a": "The groups could correspond to, e.g., different brain regions, communities in networks, or basis functions.",
+    "2412-15293_sent_3a7390a0": "Specifically, let $\\bx_g$ and $\\bbeta_g=(\\beta_{g1},\\dots,\\beta_{gp_g})^{\\top}$ be the explanatory variables and regression coefficients, respectively, corresponding to group $g\\in\\{1,\\dots,G\\}$, where $G$ is the total number of groups, $p_g$ is the number of variables in group $g$, and $\\sum_g p_g=p$.",
+    "2412-15293_sent_7b9f380c": "Then, $\\bx$ and $\\bbeta$ can be expressed as $\\bx=(\\bx_1^{\\top},\\dots,\\bx_G^{\\top})^{\\top}$ and $\\bbeta=(\\bbeta_1^{\\top},\\dots,\\bbeta_G^{\\top})^{\\top}$.",
+    "2412-15293_sent_52446654": "For regression coefficients $\\beta_{gj}$, we assign a prior having zero mean and finite variance $\\sigma^2\\lambda_{gj}$, or $\\beta_{gj}|\\lambda_{gj}, \\sigma^2 \\sim (0,\\sigma^2\\lambda_{gj})$ independently for $j=1,\\dots,p_g$ and $g=1,\\dots,G$.",
+    "2412-15293_sent_5fe10aaa": "Specifically, we use the double-exponential distribution as the prior for $\\beta_{gj}$ in what follows.",
+    "2412-15293_sent_6679b97e": "The goal is to find the distribution of these parameters which induces a prior distribution with desirable shrinkage properties",
+    "2412-15293_subsection_34a155a5": "Grouped R2 and priors on group-level variance parameters",
+    "2412-15293_sent_f15b3659": "We derive the grouped regression shrinkage prior following the argument of the R2D2 prior \\citep{zhang2022bayesian}.",
+    "2412-15293_sent_23c0ca90": "Let $W_g=\\sum_{j=1}^{p_g}\\lambda_{gj}$ for $g=1,\\ldots,G$, and $W=\\sum_{g=1}^G W_g=\\sum_{j=1}^{p_g}\\lambda_{gj}$, i.e., $W_g$ quantifies the variation in group $g$, and $W$ quantifies the overall variation in the model.",
+    "2412-15293_sent_8d2e3525": "Moreover, without loss of generality, we assume that $\\mathsf{E}(\\bx)={\\bf 0}$ and $\\mathsf{Var}(\\bx)=\\Sigma_x$ where $\\mathbf{0}_n$ is the $n$-dimensional zero vector and $\\Sigma_x$ has one's on the diagonal. Then, for a random variable $Y=\\bx^\\top \\bbeta +\\varepsilon$, it follows that",
+    "2412-15293_eq_ff905510": "\\begin{equation}\n\\mathrm{Var}(Y)=\\mathrm{Var}(\\bx^{\\top}\\bbeta) + \\sigma^2\n=\\sigma^2\\sum_{g=1}^G\\sum_{j=1}^{p_g}\\lambda_{gj}+\\sigma^2\n\\end{equation}",
+    "2412-15293_sent_71378426": "Hence, we define the global coefficient of determination as",
+    "2412-15293_eq_48330082": "\\begin{equation*}",
+    "2412-15293_sent_bae77b43": "R^2 = \\frac{\\mathrm{Var}(\\bx^{\\top}\\bbeta)}{\\mathrm{Var}(Y)} = \\frac{ \\sum _{g=1}^G \\sum _{j=1}^{p_g} \\lambda _{gj} }{ \\sum _{g=1}^G \\sum _{j=1}^{p_g} \\lambda _{gj} + 1 } = \\frac{ W }{ W +1}, \\end{equation*} and its group-specific version as",
+    "2412-15293_sent_b82a1693": "R^2_g = \\frac{\\mathrm{Var}(\\bx_g^{\\top}\\bbeta_g)}{\\mathrm{Var}(Y)} = \\frac{ \\sum _{j=1}^{p_g} \\lambda _{gj} }{ \\sum _{g'=1}^G \\sum _{j=1}^{p_{g'}} \\lambda _{g'j} + 1 } = \\frac{ W_g}{ W +1}, \\ \\ \\ \\ g=1,\\ldots,G.",
+    "2412-15293_sent_921c5aea": "\\end{equation*} This definition ensures $\\sum_{g=1}^G R_g^2=R^2$.",
+    "2412-15293_sent_64f3cbbf": "Additionally, $R^2$ is interpreted as the proportion of total variation in the response explained by all coefficients $\\bbeta$, while $R^2_g$ is the proportion of total variation in the response explained by the coefficients only in group $g$, $\\bbeta_g$.",
+    "2412-15293_sent_b6c5a990": "In this way, the larger $R^2_g$ is relative to $R^2$, the more the coefficients in group $g$ account for the variation explained by the model.",
+    "2412-15293_sent_d19127d6": "Thus, $R^2_g$ is a relative measure of group $g$'s importance in the model.",
+    "2412-15293_sent_13b965ad": "Given the definition of $R^2$ and $R^2_g$, we must now set prior distribution for these parameters.",
+    "2412-15293_sent_1f93bb27": "In \\cite{zhang2022bayesian}, the authors set $R^2\\sim\\mathsf{Beta}(a,b)$.",
+    "2412-15293_sent_55472ebf": "In the grouped setting, however, we notice that the group-specific $R^2_g$ is affected by $R^2_{g'}$ for $g'\\neq g$.",
+    "2412-15293_sent_1d09404a": "Thus, we propose a natural extension to the Dirichlet distribution:",
+    "2412-15293_eq_a7fe881d": "\\begin{equation}\n(R^2_1,\\dots,R_G^2,1-R^2)\\sim\\mathsf{Dirichlet}(a_1,\\dots,a_G,b).\n\\end{equation}",
+    "2412-15293_sent_62792628": "This marginally induces $R^2\\sim\\mathsf{Beta}(\\sum_{g=1}^G a_g, b)$ and $R^2_g\\sim\\mathsf{Beta}(a_g,b+\\sum_{g'\\neq g} a_{g'})$.",
+    "2412-15293_sent_1cb90504": "The following proposition states the necessary distributions such that this joint prior on $R^2_g$ and $R^2$ is realized, with proof in the Appendix.",
+    "2412-15293_sent_be98eee8": "\\begin{prp} If $W_g|\\tau^2\\sim\\mathsf{Gamma}(a_g,\\tau^{-2})$ and $\\tau^2\\sim\\mathsf{InvGamma}(b,1)$, all independently, then $(R^2_1,\\dots,R^2_G,1-R^2)\\sim\\mathsf{Dirichlet}(a_1,\\dots,a_G,b)$.",
+    "2412-15293_sent_63d859a6": "\\end{prp} Proposition 1 clarifies which part of the model must be specified so that the $R^2_g$'s are Dirichlet distributed. This result also implies a Beta-prime distribution on the global variance, i.e., $W|\\tau^2\\sim\\mathsf{Gamma}(\\sum_{g=1}^G a_g,\\tau^{-2})$, or equivalently, $W\\sim\\mathsf{BetaPrime}(\\sum_{g=1}^G a_g, b)$.",
+    "2412-15293_sent_81508855": "Moreover, the group-specific variances $W_g$'s are marginally Beta-prime distributed, but mutually correlated via $\\tau^2$.",
+    "2412-15293_sent_e829a4a3": "To identify which part of the model is unspecified by Proposition~\\ref{prp:r2d2}, we follow the notation of \\cite{zhang2022bayesian} and introduce weight parameter $\\phi _{gj}$ so that $\\lambda_{gj}= \\phi_{gj} W_g$, where $\\boldsymbol{\\phi}_g= (\\phi _{g1},\\dots ,\\phi _{gp_g})$ lies on the $(p_g{-}1)$-dimensional simplex.",
+    "2412-15293_sent_f881ed2f": "Then it holds that $W_g = \\sum _{j=1}^{p_g}\\lambda_{gj}$ for $g=1,\\dots,G$.",
+    "2412-15293_sent_a5ae6593": "While Proposition~\\ref{prp:r2d2} yields the prior distribution for $W_g$, the prior for $\\boldsymbol\\phi_g$ is arbitrary.",
+    "2412-15293_sent_f3283f6b": "The choice of priors for $\\boldsymbol\\phi_g$ is discussed in Section~\\ref{subsec:phi}.",
+    "2412-15293_subsection_aa9e416c": "The group R2D2 prior",
+    "2412-15293_sent_236caaa2": "To complete the prior for $\\bbeta$, the class of distributions for $\\beta_{gj}|\\lambda_{gj}, \\sigma^2$ must be specified. While any distribution with support on the entire real line and finite variance is possible, we adopt the double exponential (Laplace) distribution, as used in the original R2D2 prior, to enhance the shrinkage effects in the posterior.",
+    "2412-15293_sent_927cbbc6": "The resulting prior of $\\bbeta$ is given by",
+    "2412-15293_sent_85d555a9": "\\beta_{gj}|\\phi_{gj}, W_g,\\sigma^2\\sim \\mathsf{DE}\\left(\\sigma^2 \\phi_{gj} W_g \\right), \\quad W_g|\\tau^2\\sim\\mathsf{Gamma}(a_g,\\tau^{-2}), \\quad \\tau^2\\sim\\mathsf{InvGamma}(b,1), \\end{equation*} where $\\mathsf{DE}(\\lambda)$ denotes the double exponential distribution with variance $\\lambda$.",
+    "2412-15293_sent_d95094df": "Using the scale mixture representation of the double exponential distribution \\citep{andrews1974scale,west1987scale,park2008bayesian}, $\\beta _{gj}$ becomes conditionally Gaussian with exponentially-distributed latent variable $\\psi _{gj}$ as:",
+    "2412-15293_eq_81380860": "\\begin{equation}\n\\begin{split}\n&\\beta_{gj}|\\psi_{gj},\\phi_{gj}, W_g, \\sigma^2 \\stackrel{\\text{ind.}}{\\sim} \\mathsf{Normal}\\left(0, \\frac12\\sigma^2\\psi_{gj} \\phi_{gj}W_g\\right)\\\\\n&W_g|\\tau^2 \\stackrel{\\text{ind.}}{\\sim} \\mathsf{Gamma}(a_g,1/\\tau^2), \\ \\ \\ \\ \\ \n\\tau^2\\sim\\mathsf{InvGamma}(b,1), \\ \\ \\ \\ \\psi_{gj}\\stackrel{\\text{ind.}}{\\sim}\\mathsf{Exp}\\Big(\\frac12\\Big), \n\\end{split}\n\\end{equation}",
+    "2412-15293_sent_8cdf04ad": "To reiterate the statement of Proposition~\\ref{prp:r2d2} in this context, the priors for $W_g$'s and $\\tau^2$ must be of the form above in order for the grouped $R^2$'s to be Dirichlet distributed, but the prior for weights $\\phi _{gj}$ are arbitrary.",
+    "2412-15293_sent_c6657df5": "We call the class of priors for $\\beta _{gj}$ the {\\it group R2D2 (gR2D2) priors}.",
+    "2412-15293_subsection_db304a69": "Priors on local variance parameters",
+    "2412-15293_sent_4214bc2d": "To complete the prior specification, we must set the distribution on the local variance-allocation parameters, $\\boldsymbol\\phi_g$.",
+    "2412-15293_sent_a9fb450a": "We consider two choices: {\\it Dirichlet distributions} and {\\it logistic-normal distributions}.",
+    "2412-15293_sent_a0e19706": "We denote these group R2D2 priors as {\\it gR2D2-D} and {\\it gR2D2-L}, respectively.",
+    "2412-15293_subsubsection_c66c34be": "Dirichlet priors (gR2D2-D)",
+    "2412-15293_sent_504a0357": "In previous works \\citep{zhang2022bayesian,yanchenko2024r2d2}, a Dirichlet prior is used for the weight vector, i.e., $\\boldsymbol{\\phi}_g \\sim \\mathsf{Dirichlet} (a_{g1},\\dots ,a_{gp_g})$.",
+    "2412-15293_sent_8c368fd7": "Typically, the Dirichlet shape parameters are constrained so that $a_g = \\sum _{j=1}^{p_g} a_{gj}$ \\citep[e.g.][]{zhang2022bayesian}.",
+    "2412-15293_sent_f5d989ea": "This particular choice has been preferred for computational reasons, as samples can easily be drawn from the full conditional distribution.",
+    "2412-15293_sent_6d6973a5": "It also results in the within-group independence, however, in the sense that",
+    "2412-15293_sent_03858840": "\\phi_{gj} W_g | \\tau^2 \\sim \\mathsf{Gamma}(a_{gj},1/\\tau^2), \\qquad j=1,\\dots,p_g, \\end{equation*} due to the gamma-Dirichlet relationship.",
+    "2412-15293_sent_2be3b862": "In this study, we do not enforce this constraint on the hyper-parameters $a_g$.",
+    "2412-15293_sent_9a43217a": "The Dirichlet distribution induces negative correlation between the $\\phi_{gj}$'s, as pointed out in \\cite{aguilar2024generalized}, which motivates considering other distributions.",
+    "2412-15293_subsubsection_d095b4e4": "Logistic-normal priors (gR2D2-L)",
+    "2412-15293_sent_160a4300": "We also consider the prior proposed in \\cite{aguilar2024generalized} where the authors model $\\phi_{gj}$ through a logistic-normal distribution.",
+    "2412-15293_sent_c9708860": "Specifically, for real-valued latent variable $\\eta _{gj}$, we define",
+    "2412-15293_eq_839c6ce7": "\\begin{equation}\n\\phi_{gj}=\\frac{\\exp(\\eta_{gj})}{1+\\sum_{j'=1}^{p_g-1}\\exp(\\eta_{gj'})}, \\ \\ \\ \\ \\ j=1,\\ldots,p_g-1,\n\\end{equation}",
+    "2412-15293_sent_1393a1eb": "where $(\\eta_{g1},\\ldots,\\eta_{g,p_g-1})\\sim \\mathsf{Normal}(\\mathbf{0}_{p_g-1}, \\Sigma_g)$ and $\\Sigma_g$ is a fixed variance-covariance matrix.",
+    "2412-15293_sent_795b07a5": "The joint distribution of $\\boldsymbol\\phi_g$ is then given by",
+    "2412-15293_eq_e724b267": "\\begin{equation}\np(\\boldsymbol\\phi_g)= |2 \\pi \\Sigma_g|^{-1/2}\\left(\\prod_{k=1}^{p_g} \\phi_{gk}\\right)^{-1} \\exp \\left\\{-\\frac{1}{2}{\\rm LR}(\\phi_g)^{\\top} \\Sigma_g^{-1}{\\rm LR}(\\phi_g)\\right\\},\n\\end{equation}",
+    "2412-15293_sent_96bf6370": "where $\\mathrm{LR}(\\cdot)$ is the log-ratio transformation:",
+    "2412-15293_eq_2343a5e6": "\\begin{equation}\n{\\rm LR}(\\boldsymbol\\phi_g)\n\\equiv\n\\left(\\log \\left(\\frac{\\phi_{g1}}{\\phi_{g,p_g}}\\right), \\ldots, \\log \\left(\\frac{\\phi_{g,p_g-1}}{\\phi_{g,p_g}}\\right)\\right) \\in \\mathbb{R}^{p_g-1}.\n\\end{equation}",
+    "2412-15293_sent_7d5dc8a9": "We say that $\\boldsymbol\\phi_g$ has a logistic normal distribution and write $\\boldsymbol\\phi_g\\sim\\mathsf{LogisticNormal}(\\mathbf{0}_{p_g-1},\\Sigma_g)$.",
+    "2412-15293_sent_eca1fe3f": "This class of distributions could provide more flexibility in modeling $\\boldsymbol\\phi_g$, but requires a Metropolis-Hastings step to generate posterior samples.",
+    "2412-15293_subsection_9ce65ad2": "Hyperparameters",
+    "2412-15293_sent_78d54cd1": "In this sub-section, we discuss several choices for setting hyperparameter values.",
+    "2412-15293_sent_e674ddad": "The proposed gR2D2 priors include hyperparameters $a_g$ and $b$ which are common in gR2D2-D and gR2D2-L, and control the shape of Dirichlet prior for the group-wise coefficient of determination, as discussed in Proposition~1.",
+    "2412-15293_sent_cec23242": "Additionally, we must set $a_{gj}$ (only in gR2D2-D) and $\\Sigma_g$ (only in gR2D2-L).",
+    "2412-15293_subsubsection_f228b152": "Empirical Bayes approach",
+    "2412-15293_sent_e65f331e": "We first discuss an Empirical Bayes approach to setting the values of $a_g$.",
+    "2412-15293_sent_cfb311ea": "For a group-specific weight $w_g$, satisfying $\\sum_{g=1}^G w_g=1$, we set $a_g = a w_g$, which results in the prior distribution for the global $R^2$ as $R^2\\sim\\mathsf{Beta}(a, b)$, as in the original R2D2 prior.",
+    "2412-15293_sent_bff40ab3": "For specification of the weight $w_g$, we can employ a data-dependent approach.",
+    "2412-15293_sent_c5d69264": "Under this parametrization, $\\mathrm{E}[R_g^2]=aw_g/(a+b)=w_g \\mathrm{E}[R^2]$, so $w_g$ is regarded as a ratio of the group-specific $R_g^2$ to the global $R^2$.",
+    "2412-15293_sent_56bd3798": "Then,",
+    "2412-15293_eq_2de234ca": "\\begin{equation}\nw_g=\\frac{\\mathrm{E}[R_g^2]}{\\mathrm{E}[R^2]}\n=\\frac{\\mathrm{Var}(\\bm{x}_g^{\\top}\\boldsymbol\\beta_g)}\n{\\sum_{g'=1}^G \\mathrm{Var}(\\bm{x}_{g'}^{\\top}\\boldsymbol\\beta_{g'})}.\n\\end{equation}",
+    "2412-15293_sent_1aa5bd4b": "To obtain the point estimates of $w_g$, we first fit a linear regression model with only the $g$th covariates, $\\bm{x}_g$, to obtain point estimates $\\hat{\\boldsymbol\\beta}_g$.",
+    "2412-15293_sent_ae521aa3": "This yields a point estimate of $w_g$ as",
+    "2412-15293_eq_aca72711": "\\begin{equation}\n\\hat{w}_g=\\frac{\\hat{\\boldsymbol\\beta}_g^\\top \\boldsymbol{V}_g\\hat{\\boldsymbol\\beta}_g}\n{\\sum_{g'=1}^G\\hat{\\boldsymbol\\beta}_{g'}^\\top \\boldsymbol{V}_{g'}\\hat{\\boldsymbol\\beta}_{g'}},\n\\end{equation}",
+    "2412-15293_sent_28f752d8": "where $\\boldsymbol{V}_g$ is the $p_g \\times p_g$ sample covariance matrix of $\\boldsymbol{x}_g$.",
+    "2412-15293_sent_f4910440": "As a default choice of $(a,b)$, we set $a=b=1/2$, which makes the prior on global $R^2$ be relatively diffuse.",
+    "2412-15293_subsubsection_e6aca53a": "Sparsity-inducing prior",
+    "2412-15293_sent_17e9d11e": "If the user does not want to use the data to set the hyperparameters, and/or he wants to explicitly enforce sparsity in the regression coefficients, the following approach is also available.",
+    "2412-15293_sent_ee70ae35": "When we have many groups (large $G$), it is natural to prefer sparsity between groups.",
+    "2412-15293_sent_18c48e6b": "Since $R^2_g$ corresponds to the contribution of group $g$ to the total modeled variation, such a sparsity is realized by having $R^2_g \\approx 0$ for several $g$'s.",
+    "2412-15293_sent_b7dcbdff": "For this purpose, we can set $a_g<1$.",
+    "2412-15293_sent_48d4f69b": "If the groups are {\\it a priori} indistinguishable, then we set $a_1 = \\cdots = a_G$.",
+    "2412-15293_sent_76a48b2e": "To be coherent with the settings of the original R2D2 prior, we set $a_g = 1/(2G)$ for all $g$.",
+    "2412-15293_subsubsection_dc025c62": "Local variance allocation hyperparameters",
+    "2412-15293_sent_23a95c90": "The gR2D2-D prior contains another set of Dirichlet shape parameters, $(a_{g1},\\dots , a_{gp_g})$, for each $g$.",
+    "2412-15293_sent_e81af1b2": "To induce sparsity in regression coefficients in group $g$, one could set $a_{gj}$'s to be all equal and less than unity.",
+    "2412-15293_sent_4f4ac412": "In this study, for computational convenience, we use $a_{g1}=\\cdots =a_{gp_g} = a_g / p_g$ as a default choice, which ensures that $\\sum_{j=1}^{p_g}a_{gj}=a_g$.",
+    "2412-15293_sent_a028d0bf": "For details, see Section~\\ref{sec:comp}.",
+    "2412-15293_sent_660e145d": "Finally, the gR2D2-L prior has covariance matrix $\\Sigma _g$ for each $g$.",
+    "2412-15293_sent_ddb1ac68": "Following \\cite{aguilar2024generalized}, we set the covariance matrix $\\Sigma_g$ to approximate the Dirichlet distribution with shape parameters $(a_{g1},\\dots,a_{gp_g})$.",
+    "2412-15293_sent_1a3b9ae6": "In particular, when $a_{g1}=\\cdots=a_{gp_g}=1/p_g$, we set $(\\Sigma_g)_{kj}=\\delta(1/p_g)+I(k=j)\\delta(1/p_g)$, where $\\delta(x)$ is the trigamma function (second order derivatives of log-gamma function).",
+    "2412-15293_sent_80e42422": "Please see \\cite{aguilar2024generalized} for further details.",
+    "2412-15293_subsection_81174b10": "Discussions on group R2D2 prior",
+    "2412-15293_sent_5def14fe": "We now make several observations about the gR2D2 prior.",
+    "2412-15293_sent_a1f8abdc": "First, we note that we defined the group-specific $R^2_g$ as $R^2_g=\\mathsf{Var}(\\bx_g^{\\top}\\bbeta_g)/\\{\\mathsf{Var}(\\bx^{\\top}\\bbeta)+\\sigma^2\\}$ where the denominator takes the variance over all $\\bbeta$.",
+    "2412-15293_sent_2cd22ca2": "Another valid definition is $\\tilde R^2_g=\\mathsf{Var}(\\bx_g^{\\top}\\bbeta_g)/\\{\\mathsf{Var}(\\bx_g^{\\top}\\bbeta_g)+\\sigma^2\\}=W_g/(W_g+1)$ where now the numerator and denominator variance is only over the group-specific coefficients $\\bbeta_g$.",
+    "2412-15293_sent_81d75f1f": "Indeed, this definition induces the same prior distribution on $W_g$.",
+    "2412-15293_sent_08457195": "We prefer the first definition as it gives $\\sum_{g=1}^G R_g^2=R^2$, and has a more natural interpretation as the proportion of total variance in the response explained by the coefficients in group $g$.",
+    "2412-15293_sent_dfb1a5d5": "In the second definition, $R^2_g$ is the amount of variation in group $g$ explained by $\\bbeta_g$.",
+    "2412-15293_sent_e2bf6705": "As noted above, $R^2_g$ also serves as a relative measure of the importance of group $g$ to the overall model, something $\\tilde R^2_g$ does not.",
+    "2412-15293_sent_bad83dcf": "The preferred definition also leads to interpretable hyperparameters.",
+    "2412-15293_sent_7fa55a53": "Under fixed $b$, the values of $a_1,\\dots,a_G$ control the amount of group-specific $R_g^2$, and their sum controls the overall $R^2$, i.e., large values of $a_g$ favor large $R^2_g$ and large $\\sum_{g=1}^G a_g$ favor large $R^2$.",
+    "2412-15293_sent_d6e159b7": "On the other hand, $b$ controls the contribution of the error term to the total variation of the response.",
+    "2412-15293_sent_3dee6e5c": "We also recover the results of \\cite{zhang2022bayesian} by setting $G=1$ in the proposed prior, meaning that the proposed prior is a proper generalization of the original R2D2 prior.",
+    "2412-15293_sent_ca67b29e": "We can also compare our prior distribution with the GIGG prior \\citep{boss2023group}.",
+    "2412-15293_sent_0480a85d": "The GIGG prior is formulated as",
+    "2412-15293_sent_08ca48b1": "&\\beta_{gj}|\\tau^2,\\gamma_g^2, \\lambda_{gj}^2\\sim\\mathsf{Normal}(0,\\tau^2\\gamma_g^2\\lambda_{gj}^2),\\\\ \\tau\\sim\\mathsf{C}^+&(0,\\sigma),\\ \\gamma_g^2\\sim\\mathsf{Gamma}(a_g,1),\\ \\lambda_{gj}^2\\sim\\mathsf{InvGamma}(b_g,1).",
+    "2412-15293_sent_b6d94a26": "\\end{align*} The connections with our model are now clear.",
+    "2412-15293_sent_15227a8f": "The gR2D2 global variance parameter ($W$) has a Beta-prime distribution, while the global parameter in GIGG $(\\tau^2)$ is a squared half-Cauchy distribution.",
+    "2412-15293_sent_5bc50ea4": "Moreover, the global variance parameter is the sum of the grouped variance parameters in gR2D2, whereas the global and group variance parameters are independent in GIGG.",
+    "2412-15293_sent_ac82b6b2": "As for the group-variance prior distribution, the prior for $W_g$ conditional on $\\tau^2$ follows a gamma distribution; the comparable parameter in GIGG $(\\gamma_g^2)$ is unconditionally gamma distributed. Again, the $W_g$'s are correlated via $\\tau^2$ for gR2D2, but the $\\gamma_g^2$ are independent in GIGG.",
+    "2412-15293_sent_73fa9342": "Lastly, the local variance allocation is controlled with either a Dirichlet or logistic-normal distribution in gR2D2, but is endowed with independent Beta-prime distributions in GIGG.",
+    "2412-15293_sent_159604ae": "Thus, at each level of the model, the gR2D2 prior encodes dependence between the parameters, while all variance parameters are independent with GIGG.",
+    "2412-15293_sent_cc4ed779": "While this dependence leads to good empirical performance, it make deriving theoretical results more difficult, so we postpone this for future work.",
+    "2412-15293_section_f2764b96": "Posterior Computation",
+    "2412-15293_subsection_81b65fd4": "Joint posterior and full conditional distributions for gR2D2 priors",
+    "2412-15293_sent_5a784fac": "We now present the full MCMC sampling scheme for the gR2D2 prior.",
+    "2412-15293_sent_040a12c0": "Let $\\bm{Y}=(Y_1,\\dots,Y_n)^{\\top}$, $\\bm{X}=(\\bm{x}_1 ,\\cdots ,\\bm{x}_n)^\\top$, and $\\boldsymbol{W}$, $\\Psi$ and $\\Phi$ be collections of $W_g$, $\\psi_{gj}$ and $\\phi_{gj}$, respectively.",
+    "2412-15293_sent_f17be5ef": "We define $\\mathsf{InvGauss}( \\mu, \\lambda )$ as the inverse-Gaussian distribution with density $p(z;\\mu,\\lambda)\\propto z^{-3/2}\\exp\\left\\{-\\lambda(z-\\mu)^2/(2\\mu^2z)\\right\\}$ and $\\mathsf{GIG}(\\lambda,\\rho,\\chi)$ as the generalized inverse-Gaussian with density $p(z|\\lambda,\\rho,\\chi)\\propto z^{\\lambda-1}\\exp\\left\\{-(\\rho z+\\chi/z)/2\\right\\}$.",
+    "2412-15293_sent_2855c272": "For the error variance, we assign an inverse-gamma prior, $\\sigma^2\\sim \\mathsf{InvGamma}(n_0/2, d_0/2)$.",
+    "2412-15293_sent_89da272c": "The joint posterior of $\\bbeta$ and latent variables is given by",
+    "2412-15293_sent_aa415678": "\\pi(\\bbeta,\\sigma^2 ,&\\tau^2, \\Psi,\\Phi,\\boldsymbol{W} |\\bm{Y})\\\\ &\\propto \\exp\\left\\{-\\frac1{2\\sigma^2}(\\bm{Y}-\\bm{X}\\bbeta)^\\top (\\bm{Y}-\\bm{X}\\bbeta) - \\frac{1}{2\\sigma^2}\\sum_{g=1}^G\\sum_{j=1}^{p_g}\\frac{\\beta_{gj}^2}{ \\psi_{gj} \\phi _{gj} W_g /2} \\right\\}\\\\ &\\times \\exp\\Big(-\\frac{d_0}{2\\sigma^2} -\\frac{1}{\\tau^2}\\Big) (\\sigma^2)^{-(n_0+n+p)/2-1} (\\tau^2)^{-\\sum_{g=1}^G a_g-b-1} \\prod_{g=1}^G \\pi(\\bm{\\phi}_g) \\\\ &\\times \\prod_{g=1}^G W_g^{a_g-p_g/2-1}e^{-W_g/\\tau^2}\\prod_{j=1}^{p_g} (\\phi_{gj}\\psi_{gj})^{-1/2} e^{-\\psi_{gj}/2}, \\end{align*} where $\\pi(\\bm{\\phi}_g)$ is the prior distribution of $\\bm{\\phi}_g$, being either Dirichlet or logistic-normal densities.",
+    "2412-15293_sent_2c195b65": "Targeting this joint posterior distribution, we propose the following Gibbs sampler algorithm.",
+    "2412-15293_itemize_152df5e1": "itemize",
+    "2412-15293_item_d94470b7": "item",
+    "2412-15293_sent_6f295c67": "[-] Step 1: sampling from $\\pi(\\bbeta|\\sigma^2 ,\\tau^2,\\Psi,\\Phi,\\boldsymbol{W}, \\bm{Y})$.",
+    "2412-15293_sent_4a352c3f": "The full conditional distribution of $\\boldsymbol{\\beta}$ is $\\mathsf{Normal}(\\mu _{\\beta}, \\sigma^2 \\Sigma_{\\beta})$, where",
+    "2412-15293_sent_e735c623": "\\Sigma_{\\beta} = ( \\bm{X}^{\\top}\\bm{X} + \\bm{\\Lambda}^{-1} )^{-1}, \\ \\ \\ \\ \\ \\ \\ \\ \\mu_{\\beta} = ( \\bm{X}^{\\top}\\bm{X} + \\bm{\\Lambda} ^{-1} )^{-1} \\bm{X}^{\\top} \\bm{Y}, \\end{equation*} and $\\bm{\\Lambda}$ is the diagonal matrix whose $(j + \\sum _{g'=1}^{g-1} p_{g'})$-th diagonal element is $\\psi_{gj} \\phi_{gj} W_g/2$.",
+    "2412-15293_sent_934ecbc7": "[-] Step 2: sampling from $\\pi(\\sigma^2 |\\bbeta, \\tau^2,\\Psi,\\Phi,\\boldsymbol{W}, \\bm{Y})$.",
+    "2412-15293_sent_ee8b1d44": "The full conditional distribution of $\\sigma^2$ is $\\mathsf{InvGamma}( n_1/2, d_1/2 )$, where",
+    "2412-15293_sent_06b23b77": "n_1 = n_0 + n + p, \\ \\ \\ \\ \\ \\ d_1 = d_0 + ( \\bm{Y} - \\bm{X}\\boldsymbol{\\beta} )^{\\top} ( \\bm{Y} - \\bm{X}\\boldsymbol{\\beta} ) + \\boldsymbol{\\beta}^{\\top} \\bm{\\Lambda}^{-1} \\boldsymbol{\\beta}.",
+    "2412-15293_sent_a9182070": "[-] Step 3: sampling from $\\pi(\\tau ^2 | \\bbeta, \\sigma^2 , \\Psi,\\Phi,\\boldsymbol{W}, \\bm{Y})$.",
+    "2412-15293_sent_1324976f": "The full conditional distribution of $\\tau^2$ is $\\mathsf{InvGamma}( a_{\\tau}, b_{\\tau} )$, where",
+    "2412-15293_sent_3b50bd91": "a_{\\tau} = b + \\sum_{g=1}^G a_g \\ \\ \\ \\ \\ b_{\\tau} = 1 + \\sum_{g=1}^G W_g.",
+    "2412-15293_sent_5aa8e703": "[-] Step 4: sampling from $\\pi(\\Psi|\\bbeta, \\sigma^2 ,\\tau ^2 , \\Phi,\\boldsymbol{W}, \\bm{Y})$.",
+    "2412-15293_sent_17713625": "Conditional on the other variables, $\\psi_{gj}$'s are mutually independent.",
+    "2412-15293_sent_d2540378": "The full conditional distribution of $\\psi_{gj}^{-1}$ is $\\mathsf{InvGauss}( \\mu _{\\psi, gj}, \\lambda_{\\psi} )$, where",
+    "2412-15293_sent_3cf11687": "\\mu _{\\psi, gj} = \\frac{ \\sqrt{ \\sigma^2 \\phi _{gj} W_g /2 } }{ |\\beta _{gj}| }, \\ \\ \\ \\ \\ \\ \\ \\lambda_{\\psi} = 1.",
+    "2412-15293_sent_d50c557f": "[-] Step 5: sampling from $\\pi(\\Phi,\\boldsymbol{W}| \\bbeta, \\sigma^2 ,\\tau ^2,\\Psi , \\bm{Y})$.",
+    "2412-15293_sent_7fe5b6ca": "We first notice the conditional independence:",
+    "2412-15293_sent_940f43c4": "\\pi(\\Phi,\\boldsymbol{W}| \\bbeta, \\sigma^2 ,\\tau ^2 , \\Psi, \\bm{Y}) = \\prod _{g=1}^G \\pi(\\boldsymbol\\phi_g,W_g| \\bbeta, \\sigma^2 ,\\tau ^2 , \\Phi, \\bm{Y}).",
+    "2412-15293_sent_e20b283e": "\\end{equation*} Thus we can sample from $\\pi(\\boldsymbol\\phi_g,W_g| \\bbeta, \\sigma^2 ,\\tau ^2 , \\Psi, \\bm{Y})$ in parallel.",
+    "2412-15293_sent_e8d45831": "This step depends on the choice of priors and is discussed in more detail next, as it is the only step of the Gibbs sampler which does not yield familiar forms.",
+    "2412-15293_subsection_56dfb2b2": "Gibbs sampler for gR2D2-D",
+    "2412-15293_sent_9b965570": "Sampling of $(\\boldsymbol\\phi_g,W_g)$ is the two-step program: sampling $\\boldsymbol\\phi_g$ from the marginal, then sampling $W_g$ conditional on $\\boldsymbol\\phi_g$.",
+    "2412-15293_sent_ab9639b4": "Those conditional posteriors are not well-known distributions in general, but greatly simplified when $a_g = \\sum _{j=1}^{p_g}a_{gj}$.",
+    "2412-15293_sent_7bd31581": "We start from this special case, then move on to the general choice of shape parameters.",
+    "2412-15293_sent_90ac874c": "In the gR2D2-D model, we assume $\\boldsymbol{\\phi}_g \\sim \\mathsf{Dirichlet} (a_{g1},\\dots ,a_{gp_g})$.",
+    "2412-15293_sent_10ba93d3": "For each $g$, let $a_g^{\\ast} = \\sum _{j=1}^{p_g} a_{gj}$.",
+    "2412-15293_sent_dd30ef5a": "In the case that $a_g = a_g^{\\ast}$, the exact sampling from the distributions at Step~5 is feasible.",
+    "2412-15293_sent_b34038f4": "The algorithm below is proposed by \\cite{zhang2022bayesian}, motivated by the method used for the Dirichlet Laplace model \\citep{bhattacharya2015dirichlet}.",
+    "2412-15293_sent_6b8a5b98": "[-] Step 5a: Sampling from $\\pi(\\boldsymbol\\phi_g| \\bbeta, \\sigma^2 ,\\tau ^2 , \\Psi ,\\bm{Y})$.",
+    "2412-15293_sent_48114992": "The marginal distribution of $\\boldsymbol\\phi_g$ satisfies the following distributional equation:",
+    "2412-15293_eq_a6a0ede8": "\\begin{equation}\n\\phi_{gj} = \\frac{T_{gj}}{ T_{g,1} + \\cdots + T_{g,p_g} }, \n\\end{equation}",
+    "2412-15293_sent_56d41216": "where $T_{g,1}, \\dots, T_{g,p_g}$ are independent and distributed as",
+    "2412-15293_sent_421de161": "T_{gj} \\sim \\mathsf{GIG}\\left( a_{gj} -\\frac{1}{2} , 2, \\frac{\\beta_{gj}^2}{ \\sigma^2\\psi_{gj}W_g/2 } \\right).",
+    "2412-15293_sent_612ebe66": "[-] Step 5b: Sampling from $\\pi(W_g| \\bbeta, \\sigma^2 ,\\tau ^2 , \\boldsymbol\\phi_g, \\Psi, \\bm{Y})$.",
+    "2412-15293_sent_bad5f2d7": "Conditional on the sampled $\\boldsymbol\\phi_g$, we sample $W_g$ as:",
+    "2412-15293_sent_249d13f2": "W_g \\sim \\mathsf{GIG}\\left( a_g-\\frac{p_g}{2}, \\ \\frac{2}{\\tau^2},\\ \\sum_{j=1}^{p_g} \\frac{\\beta_{gj}^2}{ \\sigma^2\\psi_{gj}\\phi_{gj}/2} \\right).",
+    "2412-15293_sent_2d31f6d6": "In general, we have $a_g \\not= a_g^{\\ast} = \\sum _{j=1}^{p_g} a_{gj}$ and cannot use the algorithm above as-is.",
+    "2412-15293_sent_a3839084": "In fact, the sampling steps above are valid when we use $W_g \\sim \\mathsf{Gamma}(a_g^{\\ast},1/\\tau^2 )$, instead of $W_g \\sim \\mathsf{Gamma}(a_g,1/\\tau^2)$.",
+    "2412-15293_sent_3256b474": "Based on this observation, we propose to use the full conditional posterior under the prior with $a_g^{\\ast}$ as the proposal distribution, then add the acceptance-rejection step to justify it as the Metropolis-Hastings algorithm.",
+    "2412-15293_sent_380f4af0": "The acceptance probability is then simply the ratio of gamma densities.",
+    "2412-15293_sent_80e7f3eb": "[-] Let $( \\boldsymbol\\phi _g^{\\rm old} , W_g^{\\rm old} )$ be a sample generated at the previous iteration.",
+    "2412-15293_sent_2ed70858": "[-] Steps 5a and 5b (gR2D2-D): Set $a_g^{\\ast}=\\sum _{j=1}^{p_g} a_{gj}$ and sample $( \\boldsymbol\\phi _g^{\\rm new} , W_g^{\\rm new} )$ by following the step 5a and 5b described before.",
+    "2412-15293_sent_9c547bca": "[-] Step 5c (gR2D2-D): Accept $( \\boldsymbol\\phi _g^{\\rm new} , W_g^{\\rm new} )$ as the posterior sample of the current iteration with probability",
+    "2412-15293_sent_fc875144": "\\min \\left\\{ 1, \\left( \\frac{W_g^{\\rm new}}{ W_g^{\\rm old} } \\right) ^{a_g^{\\ast}-a_g} \\right\\}, \\end{equation*} otherwise accept $( \\boldsymbol\\phi _g^{\\rm old} , W_g^{\\rm old} )$.",
+    "2412-15293_sent_2f5315d4": "In practice, the acceptance rate needs to be monitored to ensure efficiency of the algorithm.",
+    "2412-15293_subsection_0b708a94": "Gibbs sampler for gR2D2-L",
+    "2412-15293_sent_a58e26e6": "In the gR2D2-L model, we assume $\\boldsymbol\\phi_g\\sim\\mathsf{LogisticNormal}(\\mathbf{0}_{p_g-1},\\Sigma_g)$.",
+    "2412-15293_sent_549d681e": "Even under this prior, we can take a similar sampling approach as in the previous sub-section.",
+    "2412-15293_sent_06a0250f": "The challenge, however, is that the logistic-normal prior lacks shape parameters $(a_{g1},\\dots g_{gp_g})$ to use in the proposal distribution.",
+    "2412-15293_sent_2862f886": "To overcome this, we simply set $a_{gj} = a_g/p_g$ so that $a_g = a_g^{\\ast}$ holds.",
+    "2412-15293_sent_4aedb910": "The difference of the priors for $\\boldsymbol\\phi_g$ in the target and proposal distributions modifies the acceptance probability of the step 5c.",
+    "2412-15293_sent_ccb8d30f": "[-] Steps 5a and 5b (gR2D2-L): Set $a_{gj}=a_g/p_g$ and sample $( \\boldsymbol\\phi _g^{\\rm new} , W_g^{\\rm new} )$ by following the step 5a and 5b described before.",
+    "2412-15293_sent_a46661ad": "[-] Step 5c (gR2D2-L): Accept $( \\boldsymbol\\phi _g^{\\rm new} , W_g^{\\rm new} )$ as the posterior sample of the current iteration with probability $\\min \\{ 1 , f(\\boldsymbol\\phi_g^{\\rm new}) / f(\\boldsymbol\\phi_g^{\\rm old}) \\}$, where $f(\\cdot )$ is given by,",
+    "2412-15293_eq_9a8063e7": "\\begin{equation}\n\\log f(\\boldsymbol{\\phi})\\equiv -\\sum_{j=1}^{p_g} a_{gj} \\log \\phi_{gj} - \\frac12 {\\rm LR}(\\boldsymbol{\\phi}_g)^\\top \\Sigma_g^{-1}{\\rm LR}(\\boldsymbol{\\phi}_g).\n\\end{equation}",
+    "2412-15293_section_c792245c": "Simulations",
+    "2412-15293_sent_796312f7": "We now demonstrate the performance of the gR2D2 prior on simulated data by looking at the estimation accuracy and inference properties.",
+    "2412-15293_subsection_f4f70727": "Settings",
+    "2412-15293_sent_dc5303f4": "We generate data from \\eqref{eq:model} with $n=250$ and $p=50$ coefficients grouped into $G=5$ groups of $p_g=10$ coefficients for $j=1,\\dots,G$.",
+    "2412-15293_sent_b61a7184": "Namely, the coefficients in the $g$th group are $\\beta_{10(g-1)+1},\\ldots,\\beta_{10g}$.",
+    "2412-15293_sent_8fd361fc": "We generate covariates $\\bx_i\\sim\\mathsf{Normal}({\\bf 0}_p,\\Sigma)$ where $\\Sigma$ has a block correlation structure, i.e., $\\Sigma_{ij}=0.7$ if coefficients $i$ and $j$ are in the same group, and $0.2$ otherwise.",
+    "2412-15293_sent_13c9240f": "We consider the following five scenarios for signal (non-null) values of $\\beta$:",
+    "2412-15293_sent_f85af2e2": "&{\\rm (s1)} \\ \\ \\beta_{1},\\beta_{21},\\beta_{41}=5, \\ \\ \\beta_{31},\\beta_{51}=-5\\\\ &{\\rm (s2)} \\ \\ \\beta_1,\\beta_2, \\beta_3=3,\\ \\ \\beta_{11}, \\beta_{12},\\beta_{13}=-3, \\ \\ \\beta_{21}=2, \\ \\ \\beta_{41},\\beta_{42},\\beta_{43},\\beta_{44},\\beta_{45}=-1\\\\ &{\\rm (s3)} \\ \\ \\beta_1,\\beta_2, \\beta_3=3,\\ \\ \\beta_{11}, \\beta_{12},\\beta_{13}=-3, \\ \\ \\beta_{41}=3, \\beta_{45}=4 \\\\ &{\\rm (s4)} \\ \\ \\beta_1, \\beta_3,\\beta_5,\\beta_7,\\beta_9=3, \\ \\ \\beta_{21},\\beta_{22},\\beta_{23},\\beta_{24},\\beta_{25}=-2\\\\ &{\\rm (s5)} \\ \\ \\beta_1, \\beta_5,\\beta_9=5, \\ \\ \\beta_{3},\\beta_7=-5 \\end{align*} Note that $\\sum_{k=1}^p|\\beta_k|=25$ for all the scenarios, and number of null groups increases from 0 to 4 going from scenario 1 to 5.",
+    "2412-15293_sent_148927a5": "In scenario 1, there is one significant coefficient in each group, while four groups have significant coefficients in scenario 2, with a differing number of signals in each group.",
+    "2412-15293_sent_14bc7f22": "Significant coefficients are roughly equally distributed between three and two groups in settings 3 and 4, respectively, whereas all non-null coefficients in one group in setting 5.",
+    "2412-15293_sent_53ad1974": "We set $\\sigma^2$ so that the resulting signal-to-noise ratio (SNR) matches a pre-specified value (0.5 and 0.7).",
+    "2412-15293_sent_d42f47e1": "We compare the gR2D2 prior with several other methods.",
+    "2412-15293_sent_650123f6": "Prior frameworks that do not account for grouping establish a baseline, including the original R2D2 prior \\citep{zhang2022bayesian} and the horseshoe prior (HS) \\citep{carvalho2009handling}.",
+    "2412-15293_sent_866e0a2b": "We also consider shrinkage priors designed for the grouped setting including the GIGG prior \\citep{boss2023group} and grouped horseshoe prior (GHS) \\citep{xu2016bayesian}.",
+    "2412-15293_sent_73557a88": "Finally, in the group R2D2 prior, the variance allocation parameters follow either the Dirichlet distribution (gR2D2-D) or the logistic normal distribution (gR2D2-L).",
+    "2412-15293_sent_06c618be": "For both methods, we set the hyperparameters as in Section~\\ref{sec:hyper}, using the Empirical Bayes approach for gR2D2-D.",
+    "2412-15293_sent_ef1eee6f": "For all methods, we generate 1000 posterior samples of $\\bbeta$ after discarding the first 1000 samples as burn-in, and then compute the posterior mean and $95\\%$ credible intervals.",
+    "2412-15293_sent_c8ab6453": "Our metric of interest is the sum of squared errors between the posterior mean $\\hat{\\bbeta}$ and the true value $\\bbeta$, averaged over the number of simulations ($R=100$):",
+    "2412-15293_eq_60a9dac1": "\\begin{equation}\n{\\rm MSE}_k\n=\\frac1{R}\\sum_{r=1}^R (\\widehat{\\beta}^{(r)}_k-\\beta_k)^2, \\ \\ \\ \\ k=1,\\ldots,p,\n\\end{equation}",
+    "2412-15293_sent_c9ffe957": "where $\\widehat{\\beta}^{(r)}_k$ denotes the posterior mean of $\\beta_k$ in the $r$th replication.",
+    "2412-15293_sent_f46a5ed2": "The MSE values are aggregated over $k$, but separated between null and non-null coefficients.",
+    "2412-15293_sent_afe4f20a": "Furthermore, we evaluate $95\\%$ credible intervals ${\\rm CI}_k^{(r)}$ of regression coefficients by empirical coverage probability (CP), and average lengths (AL) of the credible interval $|{\\rm CI}_k^{(r)}|$, defined as",
+    "2412-15293_eq_25b161eb": "\\begin{equation}\n{\\rm CP}_k=\\frac1R\\sum_{r=1}^R I(\\beta_k\\in {\\rm CI}_k^{(r)}), \\ \\ \\ \\ \\ \\ \n{\\rm AL}_k=\\frac1R\\sum_{r=1}^R |{\\rm CI}_k^{(r)}|.\n\\end{equation}",
+    "2412-15293_sent_42a8c557": "The values of CP and AL are averaged over $k=1,\\ldots,p$.",
+    "2412-15293_subsection_fd69c5cf": "Results",
+    "2412-15293_sent_49523346": "The MSE results are in Tables~\\ref{tab:sim}.",
+    "2412-15293_sent_95c1b224": "Note that the acceptance rates of the MH step in gR2D2-L (Step 5c (gR2D2-L) in Section~\\ref{sec:sampL}) were around $84\\%$ in all the scenarios.",
+    "2412-15293_sent_1b217254": "The gR2D2-D prior provides the most accurate estimates for null-signals, while GIGG, GHS and gR2D2-D perform well in estimating signals.",
+    "2412-15293_sent_91e65a69": "In particular, in scenario 1 where each group is the same with only a single non-null coefficient, incorporating the group structure is not essential in improving the model fit, resulting in the non-grouping methods like R2D2 and HS performing as well or better than other group-based approaches.",
+    "2412-15293_sent_d7f75f1e": "In scenario 5, on the other hand, modeling the between-group sparsity is the most important as all the signals are contained in a single group.",
+    "2412-15293_sent_c68e5f51": "By setting the hyperparameters of the gR2D2-D prior using the Empirical Bayes approach, this prior performs particularly well in this scenario.",
+    "2412-15293_sent_8c1fb60d": "When the signal is distributed between several, but not all groups as in scenarios 2-4, the GIGG prior yields the best estimates of the non-null coefficients, particularly when SNR $=0.5$.",
+    "2412-15293_sent_ecdb91fb": "For the larger SNR ($0.7$), the performance of the gR2D2-D prior improves and outperforms than the GIGG prior in Scenarios 3 and 5.",
+    "2412-15293_sent_247e6036": "In terms of the choice of the prior for the variance allocation parameters, we see that the Dirichlet distribution (gR2D2-D) yields better estimation of the null coefficients, while the logistic normal distribution (gR2D2-L) tends to provide lower MSE values on the non-null coefficients.",
+    "2412-15293_sent_7d8393fc": "Lastly, both gR2D2-D and gR2D2-L generally outperform the original R2D2 prior, exemplifying the importance of incorporating the group-structure into the modeling framework.",
+    "2412-15293_sent_fc02aa91": "We next discuss the model performance in posterior uncertainty quantification by the 95\\% posterior credible intervals, reported in Table~\\ref{tab:sim-cp}.",
+    "2412-15293_sent_115df45a": "We notice the over-coverage in all methods, settings and scenarios.",
+    "2412-15293_sent_eb29f67e": "Given all the methods can achieve the nominal 95\\% coverage, we prefer methods with shorter credible intervals.",
+    "2412-15293_sent_7c1d4019": "In each setting, gR2D2-D provides the narrowest intervals, while R2D2 and gR2D2-L always yield the next narrowest intervals.",
+    "2412-15293_sent_924328f4": "The credible intervals of the gR2D2-L prior are slightly wider, due to the extra parameters and model flexibility.",
+    "2412-15293_sent_2733d26b": "Both of the proposed gR2D2 methods have narrower intervals than those of GIGG for both SNRs.",
+    "2412-15293_fig_2793de57": "\\begin{table}\n\n{ \n\\begin{tabular}{ccccccccccccccc}\n\n&&& \\multicolumn{5}{c}{Null} && \\multicolumn{5}{c}{Non-null}\\\\\nSNR & Scenario & & 1 & 2 & 3 & 4 & 5 & & 1 & 2 & 3 & 4 & 5 \\\\\n\n& R2D2 & & 1.67 & 1.64 & 2.40 & 3.25 & 0.77 & & {\\bf 3.63} & 13.75 & 14.13 & 31.68 & 3.99 \\\\\n & HS & & 1.86 & 2.36 & 3.20 & 3.67 & 0.86 & & 4.32 & 12.01 & 13.45 & 26.96 & 4.96 \\\\\n0.5 & GIGG & & 10.41 & 8.06 & 10.50 & 11.88 & 6.11 & & 4.84 & {\\bf 8.65} & {\\bf 9.85} & {\\bf 16.28} & 5.02 \\\\\n & GHS & & 2.41 & 3.06 & 3.97 & 4.18 & 1.93 & & 4.56 & 11.72 & 11.94 & 18.95 & 4.45 \\\\\n & gR2D2-D & & {\\bf 1.11} & {\\bf 1.00} & {\\bf 1.48} & {\\bf 1.62} & {\\bf 0.18} & & 4.29 & 16.77 & 14.54 & 30.94 & {\\bf 3.93} \\\\\n & gR2D2-L & & 1.68 & 1.50 & 2.12 & 2.63 & 0.53 & & 3.94 & 13.58 & 13.57 & 29.62 & 4.11 \\\\\n\n & R2D2 & & 0.65 & 0.57 & 0.71 & 1.31 & 0.39 & & {\\bf 1.31} & 4.94 & 3.51 & 12.41 & 1.46 \\\\\n & HS & & 0.73 & 1.21 & 1.35 & 2.22 & 0.41 & & 1.39 & 4.41 & 4.00 & 11.09 & 1.57 \\\\\n0.7 & GIGG & & 5.66 & 4.43 & 5.64 & 7.00 & 3.37 & & 1.70 & {\\bf 3.66} & 3.83 & {\\bf 7.84} & 1.77 \\\\\n & GHS & & 0.94 & 1.71 & 1.96 & 2.61 & 0.96 & & 1.42 & 4.36 & 3.82 & 7.98 & 1.62 \\\\\n & gR2D2-D & & {\\bf 0.47} & {\\bf 0.37} & {\\bf 0.41} & {\\bf 0.61} & {\\bf 0.10} & & 1.36 & 6.33 & {\\bf 3.46} & 11.77 & {\\bf 1.44} \\\\\n & gR2D2-L & & 0.67 & 0.54 & 0.65 & 1.02 & 0.26 & & 1.37 & 4.86 & 3.54 & 11.58 & 1.48 \\\\\n\n\\end{tabular}\n\n\\caption{MSE under five scenarios of regression coefficients and two values of SNR. The lowest value for each setting is represented in {\\bf bold}.\n\n\\end{table}",
+    "2412-15293_fig_441d1ebb": "\\begin{table}\n\n{\n\\begin{tabular}{ccccccccccccccc}\n\n&&& \\multicolumn{5}{c}{SNR=0.5} && \\multicolumn{5}{c}{SNR=0.7}\\\\\n & Scenario & & 1 & 2 & 3 & 4 & 5 & & 1 & 2 & 3 & 4 & 5 \\\\\n\n & R2D2 & & 99.3 & 96.4 & 98.1 & 96.8 & 99.3 & & 99.4 & 97.5 & 98.9 & 97.9 & 99.4 \\\\\n & HS & & 99.2 & 96.7 & 97.7 & 96.8 & 99.0 & & 99.4 & 97.5 & 98.5 & 97.6 & 99.3 \\\\\nCP & GIGG & & 98.2 & 97.1 & 97.2 & 97.5 & 97.9 & & 98.0 & 96.9 & 97.3 & 97.2 & 97.6 \\\\\n & GHS & & 99.1 & 96.4 & 97.9 & 97.6 & 99.1 & & 99.4 & 97.5 & 98.4 & 98.1 & 99.2 \\\\\n & gR2D2-D & & 99.2 & 92.9 & 98.0 & 96.7 & 99.4 & & 99.4 & 96.5 & 98.9 & 98.0 & 99.5 \\\\\n & gR2D2-L & & 99.3 & 96.2 & 98.2 & 97.0 & \n 99.3 & & 99.4 & 97.6 & 98.9 & 98.1 & 99.5 \\\\\n\n & R2D2 & & 1.79 & 1.80 & 1.96 & 2.45 & 1.36 & & 1.17 & 1.20 & 1.26 & 1.68 & 0.90 \\\\\n & HS & & 1.98 & 2.05 & 2.24 & 2.67 & 1.50 & & 1.29 & 1.43 & 1.51 & 1.94 & 0.98 \\\\\nAL & GIGG & & 2.67 & 2.46 & 2.71 & 3.19 & 2.03 & & 1.83 & 1.71 & 1.87 & 2.25 & 1.39 \\\\\n & GHS & & 2.08 & 2.05 & 2.22 & 2.53 & 1.38 & & 1.35 & 1.44 & 1.49 & 1.77 & 0.91 \\\\\n & gR2D2-D & & {\\bf 1.65} & {\\bf 1.28} & {\\bf 1.42} & {\\bf 1.53} & {\\bf 0.64} & & {\\bf 1.11} & {\\bf 0.99} & {\\bf 0.92} & {\\bf 1.06} & {\\bf 0.41} \\\\\n & gR2D2-L & & 1.89 & 1.81 & 1.96 & 2.35 & 1.26 & & 1.25 & 1.24 & 1.27 & 1.62 & 0.82 \\\\\n\n\\end{tabular}\n\n\\caption{Coverage probability (\\%) and average interval length of $95\\%$ credible intervals of regression coefficients, averaged over all the coefficients, under five scenarios of true regression coefficients and two values of SNR. The narrowest credible intervals are represented in {\\bf bold}.\n\n\\end{table}",
+    "2412-15293_section_9bb4846a": "Real-data analysis",
+    "2412-15293_sent_8d2ddcec": "To illustrate the proposed methods, we analyze the Abalone dataset, available at the UCI Machine Learning Repository (\\url{https://archive.ics.uci.edu/dataset/1/abalone}).",
+    "2412-15293_sent_c2fdc446": "The response variable is the number of rings (denoted by $y_i$), which serves as a proxy for the age of abalone, and we consider seven covariates (denoted by $z_{i1},\\ldots,z_{i7}$): the shell’s longest length, diameter perpendicular to the length, height with meat in the shell, total weight of the abalone, weight of the meat, weight of the gut after bleeding, and the shell's dry weight.",
+    "2412-15293_sent_dd862ec3": "We focus on male abalone, resulting in $n=1528$ samples.",
+    "2412-15293_sent_eb7c93b5": "To capture potential non-linear effects of each covariate, we employ an additive model with $L=10$ B-spline basis functions, created via the R package \\verb+fda+ \\citep{fda}, and treat the set of 10 basis functions as a group.",
+    "2412-15293_sent_1247aae5": "Hence, $G=7$ and $p_g=10$, so that we have $p=70$ covariates in total. Then, the model is",
+    "2412-15293_eq_d26e875d": "\\begin{equation}\ny_i=\\sum_{g=1}^G\\bx_{ig}^\\top \\bbeta_g + \\varepsilon_i, \\ \\ \\ \\ \\ i=1,\\ldots,n,\n\\end{equation}",
+    "2412-15293_sent_691493c1": "where $\\bbeta_g=(\\beta_{g1},\\ldots,\\beta_{gL})^\\top$, $\\bx_{ig}=(\\Phi_{g1}(z_{ig}),\\ldots, \\Phi_{gL}(z_{ig}))^\\top $ and $\\Phi_{gl}(z)$ is the $l$th B-spline function.",
+    "2412-15293_sent_93bfac39": "We apply four group shrinkage priors, GHS, GIGG, gR2D2-D and gR2D2-L, as used in the simulation study.",
+    "2412-15293_sent_2f9285e2": "We generate 3000 posterior samples after discarding the first 1000 samples as burn-in for all the priors.",
+    "2412-15293_sent_bf02f288": "The posterior medians of the regression coefficients (coefficients for the basis functions) are presented in Figure~\\ref{fig:app}.",
+    "2412-15293_sent_6dbe827b": "The results show that the proposed gR2D2 priors tend to provide significantly sparser point estimates than those of GHS and GIGG, particularly for the first three functions (i.e., $\\bbeta_1, \\bbeta_2$ and $\\bbeta_3$).",
+    "2412-15293_sent_fbc10eb6": "On the other hand, for $\\bbeta_4, \\bbeta_5$ and $\\bbeta_7$, each prior yields much larger estimates.",
+    "2412-15293_sent_578f711f": "In Figure~\\ref{fig:app-reg}, we plot the posterior median of the non-linear effect for each covariate.",
+    "2412-15293_sent_bd34d2dc": "Moreover, we compute $95\\%$ credible intervals of non-linear effects, $\\sum_{l=1}^L \\beta_{gl}\\Phi_{gl}(z)$, as a function of $z$, evaluated at 100 equally-spaced points from ${\\rm min}_{i=1,\\ldots,n}(z_{ig})$ to ${\\rm max}_{i=1,\\ldots,n}(z_{ig})$.",
+    "2412-15293_sent_51897c0e": "We then compute the point-wise interval lengths and average over the evaluation points.",
+    "2412-15293_sent_c049cf71": "The average length of each covariate is presented in Table~\\ref{tab:app}.",
+    "2412-15293_sent_ab3e8153": "The results indicate that gR2D2 provides much shorter (more efficient) credible intervals than GHS and GIGG, which is consistent with the simulation results in Section~\\ref{sec:sim}.",
+    "2412-15293_sent_f0f36a46": "We also evaluate the performance of these priors on out-of-sample predictions.",
+    "2412-15293_sent_3bc6d107": "To do so, 500 observations are randomly selected and defined as test data, and the response values are predicted in the test sample by fitting the additive model using the training sample (1028 observations).",
+    "2412-15293_sent_84836897": "By generating random samples from the posterior predictive distribution for the test data, we calculate mean (point prediction) and $95\\%$ prediction intervals of the test data.",
+    "2412-15293_sent_f206936b": "The performance of the point and interval prediction is evaluated through mean squared errors (MSE) and empirical coverage probability (CP), respectively.",
+    "2412-15293_sent_287a5bd6": "This procedure was repeated 100 times and the resulting MSE and CP values are reported in Table~\\ref{tab:app}.",
+    "2412-15293_sent_f96dcca1": "The MSE and CP are almost identical for all the priors, with the gR2D2 priors yielding slightly lower MSE values.",
+    "2412-15293_sent_1673b677": "Combining this with the average length of the non-linear effects results, the proposed gR2D2 prior yields sparser and more efficient results without sacrificing prediction accuracy.",
+    "2412-15293_fig_cfda3a5c": "\\begin{figure}\n\n\\includegraphics[width=\\linewidth]{abalone-result.pdf}\n\\caption{Posterior median of regression coefficients obtained by four group shrinkage priors, GHS, GIGG, gR2D2-D and gR2D2-L.} \n\n\\end{figure}",
+    "2412-15293_fig_60677677": "\\begin{figure}\n\n\\includegraphics[width=\\linewidth]{abalone-reg.pdf}\n\\caption{Posterior medians of estimated non-linear regression functions of seven covariates obtained by four group shrinkage priors, GHS, GIGG, gR2D2-D and gR2D2-L.} \n\n\\end{figure}",
+    "2412-15293_fig_4bc2fefb": "\\begin{table}\n\n\\begin{tabular}{ccccccccccccccc}\n\n&&\\multicolumn{7}{c}{Covariate (average length of credible intervals)} & \\multicolumn{2}{c}{Out-of-Sample} \\\\\n & & 1 & 2 & 3 & 4 & 5 & 6 & 7 & MSE & CP (\\%) \\\\\n\nGHS & & 3.49 & 4.00 & 15.02 & 10.31 & 5.39 & 5.12 & 7.31 & 5.08 & 90.42 \\\\\nGIGG & & 1.27 & 1.72 & 8.57 & 11.63 & 7.57 & 4.53 & 9.36 & 5.02 & 90.38 \\\\\ngR2D2-D & & 0.03 & 0.15 & 2.43 & 7.44 & 3.53 & 3.41 & 6.31 & 4.99 & 90.36 \\\\\ngR2D2-L & & 0.87 & 1.11 & 7.27 & 8.49 & 3.95 & 4.48 & 6.12 & 5.00 & 90.39 \\\\\n\n\\end{tabular}\n\\caption{\nAverage length of $95\\%$ credible intervals of non-linear effects of seven covariates, 1 (Length), 2 (Diameter), 3 (Height), 4 (Whole Weight), 5 (Shucked Weight), 6 (Viscera Weight) and 7 (Shell Weight), and out-of-sample mean squared errors (MSE) and coverage probability (CP) of $95\\%$ prediction intervals, obtained from four groups shrinkage priors, GHS, GIGG, gR2D2-D and gR2D2-L. \n\n\\end{table}",
+    "2412-15293_section_6f8b794f": "Conclusion",
+    "2412-15293_sent_4b515452": "In this work, we proposed the gR2D2 prior, a shrinkage prior for grouped regression settings.",
+    "2412-15293_sent_7b81766c": "From first-principles, we derived group-specific $R^2$ values and endowed these values with a Dirichlet distribution.",
+    "2412-15293_sent_da57d5b4": "This framework induced a Beta-prime distribution on the group specific variance parameters, as well as dependence between them.",
+    "2412-15293_sent_104bfc1e": "We considered both a Dirichlet and logistic normal distribution for the variance allocation parameters, and discussed various hyperparameter choices.",
+    "2412-15293_sent_0a17e04d": "In particular, we prefer an Empirical Bayes-inspired approach of estimating the group-specific $R^2_g$ to guide the hyperparameter choices, which yielded good performance.",
+    "2412-15293_sent_9d9f4f4a": "An efficient MCMC algorithm to sample from the posterior demonstrated strong performance on simulated and real-world data.",
+    "2412-15293_sent_77ca4009": "The simulation study also yielded some insights on when the grouping priors perform well.",
+    "2412-15293_sent_d4b55a1d": "Not surprisingly, when the signal is equally spread between all the groups, incorporating the group structure into the prior provides minimal benefit, and in some cases actually worsens performance.",
+    "2412-15293_sent_bfbcc63b": "On the other hand, if one group clearly demonstrates a strong signal, then the proposed approach can account for this in the hyperparameter selection, and will yield good inference properties in point estimation.",
+    "2412-15293_sent_f6bdabc5": "The importance of modeling the group structure is also seen in posterior uncertainty quantification.",
+    "2412-15293_sent_ee60e6a2": "We stress that further study is needed to get a clearer picture of when accounting for the grouping structure improves performance.",
+    "2412-15293_section_84ffd62e": "Acknowledgments",
+    "2412-15293_sent_2c73d752": "This work is supported by the Japan Society for the Promotion of Science KAKENHI (grant numbers: 20H00080, 21H00699, 24K00244, 24K00175, 24K21420 and 24K22613).",
+    "2412-15293_sent_a56c23a5": "\\bibliographystyle{chicago} \\bibliography{refs} \\appendix \\setcounter{equation}{0} \\renewcommand{\\theequation}{A\\arabic{equation}} \\begin{center} {\\bf { Appendix}} \\end{center}",
+    "2412-15293_section_75300af1": "Proof of Proposition 1",
+    "2412-15293_sent_ae88dbe0": "We start from the $W_g$-based model:",
+    "2412-15293_sent_3dd7890a": "W_g | \\tau ^2 \\stackrel{ind}{\\sim} Gamma(a_g,\\tau^{-2}), \\qquad \\tau ^2 \\sim InvGamma(b,1).",
+    "2412-15293_sent_19ffbb85": "\\end{equation*} The joint density is given by",
+    "2412-15293_sent_abaab63b": "\\begin{split} \\pi_{(W_1,\\dots ,W_G,\\tau^2)}(W_1,\\dots , W_G, \\tau^2) &= \\pi(W_1,\\dots , W_G| \\tau^2) \\pi(\\tau^2) \\\\ &=\\left[ \\prod _{g=1}^G Gamma(W_g|a_g,\\tau^{-2}) \\right] InvGamma(\\tau^2|b,1) \\\\ &=\\left[ \\prod _{g=1}^G \\frac{1}{\\Gamma (a_g) (\\tau^{-2} )^{-a_g}} W_g^{a_g-1} e^{ -W_g/\\tau^2 } \\right] \\frac{1}{\\Gamma(b)} (\\tau^2)^{-b-1} e^{ -1/\\tau^2} \\\\ &= \\left[ \\prod _{g=1}^G \\frac{1}{\\Gamma (a_g)} W_g^{a_g-1} (\\tau^2)^{a_g} e^{ -W_g/\\tau^2 } \\right] \\frac{1}{\\Gamma(b)} (\\tau^2)^{-b-1} e^{ -1/\\tau^2} \\end{split} \\end{equation*} Then, consider the change of variable, mapping $(W_1,\\dots ,W_G,\\tau^2 )$ to $(\\gamma _1,\\dots ,\\gamma _G,\\tau^2)$ by $W_g = \\gamma _g\\tau^2$.",
+    "2412-15293_sent_8c37acff": "Note that the Jacobian is $(\\tau ^2)^{G}$.",
+    "2412-15293_sent_e0baf8e2": "Then we have the joint density of $(\\gamma_1,\\dots ,\\gamma_G,\\tau^2)$ as,",
+    "2412-15293_sent_844a28f8": "\\begin{split} \\pi(\\gamma _1,\\dots , \\gamma _G, \\tau^2) &= \\pi_{(W_1,\\dots ,W_G,\\tau^2)}(\\gamma _1\\tau^2,\\dots , \\gamma _G\\tau^2, \\tau^2) \\left| \\frac{d(W_1,\\dots ,W_G,\\tau^2)}{d(\\gamma _1,\\dots ,\\gamma_G,\\tau^2)} \\right| \\\\ &= \\left[ \\prod _{g=1}^G \\frac{1}{\\Gamma (a_g)} (\\gamma _g \\tau^2)^{a_g-1} (\\tau^2)^{-a_g} e^{ -(\\gamma _g\\tau^2)/\\tau^2 } \\right] \\frac{1}{\\Gamma(b)} (\\tau^2)^{-b-1} e^{ -1/\\tau^2} (\\tau^2)^{G} \\\\ &= \\left[ \\prod _{g=1}^G \\frac{1}{\\Gamma (a_g)} \\gamma _g ^{a_g-1} e^{ -\\gamma _g } \\right] \\frac{1}{\\Gamma(b)} (\\tau^2)^{-b-1} e^{ -1/\\tau^2} \\\\ &= \\left[ \\prod _{g=1}^G Gamma(\\gamma_g|a_g,1) \\right] InvGamma(\\tau^2|b,1), \\end{split} \\end{equation*} where the new variables are all independent and",
+    "2412-15293_sent_dd4e153b": "\\gamma _g \\stackrel{ind}{\\sim} Gamma(a_g,1), \\qquad \\tau ^2 \\sim InvGamma(b,1).",
+    "2412-15293_sent_27776924": "\\end{equation*} Define $W=W_1+\\cdots +W_G$.",
+    "2412-15293_sent_1fcb1ec5": "Then, write the vector of $R^2$'s as",
+    "2412-15293_sent_b3cc5524": "\\begin{split} (R^2_1,\\dots,R_G^2,1-R^2) &= \\left( \\frac{W_1}{W+1} , \\dots, \\frac{W_G}{W+1}, \\frac{1}{W+1} \\right) \\\\ &= \\left( \\frac{\\gamma _1}{\\sum_{g'=1}^G \\gamma_{g'} +\\tau^{-2} } , \\dots, \\frac{\\gamma _G}{\\sum_{g'=1}^G \\gamma_{g'} +\\tau^{-2} }, \\frac{\\tau^{-2}}{\\sum_{g'=1}^G \\gamma_{g'} +\\tau^{-2} } \\right) , \\end{split} \\end{equation*} which are the independent gamma ratios and follow the Dirichlet distribution.",
+    "2412-15293_sent_0013c070": "The proposed method, called the Group R2D2 prior, employs a Dirichlet prior distribution on the coefficient of determination for each group, allowing for a flexible and adaptive shrinkage that operates at both group and individual variable levels.",
+    "2412-15293_sent_06af4b87": "We present several theoretical properties of this proposed prior distribution while also developing a Markov Chain Monte Carlo algorithm.",
+    "2412-15293_sent_f0d85c42": "Shrinkage priors are a popular Bayesian tool to handle sparsity in high-dimensional regression settings, and ever since the Horseshoe prior \\citep{carvalho2009handling}, they have garnered significant research attention.",
+    "2412-15293_sent_96f72f3f": "To fix ideas, we give three examples where grouping structure naturally arises.",
+    "2412-15293_sent_1696f629": "Finally, in economics, covariate grouping may come from multi-level predictor variables which leads to many dummy variables corresponding to a single covariate.",
+    "2412-15293_sent_153c1474": "In addition to grouping structure that arises from domain knowledge of the predictor variables, there may also be a known structure that can be leveraged in, e.g., generalized additive models \\citep{xu2016bayesian}.",
+    "2412-15293_sent_02fe4771": "Here, the basis functions corresponding to each spline can be treated as a group.",
+    "2412-15293_sent_397bee22": "As \\cite{tibshirani1996regression} notes in his seminal paper, the maximum likelihood estimate of the LASSO can be thought of as the Bayesian posterior mode of the regression coefficients with Laplace prior distribution.",
+    "2412-15293_sent_c8c718c2": "This can easily be extended to the grouped regression setting.",
+    "2412-15293_sent_f128e917": "If we let $\\bbeta=(\\bbeta_1^{\\top},\\dots,\\bbeta_G^{\\top})^{\\top}$ where $\\bbeta_g$ are the coefficients for group $g\\in\\{1,\\dots,G\\}$, then a prior of the form",
+    "2412-15293_sent_16f2f872": "In this method, the variance of each regression coefficient is comprised of three components.",
+    "2412-15293_sent_6226c7ff": "Finally, we derive some theoretical properties of this prior distribution, as well as an efficient MCMC sampler for posterior approximation.",
+    "2412-15293_sent_9771677f": "The proposed method is shown to outperform the current state-of-the-art on simulated and real-world datasets.",
+    "2412-15293_sent_084e360f": "where $Y_i$ is the response, $\\bx_i$ is a $p$-dimensional vector of explanatory variables, $\\bbeta$ is the $p$-dimensional coefficient vector and $\\epsilon_i$ is the error term.",
+    "2412-15293_sent_149241b5": "The goal is to find the distribution of these parameters which induces a prior distribution with desirable shrinkage properties.",
+    "2412-15293_sent_b30b436e": "Let $W_g=\\sum_{j=1}^{p_g}\\lambda_{gj}$ for $g=1,\\ldots,G$, and $W=\\sum_{g=1}^G W_g=\\sum_{j=1}^{p_g}\\lambda_{gj}$, i.e., $W_g$ quantifies the variation in group $g$ while $W$ quantifies the overall variation in the model.",
+    "2412-15293_sent_c2963576": "Moreover, without loss of generality, we assume that $E(\\bx)={\\bf 0}_p$ and $Var(\\bx)=\\Sigma_x$ where $\\mathbf{0}_n$ is the $n$-dimensional zero vector and $\\Sigma_x$ has one's on the diagonal. We further assume that $\\bx$ and $\\bbeta$ are independent.",
+    "2412-15293_sent_b362d2ca": "Then, for a random variable $Y=\\bx^\\top \\bbeta +\\varepsilon$, it follows that",
+    "2412-15293_sent_d2599691": "\\end{equation*} Please see the Supplemental Materials for further details on these derivations.",
+    "2412-15293_sent_62a70530": "Therefore, $R^2$ is interpreted as the proportion of total variation in the response explained by all coefficients $\\bbeta$, while $R^2_g$ is the proportion of total variation in the response explained by the coefficients only in group $g$, $\\bbeta_g$.",
+    "2412-15293_sent_e2e0d033": "Thus, $R^2_g$ is a relative measure of group $g$'s importance.",
+    "2412-15293_sent_06ed41ed": "The following proposition states sufficient conditions such that this joint prior on $R^2_g$ and $R^2$ is realized, with proof in the Supplemental Materials.",
+    "2412-15293_sent_b14fea4c": "Moreover, the group-specific variances $W_g$'s are marginally Beta-prime distributed, but mutually dependent via $\\tau^2$.",
+    "2412-15293_sent_b3dfa534": "We also let $\\sigma^2\\sim\\mathsf{InvGamma}(n_0,d_0)$.\\footnote{In all experiments, we set $n_0=d_0=1$.} Using the scale mixture representation of the double exponential distribution \\citep{andrews1974scale,west1987scale,park2008bayesian}, $\\beta _{gj}$ becomes conditionally Gaussian with exponentially-distributed latent variable $\\psi _{gj}$ as:",
+    "2412-15293_sent_12954ca1": "We call the class of priors for $\\beta _{gj}$ the {\\it group R2D2 (gR2D2) prior}.",
+    "2412-15293_sent_ca0e45d3": "To reiterate, Proposition~\\ref{prp:r2d2} yields the prior distributions for $W_g$'s and $\\tau^2$ such that the grouped $R^2$'s are Dirichlet distributed, but the prior for weights $\\phi _{gj}$ are arbitrary.",
+    "2412-15293_sent_df15a20d": "It also results in the within-group (conditional) independence, however, in the sense that",
+    "2412-15293_sent_4f7e1ff4": "\\phi_{gj} W_g | \\tau^2 \\stackrel{\\text{ind.}}{\\sim} \\mathsf{Gamma}(a_{gj},1/\\tau^2), \\qquad j=1,\\dots,p_g, \\end{equation*} due to the gamma-Dirichlet relationship (see Proposition 5 of \\cite{zhang2022bayesian}).",
+    "2412-15293_sent_cb17a868": "If the user does not want to use the data to set the hyperparameters, $p_g>n$ for some $g$ such that the linear regression model cannot be fit and/or he wants to explicitly enforce sparsity in the regression coefficients, the following approach is also available.",
+    "2412-15293_sent_2dde9b53": "When there are many groups (large $G$), it is natural to prefer sparsity between groups.",
+    "2412-15293_sent_286d7f31": "To be coherent with the settings of the original R2D2 prior, we set $a_g = a/G$ for all $g$.",
+    "2412-15293_subsection_636a00c4": "Theoretical properties",
+    "2412-15293_sent_838fb3ff": "We now present several theoretical properties of the gR2D2 prior.",
+    "2412-15293_sent_f8efdbd4": "For simplicity, we only consider the Dirichlet distribution on the variance allocation parameters.",
+    "2412-15293_sent_df032521": "A desirable feature for shrinkage priors is to have high concentration at zero (to shrink parameter estimates towards zero) while also having heavy tails (to accurately estimate the signal in the data).",
+    "2412-15293_sent_8e18e629": "We can quantify these two properties with the concentration of the marginal prior distribution of $\\beta_{gj}$ near the origin and the asymptotical tail behavior.",
+    "2412-15293_sent_fe0fd62f": "\\begin{prp} Consider the gR2D2 prior defined as",
+    "2412-15293_sent_9fc49c1d": "\\beta_{gj}|\\phi_{gj}, W_g\\sim \\mathsf{DE}\\left(\\phi_{gj} W_g \\right), \\quad W_g|\\tau^2\\sim\\mathsf{Gamma}(a_g,\\tau^{-2}), \\quad \\\\ \\tau^2\\sim\\mathsf{InvGamma}(b,1), \\boldsymbol{\\phi}_g\\sim\\mathsf{Dirichlet}(a_{g1},\\dots,a_{gp_g}) \\end{multline*} where $\\sigma^2=1$ for simplicity.",
+    "2412-15293_sent_c6a23d9e": "Let $\\pi(\\beta_{gj})$ be the marginal distribution of $\\beta_{gj}$ and $a_{g1}=\\cdots=a_{gp_g}:=a_{g\\pi}$.",
+    "2412-15293_sent_d48a5cda": "Then",
+    "2412-15293_eq_7d249fd9": "\\begin{equation}\n\\pi(\\beta_{gj})\n =O\\left(|\\beta_{gj}|^{-(1-2a_{g\\pi})}\\right) \\text{ as }\\beta_{gj}\\to0\n\\end{equation}",
+    "2412-15293_sent_be5d5d37": "and",
+    "2412-15293_eq_b5996b74": "\\begin{equation}\n\\pi(\\beta_{gj})\n =O\\left(|\\beta_{gj}|^{-(2b+1)}\\right) \\text{ as }\\beta_{gj}\\to\\infty.\n\\end{equation}",
+    "2412-15293_sent_13a1ca95": "\\end{prp} This result shows that the gR2D2 prior is unbounded at the origin while also having polynomial tails, desirable features in a shrinkage prior.",
+    "2412-15293_sent_a55abf51": "Moreover, as $a_{g\\pi},b\\to0$, the origin and tail behavior, respectively, approach $O(|\\beta_{gj}|^{-1})$ which is the boundary for a proper prior, making the gR2D2 prior optimal in this sense.",
+    "2412-15293_sent_a864543b": "These results are identical to that of the original R2D2 prior \\citep{zhang2022bayesian} as their marginal distributions are the same.",
+    "2412-15293_sent_d89e7548": "The key difference between the gR2D2 and R2D2 priors lies not in the marginal distributions but in the dependence between coefficients.",
+    "2412-15293_sent_a64ece77": "Thus, we look at the joint distribution of the coefficients within a particular group, i.e., $\\bbeta_g$.",
+    "2412-15293_sent_68b8df71": "\\begin{prp} Consider the gR2D2 prior as defined in Proposition \\ref{prp:marg}.",
+    "2412-15293_sent_5d822463": "Then integrating out $W_g$ (the group variance parameter), $\\bbeta_g|\\psi_{gj},\\phi_{gj},\\tau^2\\sim\\mathsf{ML}({\\bf 0}_{p_g},\\tau^{-2}\\Phi)$ has a multivariate-Laplace distribution \\citep{eltoft2006multivariate,kozubowski2013multivariate} where $\\Phi$ is a $p_g\\times p_g$ diagonal matrix with $(\\psi_{g1}\\phi_{g1},\\dots,\\psi_{gp_g}\\phi_{gp_g})$ on the diagonal. \\end{prp} Note that a diagonal covariance for the multivariate-Laplace distribution does not imply independence, thus showing that the $\\beta_{gj}$ coefficients are dependent within a group (through the influence of the $W_g$ parameter).",
+    "2412-15293_sent_f80c673b": "Conditioned on $\\psi_{gj}$ and $\\phi_{gj}$, the joint distribution of $\\bbeta_g$ is also, in fact, the same for the original R2D2 prior.",
+    "2412-15293_sent_e7c39341": "It is not, however, the same if we marginalize out the effect of the variance allocation parameters.",
+    "2412-15293_sent_73a04edd": "To see this, consider the first group $g=1$ and notice that for the gR2D2 prior, $\\boldsymbol{\\phi}_1\\sim\\mathsf{Dirichlet}(a_{11},\\dots,a_{1p_1})^\\top$, implying that $\\sum_{j=1}^{p_1}\\phi_{1j}=1$.",
+    "2412-15293_sent_6afd2535": "On the other hand, for the R2D2 prior, $\\boldsymbol{\\phi}=(\\phi_1,\\dots,\\phi_p)^\\top\\sim\\mathsf{Dirichlet}(a_1,\\dots,a_p)$.",
+    "2412-15293_sent_7cd27494": "This means that if we looked only at the coefficients corresponding to group $g=1$, i.e., $(\\phi_1,\\dots,\\phi_{p_1})$, it would not be true that $\\sum_{j=1}^{p_1}\\phi_j=1$.",
+    "2412-15293_sent_dc8036d1": "Since the variance allocation parameter distribution is different for the R2D2 and gR2D2 prior when restricted to a single group, the marginal distribution of $\\bbeta_g$ will also be different.",
+    "2412-15293_sent_15274d62": "To further explore this point, we plot the marginal distribution of $\\bbeta_g$ for the R2D2 and gR2D2 priors.",
+    "2412-15293_sent_f73d3e27": "For simplicity, let $G=2$, $p=4$ and $p_1=p_2=2$.",
+    "2412-15293_sent_7cbf14d1": "We also set $\\psi_{gj}=1$ for all $g,j$ and $\\tau^2=1$ for convenience.",
+    "2412-15293_sent_31b736c3": "For the gR2D2 prior, we first sample $\\boldsymbol{\\phi}_1=(\\phi_{11},\\phi_{12})^\\top\\sim\\mathsf{Dirichlet}(a_{11},a_{12}$) where $a_{11}=a_{12}=a_1/p_1$ with $a_1=a/G$ and $a=1/2$.",
+    "2412-15293_sent_a32b6b09": "Then conditioned on this sample, we make a draw from the multivariate-Laplace distribution described in Proposition \\ref{prp:joint} to obtain a sample of $\\bbeta_1=(\\beta_{11},\\beta_{12})^\\top$.",
+    "2412-15293_sent_9e01b22a": "We follow a similar process to make draws from the R2D2 prior, except now we draw $\\boldsymbol{\\phi}=(\\phi_1,\\dots,\\phi_p)^\\top\\sim\\mathsf{Dirichlet}(a_1,\\dots,a_p)$ where $a_1=\\cdots=a_p:=a/p$ and keep only $\\tilde{\\boldsymbol{\\phi}}=(\\phi_1,\\phi_2)^\\top$.",
+    "2412-15293_sent_6f5b9967": "Again conditioned on this draw, we sample $\\bbeta_1=(\\beta_{11},\\beta_{12})^\\top$.",
+    "2412-15293_sent_8d30d960": "We plot the results of $10,000$ draws in Figure \\ref{fig:joint} to visualize the difference in the joint distribution induced by the gR2D2 prior compared to the original R2D2 prior.",
+    "2412-15293_sent_dc4c8d62": "Indeed, the former yields a much more ``diffuse'' distribution while the latter is more concentrated around the origin.",
+    "2412-15293_sent_597d469c": "This result is sensible as the full Dirichlet distribution of the gR2D2 prior will have a greater variance than simply taking the first two components of a larger Dirichlet distribution in the R2D2 case.",
+    "2412-15293_sent_b4853043": "The results are similar for other parameter values and thus not included here.",
+    "2412-15293_fig_7a3ac082": "\\begin{figure}\n\n \\includegraphics[width=0.99\\linewidth]{figs/gr2d2_r2d2.png}\n \\caption{Realization of the joint distribution of $\\bbeta_1$ for the gR2D2 and R2D2 priors.}\n\n\\end{figure}",
+    "2412-15293_subsection_f154d26b": "Discussion on gR2D2 prior",
+    "2412-15293_sent_b974ee73": "Another valid definition is $\\tilde R^2_g=\\mathsf{Var}(\\bx_g^{\\top}\\bbeta_g)/\\{\\mathsf{Var}(\\bx_g^{\\top}\\bbeta_g)+\\sigma^2\\}=W_g/(W_g+1)$ where now the numerator and denominator variances are only over the group-specific coefficients $\\bbeta_g$.",
+    "2412-15293_sent_fab1c598": "We prefer the first definition, however, as it gives $\\sum_{g=1}^G R_g^2=R^2$, and has a more natural interpretation as the proportion of total variance in the response explained by the coefficients in group $g$.",
+    "2412-15293_subsection_ba399e43": "Comparison with GIGG prior",
+    "2412-15293_sent_e378001a": "Thus, at each level of the model, the gR2D2 prior encodes dependence among the variance parameters, while all such parameters are independent for GIGG.",
+    "2412-15293_sent_f4b72cec": "While this dependence leads to good empirical performance, it make deriving further theoretical results, e.g., posterior consistency, more difficult, so we postpone this for future work.",
+    "2412-15293_sent_557a5ff4": "We may also compare the marginal properties of $\\beta_{gj}$ between the gR2D2 and GIGG priors.",
+    "2412-15293_sent_87429279": "First, for the asymptotic tail behavior, we showed in Proposition \\ref{prp:marg} that the gR2D2 prior behaves like $O(|\\beta_{gj}|^{-(2b+1)})$.",
+    "2412-15293_sent_777e8268": "In Theorem 2.1 of \\cite{boss2023group}, the authors show that the GIGG prior is $O(|\\beta_{gj}|^{-(2b_g+1)})$ for hyper-parameter $b_g$.",
+    "2412-15293_sent_74372d16": "Thus, the two priors exhibit similar (marginal) tail behavior.",
+    "2412-15293_sent_6f270241": "For concentration around the origin, we found that the gR2D2 prior was $O(|\\beta_{gj}|^{-(1-2a_{g\\pi})})$.",
+    "2412-15293_sent_b483266d": "Unfortunately, neither \\cite{boss2023group} nor \\cite{bai2019large} precisely characterize the origin behavior, only stating that it is unbounded at 0.",
+    "2412-15293_sent_df9f0b9d": "We note, however, that the marginal prior distribution of the GIGG prior is the same as that of the gR2D2 prior (for $\\sigma^2=1$), except that the former uses a normal distribution for $\\beta_{gj}$ while the latter uses a Laplace distribution.",
+    "2412-15293_sent_12854ac8": "Since the Laplace prior has greater concentration at 0, we expect that the gR2D2 prior will have more prior mass at 0 compared with the GIGG prior.",
+    "2412-15293_sent_5718ba46": "We see evidence of this in both the simulation study and real-data analysis.",
+    "2412-15293_sent_2efe4a60": "Finally, the parameter values themselves are also less interpretable in the GIGG model, in particular $\\tau^2$.",
+    "2412-15293_sent_de4cad86": "Ideally, the value of $\\tau^2$ should relate to the overall variance of the model, e.g., a small $\\tau^2$ means that there is very little signal in the data.",
+    "2412-15293_sent_c186254d": "Similarly, $\\gamma_g^2>\\gamma_{g'}^2$ should encode that group $g$ has more variability than group $g'$.",
+    "2412-15293_sent_0361bfe3": "We claim that this latter condition is true but the former is not.",
+    "2412-15293_sent_bc53638f": "Indeed, if we scale by a constant $c$, yielding $\\tau^2/c$ and $c\\gamma_g^2$, then their product is the same as is their relative comparison of $c\\gamma_g^2,c\\gamma_{g'}^2$, but the value of $\\tau^2/c$ (global variance) changes.",
+    "2412-15293_sent_8f4afc1f": "Therefore, it is not appropriate to consider $\\tau^2$ as the global variance in this sense.",
+    "2412-15293_sent_f65d7901": "On the other hand, in the gR2D2 model, due to the constraints introduced in Proposition \\ref{prp:r2d2}, $W=\\sum_gW_g$ is a proper global variance parameter and $W_g$ (or more precisely $R^2_g$) yields the relative sense of group variance.",
+    "2412-15293_sent_70375d00": "We consider two cases for the sample size and the number of covariates, i.e., $(n,p)\\in\\{(250, 50), (150, 200)\\}$.",
+    "2412-15293_sent_f8f3938f": "The coefficients are grouped into $G=5$ (under $p=50$) and $G=20$ (under $p=200$) groups of $p_g=10$ coefficients for $j=1,\\dots,G$.",
+    "2412-15293_sent_e659f6d6": "&{\\rm (s1)} \\ \\ \\beta_{11},\\beta_{21},\\beta_{41}=5, \\ \\ \\beta_{31},\\beta_{51}=-5\\\\ &{\\rm (s2)} \\ \\ \\beta_{11},\\beta_{12}, \\beta_{13}=3,\\ \\ \\beta_{21}, \\beta_{22},\\beta_{23}=-3, \\ \\ \\beta_{31}=2, \\ \\ \\beta_{51},\\beta_{52},\\beta_{53},\\beta_{54},\\beta_{55}=-1\\\\ &{\\rm (s3)} \\ \\ \\beta_{11},\\beta_{12}, \\beta_{13}=3,\\ \\ \\beta_{21}, \\beta_{22},\\beta_{23}=-3, \\ \\ \\beta_{51}=3, \\beta_{55}=4 \\\\ &{\\rm (s4)} \\ \\ \\beta_{11}, \\beta_{13},\\beta_{15},\\beta_{17},\\beta_{19}=3, \\ \\ \\beta_{31},\\beta_{32},\\beta_{33},\\beta_{34},\\beta_{35}=-2\\\\ &{\\rm (s5)} \\ \\ \\beta_{11}, \\beta_{15},\\beta_{19}=5, \\ \\ \\beta_{13},\\beta_{17}=-5 \\end{align*} Note that $\\sum_{g=1}^G\\sum_{j=1}^{p_g}|\\beta_{gj}|=25$ for all the scenarios, and number of null groups increases from 0 to 4 going from scenario 1 to 5.",
+    "2412-15293_sent_6018ef5c": "Significant coefficients are roughly equally distributed between three and two groups in settings 3 and 4, respectively, whereas all non-null coefficients are in a single group in setting 5.",
+    "2412-15293_sent_76119431": "As a baseline, we consider prior frameworks that do not account for grouping structure, including the original R2D2 prior \\citep{zhang2022bayesian} and the horseshoe prior (HS) \\citep{carvalho2009handling}.",
+    "2412-15293_sent_b1e0692d": "Finally, for the gR2D2 prior, the variance allocation parameters follow either the Dirichlet distribution (gR2D2-D) or the logistic normal distribution (gR2D2-L).",
+    "2412-15293_eq_98f6af0d": "\\begin{equation}\n{\\rm MSE}_{gj}\n=\\frac1{R}\\sum_{r=1}^R (\\widehat{\\beta}^{(r)}_{gj}-\\beta_{gj})^2, \\ \\ \\ \\ k=1,\\ldots,p,\n\\end{equation}",
+    "2412-15293_sent_5f330382": "where $\\widehat{\\beta}^{(r)}_{gj}$ denotes the posterior mean of $\\beta_{gj}$ in the $r$th replication.",
+    "2412-15293_sent_ce8f2bfb": "The MSE values are aggregated over $g=1,\\ldots,G$ and $j=1,\\ldots,p_g$, but separated between null and non-null coefficients.",
+    "2412-15293_sent_45ef68bb": "Furthermore, we evaluate $95\\%$ credible intervals ${\\rm CI}_{gj}^{(r)}$ of regression coefficients by empirical coverage probability (CP), and average lengths (AL) of the credible interval $|{\\rm CI}_{gj}^{(r)}|$, defined as",
+    "2412-15293_eq_ef48ab21": "\\begin{equation}\n{\\rm CP}_{gj}=\\frac1R\\sum_{r=1}^R I(\\beta_{gj}\\in {\\rm CI}_{gj}^{(r)}), \\ \\ \\ \\ \\ \\ \n{\\rm AL}_{gj}=\\frac1R\\sum_{r=1}^R |{\\rm CI}_{gj}^{(r)}|.\n\\end{equation}",
+    "2412-15293_sent_0d462e46": "The values of CP and AL are averaged over $g=1,\\ldots,G$ and $j=1,\\ldots,p_g$.",
+    "2412-15293_sent_9eacf710": "The MSE results are in Table~\\ref{tab:sim}.",
+    "2412-15293_sent_a1957e96": "For $n=250$ and $p=50$, the gR2D2-D prior provides the most accurate estimates for null-signals, while GIGG, GHS and gR2D2-D perform well in estimating signals.",
+    "2412-15293_sent_43171612": "For larger SNR ($0.7$), the performance of the gR2D2-D prior improves and outperforms than the GIGG prior in Scenarios 3 and 5.",
+    "2412-15293_sent_db8eac1d": "The results are similar when $n=150$ and $p=200$.",
+    "2412-15293_sent_c1cdf2d8": "The credible intervals of the gR2D2-L prior are slightly wider, likely due to the extra parameters and model flexibility.",
+    "2412-15293_sent_26f4437c": "This is likely because we believe the gR2D2 prior distribution has a higher concentration of prior mass at 0 compared with that of GIGG.",
+    "2412-15293_fig_9fb0924f": "\\begin{table}\n\n{ \n\n\\begin{tabular}{ccccccccccccccc}\n\n\\multicolumn{3}{c}{$(n,p)=(250, 50)$}& \\multicolumn{5}{c}{Null} && \\multicolumn{5}{c}{Non-null}\\\\\nSNR & Scenario & & 1 & 2 & 3 & 4 & 5 & & 1 & 2 & 3 & 4 & 5 \\\\\n\n & R2D2 & & 1.67 & 1.64 & 2.40 & 3.25 & 0.77 & & {\\bf 3.63} & 13.8 & 14.1 & 31.7 & 3.99 \\\\\n & HS & & 1.86 & 2.36 & 3.20 & 3.67 & 0.86 & & 4.32 & 12.0 & 13.5 & 27.0 & 4.96 \\\\\n0.5 & GIGG & & 10.4 & 8.06 & 10.5 & 11.9 & 6.11 & & 4.84 & {\\bf 8.65} & {\\bf 9.85} & {\\bf 16.3} & 5.02 \\\\\n & GHS & & 2.41 & 3.06 & 3.97 & 4.18 & 1.93 & & 4.56 & 11.7 & 11.9 & 19.0 & 4.45 \\\\\n & gR2D2-D & & {\\bf 1.11} & {\\bf 1.00} & {\\bf 1.48} & {\\bf 1.62} & {\\bf 0.18} & & 4.29 & 16.8 & 14.5 & 30.9 & {\\bf 3.93} \\\\\n & gR2D2-L & & 1.68 & 1.50 & 2.12 & 2.63 & 0.53 & & 3.94 & 13.6 & 13.6 & 29.6 & 4.11 \\\\\n\n & R2D2 & & 0.65 & 0.57 & 0.71 & 1.31 & 0.39 & & {\\bf 1.31} & 4.94 & 3.51 & 12.4 & 1.46 \\\\\n & HS & & 0.73 & 1.21 & 1.35 & 2.22 & 0.41 & & 1.39 & 4.41 & 4.00 & 11.1 & 1.57 \\\\\n0.7 & GIGG & & 5.66 & 4.43 & 5.64 & 7.00 & 3.37 & & 1.70 & {\\bf 3.66} & 3.83 & {\\bf 7.84} & 1.77 \\\\\n & GHS & & 0.94 & 1.71 & 1.96 & 2.61 & 0.96 & & 1.42 & 4.36 & 3.82 & 7.98 & 1.62 \\\\\n & gR2D2-D & & {\\bf 0.47} & {\\bf 0.37} & {\\bf 0.41} & {\\bf 0.61} & {\\bf 0.10} & & 1.36 & 6.33 & {\\bf 3.46} & 11.8 & {\\bf 1.44} \\\\\n & gR2D2-L & & 0.67 & 0.54 & 0.65 & 1.02 & 0.26 & & 1.37 & 4.86 & 3.54 & 11.6 & 1.48 \\\\\n\n\\end{tabular}\n\n\\begin{tabular}{ccccccccccccccc}\n\n\\multicolumn{3}{c}{$(n,p)=(150, 200)$}& \\multicolumn{5}{c}{Null} && \\multicolumn{5}{c}{Non-null}\\\\\nSNR & Scenario & & 1 & 2 & 3 & 4 & 5 & & 1 & 2 & 3 & 4 & 5 \\\\\n\n & R2D2 & & 28.5 & 32.4 & 38.7 & 37.4 & 11.8 & & {\\bf 15.7} & 44.0 & 41.9 & 48.2 & 12.4 \\\\\n & HS & & 3.50 & 6.52 & 6.22 & 5.04 & 1.15 & & 19.3 & 50.2 & 50.8 & 58.3 & 28.5 \\\\\n0.5 & GIGG & & 43.5 & 43.9 & 48.8 & 47.8 & 28.8 & & 22.1 & {\\bf 30.8} & {\\bf 31.6} & {\\bf 31.6} & 19.4 \\\\\n & GHS & & 10.3 & 10.7 & 8.78 & 7.13 & 6.27 & & 19.7 & 36.2 & 36.7 & 35.7 & {\\bf 9.49} \\\\\n & gR2D2-D & & {\\bf 2.20} & {\\bf 5.10} & {\\bf 5.55} & {\\bf 4.46} & {\\bf 0.40} & & 26.4 & 42.5 & 45.1 & 49.2 & 10.6 \\\\\n & gR2D2-L & & 13.2 & 15.8 & 18.2 & 15.7 & 5.17 & & {\\bf 15.7} & 39.4 & 37.9 & 43.9 & 11.1 \\\\\n\n & R2D2 & & 12.1 & 13.8 & 15.2 & 19.0 & 5.67 & & 3.34 & 22.9 & 21.6 & 30.6 & 3.29 \\\\\n & HS & & 1.41 & 2.54 & 3.28 & 2.98 & 0.42 & & {\\bf 2.72} & 28.3 & 26.4 & 38.0 & 3.26 \\\\\n & GIGG & & 28.9 & 29.2 & 32.0 & 35.0 & 19.3 & & 6.28 & {\\bf 18.8} & 18.4 & 22.4 & 6.38 \\\\\n0.7 & GHS & & 2.71 & 4.23 & 5.35 & 4.21 & 1.73 & & 3.11 & 19.7 & {\\bf 16.9} & {\\bf 18.8} & 3.20 \\\\\n & gR2D2-D & & {\\bf 1.26} & {\\bf 2.12} & {\\bf 2.15} & {\\bf 1.90} & {\\bf 0.15} & & 2.78 & 24.6 & 19.4 & 27.4 & {\\bf 2.73} \\\\\n & gR2D2-L & & 6.15 & 6.46 & 7.64 & 7.74 & 2.13 & & 3.18 & 20.7 & 18.8 & 25.9 & 3.10 \\\\\n\n\\end{tabular}\n\n\\caption{MSE under five scenarios of regression coefficients and two values of SNR. The lowest value for each setting is represented in {\\bf bold}.\n\n\\end{table}",
+    "2412-15293_fig_30c947f7": "\\begin{table}\n\n{\n\\begin{tabular}{ccccccccccccccc}\n\n\\multicolumn{3}{c}{$(n,p)=(250, 50)$}& \\multicolumn{5}{c}{SNR$=0.5$} && \\multicolumn{5}{c}{SNR$=0.7$}\\\\\n & Scenario & & 1 & 2 & 3 & 4 & 5 & & 1 & 2 & 3 & 4 & 5 \\\\\n\n & R2D2 & & 99.3 & 96.4 & 98.1 & 96.8 & 99.3 & & 99.4 & 97.5 & 98.9 & 97.9 & 99.4 \\\\\n & HS & & 99.2 & 96.7 & 97.7 & 96.8 & 99.0 & & 99.4 & 97.5 & 98.5 & 97.6 & 99.3 \\\\\nCP & GIGG & & 98.2 & 97.1 & 97.2 & 97.5 & 97.9 & & 98.0 & 96.9 & 97.3 & 97.2 & 97.6 \\\\\n & GHS & & 99.1 & 96.4 & 97.9 & 97.6 & 99.1 & & 99.4 & 97.5 & 98.4 & 98.1 & 99.2 \\\\\n & gR2D2-D & & 99.2 & 92.9 & 98.0 & 96.7 & 99.4 & & 99.4 & 96.5 & 98.9 & 98.0 & 99.5 \\\\\n & gR2D2-L & & 99.3 & 96.2 & 98.2 & 97.0 & \n 99.3 & & 99.4 & 97.6 & 98.9 & 98.1 & 99.5 \\\\\n\n & R2D2 & & 1.79 & 1.80 & 1.96 & 2.45 & 1.36 & & 1.17 & 1.20 & 1.26 & 1.68 & 0.90 \\\\\n & HS & & 1.98 & 2.05 & 2.24 & 2.67 & 1.50 & & 1.29 & 1.43 & 1.51 & 1.94 & 0.98 \\\\\nAL & GIGG & & 2.67 & 2.46 & 2.71 & 3.19 & 2.03 & & 1.83 & 1.71 & 1.87 & 2.25 & 1.39 \\\\\n & GHS & & 2.08 & 2.05 & 2.22 & 2.53 & 1.38 & & 1.35 & 1.44 & 1.49 & 1.77 & 0.91 \\\\\n & gR2D2-D & & {\\bf 1.65} & {\\bf 1.28} & {\\bf 1.42} & {\\bf 1.53} & {\\bf 0.64} & & {\\bf 1.11} & {\\bf 0.99} & {\\bf 0.92} & {\\bf 1.06} & {\\bf 0.41} \\\\\n & gR2D2-L & & 1.89 & 1.81 & 1.96 & 2.35 & 1.26 & & 1.25 & 1.24 & 1.27 & 1.62 & 0.82 \\\\\n\n\\end{tabular}\n\n\\begin{tabular}{ccccccccccccccc}\n\n\\multicolumn{3}{c}{$(n,p)=(150, 200)$}& \\multicolumn{5}{c}{SNR$=0.5$} && \\multicolumn{5}{c}{SNR$=0.7$}\\\\\n & Scenario & & 1 & 2 & 3 & 4 & 5 & & 1 & 2 & 3 & 4 & 5 \\\\\n\n & R2D2 & & 99.3 & 98.1 & 98.9 & 98.6 & 99.4 & & 99.5 & 98.4 & 99.0 & 98.8 & 99.5 \\\\\n & HS & & 99.7 & 97.8 & 99.1 & 98.3 & 99.6 & & 99.8 & 98.3 & 99.3 & 98.7 & 99.8 \\\\\nCP & GIGG & & 99.1 & 98.9 & 99.0 & 99.0 & 99.1 & & 99.0 & 98.5 & 98.9 & 98.7 & 98.8 \\\\\n & GHS & & 99.4 & 98.1 & 99.4 & 99.0 & 99.5 & & 99.8 & 98.6 & 99.4 & 99.3 & 99.7 \\\\\n & gR2D2-D & & 99.6 & 97.1 & 99.3 & 98.6 & 99.8 & & 99.8 & 97.9 & 99.5 & 99.2 & 99.8 \\\\\n & gR2D2-L & & 99.5 & 98.5 & 99.3 & 98.9 & 99.6 & & 99.7 & 98.7 & 99.4 & 99.1 & 99.7 \\\\\n\n & R2D2 & & 2.16 & 2.28 & 2.50 & 2.64 & 1.57 & & 1.42 & 1.56 & 1.66 & 1.83 & 1.05 \\\\\n & HS & & 1.62 & 1.63 & 1.86 & 1.80 & 1.13 & & 1.04 & 1.28 & 1.39 & 1.45 & 0.77 \\\\\nAL & GIGG & & 3.17 & 3.21 & 3.46 & 3.60 & 2.49 & & 2.31 & 2.40 & 2.55 & 2.72 & 1.82 \\\\\n & GHS & & 1.86 & 1.81 & 2.03 & 1.95 & 1.14 & & 1.21 & 1.33 & 1.42 & 1.42 & 0.77 \\\\\n & gR2D2-D & & {\\bf 0.74} & {\\bf 0.65} & {\\bf 0.75} & {\\bf 0.68} & {\\bf 0.33} & & {\\bf 0.50} & {\\bf 0.50} & {\\bf 0.52} & {\\bf 0.50} & {\\bf 0.22} \\\\\n & gR2D2-L & & 1.95 & 2.01 & 2.22 & 2.28 & 1.36 & & 1.30 & 1.40 & 1.49 & 1.60 & 0.91 \\\\\n\n\\end{tabular}\n\n\\caption{Coverage probability (\\%) and average interval length of $95\\%$ credible intervals of regression coefficients, averaged over all the coefficients, under five scenarios of true regression coefficients and two values of SNR. The narrowest credible intervals are represented in {\\bf bold}.\n\n\\end{table}",
+    "2412-15293_sent_1c193572": "We considered both a Dirichlet and logistic normal distribution for the variance allocation parameters and discussed various hyperparameter choices.",
+    "2412-15293_sent_a586d294": "In particular, we prefer an Empirical Bayes-inspired approach of estimating the group-specific $R^2_g$ to guide the hyperparameter choices.",
+    "2412-15293_sent_ccf0274d": "\\bibliographystyle{chicago} \\bibliography{refs} \\appendix \\setcounter{equation}{0} \\renewcommand{\\theequation}{A\\arabic{equation}} \\begin{center} {\\bf { Supplemental Materials}} \\end{center}",
+    "2412-15293_section_538d4012": "$R^2$ derivation",
+    "2412-15293_sent_77387361": "Recall that $\\beta_{gj}|\\lambda_{gj},\\sigma^2$ is such that $E(\\beta_{gj})=0$ and $Var(\\beta_{gj})=\\sigma^2\\lambda_{gj}$ with independence among the $\\beta_{gj}$'s conditional on the variance parameters, i.e., $Var(\\bbeta)=\\sigma^2\\Lambda$ where $\\Lambda$ is a diagonal matrix with $(\\lambda_{11},\\dots,\\lambda_{Gp_G})$ on the diagonal. Furthermore, $E(\\bx)={\\bf 0}_p$ and $Var(\\bx)=\\Sigma_x$ where the diagonal of $\\Sigma_x$ is all ones.",
+    "2412-15293_sent_2abd244c": "Then we can show:",
+    "2412-15293_sent_b08244c2": "Var(\\bx^\\top\\bbeta) &=E_{\\bx}(Var_{\\bbeta}(\\bbeta|\\bx)) + Var_{\\bx}(E_{\\bbeta}(\\bbeta|\\bx)) \\\\ &=E_{\\bx}(\\sigma^2\\bx^\\top\\Lambda\\bx) + Var_{\\bx}(0) \\\\ &=\\sigma^2E_{\\bx}(tr(\\bx^\\top\\Lambda\\bx))\\\\ &=\\sigma^2tr(\\LambdaE_{\\bx}(\\bx\\bx^\\top))\\\\ &=\\sigma^2tr(\\Lambda\\Sigma_x)\\\\ &=\\sigma^2\\sum_{g=1}^G\\sum_{j=1}^{p_i}\\lambda_{gj}.",
+    "2412-15293_sent_da4d0a7e": "\\end{align*} The rest of the derivation of $R^2$ follows immediately.",
+    "2412-15293_section_0ab7bbe4": "Proof of Proposition 2",
+    "2412-15293_sent_3a173596": "The gR2D2 prior is",
+    "2412-15293_sent_464224bc": "\\beta_{gj}|\\phi_{gj}, W_g\\sim \\mathsf{DE}\\left(\\phi_{gj} W_g \\right), \\quad W_g|\\tau^2\\sim\\mathsf{Gamma}(a_g,\\tau^{-2}), \\quad \\\\ \\tau^2\\sim\\mathsf{InvGamma}(b,1), \\boldsymbol{\\phi}_g\\sim\\mathsf{Dirichlet}(a_{g1},\\dots,a_{gp_g}).",
+    "2412-15293_sent_e6636024": "\\end{multline*} If we let $a_{gj}=a_{g\\pi}$ for $j=1,\\dots,p_g$, then this is equivalent to",
+    "2412-15293_sent_70ec748f": "\\beta_{gj}|\\phi_{gj}, W_g\\sim \\mathsf{DE}\\left(\\phi_{gj} W_g \\right), \\quad W_g\\sim\\mathsf{BP}(a_g,b),\\ \\boldsymbol{\\phi}_g\\sim\\mathsf{Dirichlet}(a_{g\\pi},\\dots,a_{g\\pi}).",
+    "2412-15293_sent_72be4e49": "\\end{equation*} We can see that this is equivalent to the original R2D2 prior so we recover the results from Theorem 1 and Theorem 4 of \\cite{zhang2022bayesian} for the tail behavior and origin concentration, respectively.",
+    "2412-15293_section_64c72eca": "Proof of Proposition 3",
+    "2412-15293_sent_ff0248c0": "We follow the same approach as in \\cite{boss2023group}.",
+    "2412-15293_sent_1bd47492": "Again, let $\\sigma^2=1$.",
+    "2412-15293_eq_b29159c7": "\\begin{equation}\n\\bbeta_g|W_g,\\psi_{gj},\\phi_{gj}\\sim\\mathsf{N}({\\bf 0}_{p_g}, W_g\\Phi)\n\\end{equation}",
+    "2412-15293_sent_60a3b7f4": "where $\\Phi$ is a diagonal matrix with $(\\psi_{g1}\\phi_{g1},\\dots,\\psi_{gp_g}\\phi_{gp_g})$ on the diagonal. Noting that $W_g|\\tau^2\\sim\\mathsf{Gamma}(a_g,\\tau^{-2})$ and integrating out $W_g$, we get",
+    "2412-15293_sent_955078bf": "&\\pi(\\bbeta_g|\\psi_{gj},\\phi_{gj},\\tau^2)\\\\ &=\\int \\pi(\\bbeta_g|W_g,\\psi_{gj},\\phi_{gj},\\tau^2) \\pi(W_g|\\tau^2)\\ dW_g\\\\ &\\propto \\int_0^\\infty W_g^{-p_g/2}\\exp\\left(-\\frac1{2W_g}\\bbeta_g^\\top \\Phi^{-1}\\bbeta_g\\right) W_g^{a_g-1}\\exp(-W_g/\\tau^2)\\ dW_g\\\\ &\\propto \\int_0^\\infty W_g^{a_g-p_g/2-1}\\exp\\left(- \\frac{W_g}{\\tau^2}-\\frac1{2W_g}\\bbeta_g^\\top \\Phi^{-1}\\bbeta_g \\right)\\ dW_g\\\\ &\\propto \\int_0^\\infty V_g^{a_g-p_g/2-1}\\exp\\left\\{- V_g-\\frac{\\left(\\sqrt{2\\tau^2\\bbeta_g^\\top \\Phi^{-1}\\bbeta_g}\\right)^2}{4V_g} \\right\\}\\ dV_g\\\\ &\\propto \\frac{\\left(\\sqrt{2\\tau^2\\bbeta_g^\\top \\Phi^{-1}\\bbeta_g}\\right)^{a_g-p_g/2}}{\\left(\\sqrt{2\\tau^2\\bbeta_g^\\top \\Phi^{-1}\\bbeta_g}\\right)^{a_g-p_g/2}} \\int_0^\\infty V_g^{a_g-p_g/2-1}\\exp\\left\\{- V_g-\\frac{\\left(\\sqrt{2\\tau^2\\bbeta_g^\\top \\Phi^{-1}\\bbeta_g}\\right)^2}{4V_g} \\right\\}\\ dV_g\\\\ &\\propto \\left(\\sqrt{2\\tau^2\\bbeta_g^\\top \\Phi^{-1}\\bbeta_g}\\right)^{a_g-p_g/2}K_{a_g-p_g/2}\\left(\\sqrt{2\\tau^2\\bbeta_g^\\top \\Phi^{-1}\\bbeta_g}\\right) \\end{align*} where we made the change of variables $V_g=W_g/\\tau^2$.",
+    "2412-15293_sent_687428b4": "We recognize this final expression as the kernel of the multivariate Laplace distribution with mean ${\\bf 0}_{p_g}$ and covariance $\\tau^{-2}\\Phi$ \\citep{kozubowski2013multivariate}."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15293_sent_89eb4585": "2412-15293_doc_root",
+      "2412-15293_sent_c4bd516c": "2412-15293_doc_root",
+      "2412-15293_sent_971f2934": "2412-15293_doc_root",
+      "2412-15293_sent_24f6a5c3": "2412-15293_doc_root",
+      "2412-15293_sent_6f17c6d6": "2412-15293_doc_root",
+      "2412-15293_sent_f3449457": "2412-15293_doc_root",
+      "2412-15293_sent_c4d9fb81": "2412-15293_doc_root",
+      "2412-15293_sent_dfe3553f": "2412-15293_doc_root",
+      "2412-15293_section_0b79795d": "2412-15293_doc_root",
+      "2412-15293_sent_7fe23c35": "2412-15293_section_0b79795d",
+      "2412-15293_sent_f3a0ac78": "2412-15293_section_0b79795d",
+      "2412-15293_sent_b815d146": "2412-15293_section_0b79795d",
+      "2412-15293_sent_eb021c78": "2412-15293_section_0b79795d",
+      "2412-15293_sent_13920403": "2412-15293_section_0b79795d",
+      "2412-15293_sent_ce7ac2fb": "2412-15293_section_0b79795d",
+      "2412-15293_sent_8c71b6d2": "2412-15293_section_0b79795d",
+      "2412-15293_sent_da96e32e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_2251192e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_d3a86fec": "2412-15293_section_0b79795d",
+      "2412-15293_sent_442cfae7": "2412-15293_section_0b79795d",
+      "2412-15293_sent_eea128e2": "2412-15293_section_0b79795d",
+      "2412-15293_sent_72ce1317": "2412-15293_section_0b79795d",
+      "2412-15293_sent_a0213098": "2412-15293_section_0b79795d",
+      "2412-15293_sent_f073eb50": "2412-15293_section_0b79795d",
+      "2412-15293_sent_1da16ddb": "2412-15293_section_0b79795d",
+      "2412-15293_sent_228bed3c": "2412-15293_section_0b79795d",
+      "2412-15293_sent_d07155c5": "2412-15293_section_0b79795d",
+      "2412-15293_sent_3476237e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_79d3dea7": "2412-15293_section_0b79795d",
+      "2412-15293_eq_9b0a2c48": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c203194a": "2412-15293_section_0b79795d",
+      "2412-15293_sent_67c37903": "2412-15293_section_0b79795d",
+      "2412-15293_sent_ac13a00d": "2412-15293_section_0b79795d",
+      "2412-15293_sent_324aea3e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_4ba83d7e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_58f19dc4": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c0e38d60": "2412-15293_section_0b79795d",
+      "2412-15293_sent_6d000d41": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c7fa6701": "2412-15293_section_0b79795d",
+      "2412-15293_sent_e94f871b": "2412-15293_section_0b79795d",
+      "2412-15293_eq_1a196c60": "2412-15293_section_0b79795d",
+      "2412-15293_sent_dce6e208": "2412-15293_section_0b79795d",
+      "2412-15293_sent_5575e35c": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c48e9717": "2412-15293_section_0b79795d",
+      "2412-15293_sent_5d0793e3": "2412-15293_section_0b79795d",
+      "2412-15293_sent_d56979d4": "2412-15293_section_0b79795d",
+      "2412-15293_sent_b240eea6": "2412-15293_section_0b79795d",
+      "2412-15293_sent_032aadd6": "2412-15293_section_0b79795d",
+      "2412-15293_sent_5f23028b": "2412-15293_section_0b79795d",
+      "2412-15293_sent_d7604bce": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c177fc7e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_9debe123": "2412-15293_section_0b79795d",
+      "2412-15293_section_2f18df61": "2412-15293_doc_root",
+      "2412-15293_subsection_cc745ea0": "2412-15293_section_2f18df61",
+      "2412-15293_sent_ff7d4af5": "2412-15293_subsection_cc745ea0",
+      "2412-15293_eq_2b1a7ca5": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_5cbc3728": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_7bec6d66": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_938e075b": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_b09aee7a": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_3a7390a0": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_7b9f380c": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_52446654": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_5fe10aaa": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_6679b97e": "2412-15293_subsection_cc745ea0",
+      "2412-15293_subsection_34a155a5": "2412-15293_section_2f18df61",
+      "2412-15293_sent_f15b3659": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_23c0ca90": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_8d2e3525": "2412-15293_subsection_34a155a5",
+      "2412-15293_eq_ff905510": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_71378426": "2412-15293_subsection_34a155a5",
+      "2412-15293_eq_48330082": "2412-15293_section_75300af1",
+      "2412-15293_sent_bae77b43": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_b82a1693": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_921c5aea": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_64f3cbbf": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_b6c5a990": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_d19127d6": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_13b965ad": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_1f93bb27": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_55472ebf": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_1d09404a": "2412-15293_subsection_34a155a5",
+      "2412-15293_eq_a7fe881d": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_62792628": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_1cb90504": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_be98eee8": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_63d859a6": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_81508855": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_e829a4a3": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_f881ed2f": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_a5ae6593": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_f3283f6b": "2412-15293_subsection_34a155a5",
+      "2412-15293_subsection_aa9e416c": "2412-15293_section_2f18df61",
+      "2412-15293_sent_236caaa2": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_927cbbc6": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_85d555a9": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_d95094df": "2412-15293_subsection_aa9e416c",
+      "2412-15293_eq_81380860": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_8cdf04ad": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_c6657df5": "2412-15293_subsection_aa9e416c",
+      "2412-15293_subsection_db304a69": "2412-15293_section_2f18df61",
+      "2412-15293_sent_4214bc2d": "2412-15293_subsection_db304a69",
+      "2412-15293_sent_a9fb450a": "2412-15293_subsection_db304a69",
+      "2412-15293_sent_a0e19706": "2412-15293_subsection_db304a69",
+      "2412-15293_subsubsection_c66c34be": "2412-15293_subsection_db304a69",
+      "2412-15293_sent_504a0357": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_8c368fd7": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_f5d989ea": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_6d6973a5": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_03858840": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_2be3b862": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_9a43217a": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_subsubsection_d095b4e4": "2412-15293_subsection_db304a69",
+      "2412-15293_sent_160a4300": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_c9708860": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_eq_839c6ce7": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_1393a1eb": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_795b07a5": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_eq_e724b267": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_96bf6370": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_eq_2343a5e6": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_7d5dc8a9": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_eca1fe3f": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_subsection_9ce65ad2": "2412-15293_section_2f18df61",
+      "2412-15293_sent_78d54cd1": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_e674ddad": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_cec23242": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_subsubsection_f228b152": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_e65f331e": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_cfb311ea": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_bff40ab3": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_c5d69264": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_56bd3798": "2412-15293_subsubsection_f228b152",
+      "2412-15293_eq_2de234ca": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_1aa5bd4b": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_ae521aa3": "2412-15293_subsubsection_f228b152",
+      "2412-15293_eq_aca72711": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_28f752d8": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_f4910440": "2412-15293_subsubsection_f228b152",
+      "2412-15293_subsubsection_e6aca53a": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_17e9d11e": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_ee70ae35": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_18c48e6b": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_b7dcbdff": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_48d4f69b": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_76a48b2e": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_subsubsection_dc025c62": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_23a95c90": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_e81af1b2": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_4f4ac412": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_a028d0bf": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_660e145d": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_ddb1ac68": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_1a3b9ae6": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_80e42422": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_subsection_81174b10": "2412-15293_section_2f18df61",
+      "2412-15293_sent_5def14fe": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_a1f8abdc": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_2cd22ca2": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_81d75f1f": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_08457195": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_dfb1a5d5": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_e2bf6705": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_bad83dcf": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_7fa55a53": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_d6e159b7": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_3dee6e5c": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_ca67b29e": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_0480a85d": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_08ca48b1": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_b6d94a26": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_15227a8f": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_5bc50ea4": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_ac82b6b2": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_73fa9342": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_159604ae": "2412-15293_subsection_81174b10",
+      "2412-15293_sent_cc4ed779": "2412-15293_subsection_81174b10",
+      "2412-15293_section_f2764b96": "2412-15293_doc_root",
+      "2412-15293_subsection_81b65fd4": "2412-15293_section_f2764b96",
+      "2412-15293_sent_5a784fac": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_040a12c0": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_f17be5ef": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_2855c272": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_89da272c": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_aa415678": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_2c195b65": "2412-15293_subsection_81b65fd4",
+      "2412-15293_itemize_152df5e1": "2412-15293_subsection_0b708a94",
+      "2412-15293_item_d94470b7": "2412-15293_itemize_152df5e1",
+      "2412-15293_sent_6f295c67": "2412-15293_item_d94470b7",
+      "2412-15293_sent_4a352c3f": "2412-15293_item_d94470b7",
+      "2412-15293_sent_e735c623": "2412-15293_item_d94470b7",
+      "2412-15293_sent_934ecbc7": "2412-15293_item_d94470b7",
+      "2412-15293_sent_ee8b1d44": "2412-15293_item_d94470b7",
+      "2412-15293_sent_06b23b77": "2412-15293_item_d94470b7",
+      "2412-15293_sent_a9182070": "2412-15293_item_d94470b7",
+      "2412-15293_sent_1324976f": "2412-15293_item_d94470b7",
+      "2412-15293_sent_3b50bd91": "2412-15293_item_d94470b7",
+      "2412-15293_sent_5aa8e703": "2412-15293_item_d94470b7",
+      "2412-15293_sent_17713625": "2412-15293_item_d94470b7",
+      "2412-15293_sent_d2540378": "2412-15293_item_d94470b7",
+      "2412-15293_sent_3cf11687": "2412-15293_item_d94470b7",
+      "2412-15293_sent_d50c557f": "2412-15293_item_d94470b7",
+      "2412-15293_sent_7fe5b6ca": "2412-15293_item_d94470b7",
+      "2412-15293_sent_940f43c4": "2412-15293_item_d94470b7",
+      "2412-15293_sent_e20b283e": "2412-15293_item_d94470b7",
+      "2412-15293_sent_e8d45831": "2412-15293_item_d94470b7",
+      "2412-15293_subsection_56dfb2b2": "2412-15293_section_f2764b96",
+      "2412-15293_sent_9b965570": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_ab9639b4": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_7bd31581": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_90ac874c": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_10ba93d3": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_dd30ef5a": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_b34038f4": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_6b8a5b98": "2412-15293_item_d94470b7",
+      "2412-15293_sent_48114992": "2412-15293_item_d94470b7",
+      "2412-15293_eq_a6a0ede8": "2412-15293_item_d94470b7",
+      "2412-15293_sent_56d41216": "2412-15293_item_d94470b7",
+      "2412-15293_sent_421de161": "2412-15293_item_d94470b7",
+      "2412-15293_sent_612ebe66": "2412-15293_item_d94470b7",
+      "2412-15293_sent_bad5f2d7": "2412-15293_item_d94470b7",
+      "2412-15293_sent_249d13f2": "2412-15293_item_d94470b7",
+      "2412-15293_sent_2d31f6d6": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_a3839084": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_3256b474": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_380f4af0": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_80e7f3eb": "2412-15293_item_d94470b7",
+      "2412-15293_sent_2ed70858": "2412-15293_item_d94470b7",
+      "2412-15293_sent_9c547bca": "2412-15293_item_d94470b7",
+      "2412-15293_sent_fc875144": "2412-15293_item_d94470b7",
+      "2412-15293_sent_2f5315d4": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_subsection_0b708a94": "2412-15293_section_f2764b96",
+      "2412-15293_sent_a58e26e6": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_549d681e": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_06a0250f": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_2862f886": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_4aedb910": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_ccb8d30f": "2412-15293_item_d94470b7",
+      "2412-15293_sent_a46661ad": "2412-15293_item_d94470b7",
+      "2412-15293_eq_9a8063e7": "2412-15293_item_d94470b7",
+      "2412-15293_section_c792245c": "2412-15293_doc_root",
+      "2412-15293_sent_796312f7": "2412-15293_section_c792245c",
+      "2412-15293_subsection_f4f70727": "2412-15293_section_c792245c",
+      "2412-15293_sent_dc5303f4": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_b61a7184": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_8fd361fc": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_13c9240f": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_f85af2e2": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_148927a5": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_14bc7f22": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_53ad1974": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_d42f47e1": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_650123f6": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_866e0a2b": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_73557a88": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_06c618be": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_ef1eee6f": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_c8ab6453": "2412-15293_subsection_f4f70727",
+      "2412-15293_eq_60a9dac1": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_c9ffe957": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_f46a5ed2": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_afe4f20a": "2412-15293_subsection_f4f70727",
+      "2412-15293_eq_25b161eb": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_42a8c557": "2412-15293_subsection_f4f70727",
+      "2412-15293_subsection_fd69c5cf": "2412-15293_section_c792245c",
+      "2412-15293_sent_49523346": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_95c1b224": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_1b217254": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_91e65a69": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_d7f75f1e": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_c68e5f51": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_8c1fb60d": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_ecdb91fb": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_247e6036": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_7d8393fc": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_fc02aa91": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_115df45a": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_eb29f67e": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_7c1d4019": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_924328f4": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_2733d26b": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_fig_2793de57": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_fig_441d1ebb": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_section_9bb4846a": "2412-15293_doc_root",
+      "2412-15293_sent_8d2ddcec": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_c2fdc446": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_dd862ec3": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_eb7c93b5": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_1247aae5": "2412-15293_section_9bb4846a",
+      "2412-15293_eq_d26e875d": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_691493c1": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_93bfac39": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_2f9285e2": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_bf02f288": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_6dbe827b": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_fbc10eb6": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_578f711f": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_bd34d2dc": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_51897c0e": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_c049cf71": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_ab3e8153": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_f0f36a46": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_3bc6d107": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_84836897": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_f206936b": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_287a5bd6": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_f96dcca1": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_1673b677": "2412-15293_section_9bb4846a",
+      "2412-15293_fig_cfda3a5c": "2412-15293_section_9bb4846a",
+      "2412-15293_fig_60677677": "2412-15293_section_9bb4846a",
+      "2412-15293_fig_4bc2fefb": "2412-15293_section_9bb4846a",
+      "2412-15293_section_6f8b794f": "2412-15293_doc_root",
+      "2412-15293_sent_4b515452": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_7b81766c": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_da57d5b4": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_104bfc1e": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_0a17e04d": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_9d9f4f4a": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_77ca4009": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_d4b55a1d": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_bfbcc63b": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_f6bdabc5": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_ee60e6a2": "2412-15293_section_6f8b794f",
+      "2412-15293_section_84ffd62e": "2412-15293_doc_root",
+      "2412-15293_sent_2c73d752": "2412-15293_section_84ffd62e",
+      "2412-15293_sent_a56c23a5": "2412-15293_section_84ffd62e",
+      "2412-15293_section_75300af1": "2412-15293_doc_root",
+      "2412-15293_sent_ae88dbe0": "2412-15293_section_75300af1",
+      "2412-15293_sent_3dd7890a": "2412-15293_section_75300af1",
+      "2412-15293_sent_19ffbb85": "2412-15293_section_75300af1",
+      "2412-15293_sent_abaab63b": "2412-15293_section_75300af1",
+      "2412-15293_sent_8c37acff": "2412-15293_section_75300af1",
+      "2412-15293_sent_e0baf8e2": "2412-15293_section_75300af1",
+      "2412-15293_sent_844a28f8": "2412-15293_section_75300af1",
+      "2412-15293_sent_dd4e153b": "2412-15293_section_75300af1",
+      "2412-15293_sent_27776924": "2412-15293_section_75300af1",
+      "2412-15293_sent_1fcb1ec5": "2412-15293_section_75300af1",
+      "2412-15293_sent_b3cc5524": "2412-15293_section_75300af1"
+    },
+    "2": {
+      "2412-15293_sent_89eb4585": "2412-15293_doc_root",
+      "2412-15293_sent_c4bd516c": "2412-15293_doc_root",
+      "2412-15293_sent_971f2934": "2412-15293_doc_root",
+      "2412-15293_sent_0013c070": "2412-15293_doc_root",
+      "2412-15293_sent_6f17c6d6": "2412-15293_doc_root",
+      "2412-15293_sent_06af4b87": "2412-15293_doc_root",
+      "2412-15293_sent_c4d9fb81": "2412-15293_doc_root",
+      "2412-15293_sent_dfe3553f": "2412-15293_doc_root",
+      "2412-15293_section_0b79795d": "2412-15293_doc_root",
+      "2412-15293_sent_f0d85c42": "2412-15293_section_0b79795d",
+      "2412-15293_sent_f3a0ac78": "2412-15293_section_0b79795d",
+      "2412-15293_sent_b815d146": "2412-15293_section_0b79795d",
+      "2412-15293_sent_96f72f3f": "2412-15293_section_0b79795d",
+      "2412-15293_sent_13920403": "2412-15293_section_0b79795d",
+      "2412-15293_sent_ce7ac2fb": "2412-15293_section_0b79795d",
+      "2412-15293_sent_8c71b6d2": "2412-15293_section_0b79795d",
+      "2412-15293_sent_da96e32e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_2251192e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_d3a86fec": "2412-15293_section_0b79795d",
+      "2412-15293_sent_442cfae7": "2412-15293_section_0b79795d",
+      "2412-15293_sent_1696f629": "2412-15293_section_0b79795d",
+      "2412-15293_sent_153c1474": "2412-15293_section_0b79795d",
+      "2412-15293_sent_02fe4771": "2412-15293_section_0b79795d",
+      "2412-15293_sent_f073eb50": "2412-15293_section_0b79795d",
+      "2412-15293_sent_1da16ddb": "2412-15293_section_0b79795d",
+      "2412-15293_sent_228bed3c": "2412-15293_section_0b79795d",
+      "2412-15293_sent_397bee22": "2412-15293_section_0b79795d",
+      "2412-15293_sent_3476237e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c8c718c2": "2412-15293_section_0b79795d",
+      "2412-15293_sent_f128e917": "2412-15293_section_0b79795d",
+      "2412-15293_eq_9b0a2c48": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c203194a": "2412-15293_section_0b79795d",
+      "2412-15293_sent_67c37903": "2412-15293_section_0b79795d",
+      "2412-15293_sent_ac13a00d": "2412-15293_section_0b79795d",
+      "2412-15293_sent_16f2f872": "2412-15293_section_0b79795d",
+      "2412-15293_sent_4ba83d7e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_58f19dc4": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c0e38d60": "2412-15293_section_0b79795d",
+      "2412-15293_sent_6d000d41": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c7fa6701": "2412-15293_section_0b79795d",
+      "2412-15293_sent_e94f871b": "2412-15293_section_0b79795d",
+      "2412-15293_eq_1a196c60": "2412-15293_section_0b79795d",
+      "2412-15293_sent_dce6e208": "2412-15293_section_0b79795d",
+      "2412-15293_sent_5575e35c": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c48e9717": "2412-15293_section_0b79795d",
+      "2412-15293_sent_5d0793e3": "2412-15293_section_0b79795d",
+      "2412-15293_sent_d56979d4": "2412-15293_section_0b79795d",
+      "2412-15293_sent_b240eea6": "2412-15293_section_0b79795d",
+      "2412-15293_sent_032aadd6": "2412-15293_section_0b79795d",
+      "2412-15293_sent_6226c7ff": "2412-15293_section_0b79795d",
+      "2412-15293_sent_9771677f": "2412-15293_section_0b79795d",
+      "2412-15293_sent_d7604bce": "2412-15293_section_0b79795d",
+      "2412-15293_sent_c177fc7e": "2412-15293_section_0b79795d",
+      "2412-15293_sent_9debe123": "2412-15293_section_0b79795d",
+      "2412-15293_section_2f18df61": "2412-15293_doc_root",
+      "2412-15293_subsection_cc745ea0": "2412-15293_section_2f18df61",
+      "2412-15293_sent_ff7d4af5": "2412-15293_subsection_cc745ea0",
+      "2412-15293_eq_2b1a7ca5": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_084e360f": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_7bec6d66": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_938e075b": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_b09aee7a": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_3a7390a0": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_7b9f380c": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_52446654": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_5fe10aaa": "2412-15293_subsection_cc745ea0",
+      "2412-15293_sent_149241b5": "2412-15293_subsection_cc745ea0",
+      "2412-15293_subsection_34a155a5": "2412-15293_section_2f18df61",
+      "2412-15293_sent_f15b3659": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_b30b436e": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_c2963576": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_b362d2ca": "2412-15293_subsection_34a155a5",
+      "2412-15293_eq_ff905510": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_71378426": "2412-15293_subsection_34a155a5",
+      "2412-15293_eq_48330082": "2412-15293_section_64c72eca",
+      "2412-15293_sent_bae77b43": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_b82a1693": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_d2599691": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_921c5aea": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_62a70530": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_b6c5a990": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_e2e0d033": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_13b965ad": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_1f93bb27": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_55472ebf": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_1d09404a": "2412-15293_subsection_34a155a5",
+      "2412-15293_eq_a7fe881d": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_62792628": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_06ed41ed": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_be98eee8": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_63d859a6": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_b14fea4c": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_e829a4a3": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_f881ed2f": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_a5ae6593": "2412-15293_subsection_34a155a5",
+      "2412-15293_sent_f3283f6b": "2412-15293_subsection_34a155a5",
+      "2412-15293_subsection_aa9e416c": "2412-15293_section_2f18df61",
+      "2412-15293_sent_236caaa2": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_927cbbc6": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_85d555a9": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_b3dfa534": "2412-15293_subsection_aa9e416c",
+      "2412-15293_eq_81380860": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_12954ca1": "2412-15293_subsection_aa9e416c",
+      "2412-15293_sent_ca0e45d3": "2412-15293_subsection_aa9e416c",
+      "2412-15293_subsection_db304a69": "2412-15293_section_2f18df61",
+      "2412-15293_sent_4214bc2d": "2412-15293_subsection_db304a69",
+      "2412-15293_sent_a9fb450a": "2412-15293_subsection_db304a69",
+      "2412-15293_sent_a0e19706": "2412-15293_subsection_db304a69",
+      "2412-15293_subsubsection_c66c34be": "2412-15293_subsection_db304a69",
+      "2412-15293_sent_504a0357": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_8c368fd7": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_f5d989ea": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_df15a20d": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_4f7e1ff4": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_2be3b862": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_sent_9a43217a": "2412-15293_subsubsection_c66c34be",
+      "2412-15293_subsubsection_d095b4e4": "2412-15293_subsection_db304a69",
+      "2412-15293_sent_160a4300": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_c9708860": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_eq_839c6ce7": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_1393a1eb": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_795b07a5": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_eq_e724b267": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_96bf6370": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_eq_2343a5e6": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_7d5dc8a9": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_sent_eca1fe3f": "2412-15293_subsubsection_d095b4e4",
+      "2412-15293_subsection_9ce65ad2": "2412-15293_section_2f18df61",
+      "2412-15293_sent_78d54cd1": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_e674ddad": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_cec23242": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_subsubsection_f228b152": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_e65f331e": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_cfb311ea": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_bff40ab3": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_c5d69264": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_56bd3798": "2412-15293_subsubsection_f228b152",
+      "2412-15293_eq_2de234ca": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_1aa5bd4b": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_ae521aa3": "2412-15293_subsubsection_f228b152",
+      "2412-15293_eq_aca72711": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_28f752d8": "2412-15293_subsubsection_f228b152",
+      "2412-15293_sent_f4910440": "2412-15293_subsubsection_f228b152",
+      "2412-15293_subsubsection_e6aca53a": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_cb17a868": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_2dde9b53": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_18c48e6b": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_b7dcbdff": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_48d4f69b": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_sent_286d7f31": "2412-15293_subsubsection_e6aca53a",
+      "2412-15293_subsubsection_dc025c62": "2412-15293_subsection_9ce65ad2",
+      "2412-15293_sent_23a95c90": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_e81af1b2": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_4f4ac412": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_a028d0bf": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_660e145d": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_ddb1ac68": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_1a3b9ae6": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_sent_80e42422": "2412-15293_subsubsection_dc025c62",
+      "2412-15293_subsection_636a00c4": "2412-15293_section_2f18df61",
+      "2412-15293_sent_838fb3ff": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_f8efdbd4": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_df032521": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_8e18e629": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_fe0fd62f": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_9fc49c1d": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_c6a23d9e": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_d48a5cda": "2412-15293_section_64c72eca",
+      "2412-15293_eq_7d249fd9": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_be5d5d37": "2412-15293_subsection_636a00c4",
+      "2412-15293_eq_b5996b74": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_13a1ca95": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_a55abf51": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_a864543b": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_d89e7548": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_a64ece77": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_68b8df71": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_5d822463": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_f80c673b": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_e7c39341": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_73a04edd": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_6afd2535": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_7cd27494": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_dc8036d1": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_15274d62": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_f73d3e27": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_7cbf14d1": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_31b736c3": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_a32b6b09": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_9e01b22a": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_6f5b9967": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_8d30d960": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_dc4c8d62": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_597d469c": "2412-15293_subsection_636a00c4",
+      "2412-15293_sent_b4853043": "2412-15293_subsection_636a00c4",
+      "2412-15293_fig_7a3ac082": "2412-15293_subsection_636a00c4",
+      "2412-15293_subsection_f154d26b": "2412-15293_section_2f18df61",
+      "2412-15293_sent_5def14fe": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_a1f8abdc": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_b974ee73": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_81d75f1f": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_fab1c598": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_dfb1a5d5": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_e2bf6705": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_bad83dcf": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_7fa55a53": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_d6e159b7": "2412-15293_subsection_f154d26b",
+      "2412-15293_sent_3dee6e5c": "2412-15293_subsection_f154d26b",
+      "2412-15293_subsection_ba399e43": "2412-15293_section_2f18df61",
+      "2412-15293_sent_ca67b29e": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_0480a85d": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_08ca48b1": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_b6d94a26": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_15227a8f": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_5bc50ea4": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_ac82b6b2": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_73fa9342": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_e378001a": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_f4b72cec": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_557a5ff4": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_87429279": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_777e8268": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_74372d16": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_6f270241": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_b483266d": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_df9f0b9d": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_12854ac8": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_5718ba46": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_2efe4a60": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_de4cad86": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_c186254d": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_0361bfe3": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_bc53638f": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_8f4afc1f": "2412-15293_subsection_ba399e43",
+      "2412-15293_sent_f65d7901": "2412-15293_subsection_ba399e43",
+      "2412-15293_section_f2764b96": "2412-15293_doc_root",
+      "2412-15293_subsection_81b65fd4": "2412-15293_section_f2764b96",
+      "2412-15293_sent_5a784fac": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_040a12c0": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_f17be5ef": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_2855c272": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_89da272c": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_aa415678": "2412-15293_subsection_81b65fd4",
+      "2412-15293_sent_2c195b65": "2412-15293_subsection_81b65fd4",
+      "2412-15293_itemize_152df5e1": "2412-15293_subsection_0b708a94",
+      "2412-15293_item_d94470b7": "2412-15293_itemize_152df5e1",
+      "2412-15293_sent_6f295c67": "2412-15293_item_d94470b7",
+      "2412-15293_sent_4a352c3f": "2412-15293_item_d94470b7",
+      "2412-15293_sent_e735c623": "2412-15293_item_d94470b7",
+      "2412-15293_sent_934ecbc7": "2412-15293_item_d94470b7",
+      "2412-15293_sent_ee8b1d44": "2412-15293_item_d94470b7",
+      "2412-15293_sent_06b23b77": "2412-15293_item_d94470b7",
+      "2412-15293_sent_a9182070": "2412-15293_item_d94470b7",
+      "2412-15293_sent_1324976f": "2412-15293_item_d94470b7",
+      "2412-15293_sent_3b50bd91": "2412-15293_item_d94470b7",
+      "2412-15293_sent_5aa8e703": "2412-15293_item_d94470b7",
+      "2412-15293_sent_17713625": "2412-15293_item_d94470b7",
+      "2412-15293_sent_d2540378": "2412-15293_item_d94470b7",
+      "2412-15293_sent_3cf11687": "2412-15293_item_d94470b7",
+      "2412-15293_sent_d50c557f": "2412-15293_item_d94470b7",
+      "2412-15293_sent_7fe5b6ca": "2412-15293_item_d94470b7",
+      "2412-15293_sent_940f43c4": "2412-15293_item_d94470b7",
+      "2412-15293_sent_e20b283e": "2412-15293_item_d94470b7",
+      "2412-15293_sent_e8d45831": "2412-15293_item_d94470b7",
+      "2412-15293_subsection_56dfb2b2": "2412-15293_section_f2764b96",
+      "2412-15293_sent_9b965570": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_ab9639b4": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_7bd31581": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_90ac874c": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_10ba93d3": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_dd30ef5a": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_b34038f4": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_6b8a5b98": "2412-15293_item_d94470b7",
+      "2412-15293_sent_48114992": "2412-15293_item_d94470b7",
+      "2412-15293_eq_a6a0ede8": "2412-15293_item_d94470b7",
+      "2412-15293_sent_56d41216": "2412-15293_item_d94470b7",
+      "2412-15293_sent_421de161": "2412-15293_item_d94470b7",
+      "2412-15293_sent_612ebe66": "2412-15293_item_d94470b7",
+      "2412-15293_sent_bad5f2d7": "2412-15293_item_d94470b7",
+      "2412-15293_sent_249d13f2": "2412-15293_item_d94470b7",
+      "2412-15293_sent_2d31f6d6": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_a3839084": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_3256b474": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_380f4af0": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_sent_80e7f3eb": "2412-15293_item_d94470b7",
+      "2412-15293_sent_2ed70858": "2412-15293_item_d94470b7",
+      "2412-15293_sent_9c547bca": "2412-15293_item_d94470b7",
+      "2412-15293_sent_fc875144": "2412-15293_item_d94470b7",
+      "2412-15293_sent_2f5315d4": "2412-15293_subsection_56dfb2b2",
+      "2412-15293_subsection_0b708a94": "2412-15293_section_f2764b96",
+      "2412-15293_sent_a58e26e6": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_549d681e": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_06a0250f": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_2862f886": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_4aedb910": "2412-15293_subsection_0b708a94",
+      "2412-15293_sent_ccb8d30f": "2412-15293_item_d94470b7",
+      "2412-15293_sent_a46661ad": "2412-15293_item_d94470b7",
+      "2412-15293_eq_9a8063e7": "2412-15293_item_d94470b7",
+      "2412-15293_section_c792245c": "2412-15293_doc_root",
+      "2412-15293_sent_796312f7": "2412-15293_section_c792245c",
+      "2412-15293_subsection_f4f70727": "2412-15293_section_c792245c",
+      "2412-15293_sent_70375d00": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_f8f3938f": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_8fd361fc": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_13c9240f": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_e659f6d6": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_148927a5": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_6018ef5c": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_53ad1974": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_d42f47e1": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_76119431": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_866e0a2b": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_b1e0692d": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_06c618be": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_ef1eee6f": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_c8ab6453": "2412-15293_subsection_f4f70727",
+      "2412-15293_eq_98f6af0d": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_5f330382": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_ce8f2bfb": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_45ef68bb": "2412-15293_subsection_f4f70727",
+      "2412-15293_eq_ef48ab21": "2412-15293_subsection_f4f70727",
+      "2412-15293_sent_0d462e46": "2412-15293_subsection_f4f70727",
+      "2412-15293_subsection_fd69c5cf": "2412-15293_section_c792245c",
+      "2412-15293_sent_9eacf710": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_95c1b224": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_a1957e96": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_91e65a69": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_d7f75f1e": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_c68e5f51": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_8c1fb60d": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_43171612": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_247e6036": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_7d8393fc": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_db8eac1d": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_fc02aa91": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_115df45a": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_eb29f67e": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_7c1d4019": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_c1cdf2d8": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_2733d26b": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_sent_26f4437c": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_fig_9fb0924f": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_fig_30c947f7": "2412-15293_subsection_fd69c5cf",
+      "2412-15293_section_9bb4846a": "2412-15293_doc_root",
+      "2412-15293_sent_8d2ddcec": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_c2fdc446": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_dd862ec3": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_eb7c93b5": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_1247aae5": "2412-15293_section_9bb4846a",
+      "2412-15293_eq_d26e875d": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_691493c1": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_93bfac39": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_2f9285e2": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_bf02f288": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_6dbe827b": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_fbc10eb6": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_578f711f": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_bd34d2dc": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_51897c0e": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_c049cf71": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_ab3e8153": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_f0f36a46": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_3bc6d107": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_84836897": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_f206936b": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_287a5bd6": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_f96dcca1": "2412-15293_section_9bb4846a",
+      "2412-15293_sent_1673b677": "2412-15293_section_9bb4846a",
+      "2412-15293_fig_cfda3a5c": "2412-15293_section_9bb4846a",
+      "2412-15293_fig_60677677": "2412-15293_section_9bb4846a",
+      "2412-15293_fig_4bc2fefb": "2412-15293_section_9bb4846a",
+      "2412-15293_section_6f8b794f": "2412-15293_doc_root",
+      "2412-15293_sent_4b515452": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_7b81766c": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_da57d5b4": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_1c193572": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_a586d294": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_9d9f4f4a": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_77ca4009": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_d4b55a1d": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_bfbcc63b": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_f6bdabc5": "2412-15293_section_6f8b794f",
+      "2412-15293_sent_ee60e6a2": "2412-15293_section_6f8b794f",
+      "2412-15293_section_84ffd62e": "2412-15293_doc_root",
+      "2412-15293_sent_2c73d752": "2412-15293_section_84ffd62e",
+      "2412-15293_sent_ccf0274d": "2412-15293_section_84ffd62e",
+      "2412-15293_section_538d4012": "2412-15293_doc_root",
+      "2412-15293_sent_77387361": "2412-15293_section_538d4012",
+      "2412-15293_sent_2abd244c": "2412-15293_section_538d4012",
+      "2412-15293_sent_b08244c2": "2412-15293_section_538d4012",
+      "2412-15293_sent_da4d0a7e": "2412-15293_section_538d4012",
+      "2412-15293_section_75300af1": "2412-15293_doc_root",
+      "2412-15293_sent_ae88dbe0": "2412-15293_section_75300af1",
+      "2412-15293_sent_3dd7890a": "2412-15293_section_75300af1",
+      "2412-15293_sent_19ffbb85": "2412-15293_section_75300af1",
+      "2412-15293_sent_abaab63b": "2412-15293_section_75300af1",
+      "2412-15293_sent_8c37acff": "2412-15293_section_75300af1",
+      "2412-15293_sent_e0baf8e2": "2412-15293_section_75300af1",
+      "2412-15293_sent_844a28f8": "2412-15293_section_75300af1",
+      "2412-15293_sent_dd4e153b": "2412-15293_section_75300af1",
+      "2412-15293_sent_27776924": "2412-15293_section_75300af1",
+      "2412-15293_sent_1fcb1ec5": "2412-15293_section_75300af1",
+      "2412-15293_sent_b3cc5524": "2412-15293_section_75300af1",
+      "2412-15293_section_0ab7bbe4": "2412-15293_doc_root",
+      "2412-15293_sent_3a173596": "2412-15293_section_0ab7bbe4",
+      "2412-15293_sent_464224bc": "2412-15293_section_0ab7bbe4",
+      "2412-15293_sent_e6636024": "2412-15293_section_0ab7bbe4",
+      "2412-15293_sent_70ec748f": "2412-15293_section_0ab7bbe4",
+      "2412-15293_sent_72be4e49": "2412-15293_section_0ab7bbe4",
+      "2412-15293_section_64c72eca": "2412-15293_doc_root",
+      "2412-15293_sent_ff0248c0": "2412-15293_section_64c72eca",
+      "2412-15293_sent_1bd47492": "2412-15293_section_64c72eca",
+      "2412-15293_eq_b29159c7": "2412-15293_section_64c72eca",
+      "2412-15293_sent_60a3b7f4": "2412-15293_section_64c72eca",
+      "2412-15293_sent_955078bf": "2412-15293_section_64c72eca",
+      "2412-15293_sent_687428b4": "2412-15293_section_64c72eca"
+    }
+  },
+  "merged_parents": {
+    "2412-15293_sent_89eb4585": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_c4bd516c": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_971f2934": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_24f6a5c3": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_6f17c6d6": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_f3449457": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_c4d9fb81": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_dfe3553f": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_section_0b79795d": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_7fe23c35": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_f3a0ac78": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_b815d146": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_eb021c78": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_13920403": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_ce7ac2fb": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_8c71b6d2": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_da96e32e": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_2251192e": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_d3a86fec": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_442cfae7": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_eea128e2": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_72ce1317": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_a0213098": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_f073eb50": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_1da16ddb": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_228bed3c": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_d07155c5": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_3476237e": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_79d3dea7": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_eq_9b0a2c48": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_c203194a": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_67c37903": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_ac13a00d": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_324aea3e": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_4ba83d7e": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_58f19dc4": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_c0e38d60": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_6d000d41": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_c7fa6701": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_e94f871b": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_eq_1a196c60": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_dce6e208": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_5575e35c": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_c48e9717": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_5d0793e3": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_d56979d4": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_b240eea6": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_032aadd6": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_5f23028b": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_d7604bce": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_c177fc7e": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_9debe123": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_section_2f18df61": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_subsection_cc745ea0": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_ff7d4af5": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_eq_2b1a7ca5": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_5cbc3728": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_7bec6d66": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_938e075b": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_b09aee7a": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_3a7390a0": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_7b9f380c": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_52446654": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_5fe10aaa": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_6679b97e": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_subsection_34a155a5": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_f15b3659": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_23c0ca90": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_8d2e3525": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_eq_ff905510": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_71378426": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_eq_48330082": [
+      "2412-15293_item_d94470b7",
+      "2412-15293_section_0ab7bbe4",
+      "2412-15293_section_538d4012",
+      "2412-15293_section_64c72eca",
+      "2412-15293_section_75300af1",
+      "2412-15293_subsection_34a155a5",
+      "2412-15293_subsection_636a00c4",
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_81b65fd4",
+      "2412-15293_subsection_aa9e416c",
+      "2412-15293_subsection_ba399e43",
+      "2412-15293_subsection_f4f70727",
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_bae77b43": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_b82a1693": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_921c5aea": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_64f3cbbf": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_b6c5a990": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_d19127d6": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_13b965ad": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_1f93bb27": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_55472ebf": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_1d09404a": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_eq_a7fe881d": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_62792628": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_1cb90504": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_be98eee8": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_63d859a6": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_81508855": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_e829a4a3": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_f881ed2f": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_a5ae6593": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_f3283f6b": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_subsection_aa9e416c": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_236caaa2": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_sent_927cbbc6": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_sent_85d555a9": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_sent_d95094df": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_eq_81380860": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_sent_8cdf04ad": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_sent_c6657df5": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_subsection_db304a69": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_4214bc2d": [
+      "2412-15293_subsection_db304a69"
+    ],
+    "2412-15293_sent_a9fb450a": [
+      "2412-15293_subsection_db304a69"
+    ],
+    "2412-15293_sent_a0e19706": [
+      "2412-15293_subsection_db304a69"
+    ],
+    "2412-15293_subsubsection_c66c34be": [
+      "2412-15293_subsection_db304a69"
+    ],
+    "2412-15293_sent_504a0357": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_8c368fd7": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_f5d989ea": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_6d6973a5": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_03858840": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_2be3b862": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_9a43217a": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_subsubsection_d095b4e4": [
+      "2412-15293_subsection_db304a69"
+    ],
+    "2412-15293_sent_160a4300": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_sent_c9708860": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_eq_839c6ce7": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_sent_1393a1eb": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_sent_795b07a5": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_eq_e724b267": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_sent_96bf6370": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_eq_2343a5e6": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_sent_7d5dc8a9": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_sent_eca1fe3f": [
+      "2412-15293_subsubsection_d095b4e4"
+    ],
+    "2412-15293_subsection_9ce65ad2": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_78d54cd1": [
+      "2412-15293_subsection_9ce65ad2"
+    ],
+    "2412-15293_sent_e674ddad": [
+      "2412-15293_subsection_9ce65ad2"
+    ],
+    "2412-15293_sent_cec23242": [
+      "2412-15293_subsection_9ce65ad2"
+    ],
+    "2412-15293_subsubsection_f228b152": [
+      "2412-15293_subsection_9ce65ad2"
+    ],
+    "2412-15293_sent_e65f331e": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_sent_cfb311ea": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_sent_bff40ab3": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_sent_c5d69264": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_sent_56bd3798": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_eq_2de234ca": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_sent_1aa5bd4b": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_sent_ae521aa3": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_eq_aca72711": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_sent_28f752d8": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_sent_f4910440": [
+      "2412-15293_subsubsection_f228b152"
+    ],
+    "2412-15293_subsubsection_e6aca53a": [
+      "2412-15293_subsection_9ce65ad2"
+    ],
+    "2412-15293_sent_17e9d11e": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_sent_ee70ae35": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_sent_18c48e6b": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_sent_b7dcbdff": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_sent_48d4f69b": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_sent_76a48b2e": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_subsubsection_dc025c62": [
+      "2412-15293_subsection_9ce65ad2"
+    ],
+    "2412-15293_sent_23a95c90": [
+      "2412-15293_subsubsection_dc025c62"
+    ],
+    "2412-15293_sent_e81af1b2": [
+      "2412-15293_subsubsection_dc025c62"
+    ],
+    "2412-15293_sent_4f4ac412": [
+      "2412-15293_subsubsection_dc025c62"
+    ],
+    "2412-15293_sent_a028d0bf": [
+      "2412-15293_subsubsection_dc025c62"
+    ],
+    "2412-15293_sent_660e145d": [
+      "2412-15293_subsubsection_dc025c62"
+    ],
+    "2412-15293_sent_ddb1ac68": [
+      "2412-15293_subsubsection_dc025c62"
+    ],
+    "2412-15293_sent_1a3b9ae6": [
+      "2412-15293_subsubsection_dc025c62"
+    ],
+    "2412-15293_sent_80e42422": [
+      "2412-15293_subsubsection_dc025c62"
+    ],
+    "2412-15293_subsection_81174b10": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_5def14fe": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_a1f8abdc": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_2cd22ca2": [
+      "2412-15293_subsection_81174b10"
+    ],
+    "2412-15293_sent_81d75f1f": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_08457195": [
+      "2412-15293_subsection_81174b10"
+    ],
+    "2412-15293_sent_dfb1a5d5": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_e2bf6705": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_bad83dcf": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_7fa55a53": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_d6e159b7": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_3dee6e5c": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_ca67b29e": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_0480a85d": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_08ca48b1": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_b6d94a26": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_15227a8f": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_5bc50ea4": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_ac82b6b2": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_73fa9342": [
+      "2412-15293_subsection_81174b10",
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_159604ae": [
+      "2412-15293_subsection_81174b10"
+    ],
+    "2412-15293_sent_cc4ed779": [
+      "2412-15293_subsection_81174b10"
+    ],
+    "2412-15293_section_f2764b96": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_subsection_81b65fd4": [
+      "2412-15293_section_f2764b96"
+    ],
+    "2412-15293_sent_5a784fac": [
+      "2412-15293_subsection_81b65fd4"
+    ],
+    "2412-15293_sent_040a12c0": [
+      "2412-15293_subsection_81b65fd4"
+    ],
+    "2412-15293_sent_f17be5ef": [
+      "2412-15293_subsection_81b65fd4"
+    ],
+    "2412-15293_sent_2855c272": [
+      "2412-15293_subsection_81b65fd4"
+    ],
+    "2412-15293_sent_89da272c": [
+      "2412-15293_subsection_81b65fd4"
+    ],
+    "2412-15293_sent_aa415678": [
+      "2412-15293_subsection_81b65fd4"
+    ],
+    "2412-15293_sent_2c195b65": [
+      "2412-15293_subsection_81b65fd4"
+    ],
+    "2412-15293_itemize_152df5e1": [
+      "2412-15293_subsection_0b708a94",
+      "2412-15293_subsection_56dfb2b2",
+      "2412-15293_subsection_81b65fd4"
+    ],
+    "2412-15293_item_d94470b7": [
+      "2412-15293_itemize_152df5e1"
+    ],
+    "2412-15293_sent_6f295c67": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_4a352c3f": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_e735c623": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_934ecbc7": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_ee8b1d44": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_06b23b77": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_a9182070": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_1324976f": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_3b50bd91": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_5aa8e703": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_17713625": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_d2540378": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_3cf11687": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_d50c557f": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_7fe5b6ca": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_940f43c4": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_e20b283e": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_e8d45831": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_subsection_56dfb2b2": [
+      "2412-15293_section_f2764b96"
+    ],
+    "2412-15293_sent_9b965570": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_ab9639b4": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_7bd31581": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_90ac874c": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_10ba93d3": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_dd30ef5a": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_b34038f4": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_6b8a5b98": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_48114992": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_eq_a6a0ede8": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_56d41216": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_421de161": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_612ebe66": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_bad5f2d7": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_249d13f2": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_2d31f6d6": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_a3839084": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_3256b474": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_380f4af0": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_sent_80e7f3eb": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_2ed70858": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_9c547bca": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_fc875144": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_2f5315d4": [
+      "2412-15293_subsection_56dfb2b2"
+    ],
+    "2412-15293_subsection_0b708a94": [
+      "2412-15293_section_f2764b96"
+    ],
+    "2412-15293_sent_a58e26e6": [
+      "2412-15293_subsection_0b708a94"
+    ],
+    "2412-15293_sent_549d681e": [
+      "2412-15293_subsection_0b708a94"
+    ],
+    "2412-15293_sent_06a0250f": [
+      "2412-15293_subsection_0b708a94"
+    ],
+    "2412-15293_sent_2862f886": [
+      "2412-15293_subsection_0b708a94"
+    ],
+    "2412-15293_sent_4aedb910": [
+      "2412-15293_subsection_0b708a94"
+    ],
+    "2412-15293_sent_ccb8d30f": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_sent_a46661ad": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_eq_9a8063e7": [
+      "2412-15293_item_d94470b7"
+    ],
+    "2412-15293_section_c792245c": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_796312f7": [
+      "2412-15293_section_c792245c"
+    ],
+    "2412-15293_subsection_f4f70727": [
+      "2412-15293_section_c792245c"
+    ],
+    "2412-15293_sent_dc5303f4": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_b61a7184": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_8fd361fc": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_13c9240f": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_f85af2e2": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_148927a5": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_14bc7f22": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_53ad1974": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_d42f47e1": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_650123f6": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_866e0a2b": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_73557a88": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_06c618be": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_ef1eee6f": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_c8ab6453": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_eq_60a9dac1": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_c9ffe957": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_f46a5ed2": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_afe4f20a": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_eq_25b161eb": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_42a8c557": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_subsection_fd69c5cf": [
+      "2412-15293_section_c792245c"
+    ],
+    "2412-15293_sent_49523346": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_95c1b224": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_1b217254": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_91e65a69": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_d7f75f1e": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_c68e5f51": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_8c1fb60d": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_ecdb91fb": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_247e6036": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_7d8393fc": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_fc02aa91": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_115df45a": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_eb29f67e": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_7c1d4019": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_924328f4": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_2733d26b": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_fig_2793de57": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_fig_441d1ebb": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_section_9bb4846a": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_8d2ddcec": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_c2fdc446": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_dd862ec3": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_eb7c93b5": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_1247aae5": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_eq_d26e875d": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_691493c1": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_93bfac39": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_2f9285e2": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_bf02f288": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_6dbe827b": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_fbc10eb6": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_578f711f": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_bd34d2dc": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_51897c0e": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_c049cf71": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_ab3e8153": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_f0f36a46": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_3bc6d107": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_84836897": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_f206936b": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_287a5bd6": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_f96dcca1": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_sent_1673b677": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_fig_cfda3a5c": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_fig_60677677": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_fig_4bc2fefb": [
+      "2412-15293_section_9bb4846a"
+    ],
+    "2412-15293_section_6f8b794f": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_4b515452": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_7b81766c": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_da57d5b4": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_104bfc1e": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_0a17e04d": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_9d9f4f4a": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_77ca4009": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_d4b55a1d": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_bfbcc63b": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_f6bdabc5": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_ee60e6a2": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_section_84ffd62e": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_2c73d752": [
+      "2412-15293_section_84ffd62e"
+    ],
+    "2412-15293_sent_a56c23a5": [
+      "2412-15293_section_84ffd62e"
+    ],
+    "2412-15293_section_75300af1": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_ae88dbe0": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_3dd7890a": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_19ffbb85": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_abaab63b": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_8c37acff": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_e0baf8e2": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_844a28f8": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_dd4e153b": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_27776924": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_1fcb1ec5": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_b3cc5524": [
+      "2412-15293_section_75300af1"
+    ],
+    "2412-15293_sent_0013c070": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_06af4b87": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_f0d85c42": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_96f72f3f": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_1696f629": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_153c1474": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_02fe4771": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_397bee22": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_c8c718c2": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_f128e917": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_16f2f872": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_6226c7ff": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_9771677f": [
+      "2412-15293_section_0b79795d"
+    ],
+    "2412-15293_sent_084e360f": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_149241b5": [
+      "2412-15293_subsection_cc745ea0"
+    ],
+    "2412-15293_sent_b30b436e": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_c2963576": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_b362d2ca": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_d2599691": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_62a70530": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_e2e0d033": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_06ed41ed": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_b14fea4c": [
+      "2412-15293_subsection_34a155a5"
+    ],
+    "2412-15293_sent_b3dfa534": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_sent_12954ca1": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_sent_ca0e45d3": [
+      "2412-15293_subsection_aa9e416c"
+    ],
+    "2412-15293_sent_df15a20d": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_4f7e1ff4": [
+      "2412-15293_subsubsection_c66c34be"
+    ],
+    "2412-15293_sent_cb17a868": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_sent_2dde9b53": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_sent_286d7f31": [
+      "2412-15293_subsubsection_e6aca53a"
+    ],
+    "2412-15293_subsection_636a00c4": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_838fb3ff": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_f8efdbd4": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_df032521": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_8e18e629": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_fe0fd62f": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_9fc49c1d": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_c6a23d9e": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_d48a5cda": [
+      "2412-15293_section_64c72eca",
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_eq_7d249fd9": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_be5d5d37": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_eq_b5996b74": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_13a1ca95": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_a55abf51": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_a864543b": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_d89e7548": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_a64ece77": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_68b8df71": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_5d822463": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_f80c673b": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_e7c39341": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_73a04edd": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_6afd2535": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_7cd27494": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_dc8036d1": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_15274d62": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_f73d3e27": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_7cbf14d1": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_31b736c3": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_a32b6b09": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_9e01b22a": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_6f5b9967": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_8d30d960": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_dc4c8d62": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_597d469c": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_sent_b4853043": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_fig_7a3ac082": [
+      "2412-15293_subsection_636a00c4"
+    ],
+    "2412-15293_subsection_f154d26b": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_b974ee73": [
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_sent_fab1c598": [
+      "2412-15293_subsection_f154d26b"
+    ],
+    "2412-15293_subsection_ba399e43": [
+      "2412-15293_section_2f18df61"
+    ],
+    "2412-15293_sent_e378001a": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_f4b72cec": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_557a5ff4": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_87429279": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_777e8268": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_74372d16": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_6f270241": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_b483266d": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_df9f0b9d": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_12854ac8": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_5718ba46": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_2efe4a60": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_de4cad86": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_c186254d": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_0361bfe3": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_bc53638f": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_8f4afc1f": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_f65d7901": [
+      "2412-15293_subsection_ba399e43"
+    ],
+    "2412-15293_sent_70375d00": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_f8f3938f": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_e659f6d6": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_6018ef5c": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_76119431": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_b1e0692d": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_eq_98f6af0d": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_5f330382": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_ce8f2bfb": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_45ef68bb": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_eq_ef48ab21": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_0d462e46": [
+      "2412-15293_subsection_f4f70727"
+    ],
+    "2412-15293_sent_9eacf710": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_a1957e96": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_43171612": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_db8eac1d": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_c1cdf2d8": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_26f4437c": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_fig_9fb0924f": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_fig_30c947f7": [
+      "2412-15293_subsection_fd69c5cf"
+    ],
+    "2412-15293_sent_1c193572": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_a586d294": [
+      "2412-15293_section_6f8b794f"
+    ],
+    "2412-15293_sent_ccf0274d": [
+      "2412-15293_section_84ffd62e"
+    ],
+    "2412-15293_section_538d4012": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_77387361": [
+      "2412-15293_section_538d4012"
+    ],
+    "2412-15293_sent_2abd244c": [
+      "2412-15293_section_538d4012"
+    ],
+    "2412-15293_sent_b08244c2": [
+      "2412-15293_section_538d4012"
+    ],
+    "2412-15293_sent_da4d0a7e": [
+      "2412-15293_section_538d4012"
+    ],
+    "2412-15293_section_0ab7bbe4": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_3a173596": [
+      "2412-15293_section_0ab7bbe4"
+    ],
+    "2412-15293_sent_464224bc": [
+      "2412-15293_section_0ab7bbe4"
+    ],
+    "2412-15293_sent_e6636024": [
+      "2412-15293_section_0ab7bbe4"
+    ],
+    "2412-15293_sent_70ec748f": [
+      "2412-15293_section_0ab7bbe4"
+    ],
+    "2412-15293_sent_72be4e49": [
+      "2412-15293_section_0ab7bbe4"
+    ],
+    "2412-15293_section_64c72eca": [
+      "2412-15293_doc_root"
+    ],
+    "2412-15293_sent_ff0248c0": [
+      "2412-15293_section_64c72eca"
+    ],
+    "2412-15293_sent_1bd47492": [
+      "2412-15293_section_64c72eca"
+    ],
+    "2412-15293_eq_b29159c7": [
+      "2412-15293_section_64c72eca"
+    ],
+    "2412-15293_sent_60a3b7f4": [
+      "2412-15293_section_64c72eca"
+    ],
+    "2412-15293_sent_955078bf": [
+      "2412-15293_section_64c72eca"
+    ],
+    "2412-15293_sent_687428b4": [
+      "2412-15293_section_64c72eca"
+    ]
+  }
+}

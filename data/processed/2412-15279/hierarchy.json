@@ -1,0 +1,1273 @@
+{
+  "elements": {
+    "2412-15279_doc_root": "DOCUMENT_ROOT",
+    "2412-15279_sent_676977e1": "\\maketitle",
+    "2412-15279_abstract_ce28071e": "abstract",
+    "2412-15279_sent_a2088b6f": "The human brain is a complex system, and understanding its mechanisms has been a long-standing challenge in neuroscience.",
+    "2412-15279_sent_631e82c4": "The study of the functional connectome, which maps the functional connections between different brain regions, has provided valuable insights through various advanced analysis techniques developed over the years.",
+    "2412-15279_sent_51e52b7a": "Similarly, neural networks, inspired by the brain's architecture, have achieved notable success in diverse applications but are often noted for their lack of interpretability.",
+    "2412-15279_sent_dfb71b3e": "In this paper, we propose a novel approach that bridges neural networks and human brain functions by leveraging brain-inspired techniques.",
+    "2412-15279_sent_81f02c8c": "Our approach, grounded in the insights from the functional connectome, offers scalable ways to characterize topology of large neural networks using stable statistical and machine learning techniques.",
+    "2412-15279_sent_17e9f962": "Our empirical analysis demonstrates its capability to enhance the interpretability of neural networks, providing a deeper understanding of their underlying mechanisms.",
+    "2412-15279_sent_97b511bc": "\\begin{links} \\link{Code}{https://github.com/masonwu11/topo-fcnn} \\link{Supplementary material} Available as ancillary files \\end{links}",
+    "2412-15279_section_0b79795d": "Introduction",
+    "2412-15279_sent_ec7cd0ea": "The human brain is an incredibly complex system, and understanding its intricate workings has been a long-standing challenge in neuroscience.",
+    "2412-15279_sent_eca33336": "One well-established approach to gaining deeper insights into the brain's underlying mechanisms is through the study of the functional connectome, which maps the functional connections between regions of brain networks and reflects the brain's dynamic network of interactions \\cite{bullmore2009complex}.",
+    "2412-15279_sent_44e5b3ab": "In recent decades, successful findings have emerged from this field, thanks to the development of a wide array of analysis techniques.",
+    "2412-15279_sent_a053cac6": "Artificial neural networks, inspired by the architecture and functioning of the human brain, have achieved remarkable success in applications ranging from image recognition \\cite{he2016deep} to natural language processing \\cite{vaswani2017attention}.",
+    "2412-15279_sent_fbe35bc4": "However, despite these successes, neural networks are often considered black box models due to their lack of interpretability and the difficulty in understanding the underlying mechanisms driving their performance.",
+    "2412-15279_sent_a5e39ae4": "Neural networks have predesigned architectures with preconfigured weights connecting neurons, analogous to how physically connected brain regions with white matter fibers provide structural information measured by diffusion MRI.",
+    "2412-15279_sent_03b7b22a": "Similarly, functional connections between distant neurons resemble how functional MRI measures functional connectivity between brain regions that may not have direct neuroanatomical connections.",
+    "2412-15279_sent_918875a9": "These connections in the brain give rise to coordinated activity patterns crucial for cognitive processes \\cite{honey2009predicting}.",
+    "2412-15279_sent_2c279c35": "Given that neural networks are simplified artificial versions of brain functions, it stands to reason that insights from the functional connectome could be leveraged to enhance our understanding, interpretability, and analysis of these networks, potentially leading to the development of more transparent and efficient models.",
+    "2412-15279_sent_2e117bae": "However, analyzing functional connectomes is inherently challenging due to the need to extract subtle topological patterns from noisy, complete graphs.",
+    "2412-15279_sent_515bb9d6": "Therefore, typical workflows apply a threshold to obtain a sparser graph with a clearer structure before applying techniques from graph theory \\cite{bullmore2009complex}.",
+    "2412-15279_sent_b0d6fb5e": "Graph theory has played a crucial role in functional connectome research; however, prior analyses utilizing graph theory have primarily focused on pairwise dyadic relationships, often at a fixed spatial threshold.",
+    "2412-15279_sent_b6395262": "This approach, centered on dyads, limits the neural structures and functions that graph theory can investigate.",
+    "2412-15279_sent_7d655d02": "Given that a neural network processes information not only based on local neurons of a subnetwork but also across the entire network, from input to output layers, a more comprehensive understanding requires a shift in perspective--from pairwise interactions to capturing higher-order relations (topology) across the full range of spatial resolutions.",
+    "2412-15279_fig_b71837c1": "\\begin{figure*}",
+    "2412-15279_sent_468882fd": "\\includegraphics[width=\\textwidth]{figs/schematic.png} \\caption{A schematic for extracting persistent graph homology, representing the topology of neural-network-derived functional connectomes.} \\end{figure*} Persistent homology \\cite{edelsbrunner2022computational}, an algebraic topology technique, has emerged as a promising tool for understanding and quantifying the topology of the human brain \\cite{sizemore2018cliques,songdechakraiwut2021topological}.",
+    "2412-15279_sent_a634771a": "Recently, there have been increasing attempts to apply persistent homology to study the interpretability of deep learning.",
+    "2412-15279_sent_f23f1a94": "These studies suggest that persistent homology can extract high-order topological information to interpret neural networks, but challenges remain.",
+    "2412-15279_sent_c19543bb": "In particular, current methods often focus solely on the network's structural information, without incorporating data-driven tasks \\cite{rieck2018neural,watanabe2022topological}, and are typically limited to models with a small number of neurons \\cite{naitzat2020topology,zhang2023functional}.",
+    "2412-15279_sent_fc8f20e9": "Notably, \\citeauthor{zhang2023functional} has applied persistent homology to study the functional connectivities of neural networks.",
+    "2412-15279_sent_3638ca8d": "However, their approach is still limited by the cubic time complexity of persistent homology techniques \\cite{otter2017roadmap}, making them computationally infeasible for large, complete graphs, and relies heavily on approximation solutions.",
+    "2412-15279_sent_608f6e18": "The authors addressed this challenge by thresholding functional connectivities at a predefined threshold, which limits the spatial resolution of their analysis to a range of pre-determined values, rather than capturing the entire global mechanisms of neural network functions.",
+    "2412-15279_sent_a171c3a3": "Importantly, varying threshold values can significantly alter the graph structure, affecting its robustness and sensitivity to signals, and potentially influencing the study’s final outcome.",
+    "2412-15279_sent_0ac78ddb": "Persistent graph homology \\cite{songdechakraiwut2023topological}, a recent persistent homology advancement inspired by the human brain, captures interpretable topological invariants of great interest in functional brain networks, including connected components and cycles, across the entire spatial scale of a graph.",
+    "2412-15279_sent_43bc0edb": "Connected components characterize the network shape \\cite{tewarie2015minimum}, while cycles represent higher-order interactions potentially associated with information propagation and feedback control \\cite{kwon2007analysis}.",
+    "2412-15279_sent_29c1bb92": "The computability of persistent graph homology enables the analysis of intricate details in large-scale, complex brain networks.",
+    "2412-15279_sent_a08675d1": "Motivated by this, we adopt a brain-inspired graph homology perspective to overcome computational limitations and fully exploit the potential of topological analyses on large-scale neural network functions.",
+    "2412-15279_sent_c58c5604": "In this paper, we propose a novel analysis framework that bridges neural networks and human brain functions by leveraging brain-inspired techniques from functional MRI and persistent graph homology.",
+    "2412-15279_sent_76b7b2a1": "Our framework, grounded in insights from the functional connectome, addresses the aforementioned challenges and offers scalable methods to characterize the topology of functional mechanisms of large neural networks using stable statistical and machine learning techniques.",
+    "2412-15279_sent_9697c612": "We define functional connectomes, a representation used to describe functions in neural networks, without the need for predefined threshold values, thereby significantly improving the scientific rigor of the analysis.",
+    "2412-15279_sent_f94102a6": "We also demonstrate the computability and efficiency of statistics for such representations via analytic forms.",
+    "2412-15279_sent_f80f1ef6": "Specifically, we present closed-form computations for the Wasserstein distance, Wasserstein statistics--including barycenter (average) and variance--and the Wasserstein gradient, enabling the realization of the robustness benefits of true Wasserstein distance, grounded in the central stability theorem \\cite{skraba2020wasserstein}.",
+    "2412-15279_sent_8d0d8342": "Utilizing these computable statistics naturally leads to the development of a centroid-based clustering strategy, where the Wasserstein barycenter serves as the topological centroid.",
+    "2412-15279_sent_db274433": "We conducted extensive experiments using this method to validate that our framework can indeed enhance our ability to discern and interpret the complex structure of neural network functions, providing new avenues for both analysis and application.",
+    "2412-15279_section_bb7dc781": "Functional Connectome Framework",
+    "2412-15279_sent_0a2b1fb4": "Figure \\ref{fig:schematic} shows a schematic of the functional connectivity analysis framework, described in the following.",
+    "2412-15279_subsection_bd3088cf": "Functions of Neural Networks",
+    "2412-15279_sent_cfe1985f": "Given a collection of data samples, we partition it into two separate datasets: a training dataset and a functional dataset.",
+    "2412-15279_sent_91bbe79d": "The training dataset is utilized via $k$-fold cross-validation to determine a set of optimal hyperparameter values through grid search.",
+    "2412-15279_sent_7e7e0029": "Using these optimal values, we train a well-generalized neural network on the entire training data.",
+    "2412-15279_sent_8cefad96": "Subsequently, the functional dataset is fed into the fully-trained neural network, resulting from the aforementioned training process, to investigate the information propagation of new, unknown data through it.",
+    "2412-15279_sent_2cc9f292": "Without loss of generality, we will assume that the neural network architecture of interest is a feedforward network.",
+    "2412-15279_sent_0ecca1f4": "Given a fully-trained feedforward network with $M$ hidden neurons and a functional dataset denoted by $\\sX=\\{\\vx^{(1)},\\vx^{(2)},\\ldots,\\vx^{(N)}\\}$, each data point $\\vx^{(i)} \\in \\sX$ is inputted into the feedforward network and processed through a series of neurons.",
+    "2412-15279_sent_69f532d0": "Each $j$-th neuron uses an affine transformation followed by an activation function to produce its output $a_{ij}$, representing the information processing for $\\vx^{(i)}$.",
+    "2412-15279_sent_0a0d88e5": "By processing the entire functional dataset, we concatenate the $j$-th neuron outputs for all the data points into a functional vector $\\va_j=(a_{1j},a_{2j},\\ldots,a_{Nj})$, representing the functional signal in a neural network, similar to the functions of connectome circuits studied in functional MRI.",
+    "2412-15279_sent_5113ede1": "When two functional vectors from a pair of neurons are statistically dependent, they exhibit functional synergy.",
+    "2412-15279_sent_b5db325a": "To quantify this synergy, several methods can be used to measure the statistical dependency between the two vectors, such as Pearson correlation, partial correlation, Spearman's rank correlation, and mutual information \\cite{fornito2016fundamentals}.",
+    "2412-15279_sent_a3098a9e": "In macroscale connectomics, Pearson correlation, which captures linear relationships between different brain regions, is widely used for computing functional connectomes of the human brain.",
+    "2412-15279_sent_5170d7ba": "It is straightforward to interpret, with values ranging from -1 to 1, where values further from 0 indicate stronger functional connections.",
+    "2412-15279_sent_d6838863": "Pearson correlation effectively detects synchrony between brain regions, a common feature of neural activity.",
+    "2412-15279_sent_b4503f69": "For similar reasons, we will use Pearson correlation in this paper to analyze neural networks.",
+    "2412-15279_sent_a80a4bca": "Additionally, Pearson correlation's computational efficiency makes it feasible to apply to large neural network models that involve deep layers and many neurons.",
+    "2412-15279_sent_bfddda0d": "Formally, Pearson correlation between two functional vectors $\\va_j=(a_{1j},a_{2j},...,a_{Nj})$ and $\\va_k=(a_{1k},a_{2k},...,a_{Nk})$ is defined as",
+    "2412-15279_sent_f49e03ca": "\\rho_{jk} = \\frac{\\sum_{i=1}^N(a_{ij} - \\overline{\\va}_j)(a_{ik} - \\overline{\\va}_k)}{\\sqrt{\\sum_{i=1}^N(a_{ij} - \\overline{\\va}_j)^2} \\sqrt{\\sum_{i=1}^N(a_{ik} - \\overline{\\va}_k)^2}}, \\end{equation*} where $\\overline{\\va}_j=\\sum_{i=1}^N a_{ij} \\big/ N$ and $\\overline{\\va}_k=\\sum_{i=1}^N a_{ik} \\big/ N$.",
+    "2412-15279_sent_c96b8fd4": "In studies of the connectome of the human brain, a connectome is typically represented as a graph, comprising brain regions of interest as nodes, and pairwise correlations as edge weights \\cite{fornito2016fundamentals}.",
+    "2412-15279_sent_f4e28c26": "There is no universally accepted standard for whether the sign of the correlations should be preserved. Generally, choosing the absolute value of negative correlations highlights the strength of connectivity without regard to its direction.",
+    "2412-15279_sent_6a2df67e": "This can be particularly useful in analyses where the primary interest is in the magnitude of interactions between brain regions, regardless of whether they are positively or negatively correlated. Additionally, Pearson correlation between the same region is always 1, and thus is typically excluded from analyses, resulting in a brain graph with no self-loops.",
+    "2412-15279_sent_ced373c9": "For similar reasons, we will follow the same well-established procedure applied to the case of a connectome of a neural network.",
+    "2412-15279_sent_bec693b2": "Formally, given the correlations between every pair of hidden neurons, we define an $M$-by-$M$ weighted adjacency matrix $\\mG$ whose $jk$-th entry is given as",
+    "2412-15279_sent_7fb5dcb8": "\\emG_{jk} = \\begin{cases} \\lvert \\rho_{jk} \\rvert & \\text{if $j \\neq k$}; \\\\ 0 & \\text{otherwise}.",
+    "2412-15279_sent_475479b9": "\\end{cases} \\end{equation*} We will call this matrix a functional connectome of a neural network.",
+    "2412-15279_subsection_176cf1cd": "Persistent Graph Homology",
+    "2412-15279_sent_0e9f0944": "The functional connectome is a very dense matrix, typically representing a complete graph.",
+    "2412-15279_sent_81e8d3ac": "Therefore, typical workflows \\cite{bullmore2009complex} apply a threshold to the correlation values for two main reasons: to obtain a sparser graph with a more apparent structure and to reduce the time complexity of computational methods.",
+    "2412-15279_sent_36e5471c": "In particular, methods in persistent homology have cubic time complexity \\cite{otter2017roadmap}, making them computationally infeasible for large, complete graphs.",
+    "2412-15279_sent_5a42e802": "This requires iterative, approximation solutions, which introduce numerical errors and reduce the signal-to-noise ratio.",
+    "2412-15279_sent_a4f87ff1": "Additionally, varying different threshold values significantly alters the graph structure, potentially affecting the study's final outcome.",
+    "2412-15279_sent_7e4e2216": "Importantly, pairwise dyadic correlations at a fixed spatial threshold constrain the neural structures and functions that can be investigated. Given that a neural network processes information not only based on local neurons of a subnetwork but also the entire neural network from input to output layers, a more comprehensive understanding requires a shift in perspective from pairwise interactions to capturing higher-order relations across the entire range of spatial resolutions.",
+    "2412-15279_sent_9fe10f23": "In this work, we address these challenges by leveraging brain-inspired persistent graph homology, a scalable topological-learning paradigm that enables analyses of large-scale functional connectomes without approximation \\cite{songdechakraiwut2023wasserstein}.",
+    "2412-15279_sent_28026dd6": "It has emerged as a promising tool for understanding, characterizing, and quantifying human connectomes \\cite{songdechakraiwut2022fast}.",
+    "2412-15279_sent_0df4a433": "Persistent graph homology describes interpretable topological invariants, including connected components (0th homology group) and independent cycles (1st homology group or cycle rank), across the entire spatial scale of a graph.",
+    "2412-15279_sent_c1a864ce": "Formally, given a functional connectome $\\mG$, we define a binary graph $\\mG_\\epsilon$ with the same set of neurons by thresholding the edge correlations so that an edge between neurons $j$ and $k$ exists if $\\rho_{jk} > \\epsilon$.",
+    "2412-15279_sent_be9f0b09": "As $\\epsilon$ increases, more edges are removed from the functional connectome $\\mG$.",
+    "2412-15279_sent_d6fdde44": "Thus, we have a filtration \\cite{lee2012persistent}: $ \\mG_{\\epsilon_0} \\supseteq \\mG_{\\epsilon_1} \\supseteq \\cdots \\supseteq \\mG_{\\epsilon_k} , $ where $\\epsilon_0 \\leq \\epsilon_1 \\leq \\cdots \\leq \\epsilon_k$ are called filtration values.",
+    "2412-15279_sent_692e91e2": "Persistent homology tracks the birth and death of the topological invariants over these filtration values $\\epsilon$.",
+    "2412-15279_sent_e1c18ed3": "A topological invariant born at filtration $b_j$ and persisting up to filtration $d_j$ is represented by a point $(b_j, d_j)$ in a 2D plane.",
+    "2412-15279_sent_5463d594": "The set of all such points ${(b_j, d_j)}$ is called a persistence diagram \\cite{edelsbrunner2022computational}.",
+    "2412-15279_sent_e876f9ce": "As $\\epsilon$ increases, the number of connected components $\\beta_0(\\mG_{\\epsilon})$ increases monotonically, while the number of cycles $\\beta_1(\\mG_{\\epsilon})$ decreases monotonically.",
+    "2412-15279_sent_faddd9af": "Thus, persistent graph homology only needs to track a collection of sorted birth values $B(\\mG)$ for the connected components and a collection of sorted death values $D(\\mG)$ for the cycles, given as \\cite{songdechakraiwut2023topological}",
+    "2412-15279_sent_50b63cc2": "B(\\mG) = \\{b_j \\}_{j=1}^{M-1}, \\quad D(\\mG)=\\{ d_j \\}_{j=1}^{1 + M (M - 3)/2}.",
+    "2412-15279_sent_a64fdfe8": "\\end{align*} Figure \\ref{fig:schematic} illustrates a schematic for extracting persistent graph homology, which represents the topology of functional connectomes derived from neural networks.",
+    "2412-15279_paragraph_2d215ebf": "Scalability",
+    "2412-15279_subsection_0342a803": "Persistence Statistics",
+    "2412-15279_sent_ae4634dd": "Distances are fundamental in statistics because they provide a way to measure how much individual data points vary, enabling the calculation of central tendency, dispersion, and overall data behavior.",
+    "2412-15279_sent_06defe0b": "The Wasserstein distance is a prominent measure in persistent homology, associated with the central concept of the stability theorem \\cite{skraba2020wasserstein}.",
+    "2412-15279_sent_248c3291": "In this section, we will elaborate on the high computability of persistent-graph-homology-based Wasserstein distance and how it results in defining essential statistics such as the mean and variance, among others, which have potential in neural network interpretation.",
+    "2412-15279_sent_bb906f3a": "Specifically, the Wasserstein distance between sets of birth values (or between sets of death values) can be obtained using a closed-form solution.",
+    "2412-15279_sent_f7113777": "Let $\\mG^{(1)}$ and $\\mG^{(2)}$ be two given functional connectomes, each having the same number of neurons.",
+    "2412-15279_sent_b460c3f7": "Then, the exact computation of the $p$-Wasserstein distance is achieved as \\cite{songdechakraiwut2023topological}:",
+    "2412-15279_sent_1fe3da11": "W_{p,B}(\\mG^{(1)},\\mG^{(2)}) &= \\Big( \\sum_{b \\in B(\\mG^{(1)})} \\lvert b - \\tau_0^*(b) \\rvert ^p \\Big)^{1/p}, \\\\ W_{p,D}(\\mG^{(1)},\\mG^{(2)}) &= \\Big( \\sum_{d \\in D(\\mG^{(1)})} \\lvert d - \\tau_1^*(d) \\rvert ^p \\Big)^{1/p}, \\end{align*} where $\\tau_0^*$ maps the $l$-th smallest birth value in $B(\\mG^{(1)})$ to the $l$-th smallest birth value in $B(\\mG^{(2)})$, and $\\tau_1^*$ maps the $l$-th smallest death value in $D(\\mG^{(1)})$ to the $l$-th smallest death value in $D(\\mG^{(2)})$, for all $l$.",
+    "2412-15279_sent_5ff02319": "The exact Wasserstein distances $W_{p,B}$ and $W_{p,D}$ are well-defined because the bijective mappings $\\tau_0^*$ and $\\tau_1^*$ are well-defined for sets of births and deaths, respectively, with the same cardinality.",
+    "2412-15279_sent_d36a58f4": "Importantly, the analytic expression of the Wasserstein distance above can be equivalently written in a more familiar Euclidean space.",
+    "2412-15279_sent_1c072c39": "To do this, we define a vector of sorted birth values $\\vb_{\\mG^{(i)}} = (b_{i1}, b_{i2}, ..., b_{i,M-1})$ for the connected components, where $b_{ij} \\in B(\\mG^{(i)})$ and $b_{ij} \\leq b_{i,j+1}$.",
+    "2412-15279_sent_cacbba65": "Similarly, we define a vector of sorted death values $\\vd_{\\mG^{(i)}} = (d_{i1}, d_{i2}, ..., d_{i, 1 + M (M - 3)/2})$ for the cycles.",
+    "2412-15279_sent_292ba65e": "With these definitions, the $p$-Wasserstein distance can be equivalently expressed as",
+    "2412-15279_sent_bbfe7b99": "W_{p,B}(\\mG^{(1)},\\mG^{(2)}) &= || \\vb_{\\mG^{(1)}} - \\vb_{\\mG^{(2)}} ||_p, \\\\ W_{p,D}(\\mG^{(1)},\\mG^{(2)}) &= || \\vd_{\\mG^{(1)}} - \\vd_{\\mG^{(2)}} ||_p, \\end{align*} where $|| \\cdot ||_p$ is the $\\normlp$ norm.",
+    "2412-15279_sent_c1b7adc4": "Since $W_{p,B}$ and $W_{p,B}$ are differentiable functions and can be explicitly written down, their gradients are in closed form and can be computed very efficiently.",
+    "2412-15279_sent_7c68187a": "As is common in machine learning, since we know a computable formula of the Wasserstein distance, and we can take the gradient of that formula efficiently using analytic forms, we can optimize objective functions based on the Wasserstein distance using gradient-based optimization algorithms.",
+    "2412-15279_sent_48a91b78": "For instance, given $N$ functional connectomes $\\mG^{(1)},\\mG^{(2)},...,\\mG^{(N)},$ we can determine a persistent diagram centroid $\\overline{\\vb}$ (for the connected components) that minimizes the sum of the 2-Wasserstein distances as",
+    "2412-15279_sent_22233a8a": "\\overline{\\vb} = \\argmin_{\\vb_{\\overline{\\mG}}} \\sum_{i=1}^N W_{2,B}(\\overline{\\mG},\\mG^{(i)}) = \\frac{1}{N} \\sum_{i=1}^N \\vb_{\\mG^{(i)}}.",
+    "2412-15279_sent_b672920e": "\\end{align*} $\\overline{\\vb}$ represents the Wasserstein barycenter that quantifies the central tendency of the functional connectomes.",
+    "2412-15279_sent_1190539c": "Likewise, the variability around the barycenter can be determined as",
+    "2412-15279_sent_127defc7": "s^2_{\\vb} = \\frac{1}{N} \\sum_{i=1}^N (\\vb_{\\mG^{(i)}} - \\overline{\\vb}).",
+    "2412-15279_sent_868fed49": "\\end{align*} $s^2_{\\vb}$ represents the Wasserstein variance.",
+    "2412-15279_sent_752b0dc5": "In a similar manner, the Wasserstein mean $\\overline{\\vd}$ and variance $s^2_{\\vd}$ for the cycles can be calculated using $W_{p,D}$.",
+    "2412-15279_sent_5e8c9ea9": "Additionally, other important statistics that measure central tendency, dispersion, shape, and association can also be computed.",
+    "2412-15279_section_bcb2427a": "Connectome Analysis of Neural Networks",
+    "2412-15279_sent_50a54579": "Drawing inspiration from functional MRI studies of the human brain, we are interested in the functional behavior of neural networks and whether we can characterize them using our proposed functional connectomes and persistent-graph-homology representation.",
+    "2412-15279_sent_ccb9a75a": "Through two analysis studies, we aim to explore these connections.",
+    "2412-15279_sent_b714abe1": "In the first study, we will analyze how various popular regularization strategies, including batch normalization, dropout, and $\\normltwo$ regularization, influence the overall functional mechanisms and data propagation in neural networks during inference.",
+    "2412-15279_sent_6a6eaa3e": "Regularization affects neural network weights similarly to how various factors influence structural brain networks obtained by diffusion MRI.",
+    "2412-15279_sent_cd830f85": "This, in turn, impacts how functional mechanisms unfold.",
+    "2412-15279_sent_cd6fc400": "In the second study, we will conduct a more fine-grained investigation into how neural networks process different stimuli through functional connectomes.",
+    "2412-15279_sent_aeaec96f": "Specifically, we will explore whether there are inherent topological patterns within the functional mechanisms of processing data points from various predefined classes.",
+    "2412-15279_sent_f5c41b1f": "For example, we will analyze how neural networks process samples from different digit classes (0-9) in the MNIST dataset.",
+    "2412-15279_sent_5e31f935": "This is analogous to how the human brain perceives and processes different visual stimuli, such as recognizing and distinguishing between digits, characterized by human connectomes observed in function MRI studies.",
+    "2412-15279_sent_47820856": "By drawing these comparisons, we aim to gain insights into the similarities between neural networks and human brain functions to better understand and characterize these systems.",
+    "2412-15279_paragraph_ba340b1e": "Cluster analysis",
+    "2412-15279_paragraph_e65ea160": "Method comparison",
+    "2412-15279_sent_565855ca": "The first baseline method uses $k$-means clustering on the vectorization of entries below the main diagonal of adjacency (Adj) matrices of functional connectomes, grouping the connectomes based on node-by-node geometry.",
+    "2412-15279_sent_01b19af6": "The remaining five methods use persistent homology and involve clustering on conventional Rips-complex persistence diagrams of the 1st homology group, commonly used in the literature.",
+    "2412-15279_sent_7dc21146": "The $k$-medoids algorithm is applied using the following distances and kernels: bottleneck distance (BD), Wasserstein distance (WD), sliced Wasserstein kernel (SWK) \\cite{carriere2017sliced}, and heat kernel (HK) \\cite{reininghaus2015stable}.",
+    "2412-15279_sent_a36c9f86": "Additionally, $k$-means clustering is performed on the persistence image (PI) vectorization \\cite{adams2017persistence}.",
+    "2412-15279_sent_e5618699": "More details on these methods are available in the supplementary material and code.",
+    "2412-15279_sent_859bdf13": "For all methods, initial clusters are selected at random, and we perform clustering 20 trials and report average clustering performance.",
+    "2412-15279_paragraph_f1cb45f6": "Datasets",
+    "2412-15279_paragraph_07d43f30": "Neural network architectures and training",
+    "2412-15279_sent_9631ae49": "For MNIST, we used a feedforward architecture with two hidden fully-connected layers, with the first and second layers comprising 128 and 64 neurons, respectively.",
+    "2412-15279_sent_70f5a88a": "For Fashion-MNIST, we used a similar feedforward architecture, but with the first and second layers comprising 256 and 128 neurons, respectively.",
+    "2412-15279_sent_67de8f55": "For CIFAR-10, we used a convolutional neural network with three VGG blocks \\cite{simonyan2015very}, followed by two fully-connected layers, with the first and second layers comprising 256 and 128 neurons, respectively.",
+    "2412-15279_sent_63b6512b": "In all architectures, we applied leaky ReLU activation functions and the stochastic gradient descent optimizer with momentum.",
+    "2412-15279_sent_76ebed10": "To train neural networks, we randomly partitioned the data points of each dataset into a training dataset and a functional dataset, as explained in Section \\ref{subsec:functions}.",
+    "2412-15279_sent_d3791230": "For each training strategy--namely 1) batch normalization, 2) dropout, 3) $\\normltwo$, as well as 4) vanilla (which trains neural networks without any regularization and serves as a control)--we used the training set to optimize and obtain well-generalized neural networks.",
+    "2412-15279_sent_83ab2e5e": "To account for the stochastic nature of gradient-based optimization initialization, we trained 20 neural networks for each strategy, totaling 80 networks (20 $\\times$ 4).",
+    "2412-15279_sent_5703910a": "For the MNIST dataset, the average test accuracies are 0.98 across all training strategies.",
+    "2412-15279_sent_34157029": "For Fashion-MNIST, the average test accuracies are 0.89 across all training strategies.",
+    "2412-15279_sent_561e3cb7": "For CIFAR-10, the average test accuracies are 0.76 across all training strategies.",
+    "2412-15279_sent_97ab173a": "More details on the architecture and hyperparameter tuning are available in the supplementary material and code.",
+    "2412-15279_sent_bba14a19": "Once the fully-trained neural networks are obtained, the functional dataset is fed into these networks to extract functional connectomes.",
+    "2412-15279_sent_65f61d2a": "Two different methods of extraction are employed for the two analysis studies, which will be provided in more detail below for each specific study.",
+    "2412-15279_sent_c13fb759": "Note that only neurons in the hidden fully-connected layers are used to construct the connectomes; neurons in the softmax output layers and convolutional layers are excluded.",
+    "2412-15279_subsection_657411e5": "Study 1",
+    "2412-15279_sent_167660e5": "\\includegraphics[width=\\textwidth]{figs/connectomes.jpg} \\caption{Statistics of the functional dataset used in Study 1.",
+    "2412-15279_sent_e24565c8": "Left: Sample means of the functional connectomes, averaged within each training strategy.",
+    "2412-15279_sent_2bc0fe35": "Right: Persistence diagrams and statistics for each strategy, with thick lines representing Wasserstein barycenters and shaded regions indicating Wasserstein standard deviation.} \\end{figure*}",
+    "2412-15279_sent_f41e50c8": "\\begin{tabular}{ll||ccccccc} Dataset & Strategy & BD & WD & SWK & HK & PI & Adj & Top \\\\ \\multirow{3}{4.5em}{MNIST} & All & $0.63 \\pm 0.04$ & $0.75$ & \\bm{$0.85$} & $0.72 \\pm 0.01$ & $0.69 \\pm 0.01$ & $0.32 \\pm 0.05$ & $0.78 \\pm 0.11$ \\\\ & Batch Norm vs. Vanilla & \\bm{$1.00$} & \\bm{$1.00$} & \\bm{$1.00$} & $0.93$ & $0.93$ & $0.55 \\pm 0.04$ & \\bm{$1.00$} \\\\ & Dropout vs. Vanilla & $0.67 \\pm 0.07$ & $0.90$ & $0.95$ & $0.98$ & $0.98$ & $0.54 \\pm 0.03$ & \\bm{$1.00$} \\\\ & $\\normltwo$ vs. Vanilla & $0.62 \\pm 0.04$ & $0.70$ & $0.70$ & $0.60$ & $0.58$ & $0.55 \\pm 0.03$ & \\bm{$0.80 \\pm 0.03$} \\\\ \\multirow{3}{4.5em}{Fashion-MNIST} & All & $0.68$ & $0.75 \\pm 0.01$ & $0.78$ & $0.52 \\pm 0.01$ & $0.53 \\pm 0.02$ & $0.34 \\pm 0.07$ & \\bm{$0.87 \\pm 0.12$} \\\\ & Batch Norm vs. Vanilla & \\bm{$1.00$} & \\bm{$1.00$} & \\bm{$1.00$} & \\bm{$1.00$} & $0.98$ & $0.58 \\pm 0.07$ & \\bm{$1.00$} \\\\ & Dropout vs. Vanilla & $0.73$ & $0.95$ & $0.93$ & $0.50$ & $0.50$ & $0.54 \\pm 0.04$ & \\bm{$0.98$}\\\\ & $\\normltwo$ vs. Vanilla & $0.83$ & $0.98$ & $0.95$ & $0.53$ & $0.53$ & $0.55 \\pm 0.03$ & \\bm{$1.00$}\\\\ \\multirow{3}{4.5em}{CIFAR-10} & All & $0.75 \\pm 0.01$ & \\bm{$0.98$} & $0.96$ & $0.81$ & $0.58 \\pm 0.02$ & $0.51 \\pm 0.11$ & $0.88 \\pm 0.11$ \\\\ & Batch Norm vs. Vanilla & \\bm{$1.00$} & \\bm{$1.00$} & \\bm{$1.00$} & \\bm{$1.00$} & \\bm{$1.00$} & $0.56 \\pm 0.09$ & \\bm{$1.00$}\\\\ & Dropout vs. Vanilla & \\bm{$1.00$} & \\bm{$1.00$} & \\bm{$1.00$} & \\bm{$1.00$} & $0.63 \\pm 0.07$ & $0.62 \\pm 0.17$ & \\bm{$1.00$}\\\\ & $\\normltwo$ vs. Vanilla & $0.64 \\pm 0.01$ & \\bm{$0.95$} & $0.93$ & $0.68$ & $0.67 \\pm 0.01$ & $0.55 \\pm 0.04$ & $0.94 \\pm 0.01$\\\\ \\end{tabular} \\caption{Comparison of clustering performance in Study 1 across different datasets and training strategies, reported as average purity scores $\\pm$ standard deviation.",
+    "2412-15279_sent_1546a647": "The table presents results for clustering all strategies together, as well as pairwise clustering analysis of each regularization strategy compared to the control group (vanilla).} \\end{table*}",
+    "2412-15279_sent_40615cc8": "\\begin{tabular}{ll||ccccccc} Dataset & Strategy & BD & WD & SWK & HK & PI & Adj & Top \\\\ \\multirow{3}{4.5em}{MNIST} & Vanilla & $0.33$ & $0.40$ & $0.44 \\pm 0.02$ & $0.36 \\pm 0.01$ & $0.36 \\pm 0.01$ & $0.21 \\pm 0.02$ & \\bm{$0.47 \\pm 0.02$}\\\\ & Batch Norm & $0.36 \\pm 0.02$ & \\bm{$0.50$} & $0.48 \\pm 0.02$ & $0.35$ & $0.34 \\pm 0.01$ & $0.22 \\pm 0.03$ & $0.46 \\pm 0.02$ \\\\ & Dropout & $0.33 \\pm 0.02$ & $0.47$ & $0.46 \\pm 0.01$ & $0.34 \\pm 0.01$ & $0.34 \\pm 0.01$ & $0.18 \\pm 0.03$ & \\bm{$0.57 \\pm 0.02$} \\\\ & $\\normltwo$ & $0.29 \\pm 0.01$ & $0.44 \\pm 0.01$ & $0.45 \\pm 0.01$ & $0.34 \\pm 0.01$ & $0.34 \\pm 0.01$ & $0.19 \\pm 0.02$ & \\bm{$0.48 \\pm 0.02$} \\\\ \\multirow{3}{4.5em}{Fashion-MNIST} & Vanilla & $0.39 \\pm 0.01$ & $0.62 \\pm 0.01$ & \\bm{$0.64 \\pm 0.02$} & $0.46 \\pm 0.02$ & $0.43 \\pm 0.01$ & $0.23 \\pm 0.03$ & $0.53 \\pm 0.02$\\\\ & Batch Norm & $0.38 \\pm 0.02$ & $0.58 \\pm 0.02$ & \\bm{$0.60 \\pm 0.01$} & $0.40 \\pm 0.01$ & $0.39 \\pm 0.01$ & $0.20 \\pm 0.04$ & $0.49 \\pm 0.02$\\\\ & Dropout & $0.41$ & \\bm{$0.60$} & $0.59 \\pm 0.04$ & $0.45 \\pm 0.02$ & $0.40 \\pm 0.01$ & $0.19 \\pm 0.03$ & $0.53 \\pm 0.03$ \\\\ & $\\normltwo$ & $0.43$ & $0.54 \\pm 0.01$ & \\bm{$0.59 \\pm 0.01$} & $0.41$ & $0.41 \\pm 0.01$ & $0.21 \\pm 0.04$ & $0.53 \\pm 0.04$\\\\ \\multirow{3}{4.5em}{CIFAR-10} & Vanilla & $0.30 \\pm 0.01$ & \\bm{$0.56 \\pm 0.01$} & $0.55 \\pm 0.01$ & $0.41 \\pm 0.01$ & $0.40 \\pm 0.01$ & $0.15 \\pm 0.02$ & $0.51 \\pm 0.03$ \\\\ & Batch Norm & $0.33 \\pm 0.01$ & $0.51 \\pm 0.01$ & $0.47$ & $0.35 \\pm 0.01$ & $0.35 \\pm 0.01$ & $0.16 \\pm 0.01$ & \\bm{$0.52 \\pm 0.02$}\\\\ & Dropout & $0.29 \\pm 0.01$ & $0.49$ & \\bm{$0.51 \\pm 0.01$} & $0.37 \\pm 0.01$ & $0.37 \\pm 0.01$ & $0.26 \\pm 0.04$ & $0.50 \\pm 0.02$\\\\ & $\\normltwo$ & $0.35 \\pm 0.01$ & $0.59 \\pm 0.03$ & \\bm{$0.59 \\pm 0.01$} & $0.50 \\pm 0.01$ & $0.48 \\pm 0.01$ & $0.18 \\pm 0.03$ & $0.54 \\pm 0.03$\\\\ \\end{tabular} \\caption{Comparison of clustering performance in Study 2, reported as average purity scores $\\pm$ standard deviation.} \\end{table*} We will analyze the influence of various popular regularization strategies on the overall functional mechanisms and data propagation in neural networks during inference.",
+    "2412-15279_sent_a7876a13": "To construct functional connectomes for each dataset, we feed the entire corresponding functional dataset to the neural network to extract functional connectomes.",
+    "2412-15279_sent_ca12dfcc": "As a result, we obtain 80 functional connectomes, with 20 of these connectomes from each training strategy (batch normalization, dropout, $\\normltwo$, and vanilla).",
+    "2412-15279_sent_94cfb270": "We will perform cluster analysis on these 80 data points to group them into four clusters.",
+    "2412-15279_sent_2e38d514": "Figure \\ref{fig:connectomes} illustrates the average functional connectomes from training on the Fashion-MNIST dataset using each strategy, along with their corresponding persistence diagrams, which describe the topology.",
+    "2412-15279_sent_1780570c": "Additionally, we will cluster each regularization strategy against the control group (i.e., vanilla) to better understand the impact of each regularization method on the neural networks' functional mechanisms.",
+    "2412-15279_sent_ae8cb566": "That is, we will cluster 40 data points into two groups.",
+    "2412-15279_sent_ebcba5a7": "Since these datasets are balanced, with 20 samples per class, we can evaluate clustering performance using purity \\cite{manning2008prabhakar}.",
+    "2412-15279_sent_a1861d89": "The purity score ranges from 0 to 1, with 1 indicates perfect clustering alignment.",
+    "2412-15279_sent_00241d7b": "This evaluation measure is not only transparent and interpretable but also effective for this study, where the number of clusters is small and the cluster sizes are balanced. Table \\ref{table:study1} presents the clustering performance comparison.",
+    "2412-15279_sent_0d2bcbb5": "The findings indicate that regularization strategies, which influence learnable weight adjustment of neural networks, significantly affect data propagation through functional mechanisms, similar to neuroanatomy in the human nervous system \\cite{sporns2016networks}.",
+    "2412-15279_sent_2b7dc92a": "Specifically, the clustering performance shows high purity scores, which suggest substantial differences between each regularization strategy vs. the control, highlighting the notable impact of these techniques.",
+    "2412-15279_sent_5db8c0ef": "Furthermore, different regularization strategies lead to distinct functional mechanisms, resulting in high purity scores in cluster analysis for all four training strategies.",
+    "2412-15279_sent_c1b3e7ab": "Overall, topological signals, as measured by persistent homology methods, prove to be an effective means of characterizing neural network functions.",
+    "2412-15279_sent_ea91dcb9": "In most settings, the proposed Top method outperforms other baselines.",
+    "2412-15279_subsection_9f0be18c": "Study 2",
+    "2412-15279_sent_860d0819": "We will explore how fully-trained neural networks process different stimuli using functional connectomes.",
+    "2412-15279_sent_b7ec2f21": "We construct these connectomes as follows.",
+    "2412-15279_sent_1e2b11de": "For each dataset, we partition the data into collections where each collection contains data points from a specific predefined class.",
+    "2412-15279_sent_444d905a": "For instance, in the MNIST dataset, we create 10 collections, each corresponding to a digit class (0-9).",
+    "2412-15279_sent_259539aa": "We then feed each collection into the fully-trained neural network to extract the functional connectomes for that particular class.",
+    "2412-15279_sent_e817060b": "For each training strategy, we obtain 20 functional connectomes per class, resulting in a total of 200 functional connectomes (20 $\\times$ 10).",
+    "2412-15279_sent_312cc9b9": "We will perform cluster analysis on these 200 data points to group them into ten clusters.",
+    "2412-15279_sent_ea6fdf85": "As in Study 1, these datasets in Study 2 are balanced so we will also use the purity score to evaluate clustering performance.",
+    "2412-15279_sent_54eb6ea4": "Table \\ref{table:study2} displays the clustering performance comparison.",
+    "2412-15279_sent_a8ab172c": "Topological methods, including WD, SWK and Top, effectively capture the functions distinct to each predefined class.",
+    "2412-15279_sent_5ca25c15": "They are the best performers that achieve purity scores between 0.5 and 0.6 in unsupervised settings, which are significantly better than the 0.1 score expected if clustering was made randomly.",
+    "2412-15279_sent_a8fff667": "These findings show that samples from each class are processed through distinct functional mechanisms.",
+    "2412-15279_sent_35bec5f6": "These phenomena are observed in all training strategies.",
+    "2412-15279_sent_3b5f0db2": "This is similar to how the human brain uses specialized neural mechanisms to process different types of stimuli, ensuring efficient and effective interpretation of diverse information \\cite{kandel2000principles}.",
+    "2412-15279_subsection_4c0d1c8e": "Runtime Experiment",
+    "2412-15279_sent_583bc6a4": "All topological methods used in the studies were evaluated through runtime experiments.",
+    "2412-15279_sent_2a186aeb": "These methods were executed on an Apple M1 Pro CPU with 16 GB of unified RAM.",
+    "2412-15279_sent_355b2ccc": "Figure \\ref{fig:runtime} shows the plot of runtime vs. input size.",
+    "2412-15279_sent_b0a6e1a8": "The results clearly indicate that all five persistent homology-based distances and kernels (BD, WD, SWK, HK, and PI) are limited to handling dense graphs with only a few hundred nodes, highlighting the current scaling limitations of persistent homology embedding methods and their heavy reliance on approximation solutions.",
+    "2412-15279_sent_a0d49ab7": "In contrast, Top can compute the exact Wasserstein distance between graphs with thousands of nodes and millions of edges in about one second.",
+    "2412-15279_sent_bbf70021": "This computational efficiency makes Top practical for large-scale analyses of neural networks, which cannot be effectively analyzed using methods based on conventional persistence diagrams.",
+    "2412-15279_fig_1a19074e": "\\begin{figure}\n\n\\includegraphics[width=\\columnwidth]{figs/runtime.png}\n\\caption{Average runtime of each method for computing topological distance or kernel between two complete graphs. The graphs were generated using a modular network approach (details in supplementary material, with code provided). The runtime is plotted against the network size, represented by the number of nodes and edges.}\n\n\\end{figure}",
+    "2412-15279_paragraph_e00f37d1": "Potential Impact",
+    "2412-15279_sent_3b39db96": "Our approach for characterizing functional connectomes in neural networks is effective, computable, and scalable, potentially impacting the analysis of large neural architectures.",
+    "2412-15279_sent_cedcfd59": "By integrating neural network interpretability with human brain function insights, our framework opens up opportunities to leverage established techniques from functional MRI analysis.",
+    "2412-15279_sent_3850b822": "From a statistical learning perspective, our persistence statistics provide a robust basis for hypothesis testing and permutation tests, enhancing statistical rigor.",
+    "2412-15279_sent_a0f2f9be": "Their linear-logarithmic efficiency supports large-scale neural network applications.",
+    "2412-15279_sent_d0377f01": "Additionally, the gradient computability of the Wasserstein distance aids in designing advanced machine learning algorithms through gradient descent optimization.",
+    "2412-15279_sent_1620c441": "Our studies on convolutional neural networks for the CIFAR-10 dataset demonstrate the effectiveness of focusing on subnetworks within the last few fully-connected layers, enabling topological analysis of more targeted functional mechanisms.",
+    "2412-15279_sent_a1346345": "This approach could be particularly effective for complex, deep neural networks, including those with multiple heads.",
+    "2412-15279_sent_3e7f3d29": "While primarily focused on feedforward architectures, our method can also be extended to convolutional layers and recurrent networks.",
+    "2412-15279_paragraph_f3d9abb9": "Limitation",
+    "2412-15279_sent_27f23962": "Persistent graph homology is limited to the topological invariants of connected components and cycles.",
+    "2412-15279_sent_db0c837b": "These two features, however, play a dominant role in topological analyses.",
+    "2412-15279_sent_3cf9f68e": "For example, they are widely utilized in the brain network community \\cite{bullmore2009complex,honey2007network}, and cycles, in particular, have been increasingly reported as the most discriminative topological feature in brain networks \\cite{sizemore2018cliques}, galaxy organization \\cite{biagetti2021persistence}, and protein structure \\cite{xia2014persistent}.",
+    "2412-15279_sent_19fe1f4c": "In contrast, the assessment of higher-order features beyond cycles offers limited practical value due to their relative rarity, interpretive challenges, and consequent minimal discriminative power \\cite{biagetti2021persistence,sizemore2018cliques,songdechakraiwut2020dynamic}."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15279_sent_676977e1": "2412-15279_doc_root",
+      "2412-15279_abstract_ce28071e": "2412-15279_doc_root",
+      "2412-15279_sent_a2088b6f": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_631e82c4": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_51e52b7a": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_dfb71b3e": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_81f02c8c": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_17e9f962": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_97b511bc": "2412-15279_doc_root",
+      "2412-15279_section_0b79795d": "2412-15279_doc_root",
+      "2412-15279_sent_ec7cd0ea": "2412-15279_section_0b79795d",
+      "2412-15279_sent_eca33336": "2412-15279_section_0b79795d",
+      "2412-15279_sent_44e5b3ab": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a053cac6": "2412-15279_section_0b79795d",
+      "2412-15279_sent_fbe35bc4": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a5e39ae4": "2412-15279_section_0b79795d",
+      "2412-15279_sent_03b7b22a": "2412-15279_section_0b79795d",
+      "2412-15279_sent_918875a9": "2412-15279_section_0b79795d",
+      "2412-15279_sent_2c279c35": "2412-15279_section_0b79795d",
+      "2412-15279_sent_2e117bae": "2412-15279_section_0b79795d",
+      "2412-15279_sent_515bb9d6": "2412-15279_section_0b79795d",
+      "2412-15279_sent_b0d6fb5e": "2412-15279_section_0b79795d",
+      "2412-15279_sent_b6395262": "2412-15279_section_0b79795d",
+      "2412-15279_sent_7d655d02": "2412-15279_section_0b79795d",
+      "2412-15279_fig_b71837c1": "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_sent_468882fd": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a634771a": "2412-15279_section_0b79795d",
+      "2412-15279_sent_f23f1a94": "2412-15279_section_0b79795d",
+      "2412-15279_sent_c19543bb": "2412-15279_section_0b79795d",
+      "2412-15279_sent_fc8f20e9": "2412-15279_section_0b79795d",
+      "2412-15279_sent_3638ca8d": "2412-15279_section_0b79795d",
+      "2412-15279_sent_608f6e18": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a171c3a3": "2412-15279_section_0b79795d",
+      "2412-15279_sent_0ac78ddb": "2412-15279_section_0b79795d",
+      "2412-15279_sent_43bc0edb": "2412-15279_section_0b79795d",
+      "2412-15279_sent_29c1bb92": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a08675d1": "2412-15279_section_0b79795d",
+      "2412-15279_sent_c58c5604": "2412-15279_section_0b79795d",
+      "2412-15279_sent_76b7b2a1": "2412-15279_section_0b79795d",
+      "2412-15279_sent_9697c612": "2412-15279_section_0b79795d",
+      "2412-15279_sent_f94102a6": "2412-15279_section_0b79795d",
+      "2412-15279_sent_f80f1ef6": "2412-15279_section_0b79795d",
+      "2412-15279_sent_8d0d8342": "2412-15279_section_0b79795d",
+      "2412-15279_sent_db274433": "2412-15279_section_0b79795d",
+      "2412-15279_section_bb7dc781": "2412-15279_doc_root",
+      "2412-15279_sent_0a2b1fb4": "2412-15279_section_bb7dc781",
+      "2412-15279_subsection_bd3088cf": "2412-15279_section_bb7dc781",
+      "2412-15279_sent_cfe1985f": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_91bbe79d": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_7e7e0029": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_8cefad96": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_2cc9f292": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_0ecca1f4": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_69f532d0": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_0a0d88e5": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_5113ede1": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_b5db325a": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_a3098a9e": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_5170d7ba": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_d6838863": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_b4503f69": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_a80a4bca": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_bfddda0d": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_f49e03ca": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_c96b8fd4": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_f4e28c26": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_6a2df67e": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_ced373c9": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_bec693b2": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_7fb5dcb8": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_475479b9": "2412-15279_subsection_bd3088cf",
+      "2412-15279_subsection_176cf1cd": "2412-15279_section_bb7dc781",
+      "2412-15279_sent_0e9f0944": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_81e8d3ac": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_36e5471c": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_5a42e802": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_a4f87ff1": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_7e4e2216": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_9fe10f23": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_28026dd6": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_0df4a433": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_c1a864ce": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_be9f0b09": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_d6fdde44": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_692e91e2": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_e1c18ed3": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_5463d594": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_e876f9ce": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_faddd9af": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_50b63cc2": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_a64fdfe8": "2412-15279_subsection_176cf1cd",
+      "2412-15279_paragraph_2d215ebf": "2412-15279_subsection_0342a803",
+      "2412-15279_subsection_0342a803": "2412-15279_section_bb7dc781",
+      "2412-15279_sent_ae4634dd": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_06defe0b": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_248c3291": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_bb906f3a": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_f7113777": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_b460c3f7": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_1fe3da11": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_5ff02319": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_d36a58f4": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_1c072c39": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_cacbba65": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_292ba65e": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_bbfe7b99": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_c1b7adc4": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_7c68187a": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_48a91b78": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_22233a8a": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_b672920e": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_1190539c": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_127defc7": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_868fed49": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_752b0dc5": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_5e8c9ea9": "2412-15279_subsection_0342a803",
+      "2412-15279_section_bcb2427a": "2412-15279_doc_root",
+      "2412-15279_sent_50a54579": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_ccb9a75a": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_b714abe1": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_6a6eaa3e": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_cd830f85": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_cd6fc400": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_aeaec96f": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_f5c41b1f": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_5e31f935": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_47820856": "2412-15279_section_bcb2427a",
+      "2412-15279_paragraph_ba340b1e": "2412-15279_section_bcb2427a",
+      "2412-15279_paragraph_e65ea160": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_565855ca": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_01b19af6": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_7dc21146": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_a36c9f86": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_e5618699": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_859bdf13": "2412-15279_paragraph_e65ea160",
+      "2412-15279_paragraph_f1cb45f6": "2412-15279_section_bcb2427a",
+      "2412-15279_paragraph_07d43f30": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_9631ae49": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_70f5a88a": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_67de8f55": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_63b6512b": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_76ebed10": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_d3791230": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_83ab2e5e": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_5703910a": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_34157029": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_561e3cb7": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_97ab173a": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_bba14a19": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_65f61d2a": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_c13fb759": "2412-15279_paragraph_07d43f30",
+      "2412-15279_subsection_657411e5": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_167660e5": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_e24565c8": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_2bc0fe35": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_f41e50c8": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_1546a647": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_40615cc8": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_a7876a13": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_ca12dfcc": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_94cfb270": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_2e38d514": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_1780570c": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_ae8cb566": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_ebcba5a7": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_a1861d89": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_00241d7b": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_0d2bcbb5": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_2b7dc92a": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_5db8c0ef": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_c1b3e7ab": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_ea91dcb9": "2412-15279_subsection_657411e5",
+      "2412-15279_subsection_9f0be18c": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_860d0819": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_b7ec2f21": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_1e2b11de": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_444d905a": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_259539aa": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_e817060b": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_312cc9b9": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_ea6fdf85": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_54eb6ea4": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_a8ab172c": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_5ca25c15": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_a8fff667": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_35bec5f6": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_3b5f0db2": "2412-15279_subsection_9f0be18c",
+      "2412-15279_subsection_4c0d1c8e": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_583bc6a4": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_2a186aeb": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_355b2ccc": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_b0a6e1a8": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_a0d49ab7": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_bbf70021": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_fig_1a19074e": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_paragraph_e00f37d1": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_3b39db96": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_cedcfd59": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_3850b822": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_a0f2f9be": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_d0377f01": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_1620c441": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_a1346345": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_3e7f3d29": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_paragraph_f3d9abb9": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_27f23962": "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_sent_db0c837b": "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_sent_3cf9f68e": "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_sent_19fe1f4c": "2412-15279_paragraph_f3d9abb9"
+    },
+    "2": {
+      "2412-15279_sent_676977e1": "2412-15279_doc_root",
+      "2412-15279_abstract_ce28071e": "2412-15279_doc_root",
+      "2412-15279_sent_a2088b6f": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_631e82c4": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_51e52b7a": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_dfb71b3e": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_81f02c8c": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_17e9f962": "2412-15279_abstract_ce28071e",
+      "2412-15279_sent_97b511bc": "2412-15279_doc_root",
+      "2412-15279_section_0b79795d": "2412-15279_doc_root",
+      "2412-15279_sent_ec7cd0ea": "2412-15279_section_0b79795d",
+      "2412-15279_sent_eca33336": "2412-15279_section_0b79795d",
+      "2412-15279_sent_44e5b3ab": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a053cac6": "2412-15279_section_0b79795d",
+      "2412-15279_sent_fbe35bc4": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a5e39ae4": "2412-15279_section_0b79795d",
+      "2412-15279_sent_03b7b22a": "2412-15279_section_0b79795d",
+      "2412-15279_sent_918875a9": "2412-15279_section_0b79795d",
+      "2412-15279_sent_2c279c35": "2412-15279_section_0b79795d",
+      "2412-15279_sent_2e117bae": "2412-15279_section_0b79795d",
+      "2412-15279_sent_515bb9d6": "2412-15279_section_0b79795d",
+      "2412-15279_sent_b0d6fb5e": "2412-15279_section_0b79795d",
+      "2412-15279_sent_b6395262": "2412-15279_section_0b79795d",
+      "2412-15279_sent_7d655d02": "2412-15279_section_0b79795d",
+      "2412-15279_fig_b71837c1": "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_sent_468882fd": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a634771a": "2412-15279_section_0b79795d",
+      "2412-15279_sent_f23f1a94": "2412-15279_section_0b79795d",
+      "2412-15279_sent_c19543bb": "2412-15279_section_0b79795d",
+      "2412-15279_sent_fc8f20e9": "2412-15279_section_0b79795d",
+      "2412-15279_sent_3638ca8d": "2412-15279_section_0b79795d",
+      "2412-15279_sent_608f6e18": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a171c3a3": "2412-15279_section_0b79795d",
+      "2412-15279_sent_0ac78ddb": "2412-15279_section_0b79795d",
+      "2412-15279_sent_43bc0edb": "2412-15279_section_0b79795d",
+      "2412-15279_sent_29c1bb92": "2412-15279_section_0b79795d",
+      "2412-15279_sent_a08675d1": "2412-15279_section_0b79795d",
+      "2412-15279_sent_c58c5604": "2412-15279_section_0b79795d",
+      "2412-15279_sent_76b7b2a1": "2412-15279_section_0b79795d",
+      "2412-15279_sent_9697c612": "2412-15279_section_0b79795d",
+      "2412-15279_sent_f94102a6": "2412-15279_section_0b79795d",
+      "2412-15279_sent_f80f1ef6": "2412-15279_section_0b79795d",
+      "2412-15279_sent_8d0d8342": "2412-15279_section_0b79795d",
+      "2412-15279_sent_db274433": "2412-15279_section_0b79795d",
+      "2412-15279_section_bb7dc781": "2412-15279_doc_root",
+      "2412-15279_sent_0a2b1fb4": "2412-15279_section_bb7dc781",
+      "2412-15279_subsection_bd3088cf": "2412-15279_section_bb7dc781",
+      "2412-15279_sent_cfe1985f": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_91bbe79d": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_7e7e0029": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_8cefad96": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_2cc9f292": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_0ecca1f4": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_69f532d0": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_0a0d88e5": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_5113ede1": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_b5db325a": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_a3098a9e": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_5170d7ba": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_d6838863": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_b4503f69": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_a80a4bca": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_bfddda0d": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_f49e03ca": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_c96b8fd4": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_f4e28c26": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_6a2df67e": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_ced373c9": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_bec693b2": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_7fb5dcb8": "2412-15279_subsection_bd3088cf",
+      "2412-15279_sent_475479b9": "2412-15279_subsection_bd3088cf",
+      "2412-15279_subsection_176cf1cd": "2412-15279_section_bb7dc781",
+      "2412-15279_sent_0e9f0944": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_81e8d3ac": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_36e5471c": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_5a42e802": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_a4f87ff1": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_7e4e2216": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_9fe10f23": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_28026dd6": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_0df4a433": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_c1a864ce": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_be9f0b09": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_d6fdde44": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_692e91e2": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_e1c18ed3": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_5463d594": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_e876f9ce": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_faddd9af": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_50b63cc2": "2412-15279_subsection_176cf1cd",
+      "2412-15279_sent_a64fdfe8": "2412-15279_subsection_176cf1cd",
+      "2412-15279_paragraph_2d215ebf": "2412-15279_subsection_0342a803",
+      "2412-15279_subsection_0342a803": "2412-15279_section_bb7dc781",
+      "2412-15279_sent_ae4634dd": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_06defe0b": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_248c3291": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_bb906f3a": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_f7113777": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_b460c3f7": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_1fe3da11": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_5ff02319": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_d36a58f4": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_1c072c39": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_cacbba65": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_292ba65e": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_bbfe7b99": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_c1b7adc4": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_7c68187a": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_48a91b78": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_22233a8a": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_b672920e": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_1190539c": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_127defc7": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_868fed49": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_752b0dc5": "2412-15279_subsection_0342a803",
+      "2412-15279_sent_5e8c9ea9": "2412-15279_subsection_0342a803",
+      "2412-15279_section_bcb2427a": "2412-15279_doc_root",
+      "2412-15279_sent_50a54579": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_ccb9a75a": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_b714abe1": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_6a6eaa3e": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_cd830f85": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_cd6fc400": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_aeaec96f": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_f5c41b1f": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_5e31f935": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_47820856": "2412-15279_section_bcb2427a",
+      "2412-15279_paragraph_ba340b1e": "2412-15279_section_bcb2427a",
+      "2412-15279_paragraph_e65ea160": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_565855ca": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_01b19af6": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_7dc21146": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_a36c9f86": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_e5618699": "2412-15279_paragraph_e65ea160",
+      "2412-15279_sent_859bdf13": "2412-15279_paragraph_e65ea160",
+      "2412-15279_paragraph_f1cb45f6": "2412-15279_section_bcb2427a",
+      "2412-15279_paragraph_07d43f30": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_9631ae49": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_70f5a88a": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_67de8f55": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_63b6512b": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_76ebed10": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_d3791230": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_83ab2e5e": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_5703910a": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_34157029": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_561e3cb7": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_97ab173a": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_bba14a19": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_65f61d2a": "2412-15279_paragraph_07d43f30",
+      "2412-15279_sent_c13fb759": "2412-15279_paragraph_07d43f30",
+      "2412-15279_subsection_657411e5": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_167660e5": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_e24565c8": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_2bc0fe35": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_f41e50c8": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_1546a647": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_40615cc8": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_a7876a13": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_ca12dfcc": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_94cfb270": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_2e38d514": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_1780570c": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_ae8cb566": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_ebcba5a7": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_a1861d89": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_00241d7b": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_0d2bcbb5": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_2b7dc92a": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_5db8c0ef": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_c1b3e7ab": "2412-15279_subsection_657411e5",
+      "2412-15279_sent_ea91dcb9": "2412-15279_subsection_657411e5",
+      "2412-15279_subsection_9f0be18c": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_860d0819": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_b7ec2f21": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_1e2b11de": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_444d905a": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_259539aa": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_e817060b": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_312cc9b9": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_ea6fdf85": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_54eb6ea4": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_a8ab172c": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_5ca25c15": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_a8fff667": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_35bec5f6": "2412-15279_subsection_9f0be18c",
+      "2412-15279_sent_3b5f0db2": "2412-15279_subsection_9f0be18c",
+      "2412-15279_subsection_4c0d1c8e": "2412-15279_section_bcb2427a",
+      "2412-15279_sent_583bc6a4": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_2a186aeb": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_355b2ccc": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_b0a6e1a8": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_a0d49ab7": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_bbf70021": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_fig_1a19074e": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_paragraph_e00f37d1": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_3b39db96": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_cedcfd59": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_3850b822": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_a0f2f9be": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_d0377f01": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_1620c441": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_a1346345": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_sent_3e7f3d29": "2412-15279_paragraph_e00f37d1",
+      "2412-15279_paragraph_f3d9abb9": "2412-15279_subsection_4c0d1c8e",
+      "2412-15279_sent_27f23962": "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_sent_db0c837b": "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_sent_3cf9f68e": "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_sent_19fe1f4c": "2412-15279_paragraph_f3d9abb9"
+    }
+  },
+  "merged_parents": {
+    "2412-15279_sent_676977e1": [
+      "2412-15279_doc_root"
+    ],
+    "2412-15279_abstract_ce28071e": [
+      "2412-15279_doc_root"
+    ],
+    "2412-15279_sent_a2088b6f": [
+      "2412-15279_abstract_ce28071e"
+    ],
+    "2412-15279_sent_631e82c4": [
+      "2412-15279_abstract_ce28071e"
+    ],
+    "2412-15279_sent_51e52b7a": [
+      "2412-15279_abstract_ce28071e"
+    ],
+    "2412-15279_sent_dfb71b3e": [
+      "2412-15279_abstract_ce28071e"
+    ],
+    "2412-15279_sent_81f02c8c": [
+      "2412-15279_abstract_ce28071e"
+    ],
+    "2412-15279_sent_17e9f962": [
+      "2412-15279_abstract_ce28071e"
+    ],
+    "2412-15279_sent_97b511bc": [
+      "2412-15279_doc_root"
+    ],
+    "2412-15279_section_0b79795d": [
+      "2412-15279_doc_root"
+    ],
+    "2412-15279_sent_ec7cd0ea": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_eca33336": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_44e5b3ab": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_a053cac6": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_fbe35bc4": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_a5e39ae4": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_03b7b22a": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_918875a9": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_2c279c35": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_2e117bae": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_515bb9d6": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_b0d6fb5e": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_b6395262": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_7d655d02": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_fig_b71837c1": [
+      "2412-15279_paragraph_f3d9abb9",
+      "2412-15279_section_0b79795d",
+      "2412-15279_subsection_0342a803",
+      "2412-15279_subsection_176cf1cd",
+      "2412-15279_subsection_657411e5",
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_468882fd": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_a634771a": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_f23f1a94": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_c19543bb": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_fc8f20e9": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_3638ca8d": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_608f6e18": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_a171c3a3": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_0ac78ddb": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_43bc0edb": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_29c1bb92": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_a08675d1": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_c58c5604": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_76b7b2a1": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_9697c612": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_f94102a6": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_f80f1ef6": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_8d0d8342": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_sent_db274433": [
+      "2412-15279_section_0b79795d"
+    ],
+    "2412-15279_section_bb7dc781": [
+      "2412-15279_doc_root"
+    ],
+    "2412-15279_sent_0a2b1fb4": [
+      "2412-15279_section_bb7dc781"
+    ],
+    "2412-15279_subsection_bd3088cf": [
+      "2412-15279_section_bb7dc781"
+    ],
+    "2412-15279_sent_cfe1985f": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_91bbe79d": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_7e7e0029": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_8cefad96": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_2cc9f292": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_0ecca1f4": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_69f532d0": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_0a0d88e5": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_5113ede1": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_b5db325a": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_a3098a9e": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_5170d7ba": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_d6838863": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_b4503f69": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_a80a4bca": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_bfddda0d": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_f49e03ca": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_c96b8fd4": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_f4e28c26": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_6a2df67e": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_ced373c9": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_bec693b2": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_7fb5dcb8": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_sent_475479b9": [
+      "2412-15279_subsection_bd3088cf"
+    ],
+    "2412-15279_subsection_176cf1cd": [
+      "2412-15279_section_bb7dc781"
+    ],
+    "2412-15279_sent_0e9f0944": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_81e8d3ac": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_36e5471c": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_5a42e802": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_a4f87ff1": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_7e4e2216": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_9fe10f23": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_28026dd6": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_0df4a433": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_c1a864ce": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_be9f0b09": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_d6fdde44": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_692e91e2": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_e1c18ed3": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_5463d594": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_e876f9ce": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_faddd9af": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_50b63cc2": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_sent_a64fdfe8": [
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_paragraph_2d215ebf": [
+      "2412-15279_subsection_0342a803",
+      "2412-15279_subsection_176cf1cd"
+    ],
+    "2412-15279_subsection_0342a803": [
+      "2412-15279_section_bb7dc781"
+    ],
+    "2412-15279_sent_ae4634dd": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_06defe0b": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_248c3291": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_bb906f3a": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_f7113777": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_b460c3f7": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_1fe3da11": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_5ff02319": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_d36a58f4": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_1c072c39": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_cacbba65": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_292ba65e": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_bbfe7b99": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_c1b7adc4": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_7c68187a": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_48a91b78": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_22233a8a": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_b672920e": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_1190539c": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_127defc7": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_868fed49": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_752b0dc5": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_sent_5e8c9ea9": [
+      "2412-15279_subsection_0342a803"
+    ],
+    "2412-15279_section_bcb2427a": [
+      "2412-15279_doc_root"
+    ],
+    "2412-15279_sent_50a54579": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_ccb9a75a": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_b714abe1": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_6a6eaa3e": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_cd830f85": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_cd6fc400": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_aeaec96f": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_f5c41b1f": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_5e31f935": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_47820856": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_paragraph_ba340b1e": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_paragraph_e65ea160": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_565855ca": [
+      "2412-15279_paragraph_e65ea160"
+    ],
+    "2412-15279_sent_01b19af6": [
+      "2412-15279_paragraph_e65ea160"
+    ],
+    "2412-15279_sent_7dc21146": [
+      "2412-15279_paragraph_e65ea160"
+    ],
+    "2412-15279_sent_a36c9f86": [
+      "2412-15279_paragraph_e65ea160"
+    ],
+    "2412-15279_sent_e5618699": [
+      "2412-15279_paragraph_e65ea160"
+    ],
+    "2412-15279_sent_859bdf13": [
+      "2412-15279_paragraph_e65ea160"
+    ],
+    "2412-15279_paragraph_f1cb45f6": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_paragraph_07d43f30": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_9631ae49": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_70f5a88a": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_67de8f55": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_63b6512b": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_76ebed10": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_d3791230": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_83ab2e5e": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_5703910a": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_34157029": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_561e3cb7": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_97ab173a": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_bba14a19": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_65f61d2a": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_sent_c13fb759": [
+      "2412-15279_paragraph_07d43f30"
+    ],
+    "2412-15279_subsection_657411e5": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_167660e5": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_e24565c8": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_2bc0fe35": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_f41e50c8": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_1546a647": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_40615cc8": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_a7876a13": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_ca12dfcc": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_94cfb270": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_2e38d514": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_1780570c": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_ae8cb566": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_ebcba5a7": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_a1861d89": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_00241d7b": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_0d2bcbb5": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_2b7dc92a": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_5db8c0ef": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_c1b3e7ab": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_sent_ea91dcb9": [
+      "2412-15279_subsection_657411e5"
+    ],
+    "2412-15279_subsection_9f0be18c": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_860d0819": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_b7ec2f21": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_1e2b11de": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_444d905a": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_259539aa": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_e817060b": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_312cc9b9": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_ea6fdf85": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_54eb6ea4": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_a8ab172c": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_5ca25c15": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_a8fff667": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_35bec5f6": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_sent_3b5f0db2": [
+      "2412-15279_subsection_9f0be18c"
+    ],
+    "2412-15279_subsection_4c0d1c8e": [
+      "2412-15279_section_bcb2427a"
+    ],
+    "2412-15279_sent_583bc6a4": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_sent_2a186aeb": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_sent_355b2ccc": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_sent_b0a6e1a8": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_sent_a0d49ab7": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_sent_bbf70021": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_fig_1a19074e": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_paragraph_e00f37d1": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_sent_3b39db96": [
+      "2412-15279_paragraph_e00f37d1"
+    ],
+    "2412-15279_sent_cedcfd59": [
+      "2412-15279_paragraph_e00f37d1"
+    ],
+    "2412-15279_sent_3850b822": [
+      "2412-15279_paragraph_e00f37d1"
+    ],
+    "2412-15279_sent_a0f2f9be": [
+      "2412-15279_paragraph_e00f37d1"
+    ],
+    "2412-15279_sent_d0377f01": [
+      "2412-15279_paragraph_e00f37d1"
+    ],
+    "2412-15279_sent_1620c441": [
+      "2412-15279_paragraph_e00f37d1"
+    ],
+    "2412-15279_sent_a1346345": [
+      "2412-15279_paragraph_e00f37d1"
+    ],
+    "2412-15279_sent_3e7f3d29": [
+      "2412-15279_paragraph_e00f37d1"
+    ],
+    "2412-15279_paragraph_f3d9abb9": [
+      "2412-15279_subsection_4c0d1c8e"
+    ],
+    "2412-15279_sent_27f23962": [
+      "2412-15279_paragraph_f3d9abb9"
+    ],
+    "2412-15279_sent_db0c837b": [
+      "2412-15279_paragraph_f3d9abb9"
+    ],
+    "2412-15279_sent_3cf9f68e": [
+      "2412-15279_paragraph_f3d9abb9"
+    ],
+    "2412-15279_sent_19fe1f4c": [
+      "2412-15279_paragraph_f3d9abb9"
+    ]
+  }
+}

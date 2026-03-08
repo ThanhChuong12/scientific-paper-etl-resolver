@@ -1,0 +1,1211 @@
+{
+  "elements": {
+    "2412-15303_doc_root": "DOCUMENT_ROOT",
+    "2412-15303_sent_676977e1": "\\maketitle",
+    "2412-15303_abstract_ce28071e": "abstract",
+    "2412-15303_sent_e3df8eb6": "Knowledge distillation (KD) has shown great promise in transferring knowledge from larger teacher models to smaller student models.",
+    "2412-15303_sent_95ccf7fd": "However, existing KD strategies for large language models often minimize output distributions between student and teacher models indiscriminately for each token.",
+    "2412-15303_sent_ae0f572f": "This overlooks the imbalanced nature of tokens and their varying transfer difficulties.",
+    "2412-15303_sent_17ce64c7": "In response, we propose a distillation strategy called Self-Evolution KD.",
+    "2412-15303_sent_71141897": "The core of this approach involves dynamically integrating teacher distribution and one-hot distribution of ground truth into the student distribution as prior knowledge, which promotes the distillation process.",
+    "2412-15303_sent_8c73eada": "It adjusts the ratio of prior knowledge based on token learning difficulty, fully leveraging the teacher model’s potential. Experimental results show our method brings an average improvement of approximately 1.4 SacreBLEU points across four translation directions in the WMT22 test sets.",
+    "2412-15303_sent_27247cc2": "Further analysis indicates that the improvement comes from better knowledge transfer from teachers, confirming our hypothesis.",
+    "2412-15303_section_0b79795d": "Introduction",
+    "2412-15303_sent_245c37cc": "Large language models (\\citealp[LLMs]{achiam2023gpt,touvron2023llama}) have achieved remarkable success in generating high-quality translations \\cite{hendy2023good,Peng2023ChatGPT4MT,jiao2023chatgpt} and other tasks~\\cite{kocon2023chatgpt,zhong2023can,lu2024error}.",
+    "2412-15303_sent_87a1b43d": "However, previous research indicates that LLM-based translation models (with billion-level parameters) must be several orders of magnitude larger than traditional neural machine translation systems (which typically have millions of parameters) to achieve comparable performance~\\cite{garcia2023unreasonable}.",
+    "2412-15303_sent_e7eb2556": "This high computational and deployment cost severely hinders the widespread application of LLMs in translation.",
+    "2412-15303_sent_17d297a5": "In general, a simple and effective technique to reduce high computational footprints is knowledge distillation (KD) ~\\cite{hinton2015distilling,kim2016sequence}, which trains a smaller model (aka.",
+    "2412-15303_sent_6ca9fb67": "student) under the supervision of a larger model (aka.",
+    "2412-15303_sent_d89868bc": "teacher).",
+    "2412-15303_sent_e3d13dac": "Recent research on KD for large language models (LLMs) has shown promising results~\\cite{gu2024minillm,ko2024distillm,agarwal2024policy,zhong2024revisiting,rao2024exploring}, driven by one key factor: exploration of various divergence losses.",
+    "2412-15303_sent_8340832b": "However, several problems are still under-explored. Their training objectives are achieved by indiscriminately minimizing the output distributions between the student and teacher model for each token.",
+    "2412-15303_sent_8d2ba8ed": "In fact, due to the token imbalance nature~\\cite{piantadosi2014zipf} and the truth that different tokens contribute differently to the sentence meaning~\\cite{chen2020content}, adaptively reweighting the token-level loss would promote the model training, as evidenced by its effectiveness in sequence-to-sequence training \\cite{zhang2022conditional,peng2023token}.",
+    "2412-15303_sent_8542f0f5": "It motivates us to speculate that indiscriminately adopting the same distillation mode to each token might be sub-optimal. Besides, in human learning patterns, human teachers often provide human students with personal insights (aka prior knowledge) to facilitate student learning.",
+    "2412-15303_sent_a7400531": "Excellent teachers could adjust the amount of prior knowledge to fully stimulate students' potential. This pattern further supports our hypothesis that the distillation mode should be differentiated based on the student's learning status rather than adopting a uniform strategy.",
+    "2412-15303_sent_57e2d2ef": "It also hints at the necessity of providing prior knowledge to optimize the distillation strategy and enhance student outcomes.",
+    "2412-15303_sent_1bbad080": "Therefore, a natural question arises: how to effectively transfer the teacher knowledge based on the student's mastering with the help of prior knowledge?",
+    "2412-15303_sent_c9d2a8a1": "It should be a dynamic strategy, which controls the integration of prior knowledge based on the student's training state.",
+    "2412-15303_sent_308aafbe": "To address it, we propose a simple but effective strategy -- self-evolution knowledge distillation (Self-Evolution KD) for LLMs. It mainly includes two stages: \\ding{192} Self-Question and \\ding{193} Self-Evolution.",
+    "2412-15303_sent_8b23540b": "In Stage 1, we utilize the Kullback-Leibler (KL) divergence between the student distribution and the target distribution (averaged by the teacher distribution and the one-hot distribution of ground-truth) to quantify the learning difficulty.",
+    "2412-15303_sent_4faf59c4": "By comparing this measure with a preset threshold, we assess the student model's learning status at the token level, thereby identifying hard-to-learn and easy-to-learn tokens.",
+    "2412-15303_sent_f6962bc6": "This enables us to provide tailored prior knowledge for different tokens in the next stage to enhance the student model's learning.",
+    "2412-15303_sent_df55e21b": "It should be noted that, although \\citet{qiu2022better} has demonstrated the potential of prior knowledge in the field of computer vision, treating prior knowledge as input would cause the risk of dimensionality mismatch and significantly increase training costs.",
+    "2412-15303_sent_0f9929c8": "To introduce the prior knowledge in a lightweight way, we design a simple strategy --- distribution adjustment.",
+    "2412-15303_sent_f916057c": "Specifically, in the Stage 2, if the token expresses hard-to-learn property, builds proxy distribution by smoothing the student distribution and target distribution, then used to learn target distribution, thus leading to faster convergence and superior performance.",
+    "2412-15303_sent_139f3fa4": "Otherwise, the proxy distribution is the student distribution.",
+    "2412-15303_sent_c20cc958": "By emulating the human teaching mode, assigning prior knowledge to hard-to-learn tokens to fully leverage the target information, while omitting its integration to easy-to-learn tokens, maximizes the potential of the student model.",
+    "2412-15303_sent_7dd294a4": "Empirically, we apply Self-Evolution KD to Llama series models~\\cite{touvron2023llama}, with parameter sizes ranging from 7 to 13 billion, and evaluate our proposed method on the WMT22 test sets (En$\\leftrightarrow$De and En$\\leftrightarrow$Cs).",
+    "2412-15303_sent_2ea2d21e": "The results show that Self-Evolution KD significantly achieves satisfactory gains over four competitive baselines.",
+    "2412-15303_sent_de941513": "Further analysis suggests that Self-Evolution KD is more effective in transferring knowledge from the teacher model to the student model.",
+    "2412-15303_section_aed402c3": "Related Work",
+    "2412-15303_subsection_0219c246": "Language Models for Translation",
+    "2412-15303_sent_e7f13065": "With the increasing capacity of LLMs, they have already become new standards for various NLP tasks, including machine translation~\\cite{jiao2023chatgpt,wang2023document}.",
+    "2412-15303_sent_9c58800b": "One line of work focuses on a comprehensive evaluation of LLMs across various translation scenarios.",
+    "2412-15303_sent_2ed6e009": "For example, \\citet{zhu2023multilingual,jiao2023chatgpt,hendy2023good} assess the multilingual translation capabilities of LLMs. \\citet{hendy2023good,wang2023document,karpinska2023large} evaluates their performance in document-level translation, while \\citet{guerreiro2023hallucinations} explores the phenomenon of hallucination.",
+    "2412-15303_sent_191180a0": "Another line is instruction tuning, such as \\citet{zhu2023extrapolating} boosted the translation capability of LLMs by translation data alongside cross-lingual general task data.",
+    "2412-15303_sent_b04304a1": "\\citet{xu2023paradigm} proposed a new translation paradigm: initial fine-tuning on monolingual data, followed by a small set of high-quality parallel data.",
+    "2412-15303_sent_6e25f3f9": "\\citet{jiao2023parrot} enhance the translation abilities by leveraging open-source LLMs, human-written translation and feedback data.",
+    "2412-15303_sent_a9d86649": "\\citet{zan2024building} enhanced the ability to follow instructions related to translation direction during the instruction tuning process.",
+    "2412-15303_sent_1efe373b": "Different from these approaches, we focus on transferring the translation capabilities from stronger LLM models to weaker LLM models under instruction tuning.",
+    "2412-15303_subsection_6072ea36": "Knowledge Distillation for Large Language Models",
+    "2412-15303_sent_7673825c": "The application of KD in LLM falls into two categories: black-box KD which accesses only teacher-generated texts~\\cite{chen2024knowledge,hsieh2023distilling,taori2023stanford,peng2023instruction}, and white-box KD which can employ the teacher parameters.",
+    "2412-15303_sent_1da83763": "Recently, with the increasing accessibility of open-source models, white-box distillation has gained more attention, particularly concerning the role of KL divergence~\\cite{zhong2024revisiting,gu2024minillm,wu2024rethinking,ko2024distillm,agarwal2024policy}.",
+    "2412-15303_sent_1ba80143": "Concurrently, several works aim to mitigate the training-inference mismatch problem by leveraging generated text of the student model~\\cite{agarwal2024policy,gu2024minillm,ko2024distillm}.",
+    "2412-15303_sent_6b2fafab": "Nevertheless, they ignore the efficacy of prior knowledge and indiscriminately handle tokens without differentiation.",
+    "2412-15303_sent_3202b3c8": "In this paper, we draw from human learning patterns, dynamically providing prior knowledge based on the learning state of the student model to enhance the distillation.",
+    "2412-15303_sent_8bfd2800": "Notably, a concurrent work -- SKEW KLD loss~\\cite{gu2024minillm} is also a modified distillation function that integrates the prior knowledge into the student model.",
+    "2412-15303_sent_5e8281c9": "However, it still maintains the traditional uniform distillation strategy and limits prior knowledge to the teacher's knowledge.",
+    "2412-15303_sent_bcba5066": "Besides, although \\citet{zhong2024revisiting,wang2021selective} assign varied distillation modes by token category, they fix the classification ratio and ignore the effectiveness of prior knowledge.",
+    "2412-15303_subsection_0e017604": "Self-Evolution Learning",
+    "2412-15303_sent_885ad946": "Self-evolution learning is a novel and effective method to exploit the knowledge from data, it is designed to regularize the model training by dynamically learning under-explored tokens.",
+    "2412-15303_sent_87502795": "For example, \\citet{zhong2023self} dynamically selected hard-to-learn tokens, then encourages the model to learn smoothed distribution which considers precise reference labels and easily digestible distribution generated by the model itself, thereby improving the training efficiency and scalability (up to 6 billion in their follow-up technical report~\\cite{zhong2022toward}).",
+    "2412-15303_sent_c08ac4fc": "\\citet{peng2023token} employed a similar strategy and verified the effectiveness of this learning on typical sequence-to-sequence learning tasks, e.g., machine translation, summarization and grammatical error correction tasks.",
+    "2412-15303_sent_74b269ed": "Moreover, \\citet{zheng2023self} introduced self-evolution learning to construct more adaptive and model-friendly pseudo samples to strengthen the mix-up-based text classification model.",
+    "2412-15303_sent_8e68e6d8": "In this work, we focus on applying this learning strategy to distil the translation-tailored LLMs.",
+    "2412-15303_section_12ce67f7": "Self-Evolution Knowledge Distillation",
+    "2412-15303_subsection_4d5cdaeb": "Preliminary",
+    "2412-15303_sent_4456cae7": "We provide some preliminary information about KD for LLMs. It typically employs a pre-trained and fixed teacher model to transfer knowledge into the parameterized student model by providing soft labels from the teacher's output.",
+    "2412-15303_sent_ebbb53f9": "Given source and ground-truth sequence pair ($s$, $t$) from a fixed dataset ($S$, $T$), KD could be formulated as an optimization problem aimed at minimizing the Kullback-Leibler (KL) divergence between the token-level distributions of the student $\\mathbf{q}$ and teacher $\\mathbf{p}$ models:",
+    "2412-15303_eq_30e16c7b": "\\begin{equation}\n\n\\mathcal{L}_{kl}(\\mathbf{p}||\\mathbf{q}) =\\frac{1}{N} \\sum_{i=1}^{N} \\mathbf{p}(t_i|t_{<i}, s) log \\frac{\\mathbf{p}(t_i|t_{<i}, s)}{\\mathbf{q} (t_i|t_{<i}, s)},\n\\end{equation}",
+    "2412-15303_sent_996f4819": "where $N$ is the length of ground-truth sequence $t$=\\{$t_1, ..., t_n$\\}.",
+    "2412-15303_sent_c88dfecb": "Furthermore, during the KD process, the student model also requires training under the ground-truth sequence $t$.",
+    "2412-15303_sent_a6008995": "The corresponding training objective could be calculated:",
+    "2412-15303_eq_5a68886e": "\\begin{equation}\n\\mathcal{L}_{sft} = \\frac{1}{N} \\sum_{i=1}^{N} (-log \\mathbf{q} (t_i|t_{<i},s)).\n\\end{equation}",
+    "2412-15303_sent_29a53249": "Finally, the overall loss function of KD is a linear interpolation between the supervised fine-tuning (SFT) loss and the KL loss:",
+    "2412-15303_eq_84248b07": "\\begin{equation}\n\\mathcal{L} = (1 - \\lambda) \\mathcal{L}_{sft} + \\lambda \\mathcal{L}_{kl}(\\mathbf{p}||\\mathbf{q}),\n\n\\end{equation}",
+    "2412-15303_sent_85a42bc3": "where the parameter $\\lambda$ serves as a weight to control the influence of each loss.",
+    "2412-15303_fig_b71837c1": "\\begin{figure*}",
+    "2412-15303_sent_19c821a1": "\\includegraphics[width=1\\textwidth]{model_two.png} \\caption{Overall framework of our Self-Evolution KD.",
+    "2412-15303_sent_48600762": "It mainly contains two stages: \\ding{172} self-question: calculating the learning difficulty by the KL divergence between the student distribution and target distribution, and dividing tokens into different categories.",
+    "2412-15303_sent_a8a49aa5": "comparison means comparing the learning difficulty with the preset threshold $\\Gamma$; \\ding{173} self-evolution: building proxy distribution for different tokens by smoothing the target and student distributions.",
+    "2412-15303_sent_4226e666": "Updated represents that the parameter needs to be updated, while Frozen means not.} \\end{figure*} Here we introduce the proposed self-evolution knowledge distillation {(Self-Evolution KD)} in detail.",
+    "2412-15303_sent_78f5660e": "As illustrated in Figure \\ref{fig:evokl}, it primarily emulates the human teaching mode and comprises two stages: evaluates the student's learning status to identify its hard and easy parts (Stage 1), offers varied proportions of teacher knowledge for different parts to assist the student learning (Stage 2).",
+    "2412-15303_sent_f1909201": "Stage 1 Self-Question Stage Due to the imbalanced nature of token properties~\\cite{piantadosi2014zipf}, we recommend evaluating the student's learning status at the token level.",
+    "2412-15303_sent_3287c0c6": "Therefore, the goal of this stage is to classify tokens as either hard-to-learn or easy-to-learn.",
+    "2412-15303_sent_242e5bb6": "However, how to categorize these tokens?",
+    "2412-15303_sent_193c409b": "Inspired by previous findings that reveal the dynamic training difficulty of tokens during the training process~\\cite{peng2023token}, we leverage the model itself to divide tokens wisely.",
+    "2412-15303_sent_010467f7": "Specifically, we first calculate the learning difficulty for each ground-truth token $t_i$, denoted as \\{$d_1$, ..., $d_T$\\}:",
+    "2412-15303_eq_8b8a4544": "\\begin{equation}\n\\mathbf{\\tilde{y}}_{i} = (1 - \\lambda) \\mathbf{y}_{i} + \\lambda \\mathbf{p}_{i}\n\\end{equation}",
+    "2412-15303_eq_d028a840": "\\begin{equation}\n\\mathbf{d}_i = \\mathcal{L}_{kl}(\\mathbf{\\tilde{y}}_{i}||\\mathbf{q}_i),\n\\end{equation}",
+    "2412-15303_sent_61d49809": "where $\\mathbf{y}_i$ is the one-hot distribution of ground-truth token $t_i$ at position $i$.",
+    "2412-15303_sent_72c1b367": "Notably, previous works primarily assesses the student's learning status by measuring the discrepancy between the student and teacher distributions~\\cite{zhong2024revisiting}.",
+    "2412-15303_sent_4d5b5d33": "However, as indicated in Eq. \\ref{eq:kd_finally_loss}, the student's learning status should be determined by both the teacher model and ground-truth sequence, since knowledge distillation inherently involves multiple objectives.",
+    "2412-15303_sent_e5a16614": "Therefore, we combine the distributions of the ground-truth sequence and teacher model linearly to derive the target distribution $\\mathbf{\\tilde{y}}_{i}$, and calculate the divergence gap between it and the student distribution to represent the learning difficulty $d_i$ of the student model.",
+    "2412-15303_sent_fe05177a": "Then, we preset a threshold $\\Gamma$, and select tokens which corresponding KL divergence exceed $\\Gamma$ as hard-to-learn tokens, $i.e.$, $\\mathcal{T}_h = \\{t_i | d_i > \\Gamma\\}$ where $i \\in \\{1, ..., N\\}$, and the others are easy-to-learn tokens.",
+    "2412-15303_sent_37643058": "Stage 2 Self-Evolution Stage After identifying different types of tokens, our primary focus shifts to leveraging the teacher information to enhance the learning of the student model.",
+    "2412-15303_sent_57be41b3": "Although previous work~\\cite{qiu2022better} employs the teacher's hidden states as input improve the distillation, there exists a dimensionality mismatch problem due to the model size discrepancy between the student and teacher, while significantly increases training time.",
+    "2412-15303_sent_88ec292e": "Therefore, how to integrate teacher information in a lightweight way to enhance the distillation?",
+    "2412-15303_sent_932dfd42": "It is important to note that the ``teacher'' information here not only comprises the knowledge from the teacher model but also contains the ground-truth information, as discussed in Stage 1.",
+    "2412-15303_sent_5a977797": "To address this problem, we propose to promote token distillation by a simple method -- distribution adjustment.",
+    "2412-15303_sent_7a4d8605": "Specifically, we introduce a parameter $\\beta$ to mix the student distribution $\\mathbf{q}_i$ and target distribution $\\mathbf{\\tilde{y}}_{i}$ to obtain proxy distribution $\\hat{\\mathbf{q}}$.",
+    "2412-15303_sent_c10a4d72": "Then, using proxy distribution to match target distribution:",
+    "2412-15303_eq_a7e4a93f": "\\begin{equation}\n\\hat{\\mathbf{q}}_{i} = \\beta \\mathbf{q}_i + (1-\\beta) \\mathbf{\\tilde{y}}_{i}\n\n\\end{equation}",
+    "2412-15303_eq_e4d81e61": "\\begin{equation}\n\\mathcal{L}_{kl}^{h_i} = \\mathcal{L}_{kl}(\\mathbf{\\tilde{y}}_{i}||\\hat{\\mathbf{q}}_{i}).\n\\end{equation}",
+    "2412-15303_sent_403d31f2": "By adjusting the information on the distribution, we avoid the dimensionality mismatch problem caused by integrating hidden states, while incurring almost no extra training cost.",
+    "2412-15303_sent_8206b274": "Furthermore, since the student distribution owns a partial target distribution, it empirically leads to faster convergence and superior performance \\cite{ko2024distillm}.",
+    "2412-15303_sent_2f2e9df3": "As for the easy-to-learn tokens, given their ability to effectively capture the ``teacher'' information, no additional modifications are necessary.",
+    "2412-15303_sent_90853632": "Their corresponding optimization objective is as follows:",
+    "2412-15303_eq_7e79d2f4": "\\begin{equation}\n\\mathcal{L}_{kl}^{e_i} = \\mathcal{L}_{kl}(\\mathbf{\\tilde{y}}_{i}||\\mathbf{q}_i).\n\\end{equation}",
+    "2412-15303_sent_d213cd23": "Overall Optimization Finally, we combine the losses of the hard-to-learn tokens and the other tokens.",
+    "2412-15303_sent_e0cf9e70": "The overall optimization objective is formulated as:",
+    "2412-15303_eq_ceef6f1b": "\\begin{equation}\n\\mathcal{L} = \\frac{1}{N} (\\sum\\limits_{i \\in \\mathcal{T}_e} \\mathcal{L}_{kl}^{e_i} + \\sum\\limits_{j \\in \\mathcal{T}_h} \\mathcal{L}_{kl}^{h_j}),\n\\end{equation}",
+    "2412-15303_sent_0f7929f0": "where $\\mathcal{T}_e$ and $\\mathcal{T}_h$ represents the easy-to-learn token set and hard-to-learn token set, respectively.",
+    "2412-15303_section_d575842d": "Experimental Setup",
+    "2412-15303_subsection_e5a724b2": "Training Data",
+    "2412-15303_sent_87d888cd": "For training data, we use a small yet high-quality parallel dataset\\footnote{ https://github.com/fe1ixxu/ALMA} following \\citet{xu2023paradigm}.",
+    "2412-15303_sent_87bb9e99": "It contains 14k and 12k parallel sentence pairs on English-German (EN-DE) and English-Czech (EN-CS) tasks, respectively.",
+    "2412-15303_sent_a7b4285d": "Then, we formatted them into translation instructions in four language directions: En$\\to$De, De$\\to$En, En$\\to$Cs and Cs$\\to$En, according to the translation prompt, which resulted in 52K multilingual training sets.",
+    "2412-15303_sent_6b1c86d7": "Following \\citet{jiao2023parrot}, our translation instructions include a fixed preface for all tasks, followed by ``\\#\\#\\# Instruction:'' to describe the translation task, ``\\#\\#\\# Input:'' for presenting the source sentence, and a ``\\#\\#\\# Response:'' with the target sentence to be generated.",
+    "2412-15303_subsection_74415cec": "Model Training",
+    "2412-15303_sent_377799f3": "Our experiments are conducted based on the Llama-factory\\footnote{https://github.com/hiyouga/LLaMA-Factory} codebase with the Llama family models~\\cite{touvron2023llama}.",
+    "2412-15303_sent_2b2f39ab": "We use supervised fine-tuned (SFT) Llama1-13B trained on the train data as the teacher model, and regard the Llama1-7B as the student model.",
+    "2412-15303_sent_6ce8312a": "We fine-tuned all models for 3 epochs with a batch size of 128, while keeping a maximum text length of 512.",
+    "2412-15303_sent_d7f38fbd": "Besides, we set the learning rate and warmup\\_ratio as $2e-5$ and $0.03$, respectively.",
+    "2412-15303_sent_c009c5d3": "The experimental parameters and train data remain consistent in both the SFT and KD process.",
+    "2412-15303_sent_dbfe2a90": "However, while evaluating the performance on the final checkpoints in knowledge distillation, we employ a validation dataset to select the best checkpoint during SFT, as the model easily overfits in this process.",
+    "2412-15303_sent_31331783": "The validation dataset is composed of WMT21 En$\\to$De and Cs$\\to$En test data~\\cite{akhbardeh2021findings}.",
+    "2412-15303_sent_8dd62dfd": "All experiments are conducted on NVIDIA 8*A800 (80GB) GPUs and utilize DeepSpeed ZeRO\\footnote{https://github.com/microsoft/DeepSpeed} Stage~3 for efficient model parallelism.",
+    "2412-15303_subsection_b74a43db": "Evaluation",
+    "2412-15303_paragraph_f315202b": "Test Data",
+    "2412-15303_sent_4298056a": "We evaluated the translation performance on the widely used WMT22 test datasets.",
+    "2412-15303_sent_d6904331": "It is the test sets from the WMT 2022 competition~\\cite{kocmi2022findings}\\footnote{https://www.statmt.org/wmt22/translation-task.html}, which consists of diverse domains such as news, social, e-commerce, and conversational. The number of sentence pairs for De$\\to$En, En$\\to$De, En$\\to$Cs and Cs$\\to$En is 1984, 2037, 2037 and 1448, respectively.",
+    "2412-15303_paragraph_f32c3eda": "Metrics",
+    "2412-15303_sent_f80a8853": "For automatic evaluations, we use SacreBLEU \\cite{post2018call}\\footnote{https://github.com/mjpost/SacreBleu} and the COMET score~\\cite{rei2020comet}\\footnote{https://github.com/Unbabel/COMET} with Unbabel/wmt22-comet-da.",
+    "2412-15303_sent_99c4c7a0": "Specifically, SacreBLEU primarily calculates n-gram similarity to measure the surface lexical matching, while COMET relies on cross-lingual pre-trained models to obtain human-like semantic matching.",
+    "2412-15303_paragraph_e6165364": "Baselines",
+    "2412-15303_sent_d565d897": "We consider two traditional knowledge distillation (KD) baselines in our main experiment:",
+    "2412-15303_itemize_6eb434f5": "itemize",
+    "2412-15303_item_16adb13a": "item",
+    "2412-15303_sent_040f47ac": "\\bf Forward KD~\\cite{hinton2015distilling}: is defined in Eq. \\ref{eq:kd_finally_loss};",
+    "2412-15303_sent_277866b0": "\\bf Reverse KD~\\cite{agarwal2024policy}: $(1 - \\lambda) \\mathcal{L}_{sft} + \\lambda \\mathcal{L}_{kl}(\\mathbf{q}||\\mathbf{p})$, swaps the roles of the teacher and student distributions compared to Forward KD.",
+    "2412-15303_sent_6ef04ecb": "In addition, we dynamically divide tokens into two groups: easy-to-learn and hard-to-learn, and our method assumes that different tokens require different distillation modes.",
+    "2412-15303_sent_7ea4c09f": "To better observe the impact of these dynamic changes, we introduce two extreme comparison baselines:",
+    "2412-15303_sent_4d534168": "\\bf NoEvo KD: $\\mathcal{L}_{kl}(\\mathbf{\\tilde{y}}|| \\mathbf{q})$, treat all tokens as easy-to-learn;",
+    "2412-15303_sent_3a205f00": "\\bf SKEW KD: $\\mathcal{L}_{kl}(\\mathbf{\\tilde{y}}||\\beta \\mathbf{q} + (1-\\beta) \\mathbf{\\tilde{y}})$, regard all tokens as hard-to-learn tokens, which is similar to SKEW KLD~\\cite{ko2024distillm}.",
+    "2412-15303_sent_d7f4adcc": "The default value of $\\beta$ is 0.5, which is consistent with our \\bf Self-Evolution KD approach.",
+    "2412-15303_sent_62164c4f": "For reference, we also report the performances of Llama-13B and Llama-7B models after SFT as the upper and lower bounds.",
+    "2412-15303_sent_8bfce0f2": "Additionally, for two traditional baselines, we closely follow \\citet{gu2024minillm}, integrating the SFT loss and KL loss with a mixture ratio $\\lambda$=0.5.",
+    "2412-15303_sent_b3ad679f": "For our proposed baselines and our method, we combine the teacher distribution and the one-hot distribution of ground-truth at a 0.5 ratio to form the target distribution, omitting the SFT loss since the target distribution already encapsulates the ground-truth information.",
+    "2412-15303_sent_b40533b2": "We compute the loss exclusively on the ground-truth sequence.",
+    "2412-15303_sent_b1661a57": "All models use the beam search strategy \\cite{vaswani2017attention,freitag2017beam} during inference.",
+    "2412-15303_sent_cfaca085": "Due to the high computational cost and potential out-of-memory (OOM) issues associated with beam search, we set the beam size to 1 as default.",
+    "2412-15303_section_992168ed": "Experimental Results",
+    "2412-15303_sent_210e61b8": "\\tabcolsep 3pt \\begin{tabular}{lcccccccccc} & \\multicolumn{2}{c}{En $\\to$ De} & \\multicolumn{2}{c}{De $\\to$ En} & \\multicolumn{2}{c}{En $\\to$ Cs} & \\multicolumn{2}{c}{Cs $\\to$ En} & \\multicolumn{2}{c}{Average} \\\\ & BLEU & COMET & BLEU & COMET & BLEU & COMET & BLEU & COMET & BLEU & COMET \\\\ & \\multicolumn{10}{c}{Test: WMT22 Test sets} \\\\ Teacher & 26.69 & 82.77 & 28.47 & 83.43 & 20.84 & 81.37 & 37.9 & 83.67 & 28.48 & 82.81 \\\\ \\addlinespace[2pt] Student & 25.14 & 81.08 & 27.53 & 82.92 & 19.18 & 78.11 & 36.92 & 83.10 & 27.19 & 81.30 \\\\ Forward KD & 25.29 & 81.84 & 27.77 & 83.09 & 20.39 & 80.60 & 36.11 & 83.27 & 27.39 & 82.20 \\\\ Reverse KD & 25.37 & 81.77 & 27.41 & 83.03 & 20.5 & 79.83 & 35.34 & 83.22 & 27.16 & 81.96 \\\\ NoEvo KD & 25.51 & 81.70 & 27.85 & 83.02 & 20.56 & 80.78 & 36.21 & 83.30 & 27.53 & 82.20 \\\\ SKEW KD & 26.1 & 81.74 & 28.09 & 83.20 & 21.22 & 80.45 & 37.77 & 83.53 & 28.29 & 82.23 \\\\ \\multicolumn{11}{l}{\\textcolor{lightgray!99}{Ours}} \\\\ Self-Evolution KD &26.73$^{\\dagger}$& 82.05&28.62$^\\dagger$ &83.42&21.54$^\\dagger$ &80.71 &38.44$^\\dagger$ &83.74 &28.83&82.48 \\\\ \\rowcolor{customgraycolor} ~~~~$\\Delta$ & +1.44 & +0.21 & +0.85 & +0.33 & +1.15 & +0.11 & +2.33 & +0.47 & $+$1.44& $+$0.28 \\\\ \\end{tabular} \\caption{Comparison results of our \\bf Self-Evolution KD against baselines on different translation tasks, where ``$\\Delta$'' indicates the improvement against \\bf Forward KD, and ``$\\dagger$''indicates statistically significant difference (p$<$0.05).",
+    "2412-15303_sent_2a9b4a96": "\\bf Student and \\bf Teacher represent the Llama-7b and Llama-13b after SFT.} \\end{table*}",
+    "2412-15303_subsection_9d6c55ce": "Main Results",
+    "2412-15303_sent_f63fe0e3": "We report the comparison of our \\bf Self-Evolution KD and other competitive baseline distillation methods in Table~\\ref{tab:main_kl_results}, in terms of translation performance (SacreBLEU and COMET scores).",
+    "2412-15303_sent_89c7d720": "We have the following observations:",
+    "2412-15303_paragraph_5b0ff5c8": "Larger models produce better translations.",
+    "2412-15303_paragraph_f7b70386": "Forward KD is effective",
+    "2412-15303_sent_cfa84cbb": "Furthermore, recent methods \\cite{gu2024minillm,kim2024promptkd} argue that Reverse KD is more suitable for large language models than Forward KD.",
+    "2412-15303_sent_8b70b239": "Nevertheless, our findings indicate that pure Forward or Reverse KD yields similar performance without significant differences.",
+    "2412-15303_sent_c73cdadb": "Consequently, in this paper, we emphasize the substantial benefits derived from dynamically integrating prior knowledge for each token.",
+    "2412-15303_paragraph_ac200516": "Self-Evolution KD improves distillation",
+    "2412-15303_sent_8cd17590": "Compared to baseline Forward KD, Self-Evolution KD achieves significant improvements (average: +1.44 SacreBLEU points / +0.28 COMET scores).",
+    "2412-15303_sent_46316e56": "It shows a maximum improvement of approximately 2.33 SacreBLEU points and about 0.47 COMET scores in the Cs$\\to$En test set.",
+    "2412-15303_sent_8bd28b56": "Besides, Self-Evolution KD achieves a performance comparable to that of the teacher model and even surpasses it on the SacreBLEU metric.",
+    "2412-15303_sent_2a8d169b": "These substantial gains underscore the efficiency of our approach.",
+    "2412-15303_sent_a3f141f6": "As an adaptive strategy, Self-Evolution KD dynamically allocates different strategies based on the learning status of each token.",
+    "2412-15303_sent_4be419b4": "It surpasses both static strategies, as shown in Table \\ref{tab:main_kl_results}, corroborating our hypothesis that indiscriminately distilling each token is a sub-optimal strategy.",
+    "2412-15303_sent_3014a443": "Adopting varied distillation modes on the basis of the student's learning status would better align the distillation curve of the student model, thereby fully unleashing its potential. Moreover, with the integration of prior knowledge, SKEW KD also shows significant improvement over Forward KD, with average gains of 0.9 SacreBLEU points.",
+    "2412-15303_subsection_feb8fbab": "Ablation Study",
+    "2412-15303_subsubsection_3068bfc2": "Effect of Token Selection",
+    "2412-15303_sent_028f2df7": "\\subfigure[Values of $\\Gamma$]{ \\includegraphics[width=0.31\\textwidth]{different_loss_threshold.png} \\subfigure[Values of $K (\\%)$]{ \\includegraphics[width=0.31\\textwidth]{different_select_ratio.png} \\subfigure[Values of $\\beta$]{ \\includegraphics[width=0.31\\textwidth]{different_exposure_ratio.png} \\caption{\\ref{fig:lossthres} and \\ref{fig:selectratio}: Effect of $\\Gamma$ and percent ($K$) for selecting hard-to-learn tokens.",
+    "2412-15303_sent_76ce7277": "\\ref{fig:exposureratio}: Effect of $\\beta$ to determine the mixsture proportion of prior knowledge.",
+    "2412-15303_sent_8689c6da": "We report their average SacreBLEU points on the above-mentioned validation dataset in \\ref{fig:lossthres} and \\ref{fig:exposureratio}.",
+    "2412-15303_sent_4273649a": "As for \\ref{fig:selectratio}, the average SacreBLEU points on WMT22 test sets are reported since we compare different distillation strategies.} \\end{figure*} As a key point in this paper, how to divide tokens after evaluating the student's learning state is worth considering.",
+    "2412-15303_sent_0627f32f": "Traditional methods typically select top $K$ percent of all tokens as hard-to-learn tokens \\cite{zhong2024revisiting}.",
+    "2412-15303_sent_f6529e5b": "However, we suspect that this approach is sub-optimal, since it forces the model to choose a fixed proportion of hard-to-learn tokens even in the later stages of distillation.",
+    "2412-15303_sent_dfd4e36f": "In contrast, dynamically selecting hard-to-learn tokens based on a preset threshold $\\Gamma$ would avoid choosing hard-to-learn tokens after all tokens have been sufficiently learned, thereby fully harnessing the potential of the student model.",
+    "2412-15303_sent_91782ad7": "In this section, we delve into the impact of the two strategies.",
+    "2412-15303_sent_7937eb95": "The former is named \\bf Self-Evolution KD -w/ top$K$, while the latter is \\bf Self-Evolution KD -w/ $\\Gamma$.",
+    "2412-15303_sent_8fe96206": "First, we examine the influence of the hyper-parameter $\\Gamma$ within our dynamic strategy.",
+    "2412-15303_sent_b0006048": "As shown in Fig \\ref{fig:lossthres}, we observe that a larger or smaller threshold detrimentally affects the performance of Self-Evolution KD.",
+    "2412-15303_sent_0457f6ea": "The former leads to an overabundance of easy-to-learn tokens and fails to adequately focus on tokens that need assistance, while the latter is the opposite.",
+    "2412-15303_sent_745cc2eb": "Self-Evolution KD performs best with an optimal value of $\\Gamma$ = 0.4, thus we retain it as our default setting.",
+    "2412-15303_sent_be6398f9": "Second, from Fig \\ref{fig:selectratio}, the Self-Evolution -w/ top$K$ outperforms the NoEvo KD and SKEW KD, it further demonstrates the effectiveness of assigning distinct distillation strategies to different tokens.",
+    "2412-15303_sent_5650aa08": "However, its performance is inferior to the dynamic selection strategy (-w/ $\\Gamma$), which is consistent with our aforementioned hypothesis.",
+    "2412-15303_sent_78e25cd9": "Takeaway: These observations suggest that selecting the appropriate number of hard-to-learn tokens is crucial, since a larger or smaller number would lead to negative impacts.",
+    "2412-15303_sent_b6cf7203": "Besides, a dynamic token selection strategy aligns better with the learning patterns of the student model, thus fully unlocking its potential.",
+    "2412-15303_subsubsection_ef39f956": "Influence of $\\mathbf{\\beta}$",
+    "2412-15303_sent_9f87df91": "The factor $\\beta$ in Eq. \\ref{exposure_formula}, which serves to control the proportion of target distribution integrated to the student distribution, also requires to be investigated. Figure \\ref{fig:exposureratio} shows the results of varied $\\beta$ ranging from 0.1 to 0.9.",
+    "2412-15303_sent_d7b3b4d7": "As observed, the model performs optimally with $\\beta$ = 0.5, thus we adopt it as default setting in our experiments.",
+    "2412-15303_sent_1b82df25": "Besides, we also employ the progressive strategy outlined in \\citet{qian2020glancing}, dynamically adjusting the integration ratio of the target distribution.",
+    "2412-15303_sent_39f659a3": "Specifically, we set an initial ratio ($\\beta_b$) and linearly decrease it to a predefined final value ($\\beta_e$) throughout the training process.",
+    "2412-15303_sent_cda5696c": "As seen in Figure \\ref{fig.glancing}, the dynamic strategy fails to bring substantial gain, despite its potential advantages.",
+    "2412-15303_sent_09f55d49": "Takeaway: it proves that indiscriminately distill each token, even with dynamic adjustments to prior knowledge, still constrains the model performance, leading to sub-optimal outcomes.",
+    "2412-15303_fig_f37e3c9e": "\\begin{figure}\n\n \\includegraphics[width=0.9\\columnwidth]{glancing_progress.png}\n \\caption{Comparison of static strategy and progressive strategy for factor $\\beta$. ``0.5$\\to$0.0'' means the $\\beta_b$ is 0.5 and the $\\beta_e$ is 0.0. static strategy (0.5) indicates the results of Self-Evolution KD ($\\beta$ = 0.5).}\n\n\\end{figure}",
+    "2412-15303_subsection_1fa3fcf2": "Further Analysis",
+    "2412-15303_subsubsection_40b587de": "Does Self-Evolution KD Transfer The Teacher's Knowledge Better?",
+    "2412-15303_sent_ccb67de8": "The core of Knowledge Distillation (KD) is to transfer the distilled knowledge from a well-performing but cumbersome teacher model to a compact and lightweight student model, thus we analyze the effectiveness of knowledge transfer across various distillation strategies in this part.",
+    "2412-15303_sent_3a54e450": "We regard the generation text of teacher model on the WMT22 En$\\leftrightarrow$De, En$\\leftrightarrow$Cs test sets as the ``reference'', calculate the SacreBLEU scores between the ``reference'' and generated text of various distillation strategies.",
+    "2412-15303_sent_3b900966": "As illustrated in Figure \\ref{fig.transfer}, SKEW KD is superior to Forward KD in terms of similarity to the teacher model's generated text.",
+    "2412-15303_sent_ce312096": "Notably, Self-Evolution KD achieves the best performance, with an average improvement of 2.8 gains across the four language pairs.",
+    "2412-15303_sent_bfcafac6": "Takeaway: These findings indicate that the introduction of prior knowledge enables the student model to better capture the target information and enhances the efficiency of the teacher's knowledge transfer.",
+    "2412-15303_sent_2321d28e": "Additionally, a dynamic strategy that integrates prior knowledge based on the student's learning status further enhances its potential and deepens its understanding of the teacher's knowledge.",
+    "2412-15303_fig_24e0c83d": "\\begin{figure}\n\n\\includegraphics[width=0.94\\columnwidth]{knowledge_transfer.png}\n \\caption{Comparison of teacher’s knowledge transfer across different distillation strategies.}\n\n\\end{figure}",
+    "2412-15303_subsubsection_a8c438f3": "Comparison of Prior Knowledge",
+    "2412-15303_sent_0e10412e": "Given that knowledge distillation inherently involves multi-objective learning, we suspect that only considering the teacher knowledge as prior knowledge would significantly reduce the KL divergence loss and mislead the student model to emphasize the SFT loss, thus potentially curtailing the benefits derivable from teacher knowledge.",
+    "2412-15303_sent_16fda6b7": "Following \\citet{ko2024distillm}, we redefine the distillation objective as (SKEW KD (teacher)):",
+    "2412-15303_eq_855d3580": "\\begin{equation}\n\\mathcal{L} = (1 - \\lambda) \\mathcal{L}_{sft} + \\lambda \\mathcal{L}_{kl} (p || \\beta q_\\theta + (1-\\beta) p),\n\\end{equation}",
+    "2412-15303_sent_d4380c20": "where $\\beta$ = 0.9\\cite{ko2024distillm}.",
+    "2412-15303_sent_28e8c419": "As shown in Figure \\ref{fig.skew_loss_weight}, we observe the results when setting $\\lambda$ to 0.3, 0.5, 0.7 and 1.0, respectively.",
+    "2412-15303_sent_d281e397": "While the parameter $\\lambda$ is set to 1.0, as \\citet{ko2024distillm}, the result proves that ignoring the ground-truth information leads to a significant decline in performance.",
+    "2412-15303_sent_64941a74": "Besides, despite adjusting the loss weights to balance the SFT loss and the KL divergence loss, the performance of SKEW KD (teacher) still significantly lags behind that of Self-Evolution KD.",
+    "2412-15303_sent_f96e0d27": "Takeaway: This finding is consistent with our conjecture that modifying the distillation optimization function by only integrating the teacher's knowledge disrupts the original cooperative relationship between multiple objectives, thus weakening the student's performance.",
+    "2412-15303_fig_e2e1dfa8": "\\begin{figure}\n\n \\includegraphics[width=0.9\\columnwidth]{skew_kd_loss_weight.png}\n \\caption{Effect of the loss weight of the SKEW KD (Teacher). We only report the Self-Evolution KD for reference.}\n\n\\end{figure}",
+    "2412-15303_subsubsection_a891cd6d": "Larger Teacher Model",
+    "2412-15303_fig_72b21b31": "\\begin{table}\n\n\\begin{center}\n\\tabcolsep 1.5pt\n\\begin{tabular}{lccccc}\n\n WMT22 & En$\\to$De & De$\\to$En & En$\\to$Cs & Cs$\\to$En & Avg. \\\\\n\n Teacher & 26.81 & 27.53 & 20.64 & 38.17 & 28.29 \\\\\n\n Forward KD & 25.36 & 27.17 & 19.91 & 35.42 & 26.96 \\\\\n Reverse KD & 24.92 & 26.62 & 19.81 & 34.40 & 26.44 \\\\\n NoEvo KD & 25.32 & 27.13 & 19.77 & 35.92 & 27.04 \\\\\n SKEW KD & 25.97 & 28.14 & 20.91 & 37.24 & 28.07 \\\\\n \\rowcolor{customgraycolor}\n Self-Evolution KD & 26.73 & 28.14 & 21.65 & 38.07 & 28.65 \\\\\n\n\\end{tabular}\n\\caption{Comparison results for different distillation strategies between the teacher model Llama-30B after SFT and the student model Llama-7B(SacreBLEU).} \n\n \\end{center}\n\\end{table}",
+    "2412-15303_sent_50eba4bb": "To assess the effectiveness of knowledge distillation in models with substantial size disparities, we employ Llama-30b models after SFT as teachers, distilling knowledge into student models with 7 billion parameters.",
+    "2412-15303_sent_08db5674": "Table \\ref{tab:larger_model_size} provides a comprehensive comparison against several strong baselines.",
+    "2412-15303_sent_433e8dd9": "As observed, Self-Evolution KD significantly outperforms the baseline (Forward KD), with an average improvement of approximately 1.7 SacreBLEU points, and surpasses other distillation strategies.",
+    "2412-15303_sent_16f74ed8": "Notably, the distillation gains from the teacher model with 30 billion parameters surpass those from the teacher model with 13 billion parameters (e.g., 1.7 SacreBleu point V.S.",
+    "2412-15303_sent_89608ef9": "1.5 SacreBleu point).",
+    "2412-15303_sent_47340a1c": "Takeaway: It clearly indicates that our method consistently achieves superior performance, even in large model size gaps.",
+    "2412-15303_sent_96f54a42": "It also shows the potential to mitigate the adverse effects of distillation caused by large teacher models.",
+    "2412-15303_section_6f8b794f": "Conclusion",
+    "2412-15303_sent_774103dd": "This paper explores the potential of utilizing prior knowledge in LLM knowledge distillation and highlights the limitations of equally distilling each token without differentiation.",
+    "2412-15303_sent_6dd26d97": "In particular, we propose a dynamic teaching mode that enhances student distillation by integrating prior knowledge which contains teacher knowledge and ground-truth information.",
+    "2412-15303_sent_b26b5537": "Besides, we adjust the integration ratio based on the student's token-level learning status.",
+    "2412-15303_sent_19852c28": "Experimental results demonstrate that our approach consistently enhances distillation performance across multiple translation tasks.",
+    "2412-15303_sent_649a2c03": "Furthermore, in-depth analysis indicates that our method effectively transfers the teacher's knowledge.",
+    "2412-15303_section_f3d9abb9": "Limitation",
+    "2412-15303_sent_bfd49a9f": "Our work has several potential limitations.",
+    "2412-15303_sent_814494e8": "First, given the limited computational budget, our method has not been validated across extensive model size gaps, such as 65B.",
+    "2412-15303_sent_4fbd7d09": "Scaling up to larger model sizes will be more convincing.",
+    "2412-15303_sent_50a6576e": "Second, one key factor $\\Gamma$ is empirical and preset value, we fix it throughout the training, following previous works~\\cite{peng2023token}.",
+    "2412-15303_sent_ea87aa13": "It would be sensible and elegant to dynamically determine the threshold according to training difficulty.",
+    "2412-15303_sent_968e0dff": "For example, you can employ an additional network to predict the integration ratio of prior knowledge for each token.",
+    "2412-15303_section_84ffd62e": "Acknowledgments",
+    "2412-15303_sent_87be070b": "We would like to thank the anonymous reviewers for their insightful comments.",
+    "2412-15303_sent_0635000b": "Shujian Huang is the corresponding author.",
+    "2412-15303_sent_2d97c5f9": "This work is supported by National Science Foundation of China (No. 62376116, 62176120)."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15303_sent_676977e1": "2412-15303_doc_root",
+      "2412-15303_abstract_ce28071e": "2412-15303_doc_root",
+      "2412-15303_sent_e3df8eb6": "2412-15303_abstract_ce28071e",
+      "2412-15303_sent_95ccf7fd": "2412-15303_abstract_ce28071e",
+      "2412-15303_sent_ae0f572f": "2412-15303_abstract_ce28071e",
+      "2412-15303_sent_17ce64c7": "2412-15303_abstract_ce28071e",
+      "2412-15303_sent_71141897": "2412-15303_abstract_ce28071e",
+      "2412-15303_sent_8c73eada": "2412-15303_abstract_ce28071e",
+      "2412-15303_sent_27247cc2": "2412-15303_abstract_ce28071e",
+      "2412-15303_section_0b79795d": "2412-15303_doc_root",
+      "2412-15303_sent_245c37cc": "2412-15303_section_0b79795d",
+      "2412-15303_sent_87a1b43d": "2412-15303_section_0b79795d",
+      "2412-15303_sent_e7eb2556": "2412-15303_section_0b79795d",
+      "2412-15303_sent_17d297a5": "2412-15303_section_0b79795d",
+      "2412-15303_sent_6ca9fb67": "2412-15303_section_0b79795d",
+      "2412-15303_sent_d89868bc": "2412-15303_section_0b79795d",
+      "2412-15303_sent_e3d13dac": "2412-15303_section_0b79795d",
+      "2412-15303_sent_8340832b": "2412-15303_section_0b79795d",
+      "2412-15303_sent_8d2ba8ed": "2412-15303_section_0b79795d",
+      "2412-15303_sent_8542f0f5": "2412-15303_section_0b79795d",
+      "2412-15303_sent_a7400531": "2412-15303_section_0b79795d",
+      "2412-15303_sent_57e2d2ef": "2412-15303_section_0b79795d",
+      "2412-15303_sent_1bbad080": "2412-15303_section_0b79795d",
+      "2412-15303_sent_c9d2a8a1": "2412-15303_section_0b79795d",
+      "2412-15303_sent_308aafbe": "2412-15303_section_0b79795d",
+      "2412-15303_sent_8b23540b": "2412-15303_section_0b79795d",
+      "2412-15303_sent_4faf59c4": "2412-15303_section_0b79795d",
+      "2412-15303_sent_f6962bc6": "2412-15303_section_0b79795d",
+      "2412-15303_sent_df55e21b": "2412-15303_section_0b79795d",
+      "2412-15303_sent_0f9929c8": "2412-15303_section_0b79795d",
+      "2412-15303_sent_f916057c": "2412-15303_section_0b79795d",
+      "2412-15303_sent_139f3fa4": "2412-15303_section_0b79795d",
+      "2412-15303_sent_c20cc958": "2412-15303_section_0b79795d",
+      "2412-15303_sent_7dd294a4": "2412-15303_section_0b79795d",
+      "2412-15303_sent_2ea2d21e": "2412-15303_section_0b79795d",
+      "2412-15303_sent_de941513": "2412-15303_section_0b79795d",
+      "2412-15303_section_aed402c3": "2412-15303_doc_root",
+      "2412-15303_subsection_0219c246": "2412-15303_section_aed402c3",
+      "2412-15303_sent_e7f13065": "2412-15303_subsection_0219c246",
+      "2412-15303_sent_9c58800b": "2412-15303_subsection_0219c246",
+      "2412-15303_sent_2ed6e009": "2412-15303_subsection_0219c246",
+      "2412-15303_sent_191180a0": "2412-15303_subsection_0219c246",
+      "2412-15303_sent_b04304a1": "2412-15303_subsection_0219c246",
+      "2412-15303_sent_6e25f3f9": "2412-15303_subsection_0219c246",
+      "2412-15303_sent_a9d86649": "2412-15303_subsection_0219c246",
+      "2412-15303_sent_1efe373b": "2412-15303_subsection_0219c246",
+      "2412-15303_subsection_6072ea36": "2412-15303_section_aed402c3",
+      "2412-15303_sent_7673825c": "2412-15303_subsection_6072ea36",
+      "2412-15303_sent_1da83763": "2412-15303_subsection_6072ea36",
+      "2412-15303_sent_1ba80143": "2412-15303_subsection_6072ea36",
+      "2412-15303_sent_6b2fafab": "2412-15303_subsection_6072ea36",
+      "2412-15303_sent_3202b3c8": "2412-15303_subsection_6072ea36",
+      "2412-15303_sent_8bfd2800": "2412-15303_subsection_6072ea36",
+      "2412-15303_sent_5e8281c9": "2412-15303_subsection_6072ea36",
+      "2412-15303_sent_bcba5066": "2412-15303_subsection_6072ea36",
+      "2412-15303_subsection_0e017604": "2412-15303_section_aed402c3",
+      "2412-15303_sent_885ad946": "2412-15303_subsection_0e017604",
+      "2412-15303_sent_87502795": "2412-15303_subsection_0e017604",
+      "2412-15303_sent_c08ac4fc": "2412-15303_subsection_0e017604",
+      "2412-15303_sent_74b269ed": "2412-15303_subsection_0e017604",
+      "2412-15303_sent_8e68e6d8": "2412-15303_subsection_0e017604",
+      "2412-15303_section_12ce67f7": "2412-15303_section_12ce67f7",
+      "2412-15303_subsection_4d5cdaeb": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_4456cae7": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_sent_ebbb53f9": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_eq_30e16c7b": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_sent_996f4819": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_sent_c88dfecb": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_sent_a6008995": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_eq_5a68886e": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_sent_29a53249": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_eq_84248b07": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_sent_85a42bc3": "2412-15303_subsection_4d5cdaeb",
+      "2412-15303_fig_b71837c1": "2412-15303_section_84ffd62e",
+      "2412-15303_sent_19c821a1": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_48600762": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_a8a49aa5": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_4226e666": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_78f5660e": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_f1909201": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_3287c0c6": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_242e5bb6": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_193c409b": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_010467f7": "2412-15303_section_12ce67f7",
+      "2412-15303_eq_8b8a4544": "2412-15303_section_12ce67f7",
+      "2412-15303_eq_d028a840": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_61d49809": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_72c1b367": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_4d5b5d33": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_e5a16614": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_fe05177a": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_37643058": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_57be41b3": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_88ec292e": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_932dfd42": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_5a977797": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_7a4d8605": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_c10a4d72": "2412-15303_section_12ce67f7",
+      "2412-15303_eq_a7e4a93f": "2412-15303_section_12ce67f7",
+      "2412-15303_eq_e4d81e61": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_403d31f2": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_8206b274": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_2f2e9df3": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_90853632": "2412-15303_section_12ce67f7",
+      "2412-15303_eq_7e79d2f4": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_d213cd23": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_e0cf9e70": "2412-15303_section_12ce67f7",
+      "2412-15303_eq_ceef6f1b": "2412-15303_section_12ce67f7",
+      "2412-15303_sent_0f7929f0": "2412-15303_section_12ce67f7",
+      "2412-15303_section_d575842d": "2412-15303_doc_root",
+      "2412-15303_subsection_e5a724b2": "2412-15303_section_d575842d",
+      "2412-15303_sent_87d888cd": "2412-15303_subsection_e5a724b2",
+      "2412-15303_sent_87bb9e99": "2412-15303_subsection_e5a724b2",
+      "2412-15303_sent_a7b4285d": "2412-15303_subsection_e5a724b2",
+      "2412-15303_sent_6b1c86d7": "2412-15303_subsection_e5a724b2",
+      "2412-15303_subsection_74415cec": "2412-15303_section_d575842d",
+      "2412-15303_sent_377799f3": "2412-15303_subsection_74415cec",
+      "2412-15303_sent_2b2f39ab": "2412-15303_subsection_74415cec",
+      "2412-15303_sent_6ce8312a": "2412-15303_subsection_74415cec",
+      "2412-15303_sent_d7f38fbd": "2412-15303_subsection_74415cec",
+      "2412-15303_sent_c009c5d3": "2412-15303_subsection_74415cec",
+      "2412-15303_sent_dbfe2a90": "2412-15303_subsection_74415cec",
+      "2412-15303_sent_31331783": "2412-15303_subsection_74415cec",
+      "2412-15303_sent_8dd62dfd": "2412-15303_subsection_74415cec",
+      "2412-15303_subsection_b74a43db": "2412-15303_section_d575842d",
+      "2412-15303_paragraph_f315202b": "2412-15303_subsection_b74a43db",
+      "2412-15303_sent_4298056a": "2412-15303_paragraph_f315202b",
+      "2412-15303_sent_d6904331": "2412-15303_paragraph_f315202b",
+      "2412-15303_paragraph_f32c3eda": "2412-15303_subsection_b74a43db",
+      "2412-15303_sent_f80a8853": "2412-15303_paragraph_f32c3eda",
+      "2412-15303_sent_99c4c7a0": "2412-15303_paragraph_f32c3eda",
+      "2412-15303_paragraph_e6165364": "2412-15303_subsection_b74a43db",
+      "2412-15303_sent_d565d897": "2412-15303_paragraph_e6165364",
+      "2412-15303_itemize_6eb434f5": "2412-15303_paragraph_ac200516",
+      "2412-15303_item_16adb13a": "2412-15303_itemize_6eb434f5",
+      "2412-15303_sent_040f47ac": "2412-15303_item_16adb13a",
+      "2412-15303_sent_277866b0": "2412-15303_item_16adb13a",
+      "2412-15303_sent_6ef04ecb": "2412-15303_paragraph_e6165364",
+      "2412-15303_sent_7ea4c09f": "2412-15303_paragraph_e6165364",
+      "2412-15303_sent_4d534168": "2412-15303_item_16adb13a",
+      "2412-15303_sent_3a205f00": "2412-15303_item_16adb13a",
+      "2412-15303_sent_d7f4adcc": "2412-15303_item_16adb13a",
+      "2412-15303_sent_62164c4f": "2412-15303_paragraph_e6165364",
+      "2412-15303_sent_8bfce0f2": "2412-15303_paragraph_e6165364",
+      "2412-15303_sent_b3ad679f": "2412-15303_paragraph_e6165364",
+      "2412-15303_sent_b40533b2": "2412-15303_paragraph_e6165364",
+      "2412-15303_sent_b1661a57": "2412-15303_paragraph_e6165364",
+      "2412-15303_sent_cfaca085": "2412-15303_paragraph_e6165364",
+      "2412-15303_section_992168ed": "2412-15303_doc_root",
+      "2412-15303_sent_210e61b8": "2412-15303_section_992168ed",
+      "2412-15303_sent_2a9b4a96": "2412-15303_section_992168ed",
+      "2412-15303_subsection_9d6c55ce": "2412-15303_section_992168ed",
+      "2412-15303_sent_f63fe0e3": "2412-15303_subsection_9d6c55ce",
+      "2412-15303_sent_89c7d720": "2412-15303_subsection_9d6c55ce",
+      "2412-15303_paragraph_5b0ff5c8": "2412-15303_subsection_9d6c55ce",
+      "2412-15303_paragraph_f7b70386": "2412-15303_subsection_9d6c55ce",
+      "2412-15303_sent_cfa84cbb": "2412-15303_paragraph_f7b70386",
+      "2412-15303_sent_8b70b239": "2412-15303_paragraph_f7b70386",
+      "2412-15303_sent_c73cdadb": "2412-15303_paragraph_f7b70386",
+      "2412-15303_paragraph_ac200516": "2412-15303_subsection_9d6c55ce",
+      "2412-15303_sent_8cd17590": "2412-15303_item_16adb13a",
+      "2412-15303_sent_46316e56": "2412-15303_item_16adb13a",
+      "2412-15303_sent_8bd28b56": "2412-15303_item_16adb13a",
+      "2412-15303_sent_2a8d169b": "2412-15303_item_16adb13a",
+      "2412-15303_sent_a3f141f6": "2412-15303_item_16adb13a",
+      "2412-15303_sent_4be419b4": "2412-15303_item_16adb13a",
+      "2412-15303_sent_3014a443": "2412-15303_item_16adb13a",
+      "2412-15303_subsection_feb8fbab": "2412-15303_section_992168ed",
+      "2412-15303_subsubsection_3068bfc2": "2412-15303_subsection_feb8fbab",
+      "2412-15303_sent_028f2df7": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_76ce7277": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_8689c6da": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_4273649a": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_0627f32f": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_f6529e5b": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_dfd4e36f": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_91782ad7": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_7937eb95": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_8fe96206": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_b0006048": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_0457f6ea": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_745cc2eb": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_be6398f9": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_5650aa08": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_78e25cd9": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_sent_b6cf7203": "2412-15303_subsubsection_3068bfc2",
+      "2412-15303_subsubsection_ef39f956": "2412-15303_subsection_feb8fbab",
+      "2412-15303_sent_9f87df91": "2412-15303_subsubsection_ef39f956",
+      "2412-15303_sent_d7b3b4d7": "2412-15303_subsubsection_ef39f956",
+      "2412-15303_sent_1b82df25": "2412-15303_subsubsection_ef39f956",
+      "2412-15303_sent_39f659a3": "2412-15303_subsubsection_ef39f956",
+      "2412-15303_sent_cda5696c": "2412-15303_subsubsection_ef39f956",
+      "2412-15303_sent_09f55d49": "2412-15303_subsubsection_ef39f956",
+      "2412-15303_fig_f37e3c9e": "2412-15303_subsubsection_ef39f956",
+      "2412-15303_subsection_1fa3fcf2": "2412-15303_section_992168ed",
+      "2412-15303_subsubsection_40b587de": "2412-15303_subsection_1fa3fcf2",
+      "2412-15303_sent_ccb67de8": "2412-15303_subsubsection_40b587de",
+      "2412-15303_sent_3a54e450": "2412-15303_subsubsection_40b587de",
+      "2412-15303_sent_3b900966": "2412-15303_subsubsection_40b587de",
+      "2412-15303_sent_ce312096": "2412-15303_subsubsection_40b587de",
+      "2412-15303_sent_bfcafac6": "2412-15303_subsubsection_40b587de",
+      "2412-15303_sent_2321d28e": "2412-15303_subsubsection_40b587de",
+      "2412-15303_fig_24e0c83d": "2412-15303_subsubsection_40b587de",
+      "2412-15303_subsubsection_a8c438f3": "2412-15303_subsection_1fa3fcf2",
+      "2412-15303_sent_0e10412e": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_sent_16fda6b7": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_eq_855d3580": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_sent_d4380c20": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_sent_28e8c419": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_sent_d281e397": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_sent_64941a74": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_sent_f96e0d27": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_fig_e2e1dfa8": "2412-15303_subsubsection_a8c438f3",
+      "2412-15303_subsubsection_a891cd6d": "2412-15303_subsection_1fa3fcf2",
+      "2412-15303_fig_72b21b31": "2412-15303_subsubsection_a891cd6d",
+      "2412-15303_sent_50eba4bb": "2412-15303_subsubsection_a891cd6d",
+      "2412-15303_sent_08db5674": "2412-15303_subsubsection_a891cd6d",
+      "2412-15303_sent_433e8dd9": "2412-15303_subsubsection_a891cd6d",
+      "2412-15303_sent_16f74ed8": "2412-15303_subsubsection_a891cd6d",
+      "2412-15303_sent_89608ef9": "2412-15303_subsubsection_a891cd6d",
+      "2412-15303_sent_47340a1c": "2412-15303_subsubsection_a891cd6d",
+      "2412-15303_sent_96f54a42": "2412-15303_subsubsection_a891cd6d",
+      "2412-15303_section_6f8b794f": "2412-15303_doc_root",
+      "2412-15303_sent_774103dd": "2412-15303_section_6f8b794f",
+      "2412-15303_sent_6dd26d97": "2412-15303_section_6f8b794f",
+      "2412-15303_sent_b26b5537": "2412-15303_section_6f8b794f",
+      "2412-15303_sent_19852c28": "2412-15303_section_6f8b794f",
+      "2412-15303_sent_649a2c03": "2412-15303_section_6f8b794f",
+      "2412-15303_section_f3d9abb9": "2412-15303_doc_root",
+      "2412-15303_sent_bfd49a9f": "2412-15303_section_f3d9abb9",
+      "2412-15303_sent_814494e8": "2412-15303_section_f3d9abb9",
+      "2412-15303_sent_4fbd7d09": "2412-15303_section_f3d9abb9",
+      "2412-15303_sent_50a6576e": "2412-15303_section_f3d9abb9",
+      "2412-15303_sent_ea87aa13": "2412-15303_section_f3d9abb9",
+      "2412-15303_sent_968e0dff": "2412-15303_section_f3d9abb9",
+      "2412-15303_section_84ffd62e": "2412-15303_doc_root",
+      "2412-15303_sent_87be070b": "2412-15303_section_84ffd62e",
+      "2412-15303_sent_0635000b": "2412-15303_section_84ffd62e",
+      "2412-15303_sent_2d97c5f9": "2412-15303_section_84ffd62e"
+    }
+  },
+  "merged_parents": {
+    "2412-15303_sent_676977e1": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_abstract_ce28071e": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_sent_e3df8eb6": [
+      "2412-15303_abstract_ce28071e"
+    ],
+    "2412-15303_sent_95ccf7fd": [
+      "2412-15303_abstract_ce28071e"
+    ],
+    "2412-15303_sent_ae0f572f": [
+      "2412-15303_abstract_ce28071e"
+    ],
+    "2412-15303_sent_17ce64c7": [
+      "2412-15303_abstract_ce28071e"
+    ],
+    "2412-15303_sent_71141897": [
+      "2412-15303_abstract_ce28071e"
+    ],
+    "2412-15303_sent_8c73eada": [
+      "2412-15303_abstract_ce28071e"
+    ],
+    "2412-15303_sent_27247cc2": [
+      "2412-15303_abstract_ce28071e"
+    ],
+    "2412-15303_section_0b79795d": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_sent_245c37cc": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_87a1b43d": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_e7eb2556": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_17d297a5": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_6ca9fb67": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_d89868bc": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_e3d13dac": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_8340832b": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_8d2ba8ed": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_8542f0f5": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_a7400531": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_57e2d2ef": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_1bbad080": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_c9d2a8a1": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_308aafbe": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_8b23540b": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_4faf59c4": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_f6962bc6": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_df55e21b": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_0f9929c8": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_f916057c": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_139f3fa4": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_c20cc958": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_7dd294a4": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_2ea2d21e": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_sent_de941513": [
+      "2412-15303_section_0b79795d"
+    ],
+    "2412-15303_section_aed402c3": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_subsection_0219c246": [
+      "2412-15303_section_aed402c3"
+    ],
+    "2412-15303_sent_e7f13065": [
+      "2412-15303_subsection_0219c246"
+    ],
+    "2412-15303_sent_9c58800b": [
+      "2412-15303_subsection_0219c246"
+    ],
+    "2412-15303_sent_2ed6e009": [
+      "2412-15303_subsection_0219c246"
+    ],
+    "2412-15303_sent_191180a0": [
+      "2412-15303_subsection_0219c246"
+    ],
+    "2412-15303_sent_b04304a1": [
+      "2412-15303_subsection_0219c246"
+    ],
+    "2412-15303_sent_6e25f3f9": [
+      "2412-15303_subsection_0219c246"
+    ],
+    "2412-15303_sent_a9d86649": [
+      "2412-15303_subsection_0219c246"
+    ],
+    "2412-15303_sent_1efe373b": [
+      "2412-15303_subsection_0219c246"
+    ],
+    "2412-15303_subsection_6072ea36": [
+      "2412-15303_section_aed402c3"
+    ],
+    "2412-15303_sent_7673825c": [
+      "2412-15303_subsection_6072ea36"
+    ],
+    "2412-15303_sent_1da83763": [
+      "2412-15303_subsection_6072ea36"
+    ],
+    "2412-15303_sent_1ba80143": [
+      "2412-15303_subsection_6072ea36"
+    ],
+    "2412-15303_sent_6b2fafab": [
+      "2412-15303_subsection_6072ea36"
+    ],
+    "2412-15303_sent_3202b3c8": [
+      "2412-15303_subsection_6072ea36"
+    ],
+    "2412-15303_sent_8bfd2800": [
+      "2412-15303_subsection_6072ea36"
+    ],
+    "2412-15303_sent_5e8281c9": [
+      "2412-15303_subsection_6072ea36"
+    ],
+    "2412-15303_sent_bcba5066": [
+      "2412-15303_subsection_6072ea36"
+    ],
+    "2412-15303_subsection_0e017604": [
+      "2412-15303_section_aed402c3"
+    ],
+    "2412-15303_sent_885ad946": [
+      "2412-15303_subsection_0e017604"
+    ],
+    "2412-15303_sent_87502795": [
+      "2412-15303_subsection_0e017604"
+    ],
+    "2412-15303_sent_c08ac4fc": [
+      "2412-15303_subsection_0e017604"
+    ],
+    "2412-15303_sent_74b269ed": [
+      "2412-15303_subsection_0e017604"
+    ],
+    "2412-15303_sent_8e68e6d8": [
+      "2412-15303_subsection_0e017604"
+    ],
+    "2412-15303_section_12ce67f7": [
+      "2412-15303_doc_root",
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_subsection_4d5cdaeb": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_4456cae7": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_sent_ebbb53f9": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_eq_30e16c7b": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_sent_996f4819": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_sent_c88dfecb": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_sent_a6008995": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_eq_5a68886e": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_sent_29a53249": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_eq_84248b07": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_sent_85a42bc3": [
+      "2412-15303_subsection_4d5cdaeb"
+    ],
+    "2412-15303_fig_b71837c1": [
+      "2412-15303_section_12ce67f7",
+      "2412-15303_section_84ffd62e",
+      "2412-15303_section_992168ed",
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_19c821a1": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_48600762": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_a8a49aa5": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_4226e666": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_78f5660e": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_f1909201": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_3287c0c6": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_242e5bb6": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_193c409b": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_010467f7": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_eq_8b8a4544": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_eq_d028a840": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_61d49809": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_72c1b367": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_4d5b5d33": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_e5a16614": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_fe05177a": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_37643058": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_57be41b3": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_88ec292e": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_932dfd42": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_5a977797": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_7a4d8605": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_c10a4d72": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_eq_a7e4a93f": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_eq_e4d81e61": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_403d31f2": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_8206b274": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_2f2e9df3": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_90853632": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_eq_7e79d2f4": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_d213cd23": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_e0cf9e70": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_eq_ceef6f1b": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_sent_0f7929f0": [
+      "2412-15303_section_12ce67f7"
+    ],
+    "2412-15303_section_d575842d": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_subsection_e5a724b2": [
+      "2412-15303_section_d575842d"
+    ],
+    "2412-15303_sent_87d888cd": [
+      "2412-15303_subsection_e5a724b2"
+    ],
+    "2412-15303_sent_87bb9e99": [
+      "2412-15303_subsection_e5a724b2"
+    ],
+    "2412-15303_sent_a7b4285d": [
+      "2412-15303_subsection_e5a724b2"
+    ],
+    "2412-15303_sent_6b1c86d7": [
+      "2412-15303_subsection_e5a724b2"
+    ],
+    "2412-15303_subsection_74415cec": [
+      "2412-15303_section_d575842d"
+    ],
+    "2412-15303_sent_377799f3": [
+      "2412-15303_subsection_74415cec"
+    ],
+    "2412-15303_sent_2b2f39ab": [
+      "2412-15303_subsection_74415cec"
+    ],
+    "2412-15303_sent_6ce8312a": [
+      "2412-15303_subsection_74415cec"
+    ],
+    "2412-15303_sent_d7f38fbd": [
+      "2412-15303_subsection_74415cec"
+    ],
+    "2412-15303_sent_c009c5d3": [
+      "2412-15303_subsection_74415cec"
+    ],
+    "2412-15303_sent_dbfe2a90": [
+      "2412-15303_subsection_74415cec"
+    ],
+    "2412-15303_sent_31331783": [
+      "2412-15303_subsection_74415cec"
+    ],
+    "2412-15303_sent_8dd62dfd": [
+      "2412-15303_subsection_74415cec"
+    ],
+    "2412-15303_subsection_b74a43db": [
+      "2412-15303_section_d575842d"
+    ],
+    "2412-15303_paragraph_f315202b": [
+      "2412-15303_subsection_b74a43db"
+    ],
+    "2412-15303_sent_4298056a": [
+      "2412-15303_paragraph_f315202b"
+    ],
+    "2412-15303_sent_d6904331": [
+      "2412-15303_paragraph_f315202b"
+    ],
+    "2412-15303_paragraph_f32c3eda": [
+      "2412-15303_subsection_b74a43db"
+    ],
+    "2412-15303_sent_f80a8853": [
+      "2412-15303_paragraph_f32c3eda"
+    ],
+    "2412-15303_sent_99c4c7a0": [
+      "2412-15303_paragraph_f32c3eda"
+    ],
+    "2412-15303_paragraph_e6165364": [
+      "2412-15303_subsection_b74a43db"
+    ],
+    "2412-15303_sent_d565d897": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_itemize_6eb434f5": [
+      "2412-15303_paragraph_ac200516",
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_item_16adb13a": [
+      "2412-15303_itemize_6eb434f5"
+    ],
+    "2412-15303_sent_040f47ac": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_277866b0": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_6ef04ecb": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_sent_7ea4c09f": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_sent_4d534168": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_3a205f00": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_d7f4adcc": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_62164c4f": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_sent_8bfce0f2": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_sent_b3ad679f": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_sent_b40533b2": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_sent_b1661a57": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_sent_cfaca085": [
+      "2412-15303_paragraph_e6165364"
+    ],
+    "2412-15303_section_992168ed": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_sent_210e61b8": [
+      "2412-15303_section_992168ed"
+    ],
+    "2412-15303_sent_2a9b4a96": [
+      "2412-15303_section_992168ed"
+    ],
+    "2412-15303_subsection_9d6c55ce": [
+      "2412-15303_section_992168ed"
+    ],
+    "2412-15303_sent_f63fe0e3": [
+      "2412-15303_subsection_9d6c55ce"
+    ],
+    "2412-15303_sent_89c7d720": [
+      "2412-15303_subsection_9d6c55ce"
+    ],
+    "2412-15303_paragraph_5b0ff5c8": [
+      "2412-15303_subsection_9d6c55ce"
+    ],
+    "2412-15303_paragraph_f7b70386": [
+      "2412-15303_subsection_9d6c55ce"
+    ],
+    "2412-15303_sent_cfa84cbb": [
+      "2412-15303_paragraph_f7b70386"
+    ],
+    "2412-15303_sent_8b70b239": [
+      "2412-15303_paragraph_f7b70386"
+    ],
+    "2412-15303_sent_c73cdadb": [
+      "2412-15303_paragraph_f7b70386"
+    ],
+    "2412-15303_paragraph_ac200516": [
+      "2412-15303_subsection_9d6c55ce"
+    ],
+    "2412-15303_sent_8cd17590": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_46316e56": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_8bd28b56": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_2a8d169b": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_a3f141f6": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_4be419b4": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_sent_3014a443": [
+      "2412-15303_item_16adb13a"
+    ],
+    "2412-15303_subsection_feb8fbab": [
+      "2412-15303_section_992168ed"
+    ],
+    "2412-15303_subsubsection_3068bfc2": [
+      "2412-15303_subsection_feb8fbab"
+    ],
+    "2412-15303_sent_028f2df7": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_76ce7277": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_8689c6da": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_4273649a": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_0627f32f": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_f6529e5b": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_dfd4e36f": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_91782ad7": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_7937eb95": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_8fe96206": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_b0006048": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_0457f6ea": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_745cc2eb": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_be6398f9": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_5650aa08": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_78e25cd9": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_sent_b6cf7203": [
+      "2412-15303_subsubsection_3068bfc2"
+    ],
+    "2412-15303_subsubsection_ef39f956": [
+      "2412-15303_subsection_feb8fbab"
+    ],
+    "2412-15303_sent_9f87df91": [
+      "2412-15303_subsubsection_ef39f956"
+    ],
+    "2412-15303_sent_d7b3b4d7": [
+      "2412-15303_subsubsection_ef39f956"
+    ],
+    "2412-15303_sent_1b82df25": [
+      "2412-15303_subsubsection_ef39f956"
+    ],
+    "2412-15303_sent_39f659a3": [
+      "2412-15303_subsubsection_ef39f956"
+    ],
+    "2412-15303_sent_cda5696c": [
+      "2412-15303_subsubsection_ef39f956"
+    ],
+    "2412-15303_sent_09f55d49": [
+      "2412-15303_subsubsection_ef39f956"
+    ],
+    "2412-15303_fig_f37e3c9e": [
+      "2412-15303_subsubsection_ef39f956"
+    ],
+    "2412-15303_subsection_1fa3fcf2": [
+      "2412-15303_section_992168ed"
+    ],
+    "2412-15303_subsubsection_40b587de": [
+      "2412-15303_subsection_1fa3fcf2"
+    ],
+    "2412-15303_sent_ccb67de8": [
+      "2412-15303_subsubsection_40b587de"
+    ],
+    "2412-15303_sent_3a54e450": [
+      "2412-15303_subsubsection_40b587de"
+    ],
+    "2412-15303_sent_3b900966": [
+      "2412-15303_subsubsection_40b587de"
+    ],
+    "2412-15303_sent_ce312096": [
+      "2412-15303_subsubsection_40b587de"
+    ],
+    "2412-15303_sent_bfcafac6": [
+      "2412-15303_subsubsection_40b587de"
+    ],
+    "2412-15303_sent_2321d28e": [
+      "2412-15303_subsubsection_40b587de"
+    ],
+    "2412-15303_fig_24e0c83d": [
+      "2412-15303_subsubsection_40b587de"
+    ],
+    "2412-15303_subsubsection_a8c438f3": [
+      "2412-15303_subsection_1fa3fcf2"
+    ],
+    "2412-15303_sent_0e10412e": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_sent_16fda6b7": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_eq_855d3580": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_sent_d4380c20": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_sent_28e8c419": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_sent_d281e397": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_sent_64941a74": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_sent_f96e0d27": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_fig_e2e1dfa8": [
+      "2412-15303_subsubsection_a8c438f3"
+    ],
+    "2412-15303_subsubsection_a891cd6d": [
+      "2412-15303_subsection_1fa3fcf2"
+    ],
+    "2412-15303_fig_72b21b31": [
+      "2412-15303_subsubsection_a891cd6d"
+    ],
+    "2412-15303_sent_50eba4bb": [
+      "2412-15303_subsubsection_a891cd6d"
+    ],
+    "2412-15303_sent_08db5674": [
+      "2412-15303_subsubsection_a891cd6d"
+    ],
+    "2412-15303_sent_433e8dd9": [
+      "2412-15303_subsubsection_a891cd6d"
+    ],
+    "2412-15303_sent_16f74ed8": [
+      "2412-15303_subsubsection_a891cd6d"
+    ],
+    "2412-15303_sent_89608ef9": [
+      "2412-15303_subsubsection_a891cd6d"
+    ],
+    "2412-15303_sent_47340a1c": [
+      "2412-15303_subsubsection_a891cd6d"
+    ],
+    "2412-15303_sent_96f54a42": [
+      "2412-15303_subsubsection_a891cd6d"
+    ],
+    "2412-15303_section_6f8b794f": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_sent_774103dd": [
+      "2412-15303_section_6f8b794f"
+    ],
+    "2412-15303_sent_6dd26d97": [
+      "2412-15303_section_6f8b794f"
+    ],
+    "2412-15303_sent_b26b5537": [
+      "2412-15303_section_6f8b794f"
+    ],
+    "2412-15303_sent_19852c28": [
+      "2412-15303_section_6f8b794f"
+    ],
+    "2412-15303_sent_649a2c03": [
+      "2412-15303_section_6f8b794f"
+    ],
+    "2412-15303_section_f3d9abb9": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_sent_bfd49a9f": [
+      "2412-15303_section_f3d9abb9"
+    ],
+    "2412-15303_sent_814494e8": [
+      "2412-15303_section_f3d9abb9"
+    ],
+    "2412-15303_sent_4fbd7d09": [
+      "2412-15303_section_f3d9abb9"
+    ],
+    "2412-15303_sent_50a6576e": [
+      "2412-15303_section_f3d9abb9"
+    ],
+    "2412-15303_sent_ea87aa13": [
+      "2412-15303_section_f3d9abb9"
+    ],
+    "2412-15303_sent_968e0dff": [
+      "2412-15303_section_f3d9abb9"
+    ],
+    "2412-15303_section_84ffd62e": [
+      "2412-15303_doc_root"
+    ],
+    "2412-15303_sent_87be070b": [
+      "2412-15303_section_84ffd62e"
+    ],
+    "2412-15303_sent_0635000b": [
+      "2412-15303_section_84ffd62e"
+    ],
+    "2412-15303_sent_2d97c5f9": [
+      "2412-15303_section_84ffd62e"
+    ]
+  }
+}

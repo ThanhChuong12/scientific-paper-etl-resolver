@@ -1,0 +1,2102 @@
+{
+  "elements": {
+    "2412-15281_doc_root": "DOCUMENT_ROOT",
+    "2412-15281_sent_48cf4bf9": "\\title {Minimal subshifts of prescribed mean dimension over general alphabets} \\author[Xiangtong Wang and Hang Zhao]{Xiangtong Wang and Hang Zhao} \\address{X.",
+    "2412-15281_sent_198acb00": "Wang: School of Mathematical Sciences, University of Science and Technology of China, Hefei, Anhui, 230026, People's Republic of China} \\email{wxt2020@mail.ustc.edu.cn} \\address{H.",
+    "2412-15281_sent_6d119211": "Zhao: School of Mathematics, Sichuan University, Chengdu, Sichuan, 61006, People's Republic of China} \\email{hangzhaoscu@163.com} \\subjclass[2010]{Primary: 37B05, 54F45} \\keywords{Mean dimension, Minimal dynamical system, Amenable group action, Tiling.\\\\}",
+    "2412-15281_abstract_ce28071e": "abstract",
+    "2412-15281_sent_efa123a7": "Let $G$ be a countable infinite amenable group, $K$ a finite-dimensional compact metrizable space, and $(K^G,\\sigma)$ the full $G$-shift on $K^G$.",
+    "2412-15281_sent_45e3ae73": "For any $r\\in [0,\\mdim(K^G,\\sigma))$, we construct a minimal subshift $(X,\\sigma)$ of $(K^G,\\sigma)$ with $\\mdim(X,\\sigma)=r$.",
+    "2412-15281_sent_a4560eaf": "Furthermore, we construct a subshift of $([0,1]^G,\\sigma)$ such that its mean dimension is $1$, and that the set of all attainable values of the mean dimension of its minimal subsystems is exactly the interval $[0,1)$.",
+    "2412-15281_sent_46552cfa": "\\maketitle \\thispagestyle{empty}",
+    "2412-15281_section_0b79795d": "Introduction",
+    "2412-15281_sent_371e428d": "Mean dimension is a numerical topological invariant of dynamical systems.",
+    "2412-15281_sent_c1eb580f": "It was introduced by Gromov \\cite{Gromov} and has been used by Lindenstrauss and Weiss \\cite{Lindenstrauss--Weiss} to prove the existence of a minimal $\\mathbb{Z}$-action on a compact metrizable space which cannot be embedded into the shift on $[0,1]^{\\mathbb Z}$, answering a long-standing open question raised by Auslander \\cite{Auslander} in the negative.",
+    "2412-15281_sent_da71c23a": "Here we say that a dynamical system can be embedded into another, if the former is topologically conjugate to a subsystem of the latter.",
+    "2412-15281_sent_84ec82c7": "Mean dimension is a powerful tool for studying dynamical systems with infinite topological dimension or entropy.",
+    "2412-15281_sent_c448a796": "A wonderful example is its application to the problem of embedding dynamical systems into the shift on the Hilbert cube $([0,1]^m)^{\\mathbb Z}$.",
+    "2412-15281_sent_3666cd9f": "For example, when Lindenstrauss and Weiss \\cite{Lindenstrauss--Weiss} solved Auslander's question, what they did is to construct a minimal dynamical system of mean dimension arbitrarily given in $[0,+\\infty]$.",
+    "2412-15281_sent_9ab601c6": "It follows immediately that not every minimal $\\mathbb Z $-action can be embedded into $(([0,1]^m)^{\\mathbb Z},\\sigma)$.",
+    "2412-15281_sent_f408d868": "An amazing result in this direction was due to Lindenstrauss \\cite{Lin99}, he showed that for $r\\in [0,m/36)$, any minimal system of mean dimension $r$ can be embedded into $(([0,1]^m)^{\\mathbb Z},\\sigma)$.",
+    "2412-15281_sent_c45dc447": "For any $r\\ge m/2$, Lindenstrauss and Tsukamoto \\cite{LT14} proved that there exists a minimal system of mean dimension $r$, which cannot be embedded into $(([0,1]^m)^{\\mathbb Z},\\sigma)$.",
+    "2412-15281_sent_89a04927": "As for $r\\in [0,m/2)$, it is a great surprise that any minimal system of mean dimension $r$ can be embedded into $(([0,1]^m)^{\\mathbb Z},\\sigma)$.",
+    "2412-15281_sent_35c3ca28": "This result was attributed to Gutman and Tsukamoto \\cite{GT20}, which improved the result of Lindenstrauss mentioned above \\cite{Lin99}.",
+    "2412-15281_sent_c1be38ee": "For its extension to $\\mathbb{Z}^k$-actions, we refer to \\cite{Gut15,GQS18,GT14,Gut11,GLT16,GQT19}.",
+    "2412-15281_sent_f0fc5f18": "In this paper, we consider mean dimension and minimal subshifts of the full $G$-shift on the product space $K^G$ (denoted by $(K^G,\\sigma)$), where $G$ is a countable infinite amenable group and $K$ is a compact metrizable space.",
+    "2412-15281_sent_759c68d4": "Notice that in the case that $G=\\mathbb{Z}$ and $K$ is an $m$-dimensional polyhedron, in particular $K=[0,1]^m$, Lindenstrauss and Weiss \\cite{Lindenstrauss--Weiss} indeed showed that for any $r\\in[0,m)$ there exists a minimal subshift of $(([0,1]^m)^\\mathbb{Z},\\sigma)$, whose mean dimension is exactly $r$.",
+    "2412-15281_sent_98acb747": "In the case that $G$ is a countable amenable group containing subgroups of arbitrarily large finite index (this condition is automatically satisfied if $G$ is an infinite finitely-generated Abelian group) and $K$ is a polyhedron, for any $r\\in [0,\\dim (K)]$, Coornaert and Krieger \\cite{M.",
+    "2412-15281_sent_d7a87d8c": "Coornaert and F.",
+    "2412-15281_sent_79fa6ad1": "Krieger} constructed a subshift (not minimal, in general) of $(K^G,\\sigma)$, whose mean dimension is $r$.",
+    "2412-15281_sent_15bc74bd": "When $G$ is a countable infinite amenable group and $K$ is a polyhedron, for any $r\\in[0,\\dim (K))$, Krieger \\cite{Kri09} constructed a minimal subshift of $(K^G,\\sigma)$, whose mean dimension is larger than $r$.",
+    "2412-15281_sent_8fd78f60": "Further, Dou \\cite{Dou} improved this result.",
+    "2412-15281_sent_36c6b0fa": "By employing tiling techniques, he proved that for any $r\\in[0,\\dim (K))$ there exists a minimal subshift of $(K^G,\\sigma)$ whose mean dimension equals $r$.",
+    "2412-15281_sent_5784cfd3": "There are two significant problems in this direction:",
+    "2412-15281_enumerate_963811fa": "enumerate",
+    "2412-15281_item_fb209a7f": "item",
+    "2412-15281_sent_0adfa6d9": "[(1)] The first problem was posed explicitly by Dou \\cite{Dou}.",
+    "2412-15281_sent_62917686": "He asked, when $K$ is a polyhedron, whether there exists a minimal subshift of $(K^G,\\sigma)$ with full mean dimension, i.e., a minimal subshift whose mean dimension equals $\\mdim(K^G,\\sigma)$.",
+    "2412-15281_sent_5d6756ea": "[(2)] The second problem comes implicitly from the statement, asking if we may replace the alphabet (which is assumed to be any polyhedron in the above statement) with an arbitrary finite-dimensional compact metrizable space $K$.",
+    "2412-15281_sent_379c022c": "Problem (1) was solved by Jin and Qiao \\cite{JQfull}.",
+    "2412-15281_sent_9a349749": "They successfully constructed a minimal subshift of the Hilbert cube of full mean dimension with a delicate process, and thus, gave an affirmative answer to this problem.",
+    "2412-15281_sent_d6c96a68": "Although their result is stated for $\\mathbb{Z}$-actions, they also pointed out that it is straightforward to generalize their result to actions of countable infinite amenable groups, one can find a detailed proof given by Yin and Xiao in \\cite{Zhengyu Yin and Zubiao Xiao}.",
+    "2412-15281_sent_ade6d0fe": "Our goal is to address Problem (2).",
+    "2412-15281_sent_fd8c4a58": "While our findings cover all amenable groups, it is significant to note that the corresponding results were previously unknown for the specific case of the integer group $\\mathbb{Z}$.",
+    "2412-15281_sent_9601c40b": "\\begin{Maintheorem} Let $G$ be a countable infinite amenable group and $K$ a finite-dimensional compact metrizable space.",
+    "2412-15281_sent_533b2b7c": "Then for any $0\\le r<\\mdim(K^G,\\sigma)$ there exists a minimal subshift of $(K^G,\\sigma)$, whose mean dimension is $r$.",
+    "2412-15281_sent_b7505507": "\\end{Maintheorem} For a finite group $G$, the conclusion of Theorem \\ref{maintheorem a} is not valid.",
+    "2412-15281_sent_b3a6546b": "Owing to $\\mdim(X,G)={\\dim(X)}/{|G|}$, the set of all attainable values of the mean dimension of subsystems of $(K^G,\\sigma)$ is discrete.",
+    "2412-15281_sent_83fb9ffb": "Also note that in contrast to $([0,1]^\\mathbb{Z},\\sigma)$ there is a similar result regarding the construction of minimal subsystems of prescribed mean dimension in a function space (so-called Bernstein space, which serves as an analogue of the Hilbert cube) by Zhao \\cite{Jianjie Zhao}.",
+    "2412-15281_sent_929dae69": "However, it remains unknown whether there exists a minimal subshift of $(K^G,\\sigma)$ that achieves full mean dimension, i.e., a mean dimension equal to $\\mdim(K^G,\\sigma)$.",
+    "2412-15281_sent_a3123ba1": "It appears that the method employed in \\cite{JQfull} fails when the space $K$ significantly deviates from Euclidean spaces.",
+    "2412-15281_sent_01e458c4": "Hence a natural question arises: Is it possible to construct a dynamical system such that, for every $0\\le r<\\mdim(K^G,\\sigma)$, there exists a minimal subsystem of mean dimension $r$, but no minimal subsystem attains full mean dimension?",
+    "2412-15281_sent_f9ac9de3": "For this purpose, we present a constructive example as follows: \\begin{Maintheorem} Let $G$ be a countable infinite amenable group.",
+    "2412-15281_sent_6d07262b": "Then there exists a subshift $(M,\\sigma)$ of $([0,1]^G,\\sigma)$ such that $\\mdim(M,\\sigma)=1$ and that the set of all attainable values of the mean dimension of minimal subsystems of $(M,\\sigma)$ is exactly the interval $[0,1)$.",
+    "2412-15281_sent_3538b9eb": "\\end{Maintheorem} Observe that if the goal is merely to construct a dynamical system such that all of its minimal subsystems have mean dimension strictly less than the mean dimension of this system, the proof is significantly streamlined and follows directly from Theorem \\ref{maintheorem a}.",
+    "2412-15281_sent_a3e137c0": "This paper is organized as follows: In Section \\ref{sec:preliminaries}, we collect basic knowledge on tilings of amenable groups, subshifts and mean dimension.",
+    "2412-15281_sent_93650803": "In Section \\ref{sec:maintheorem a}, we prove Theorem \\ref{maintheorem a}.",
+    "2412-15281_subsection_0407c271": "Acknowledgements",
+    "2412-15281_sent_f22eaaaf": "The authors would like to thank Wen Huang, Qiang Huo, Lei Jin, Kairan Liu and Yixiao Qiao for their helpful suggestions.",
+    "2412-15281_sent_3d2f9e25": "X.",
+    "2412-15281_sent_2510acbf": "Wang is partially supported by National Key R\\&D Program of China (No. 2024YFA1013602, 2024YFA1013600 ) and NSFC grant (12090012, 12090010).",
+    "2412-15281_sent_42a2f2ea": "H.",
+    "2412-15281_sent_806f6cf8": "Zhao is supported by NSFC grant (123B2006).",
+    "2412-15281_section_7ad03400": "Preliminaries",
+    "2412-15281_subsection_29d2b506": "Tilings of amenable groups.",
+    "2412-15281_sent_e1b1ac3f": "For a group $G$, we denote by $\\mathcal{F}(G)$ the collection of all nonempty finite subsets of $G$.",
+    "2412-15281_sent_465c43bf": "A countable group $G$ is called amenable if there exists a sequence $\\{F_{n}\\}_{n=1}^{\\infty}\\subset\\mathcal{F}(G)$ such that for any $g\\in G$ we have $\\lim_{n\\to\\infty}\\frac{|F_{n}\\triangle gF_{n}|}{|F_{n}|}=0$, where $|\\cdot|$ denotes the cardinality of a set.",
+    "2412-15281_sent_33b1db2b": "Such a sequence $\\{F_{n}\\}_{n=1}^{\\infty} $ is called a F\\o lner sequence of the group $G$.",
+    "2412-15281_sent_1619f3f5": "For $T\\in\\mathcal{F}(G)$ and $\\epsilon>0$, we say that a subset $F$ of $G$ is $(T,\\epsilon)$-invariant if $\\frac{|B(F,T)|}{|F|}<\\epsilon$, where $B(F,T):=\\left\\{g\\in G:Tg\\cap F\\ne\\emptyset,\\;Tg\\cap(G\\setminus F)\\ne\\emptyset\\right\\}.$ The following statement can be directly proven from the definition: $\\{F_{n}\\}_{n=1}^{\\infty}$ is a F\\o lner sequence of $G$ if and only if for any $T\\in\\mathcal{F}(G)$ and any $\\epsilon>0$, $F_{n}$ is $(T,\\epsilon)$-invariant for $n$ sufficiently large if and only if for any $T\\in\\mathcal{F}(G)$ and any $\\epsilon>0$, ${|F_{n}\\triangle TF_{n}|}/{|F_{n}|}<\\epsilon$ for $n$ sufficiently large.",
+    "2412-15281_sent_5db7aae8": "Let $G$ be a countable infinite amenable group.",
+    "2412-15281_sent_2ca1e1b6": "We say that $\\mathcal{T}$ is a tiling of $G$ if $\\mathcal{T}\\subset\\mathcal{F}(G)$, $\\bigcup_{T\\in\\mathcal{T}}T=G$ and $T\\cap T'=\\emptyset$ when $T\\neq T'$.",
+    "2412-15281_sent_67a5d862": "Every element in the tiling $\\mathcal{T}$ is called a $\\mathcal{T}$-tile (or a tile).",
+    "2412-15281_sent_15fe9b0e": "A tiling $\\mathcal{T}$ of $G$ is said to be finite if $\\mathcal{T}$ can be generated by translating elements in a finite collection $\\mathcal{S}_{\\mathcal{T}}\\subset\\mathcal{F}(G)$, i.e., for each $T\\in\\mathcal{T}$ there exist $S\\in\\mathcal{S}_{\\mathcal{T}}$ and $c\\in G$ such that $Sc=T$.",
+    "2412-15281_sent_383301c6": "Every element in $\\mathcal{S}_{\\mathcal{T}}$ is called a shape of $\\mathcal{T}$.",
+    "2412-15281_sent_efb0bbe1": "For every shape $S\\in\\mathcal{S}_{\\mathcal{T}}$ the center of $S$ is defined by $C(S)=\\{c\\in G:Sc\\in\\mathcal{T}\\}\\subset G$.",
+    "2412-15281_sent_51df8f00": "The translation of a tiling $\\mathcal{T}$ by $g\\in G$ is $\\mathcal{T}g=\\{Tg:T\\in\\mathcal{T}\\}$, which is also a tiling of $G$.",
+    "2412-15281_sent_979a66b4": "For $F\\in\\mathcal{F}(G)$ we set $\\mathcal{T}|_{F}=\\{T\\cap F:T\\in\\mathcal{T}\\}$.",
+    "2412-15281_sent_9a1d89a9": "A finite tiling $\\mathcal{T}$ of $G$ is called syndetic if for every shape $S\\in\\mathcal{S}_{\\mathcal{T}}$ the center $C(S)$ is syndetic.",
+    "2412-15281_sent_cc7905de": "A sequence $\\{\\mathcal{T}_{k}\\}_{k=1}^{\\infty}$ of finite tilings of $G$ is called primely congruent if for every $k\\ge1$, $\\mathcal{T}_{k}$ is a refinement of $\\mathcal{T}_{k+1}$ (i.e., every $\\mathcal{T}_{k+1}$-tile is a union of some $\\mathcal{T}_{k}$-tiles) and each shape of $\\mathcal{T}_{k+1}$ is partitioned by shapes of $\\mathcal{T}_{k}$ in a unique way (i.e., for any two $\\mathcal{T}_{k+1}$-tiles $Sc_{1}$ and $Sc_{2}$ of the same shape $S\\in\\mathcal{S}_{\\mathcal{T}_{k+1}}$ we have ${\\mathcal{T}_{k}}|_{Sc_{1}}=({\\mathcal{T}_{k}}|_{Sc_{2}})c_{2}^{-1}c_{1}$).",
+    "2412-15281_sent_cf1e9fb0": "We borrow the following two propositions in our proof.",
+    "2412-15281_sent_dabc21b4": "\\begin{proposition} [{\\cite[Proposition 2.2]{Lei Jin and Park Kyewon Koh and Yixiao Qiao }}] Suppose that $\\mathcal{T}$ is a finite tiling of $G$.",
+    "2412-15281_sent_867ab7dd": "Then for any $\\epsilon>0$, there exist $\\delta>0$ and $K\\in\\mathcal{F}(G) $ such that for each $g\\in G$ and each $(K,\\delta)$-invariant $F\\in\\mathcal{F}(G)$, the union of those $\\mathcal{T}g$-tiles which are contained in $F$ has proportion larger than $1-\\epsilon$, namely $\\frac{|\\bigcup_{T\\in\\mathcal{T}g,T\\subset F}T|}{|F|}>1-\\epsilon$.",
+    "2412-15281_sent_30fb44ba": "\\end{proposition} \\begin{proposition}[{\\cite[Proposition 2.3]{Lei Jin and Park Kyewon Koh and Yixiao Qiao }}, {\\cite[Lemma 3.2]{Dou}}] Suppose that $\\mathcal{T}$ is a syndetic finite tiling of $G$ and $\\mathcal{S}_{\\mathcal{T}}$ is s set of shapes of $\\mathcal{T}$.",
+    "2412-15281_sent_1b829bb0": "Then for any $n\\in\\mathbb{N}$ there exist $K\\in\\mathcal{F}(G)$ and $\\epsilon>0$ such that for every $S\\in\\mathcal{S}_{\\mathcal{T}}$ and every $(K,\\epsilon)$-invariant $F\\in\\mathcal{F}(G)$, $F$ contains at least $n$ $\\mathcal{T}$-tiles of the shape $S$.",
+    "2412-15281_sent_31e5ef0e": "\\end{proposition}",
+    "2412-15281_subsection_c82a81fa": "Group actions",
+    "2412-15281_sent_1921a5e1": "Throughout this paper, by a $G$-action we always understand a triple $(X,G,\\Phi)$, where $X$ is a compact metrizable space, $G$ is a countable infinite discrete\\footnote{Since $G$ is countable, the topology on $G$ we use here is the discrete topology.} amenable group with the identity element $e$, and $\\Phi:G\\times X\\to X$, $(g,x)\\mapsto\\Phi(g,x)$ is a continuous map satisfying that $\\Phi(e,x)=x$, $\\Phi(gh,x)=\\Phi(g,\\Phi(h,x))$, for all $x\\in X$ and $g,h\\in G$.",
+    "2412-15281_sent_f67ee077": "Usually, $(X,G,\\Phi)$ and $\\Phi(g,x)$ are abbreviated to $(X,G)$ and $gx$, respectively.",
+    "2412-15281_sent_143177c0": "We say that $(Y,G)$ is a subsystem of $(X,G)$ if $Y$ is a closed $G$-invariant subset of $X$, under the action of $G$ restricted to $Y$.",
+    "2412-15281_sent_277830ee": "We say a $G$-action $(X,G)$ is minimal if for every $x\\in X$, its orbit $Gx:=\\{gx\\;:\\;g\\in G\\}$ is dense in $X$.",
+    "2412-15281_sent_f05dee8f": "A subset $S$ of $G$ is called syndetic if there exists a finite subset $F$ of $G$ such that $G=FS$, where $FS=\\{fs:f\\in F,s\\in S\\}$.",
+    "2412-15281_sent_ceee54d5": "A point $x\\in X$ is said to be almost periodic if for each neighborhood $U$ of $x$, there is a syndetic subset $S$ of $G$ such that $Sx\\subset U$.",
+    "2412-15281_sent_1519ea51": "The following lemma reveals a relationship between minimality and almost periodicity.",
+    "2412-15281_sent_0dca0166": "\\begin{lemma}[{\\cite[Chapter 1]{Auslander}}] A $G$-action $(X,G)$ is minimal if and only if $X$ is the orbit closure of an almost periodic point.",
+    "2412-15281_sent_4129e42e": "\\end{lemma} Let $(K,d)$ be a compact metric space.",
+    "2412-15281_sent_517d0845": "For each $m\\in\\mathbb{N}$, we equip $K^m$ with the product topology and define a compatible metric $d_{\\infty}$ on $K^{m}$ by \\begin{equation} d_{\\infty}\\left((x_{1},x_{2},\\dots,x_{m}),(y_{1},y_{2},\\dots,y_{m})\\right)=\\max_{1\\le i\\le m}d(x_{i},y_{i}).",
+    "2412-15281_sent_811e3169": "\\end{equation} We also equip $K^G= \\{(x_{g})_{g\\in G}: x_g\\in K\\}$ with the product topology and define a compatible metric $D$ on $K^G$ by",
+    "2412-15281_eq_3d55bd58": "\\begin{equation}\nD(x,y)=\\sum_{g\\in G}\\alpha_{g}d(x_{g},y_{g}),\\quad\\forall x=(x_{g})_{g\\in G},\\;y=(y_{g})_{g\\in G}\\in K^{G},\n\\end{equation}",
+    "2412-15281_sent_2fb24d12": "where $(\\alpha_g)_{g\\in G}\\subset(0,+\\infty)$ satisfies $\\alpha_{e}=1,\\quad\\sum_{g\\in G}\\alpha_{g}<+\\infty.\\footnote{Note that $G$ is countable.}$ Hence",
+    "2412-15281_eq_329af113": "\\begin{equation}\n\n d(x_e,y_e)\\le D(x,y), \\quad\\forall x=(x_{g})_{g\\in G},\\;y=(y_{g})_{g\\in G}\\in K^{G}.\n\\end{equation}",
+    "2412-15281_sent_dfe7f14c": "The full $G$-shift on $K^{G}$, denoted by $(K^G,\\sigma)$, is the $G$-action defined by",
+    "2412-15281_eq_442e82d3": "\\begin{equation}\n\\sigma:G\\times K^{G}\\to K^{G},\\quad(g,(x_{h})_{h\\in G})\\mapsto(x_{hg})_{h\\in G}\\footnote{The notation $\\sigma$ may be kept in different shifts if there is no ambiguity.}\n\\end{equation}",
+    "2412-15281_sent_e1857bd2": "for all $g\\in G$ and $(x_{h})_{h\\in G}\\in K^{G}$.",
+    "2412-15281_sent_aa2453f1": "A subsystem of $(K^{G},\\sigma)$ is called a subshift.",
+    "2412-15281_sent_8c52ca02": "For $x=(x_{g})_{g\\in G}\\in K^{G}$ and $F\\subset G$, we denote by $x|_{F}=(x_{g})_{g\\in F}\\in K^F$ the restriction of $x$ to $F$, and $\\pi_{F}:K^{G}\\to K^{F},\\ x\\mapsto x|_{F}$ the canonical projection map.",
+    "2412-15281_sent_d092eaaf": "For $q\\in K$, we set $x(F,q)=\\left\\{g\\in F:x_{g}=q\\right\\}\\subset G$.",
+    "2412-15281_subsection_c97300b0": "Mean dimension",
+    "2412-15281_sent_2e8b6f9c": "Let $X$ be a compact metrizable space, $\\rho$ a compatible metric on $X$, and $P$ a polyhedron.",
+    "2412-15281_sent_1ffcae9c": "For $\\epsilon>0$, a continuous map $f:X\\to P$ is called an $\\epsilon$-embedding with respect to $\\rho$, if $f(x)=f(y)$ implies $\\rho(x,y)<\\epsilon$, for all $x,y\\in X$.",
+    "2412-15281_sent_91f071ea": "Let $\\Widim_{\\epsilon}(X,\\rho)$ be the minimum dimension of a polyhedron $P$ such that there is an $\\epsilon$-embedding $f:X\\to P$ with respect to the metric $\\rho$.",
+    "2412-15281_sent_df054d6e": "It is classically known that the topological dimension of $X$ may be recovered by $\\dim(X)=\\lim_{\\epsilon\\to0}\\Widim_{\\epsilon}(X,\\rho)$.",
+    "2412-15281_sent_1be0b173": "Let $(X,G)$ be a $G$-action.",
+    "2412-15281_sent_47dc4af8": "For $F\\in\\mathcal{F}(G)$, we define a compatible metric $\\rho_{F}$ on $X$ by",
+    "2412-15281_eq_5217227d": "\\begin{equation}\n\n\\rho_{F}(x,y)=\\max_{g\\in F}\\rho(gx,gy).\\end{equation}",
+    "2412-15281_sent_aa17ee8f": "The mean dimension of $(X,G)$ is defined by",
+    "2412-15281_eq_f65a6d7c": "\\begin{equation}\n\\mdim(X,G)=\\lim_{\\epsilon\\to0}\\lim_{n\\to\\infty}\\frac{\\Widim_{\\epsilon}(X,\\rho_{F_{n}})}{|F_{n}|},\n\\end{equation}",
+    "2412-15281_sent_6c0efbc8": "where $\\{F_{n}\\}_{n=1}^{\\infty}$ is a F\\o lner sequence of $G$.",
+    "2412-15281_sent_b5f0cfea": "It is well known that the limit in the above definition always exists.",
+    "2412-15281_sent_441ede13": "The mean dimension is a topological invariant of the $G$-action $(X,G)$, and the value $\\mdim(X,G)$ is independent of the choice of the F\\o lner sequence $\\{F_{n}\\}_{n=1}^{\\infty}$ and the metric $\\rho$.",
+    "2412-15281_sent_51bf7c85": "For example, $\\mdim(([0,1]^m)^G,\\sigma)=m.$ For $J\\subset G,$ the density $\\delta(J)\\in [0,1]$ of $J$ in $G$ is defined by",
+    "2412-15281_eq_51100ee0": "\\begin{equation}\n\n\\delta(J):=\\sup_{\\{F_n\\}}\\limsup_{n\\to \\infty}\\cfrac{|J\\cap F_n|}{|F_n|},\\end{equation}",
+    "2412-15281_sent_95ada70b": "where $\\{F_n\\}^\\infty_{n=1}$ runs over all F\\o lner sequences of $G.$ We shall employ a technical lemma due to Tsukamoto \\cite[Lemma 3.1]{Tsukamoto}, which applies to finite-dimensional compact metrizable spaces.",
+    "2412-15281_sent_ef740be9": "\\begin{lemma}[{\\cite[Lemma 3.1]{Tsukamoto}}] Let $(K,d)$ be a finite-dimensional compact metric space.",
+    "2412-15281_sent_f72963b3": "Then there is some $\\delta>0$ such that for all $m\\in\\mathbb{N}$ and all $0<\\epsilon<\\delta$ we have $\\Widim_\\epsilon(K^m,d_\\infty)\\ge m\\cdot(\\dim(K)-1)$.",
+    "2412-15281_sent_9905972a": "\\end{lemma} Tsukamoto \\cite{Tsukamoto} observed a dichotomy for mean dimension of the full $\\mathbb{Z}$-shift on $K^\\mathbb{Z}$.",
+    "2412-15281_sent_32860a4d": "More precisely, he proved that either $\\mdim(K^\\mathbb{Z},\\sigma)= \\dim(K)$ or $\\mdim(K^\\mathbb{Z},\\sigma)= \\dim(K)-1$.",
+    "2412-15281_sent_d8154e1c": "This conclusion admits a straightforward generalization to the setting of amenable group actions.",
+    "2412-15281_sent_14538c3d": "Then \\begin{equation} \\mdim(K^G,\\sigma)=\\lim_{n\\to\\infty}\\frac{\\dim(K^n)}{n}.",
+    "2412-15281_section_97220268": "A constructive proof of Theorem \\ref{maintheorem a}",
+    "2412-15281_sent_bcd416a6": "The proof of Theorem \\ref{maintheorem a} consists of three parts.",
+    "2412-15281_sent_503e2e25": "Part 1 is dedicated to the construction, while Part 2 and Part 3 are devoted to the argument that the $G$-action we constructed satisfies all the required conditions.",
+    "2412-15281_sent_ca4f80b0": "The title of each part indicates the precise aim of the part.",
+    "2412-15281_sent_542eb5c6": "Let us start with some necessary settings.",
+    "2412-15281_sent_223c6361": "Let $G=\\{g_k:k\\in\\mathbb{N}\\}$ be a countable infinite discrete amenable group whose identity element is denoted by $e$.",
+    "2412-15281_sent_be3ec054": "Let $(K,d)$ be a finite-dimensional compact metric space and $ t\\in (0,1)$.",
+    "2412-15281_sent_0a5453e0": "Let $\\{\\delta_n\\}_{n=1}^\\infty$ be a sequence strictly decreasing to zero and $\\{K_n\\}_{n=1}^\\infty$ be an increasing sequence of finite $\\delta_n$-dense subsets of $K$.",
+    "2412-15281_sent_29162b69": "We take a symbol $\\ast\\notin K$ and set $\\hat{K}=K\\cup\\{\\ast\\}$.",
+    "2412-15281_sent_48b0f207": "Our proof relies heavily on a recent result due to Downarowicz, Huczek and Zhang \\cite{DHZ} on tilings of amenable groups, which provides the foundation for our proof.",
+    "2412-15281_sent_46eb37c3": "Notice that it is also feasible to obtain our result (and Dou's result \\cite{Dou}) by using Ornstein and Weiss' quasi-tiling theory \\cite{OW87}, but the proof will be notationally more complicated. \\begin{theorem}[{\\cite[Theorem 5.2]{DHZ}},{\\cite[Theorem 3.6]{Dou}}] Let $G$ be a countable infinite amenable group with the identity element $e$, $\\{A_n\\}_{n=1}^\\infty\\subset\\mathcal{F}(G)$ an increasing sequence with $\\bigcup_{n=1}^{\\infty}A_n=G$, and $\\{\\eta_n\\}_{n=1}^\\infty$ a decreasing sequence of positive numbers converging to zero.",
+    "2412-15281_sent_0a50b207": "Then there exists a primely congruent sequence $\\{\\mathcal{T}_n\\}_{n=1}^\\infty$ of syndetic\\footnote{The term ``syndetic'' here is equivalent to the term ``irreducible'' in \\cite{Dou}, due to \\cite[Lemma 3.1]{Dou}.} finite tilings of $G$ satisfying the following conditions:",
+    "2412-15281_sent_4dc2a4e9": "$e\\in S_{1,1}\\subset S_{2,1}\\subset\\cdots\\subset S_{n,1}\\subset\\cdots\\subset\\bigcup_{n=1}^{\\infty}S_{n,1}=G$ and $e\\in C(S_{n,1})$;",
+    "2412-15281_sent_7e2411f9": "for every $n\\in\\mathbb{N}$ and every $1\\le i\\le \\gamma_n$, $S_{n,i}$ is $(A_n,\\eta_n)$-invariant;",
+    "2412-15281_sent_497dec85": "where for each $n\\in\\mathbb{N}$, $\\{S_{n,i}:1\\le i\\le \\gamma_n\\}$ is the set of all shapes of $\\mathcal{T}_n$.",
+    "2412-15281_sent_64832e6d": "\\end{theorem} Part 1: Construction of $(X,\\sigma)$.",
+    "2412-15281_sent_284315e7": "The construction of $(X,\\sigma)$ will be fulfilled by induction.",
+    "2412-15281_sent_4037ae1b": "To start with, let us explain the intuitive meaning of our notations shortly.",
+    "2412-15281_sent_410f45d5": "For a positive integer $k$ we build in the $k$-th step a subshift $(X_k,\\sigma)$ of $(K^G,\\sigma)$, which is generated from finitely many ``blocks'' $\\{B_{k,i}\\}_{1\\le i\\le \\gamma_{n_k}}$, where each $B_{k,i}$ is a closed subset of $K^{S_{n_k,i}}$ and ${S_{n_k,i}}$ indicates the ``shape\" of the block $B_{k,i}$.",
+    "2412-15281_sent_686c4328": "When we deal with the next block $B_{k+1,j}$ in the $(k+1)$-th step, we will ``copy'' the blocks $\\{B_{k,i}\\}_{1\\le i\\le \\gamma_{n_k}}$ sufficiently many times and add some new restrictions to ensure that ``the proportion of freedom'' $\\frac{|J_k|}{|T_k^\\prime|}$ gradually decreases to the desired value $t$.",
+    "2412-15281_sent_7ce117ed": "To begin with, we take a decreasing sequence $\\{\\eta_n\\}_{n=1}^\\infty$ of positive numbers converging to zero and an increasing sequence $\\{A_n\\}_{n=1}^\\infty\\subset\\mathcal{F}(G)$ with $\\bigcup_{n=1}^{\\infty}A_n=G$.",
+    "2412-15281_sent_82296515": "By Theorem \\ref{tiling}, there exists a primely congruent sequence $\\{\\mathcal T_n\\}$ of syndetic finite tilings of $G$ with the sets of shapes $S_{\\mathcal T_{n}}=\\{S_{n,i}:1\\le i\\le \\gamma_n\\} $ satisfying property \\eqref{propo1} and \\eqref{propo2} in Theorem \\ref{tiling}.",
+    "2412-15281_sent_74807cf9": "Step 1.",
+    "2412-15281_sent_5a88febb": "Choose $n_1\\in\\mathbb{N}$ sufficiently large so that for every $1\\le i\\le \\gamma_{n_1}$ there exists $x_{1,i}\\in\\hat{K}^{S_{n_1,i}}$ with",
+    "2412-15281_eq_6691e4ac": "\\begin{equation}\nt<\\frac{|x_{1,i}(S_{n_1,i},\\ast)|}{|S_{n_1,i}|}\\le t+\\frac{1}{|S_{n_1,i}|}.\n\\end{equation}",
+    "2412-15281_sent_cae6404c": "Let",
+    "2412-15281_eq_3173ed9c": "\\begin{equation}\nB_{1,i}=\\left\\{x=(x_g)_{g\\in S_{n_1,i}}\\in K^{S_{n_1,i}}:\\;x_g=(x_{1,i})_g,\\;\\forall g\\in S_{n_1,i}\\setminus x_{1,i}(S_{n_1,i},\\ast)\\right\\}.\n\\end{equation}",
+    "2412-15281_sent_7998d053": "We define $x_1\\in\\hat{K}^G$ by",
+    "2412-15281_eq_7bf3f4b0": "\\begin{equation}\n{x_1}|_{S_{n_1,i}c}=x_{1,i},\\quad\\forall1\\le i\\le \\gamma_{n_1},\\;\\forall c\\in C(S_{n_1,i}).\n\\end{equation}",
+    "2412-15281_sent_e910751d": "We set",
+    "2412-15281_eq_6200acef": "\\begin{equation}\nX^0_1=\\left\\{x\\in K^G:\\;x|_{S_{n_1,i}c}\\in B_{1,i},\\;\\forall1\\le i\\le \\gamma_{n_1},\\;\\forall c\\in C(S_{n_1,i})\\right\\}\n\\end{equation}",
+    "2412-15281_sent_b0641479": "and the subshift of $K^G$ generated by $X^0_1$, namely,",
+    "2412-15281_eq_7684bbfe": "\\begin{equation}\nX_1=\\overline{GX^0_1}=\\overline{\\bigcup_{g\\in G}gX^0_1}.\n\\end{equation}",
+    "2412-15281_sent_26b7b8aa": "Step 2.",
+    "2412-15281_sent_ca9e844b": "Applying Proposition \\ref{manytiles}, we choose $l_1\\in\\mathbb{N}$ sufficiently large such that we can find a finite subset $R_1\\subset C(S_{n_1,1})$ and $h_1\\in C(S_{n_1,1})$ satisfying",
+    "2412-15281_eq_1c564aae": "\\begin{equation}\ne\\in R_1,\\quad h_1\\notin R_1,\\quad S_{n_1,1}R_1\\cup S_{n_1,1}h_1\\subset S_{l_1,1},\\quad|R_1|=|K_1|^{|x_{1,1}(S_{n_1,1},\\ast)|}.\n\\end{equation}",
+    "2412-15281_sent_545c5eb8": "We select $w_1\\in\\hat{K}^{S_{l_1,1}}$ by modifying ${x_1}|_{S_{l_1,1}}$ on \\begin{equation} {x_1}(S_{n_1,1}R_1,\\ast)={x_1}(S_{n_1,1},\\ast)R_1 ={x_{1,1}}(S_{n_1,1},\\ast)R_1 \\end{equation} such that Conditions (A.2.1), (A.2.2), and (A.2.3) are satisfied:",
+    "2412-15281_sent_07d11258": "[(A.2.1)] ${w_1}|_{S_{n_1,1}r\\setminus{x_{1,1}(S_{n_1,1},\\ast)r}}={x_{1,1}}|_{S_{n_1,1}\\setminus{x_{1,1}(S_{n_1,1},\\ast)}}$, $\\forall r\\in R_1$;",
+    "2412-15281_sent_884195ae": "[(A.2.2)] ${w_1}|_{x_{1,1}(S_{n_1,1},\\ast)r}\\in K_1^{|x_{1,1}(S_{n_1,1},\\ast)|}$ $(r\\in R_1)$ are pairwise distinct, i.e., \\footnote{In this context, as well as in (A.k.2), we say that ${w_1}|_{x_{1,1}(S_{n_1,1},\\ast)}={w_1}|_{x_{1,1}(S_{n_1,1},\\ast)r}$ if and only if $(w_1)_g=(w_1)_{gr}\\in K_1$ for all $g\\in{x_{1,1}(S_{n_1,1},\\ast)}$.}",
+    "2412-15281_eq_957e0f85": "\\begin{equation}\n\\left\\{{w_1}|_{x_{1,1}(S_{n_1,1},\\ast)r}:\\;r\\in R_1\\right\\}=K_1^{|x_{1,1}(S_{n_1,1},\\ast)|};\n\\end{equation}",
+    "2412-15281_sent_1528e2b3": "[(A.2.3)] if $S_{n_1,i}c\\subset S_{l_1,1}\\setminus S_{n_1,1}R_1$ for some $1\\le i\\le \\gamma_{n_1}$ and some $c\\in C(S_{n_1,i})$ then",
+    "2412-15281_eq_f646d432": "\\begin{equation}\n{w_1}|_{S_{n_1,i}c}=x_{1,i}.\n\\end{equation}",
+    "2412-15281_sent_2944de99": "Clearly,",
+    "2412-15281_eq_90249384": "\\begin{equation}\n{w_1}|_{S_{n_1,1}h_1}=x_{1,1},\\quad{w_1}|_{S_{n_1,1}}\\in B_{1,1}\\subset K^{S_{n_1,1}}.\n\\end{equation}",
+    "2412-15281_sent_83c6032f": "We pick $n_2\\in\\mathbb{N}$ sufficiently large such that Conditions (B.2.1), (B.2.2), and (B.2.3) are satisfied:",
+    "2412-15281_sent_a61b024a": "[(B.2.1)] $g_1h_1\\in S_{n_2,1}$;",
+    "2412-15281_sent_65c32474": "[(B.2.2)] for every $1\\le i\\le \\gamma_{n_2}$, there is $c_{1,i}\\in C(S_{l_1,1})$ such that $S_{l_1,1}c_{1,i}\\subset S_{n_2,i}$, and moreover, $c_{1,1}=e$;",
+    "2412-15281_sent_ee84adf0": "[(B.2.3)] for every $1\\le i\\le \\gamma_{n_2}$, $|S_{l_1,1}|$ is negligible compared with $|S_{n_2,i}|$, more precisely,",
+    "2412-15281_eq_ed713f98": "\\begin{equation}\n\\frac{|x_1(S_{n_2,i}\\setminus S_{l_1,1}c_{1,i},\\ast)|}{|S_{n_2,i}|}>t,\n\\quad\\forall1\\le i\\le \\gamma_{n_2}.\n\\end{equation}",
+    "2412-15281_sent_2e38ca3b": "For every $1\\le i\\le \\gamma_{n_2}$, we choose $x_{2,i}\\in\\hat{K}^{S_{n_2,i}}$ by partially modifying ${x_1}|_{S_{n_2,i}}$ on ${x_1}(S_{n_2,i},\\ast)$ such that Conditions (C.2.1), (C.2.2), and (C.2.3) are satisfied:",
+    "2412-15281_sent_973e1184": "[(C.2.1)] ${x_{2,i}}|_{S_{l_1,1}c_{1,i}}=w_1$;",
+    "2412-15281_sent_c1bfb729": "[(C.2.2)] if $S_{n_1,j}c\\subset S_{n_2,i}\\setminus S_{l_1,1}c_{1,i}$ for some $1\\le j\\le \\gamma_{n_1}$ and some $c\\in C(S_{n_1,j})$ then",
+    "2412-15281_eq_7c54ae97": "\\begin{equation}\n(x_{2,i})_{gc}=(x_{1,j})_g,\\quad\\forall g\\in S_{n_1,j}\\setminus x_{1,j}(S_{n_1,j},\\ast);\n\\end{equation}",
+    "2412-15281_sent_a39a4f80": "[(C.2.3)] on the rest of coordinates in $S_{n_2,i}\\setminus S_{l_1,1}c_{1,i}$, we can replace some $\\ast$'s with elements in $K$ such that there are appropriately many $\\ast$'s satisfying",
+    "2412-15281_eq_0ba7e24f": "\\begin{equation}\nt<\\frac{|x_{2,i}(S_{n_2,i},\\ast)|}{|S_{n_2,i}|}\\le t+\\frac{1}{|S_{n_2,i}|}.\n\\end{equation}",
+    "2412-15281_eq_01e19039": "\\begin{equation}\nB_{2,i}=\\left\\{x=(x_g)_{g\\in S_{n_2,i}}\\in K^{S_{n_2,i}}:\\;x_g=(x_{2,i})_g,\\;\\forall g\\in S_{n_2,i}\\setminus x_{2,i}(S_{n_2,i},\\ast)\\right\\}.\n\\end{equation}",
+    "2412-15281_sent_a1ef6528": "We define $x_2\\in\\hat{K}^G$ by",
+    "2412-15281_eq_0bfc6a82": "\\begin{equation}\n{x_2}|_{S_{n_2,i}c}=x_{2,i},\\quad\\forall1\\le i\\le \\gamma_{n_2},\\;\\forall c\\in C(S_{n_2,i}).\n\\end{equation}",
+    "2412-15281_eq_ba2cd01d": "\\begin{equation}\nX^0_2=\\left\\{x\\in K^G:\\;x|_{S_{n_2,i}c}\\in B_{2,i},\\;\\forall1\\le i\\le \\gamma_{n_2},\\;\\forall c\\in C(S_{n_2,i})\\right\\}\n\\end{equation}",
+    "2412-15281_sent_f397ebb2": "and the subshift of $K^G$ generated by $X^0_2$, namely,",
+    "2412-15281_eq_5a0a36c4": "\\begin{equation}\nX_2=\\overline{GX^0_2}=\\overline{\\bigcup_{g\\in G}gX^0_2}.\n\\end{equation}",
+    "2412-15281_sent_fc255833": "To proceed, we assume that $x_{k-1,i}$, $B_{k-1,i}$ ($1\\le i\\le \\gamma_{n_{k-1}}$), $x_{k-1}$, $X^0_{k-1}$, and $X_{k-1}$ have been already generated in Step $(k-1)$.",
+    "2412-15281_sent_6d4a9291": "Now we generate $x_{k,i}$, $B_{k,i}$ ($1\\le i\\le \\gamma_{n_k}$), $x_k$, $X^0_k$, and $X_k$ in Step $k$ ($k\\ge2$).",
+    "2412-15281_sent_ff36ed4b": "Step k.",
+    "2412-15281_sent_70289813": "By Proposition \\ref{manytiles}, we take $l_{k-1}\\in\\mathbb{N}$ large enough such that we can find a finite subset $R_{k-1}\\subset C(S_{n_{k-1},1})$ and $h_{k-1}\\in C(S_{n_{k-1},1})$ satisfying",
+    "2412-15281_eq_249718f6": "\\begin{equation}\ne\\in R_{k-1},\\quad h_{k-1}\\notin R_{k-1},\\quad S_{n_{k-1},1}R_{k-1}\\cup S_{n_{k-1},1}h_{k-1}\\subset S_{l_{k-1},1},\n\\end{equation}",
+    "2412-15281_eq_0f3e7a47": "\\begin{equation}\n|R_{k-1}|=|K_{k-1}|^{|x_{k-1,1}(S_{n_{k-1},1},\\ast)|}.\n\\end{equation}",
+    "2412-15281_sent_791d86e5": "We select $w_{k-1}\\in\\hat{K}^{S_{l_{k-1},1}}$ by modifying ${x_{k-1}}|_{S_{l_{k-1},1}}$ on \\begin{equation} {x_{k-1}}(S_{n_{k-1},1}R_{k-1},\\ast)={x_{k-1}}(S_{n_{k-1},1},\\ast)R_{k-1} ={x_{{k-1},1}}(S_{n_{k-1},1},\\ast)R_{k-1}, \\end{equation} such that Conditions (A.k.1), (A.k.2), and (A.k.3) are satisfied:",
+    "2412-15281_sent_8ba8b092": "[(A.k.1)] ${w_{k-1}}|_{S_{n_{k-1},1}r\\setminus{x_{k-1,1}(S_{n_{k-1},1},\\ast)r}}={x_{k-1,1}}|_{S_{n_{k-1},1}\\setminus{x_{k-1,1}(S_{n_{k-1},1},\\ast)}}$, $\\forall r\\in R_{k-1}$;",
+    "2412-15281_sent_ad36dea8": "[(A.k.2)] ${w_{k-1}}|_{x_{k-1,1}(S_{n_{k-1},1},\\ast)r}\\in K_{k-1}^{|x_{k-1,1}(S_{n_{k-1},1},\\ast)|}$ $(r\\in R_{k-1})$ are pairwise distinct, i.e.,",
+    "2412-15281_eq_8751d9f6": "\\begin{equation}\n\\left\\{{w_{k-1}}|_{x_{k-1,1}(S_{n_{k-1},1},\\ast)r}:\\;r\\in R_{k-1}\\right\\}=K_{k-1}^{|x_{k-1,1}(S_{n_{k-1},1},\\ast)|};\n\\end{equation}",
+    "2412-15281_sent_a907c2fe": "[(A.k.3)] if $S_{n_{k-1},i}c\\subset S_{l_{k-1},1}\\setminus S_{n_{k-1},1}R_{k-1}$ for some $1\\le i\\le \\gamma_{n_{k-1}}$ and some $c\\in C(S_{n_{k-1},i})$ then",
+    "2412-15281_eq_51eb6f73": "\\begin{equation}\n{w_{k-1}}|_{S_{n_{k-1},i}c}=x_{k-1,i}.\n\\end{equation}",
+    "2412-15281_sent_24ca286e": "Obviously,",
+    "2412-15281_eq_90080017": "\\begin{equation}\n{w_{k-1}}|_{S_{n_{k-1},1}h_{k-1}}=x_{k-1,1},\\quad{w_{k-1}}|_{S_{n_{k-1},1}}\\in B_{k-1,1}\\subset K^{S_{n_{k-1},1}}.\n\\end{equation}",
+    "2412-15281_sent_a1270962": "We pick $n_k\\in\\mathbb{N}$ sufficiently large such that Conditions (B.k.1), (B.k.2), and (B.k.3) are satisfied:",
+    "2412-15281_sent_0e73bd10": "[(B.k.1)] $g_{k-1}h_1h_2\\cdots h_{k-1}\\in S_{n_k,1}$;",
+    "2412-15281_sent_a993e778": "[(B.k.2)] for every $1\\le i\\le \\gamma_{n_k}$, there is $c_{k-1,i}\\in C(S_{l_{k-1},1})$ such that $S_{l_{k-1},1}c_{k-1,i}\\subset S_{n_k,i}$, and moreover, $c_{k-1,1}=e$;",
+    "2412-15281_sent_e6395952": "[(B.k.3)] for every $1\\le i\\le \\gamma_{n_k}$, $|S_{l_{k-1},1}|$ is negligible compared with $|S_{n_k,i}|$, more precisely,",
+    "2412-15281_eq_cc184468": "\\begin{equation}\n\\frac{|x_{k-1}(S_{n_k,i}\\setminus S_{l_{k-1},1}c_{k-1,i},\\ast)|}{|S_{n_k,i}|}>t,\n\\quad\\forall1\\le i\\le \\gamma_{n_k}.\n\\end{equation}",
+    "2412-15281_sent_3c9a49c3": "For every $1\\le i\\le \\gamma_{n_k}$, we choose $x_{k,i}\\in\\hat{K}^{S_{n_k,i}}$ by partially modifying ${x_{k-1}}|_{S_{n_k,i}}$ on ${x_{k-1}}(S_{n_k,i},\\ast)$ such that Conditions (C.k.1), (C.k.2), and (C.k.3) are satisfied:",
+    "2412-15281_sent_47f90dd4": "[(C.k.1)] ${x_{k,i}}|_{S_{l_{k-1},1}c_{k-1,i}}=w_{k-1}$;",
+    "2412-15281_sent_acf0f4d6": "[(C.k.2)] if $S_{n_{k-1},j}c\\subset S_{n_k,i}\\setminus S_{l_{k-1},1}c_{k-1,i}$ for some $1\\le j\\le \\gamma_{n_{k-1}}$ and some $c\\in C(S_{n_{k-1},j})$ then",
+    "2412-15281_eq_4e2b49f4": "\\begin{equation}\n(x_{k,i})_{gc}=(x_{k-1,j})_g,\\quad\\forall g\\in S_{n_{k-1},j}\\setminus x_{k-1,j}(S_{n_{k-1},j},\\ast);\n\\end{equation}",
+    "2412-15281_sent_24acb38c": "[(C.k.3)] on the rest of coordinates in $S_{n_k,i}\\setminus S_{l_{k-1},1}c_{k-1,i}$, we can replace some $\\ast$'s with elements in $K$ such that there are appropriately many $\\ast$'s satisfying",
+    "2412-15281_eq_cfb52310": "\\begin{equation}\nt<\\frac{|x_{k,i}(S_{n_k,i},\\ast)|}{|S_{n_k,i}|}\\le t+\\frac{1}{|S_{n_k,i}|}.\n\\end{equation}",
+    "2412-15281_eq_f0cf1a6e": "\\begin{equation}\nB_{k,i}=\\left\\{x=(x_g)_{g\\in S_{n_k,i}}\\in K^{S_{n_k,i}}:\\;x_g=(x_{k,i})_g,\\;\\forall g\\in S_{n_k,i}\\setminus x_{k,i}(S_{n_k,i},\\ast)\\right\\}.\n\\end{equation}",
+    "2412-15281_sent_fbbc6b5f": "We define $x_k\\in\\hat{K}^G$ by",
+    "2412-15281_eq_78726d94": "\\begin{equation}\n{x_k}|_{S_{n_k,i}c}=x_{k,i},\\quad\\forall1\\le i\\le \\gamma_{n_k},\\;\\forall c\\in C(S_{n_k,i}).\n\\end{equation}",
+    "2412-15281_eq_9d791a40": "\\begin{equation}\nX^0_k=\\left\\{x\\in K^G:\\;x|_{S_{n_k,i}c}\\in B_{k,i},\\;\\forall1\\le i\\le \\gamma_{n_k},\\;\\forall c\\in C(S_{n_k,i})\\right\\}\n\\end{equation}",
+    "2412-15281_sent_319b83e6": "and the subshift of $K^G$ generated by $X^0_k$, namely,",
+    "2412-15281_eq_7c37a759": "\\begin{equation}\nX_k=\\overline{GX^0_k}=\\overline{\\bigcup_{g\\in G}gX^0_k}.\n\\end{equation}",
+    "2412-15281_sent_3ec706c3": "So far we have already generated $x_{k,i}$, $B_{k,i}$ ($1\\le i\\le \\gamma_{n_k}$), $x_k$, $X^0_k$, and $X_k$ in Step $k$ for all $k\\in\\mathbb{N}$.",
+    "2412-15281_sent_84821acc": "It follows from our construction that $\\{X^0_k\\}_{k=1}^\\infty$ and $\\{X_k\\}_{k=1}^\\infty$ are two decreasing sequences of non-empty closed subsets of $K^G$.",
+    "2412-15281_sent_793f2adf": "Since \\begin{equation} S_{n_{k},1}\\subset S_{n_{k+1},1}\\setminus x_{k+1,1}(S_{n_{k+1},1},\\ast)\\subset S_{n_{m},1}\\setminus x_{m,1}(S_{n_{m},1},\\ast),\\quad\\forall k\\in\\mathbb{N},\\;\\forall m\\ge k+1, \\end{equation} we deduce that",
+    "2412-15281_eq_e592c7cb": "\\begin{equation}\nx_{k+1}|_{S_{n_k,1}}=x_{k+1,1}|_{S_{n_k,1}}=w_{k}|_{S_{n_k,1}}=x_{m,1}|_{S_{n_k,1}}= x_m|_{S_{n_k,1}}\\in K^{S_{n_k,1}},\\quad\\forall k\\in\\mathbb{N},\\;\\forall m\\ge k+1.\n\\end{equation}",
+    "2412-15281_sent_255f735e": "Now by the fact $\\bigcup_{k=1}^{\\infty}S_{n_k,1}=G$ we observe that if a point $x$ belongs to the intersection $\\bigcap_{k=1}^{\\infty}X^0_k$ then the value $x_g\\in K$ ($g\\in G$) for all its coordinates must be determined eventually according to our construction.",
+    "2412-15281_sent_603374ec": "Indeed, $x|_{S_{n_k,1}}=x_{k+1}|_{S_{n_k,1}}$ is determined in step $(k+1)$.",
+    "2412-15281_sent_51874b1d": "Thus, the intersection $\\bigcap_{k=1}^{\\infty}X^0_k$ is a singleton.",
+    "2412-15281_eq_bed49e63": "\\begin{equation}\n\\bigcap_{k=1}^{\\infty}X^0_k=\\{z\\}.\n\\end{equation}",
+    "2412-15281_sent_a0d88633": "Finally, we let $X\\subset K^G$ be the orbit closure of $z$, i.e.,",
+    "2412-15281_eq_374a5371": "\\begin{equation}\nX=\\overline{Gz}=\\overline{\\{gz:\\;g\\in G\\}}.\n\\end{equation}",
+    "2412-15281_sent_3f24f301": "Since $X$ is a closed subset of $K^G$ and is invariant under the $G$-shift, $(X,\\sigma)$ becomes a subshift of $(K^G,\\sigma)$, also a subsystem of $(X_k,\\sigma)$.",
+    "2412-15281_sent_e3cd56e1": "This eventually finishes the construction of $(X,\\sigma)$.",
+    "2412-15281_sent_cee057c5": "Next we will check that $(X,\\sigma)$ satisfies all the required properties.\\\\ Part 2: Minimality of $(X,\\sigma)$.",
+    "2412-15281_sent_c7cc71f5": "To show that $(X,\\sigma)$ is minimal, by Lemma \\ref{minimality} it suffices to prove that the point $z\\in X$ is almost periodic, i.e., for any $\\epsilon>0$ there exists a syndetic subset $S=S_\\epsilon$ of $G$ with",
+    "2412-15281_eq_6dc3047a": "\\begin{equation}\nD(z,cz)<\\epsilon,\\quad\\forall c\\in S.\n\\end{equation}",
+    "2412-15281_sent_ec9a10d8": "To see the later statement, we fix $\\epsilon>0$ arbitrarily.",
+    "2412-15281_sent_e0b1d2bc": "Since $S_{k,1}$ is increasing over $k\\in\\mathbb{N}$ and eventually covers the group $G$, there exists $m\\in\\mathbb{N}$ such that for any two points $x=(x_g)_{g\\in G}$ and $x^{\\prime}=(x^{\\prime}_g)_{g\\in G}$ coming from $K^G$, we have",
+    "2412-15281_eq_16996026": "\\begin{equation}\nx|_{S_{n_m,1}}=x^\\prime|_{S_{n_m,1}}\\quad\\text{implies}\\quad D(x,x^\\prime)<\\epsilon.\n\\end{equation}",
+    "2412-15281_sent_cb276916": "Since the tiling $\\mathcal{T}_{n_{m+1}}$ is syndetic, $C(S_{n_{m+1},1})$ is syndetic.",
+    "2412-15281_sent_cb597a91": "By (A.k.3), (B.k.2), (C.k.1), and the definition of $z$, we have",
+    "2412-15281_eq_8983b362": "\\begin{equation}\nz|_{S_{n_m,1}}=z|_{S_{n_m,1}c},\\quad\\forall c\\in C(S_{n_{m+1},1})\n\\end{equation}",
+    "2412-15281_sent_0a160ab5": "i.e.,",
+    "2412-15281_eq_ac427268": "\\begin{equation}\nz|_{S_{n_m,1}}=(cz)|_{S_{n_m,1}},\\quad\\forall c\\in C(S_{n_{m+1},1}).\n\\end{equation}",
+    "2412-15281_sent_80ec7005": "It follows that",
+    "2412-15281_eq_b7906088": "\\begin{equation}\nD(z,cz)<\\epsilon,\\quad\\forall c\\in C(S_{n_{m+1},1}).\n\\end{equation}",
+    "2412-15281_sent_a158bbcf": "Thus, we end this part by taking $S=C(S_{n_{m+1},1})$.\\\\ Part 3: Mean dimension of $(X,\\sigma)$.",
+    "2412-15281_sent_091c5c35": "The aim of this part is to prove",
+    "2412-15281_eq_c3272783": "\\begin{equation}\n\\mdim(X,\\sigma)=t\\cdot\\mdim(K^G,\\sigma).\n\\end{equation}",
+    "2412-15281_sent_66afe597": "To estimate the upper bound of $\\mdim(X,\\sigma)$, we will employ Gromov's ``Pro-Mean Inequality'' (\\cite[Propostion 1.9.1]{Gromov}).",
+    "2412-15281_sent_dde96832": "The following statement is due to Coornaert and Krieger \\cite[Proposition 4.1]{M.",
+    "2412-15281_sent_649ce45e": "Krieger}.",
+    "2412-15281_sent_6ff15bb6": "\\begin{proposition}[{\\cite[Proposition 4.1]{M.",
+    "2412-15281_sent_46c3a395": "Krieger}}] Let $K$ be a finite-dimensional compact metrizable space and $(X,\\sigma)$ a subshift of $(K^{G},\\sigma)$.",
+    "2412-15281_sent_86835c98": "Then one has",
+    "2412-15281_eq_aeb27b27": "\\begin{equation}\n\\mdim(X,\\sigma)\\le\\liminf_{m\\to\\infty}\\frac{\\dim(\\pi_{E_{m}}(X))}{|E_{m}|}\n\\end{equation}",
+    "2412-15281_sent_36c3e120": "for any F\\o lner sequence $\\{E_{m}\\}_{m=1}^{\\infty}$ of $G$.",
+    "2412-15281_sent_fa161547": "\\end{proposition} \\begin{proof}[Upper bound for the mean dimension of $(X,\\sigma)$] Firstly, we fix $k\\in\\mathbb{N}$ and $\\epsilon>0$ arbitrarily.",
+    "2412-15281_sent_df616721": "Take a F\\o lner sequence $\\{E_m\\}_{m=1}^\\infty$ of $G$.",
+    "2412-15281_sent_5c67a4dc": "By Proposition \\ref{bigproportion}, there exists $M\\in\\mathbb{N}$ sufficiently large such that for any $m\\ge M$, the union of $\\mathcal{T}_{n_k}g$-tiles which are contained in $E_m$ has proportion larger than $1-\\epsilon$ for all $g\\in G$, i.e.,",
+    "2412-15281_eq_173c5729": "\\begin{equation}\n\\frac{|\\bigcup_{T\\in\\mathcal{T}_{n_k}g,T\\subset E_m}T|}{|E_m|}>1-\\epsilon,\\quad\\forall m\\ge M,\\;\\forall g\\in G.\n\\end{equation}",
+    "2412-15281_sent_a80c08a0": "For any $m\\ge M$ we divide $G$ into $L_{m,k}$ classes $Q_1,Q_2,\\dots,Q_{L_{m,k}}$ such that if $g,h\\in Q_i$ for some $1\\le i\\le L_{m,k}$ then",
+    "2412-15281_eq_f7f8c6c9": "\\begin{equation}\n\\mathcal{T}_{n_k}g|_{E_m}=\\mathcal{T}_{n_k}h|_{E_m},\n\\end{equation}",
+    "2412-15281_sent_dac25214": "where $\\mathcal{T}_{n_k}g|_{E_m}=\\{Tg\\cap E_m:T\\in\\mathcal{T}_{n_k}\\}$.",
+    "2412-15281_sent_0e2249d0": "In fact, $L_{m,k}$ is the total number of such different patterns.",
+    "2412-15281_sent_21659941": "Since $E_m$ is finite, $L_{m,k}$ is a finite number which depends on $E_m$ and the shapes of $\\mathcal{T}_{n_k} $.",
+    "2412-15281_sent_3b787a4f": "For each $1\\le i\\le L_{m,k}$ we take $q_i\\in Q_i$, then there exists $j_i=j_i(m,k)\\in\\mathbb{N}$ such that",
+    "2412-15281_eq_b0702a61": "\\begin{equation}\n\\mathcal{T}_{n_k}q_i|_{E_m}=\\left\\{S_{n_k,p_1}c_1q_i,S_{n_k,p_2}c_2q_i,\\dots,S_{n_k,p_{j_i}}c_{j_i}q_i,\\;A_i\\right\\}\n\\end{equation}",
+    "2412-15281_sent_f432f4a6": "for some $1\\le p_l\\le \\gamma_{n_k}$, $c_l\\in C(S_{n_k,p_l})$ ($1\\le l\\le j_i$) and some $A_i=A_i(m,k)\\subset E_m$ with $|A_i|/|E_m|<\\epsilon$.",
+    "2412-15281_sent_38c50b73": "Since",
+    "2412-15281_eq_bfce427f": "\\begin{equation}\n\\pi_{E_m}({q_iX^0_k})\\subset B_{k,p_1}\\times B_{k,p_2}\\times\\cdots\\times B_{k,p_{j_i}}\\times K^{A_i},\\quad\\forall m\\ge M\n\\end{equation}",
+    "2412-15281_sent_b6823515": "is a closed set, by the construction of ${X_k}$, it follows that",
+    "2412-15281_sent_6eb10a4b": "\\pi_{E_m}({X_k}) &\\subset\\overline{\\bigcup_{g\\in G}\\pi_{E_m}({gX^0_k})} &\\subset\\bigcup_{1\\le i\\le L_{m,k}}B_{k,p_1}\\times B_{k,p_2}\\times\\cdots\\times B_{k,p_{j_i}}\\times K^{A_i},\\quad\\forall m\\ge M.",
+    "2412-15281_sent_fcb0a455": "\\end{align*} Thus, we have",
+    "2412-15281_sent_e2fbfed7": "\\frac{\\dim(\\pi_{E_m}({X_k}))}{|E_m|} &\\le\\max_{1\\le i\\le L_{m,k}}\\frac{\\dim(B_{k,p_1}\\times B_{k,p_2}\\times\\cdots\\times B_{k,p_{j_i}}\\times K^{A_i})}{|E_m|}\\\\ &\\le\\max_{1\\le i\\le L_{m,k}}\\frac{\\dim K^{\\sum_{1\\le l\\le j_i}|x_{k,p_l}(S_{n_k,p_l},\\ast)|}+|A_i|\\cdot\\dim(K)}{|E_m|}.",
+    "2412-15281_sent_19766599": "\\end{align*} Let $t_{m,k}:=\\max_{1\\le i\\le L_{m,k}}\\sum_{1\\le l\\le j_i}|x_{k,p_l}(S_{n_k,p_l},\\ast)|$.",
+    "2412-15281_sent_8c80e0da": "By (C.k.3) we have that",
+    "2412-15281_eq_5929aa04": "\\begin{equation}\n\\max_{1\\le i\\le L_{m,k}}t\\cdot\\sum_{1\\le l\\le j_i}|S_{n_k,p_l}| < t_{m,k}\\le\\max_{1\\le i\\le L_{m,k}}\\sum_{1\\le l\\le j_i}(t\\cdot|S_{n_k,p_l}|+1),\n\\end{equation}",
+    "2412-15281_sent_347ce0c9": "then for each $k\\in \\mathbb{N}$, we have",
+    "2412-15281_eq_a4180c36": " \\begin{equation}\n\\lim_{m\\to\\infty}t_{m,k}=\\infty\\quad\\text{and}\\quad \\frac {t_{m,k}} {|E_{m}|}\\le t+\\frac{1}{\\min\\{|S_{n_k,j}|:1\\le j\\le \\gamma_{n_k}\\}}.\n\\end{equation}",
+    "2412-15281_sent_4469b58b": "Thus, by \\eqref{bili} we obtain",
+    "2412-15281_sent_018f5ff3": "\\frac{\\dim(\\pi_{E_m}({X_k}))}{|E_m|} &\\le\\frac{\\dim(K^{t_{m,k}})}{t_{m,k}}\\cdot\\frac {t_{m,k}} {|E_m|}+\\epsilon\\cdot \\dim(K)\\\\ &\\le\\frac{\\dim(K^{t_{m,k}})}{t_{m,k}}\\cdot\\left(t+\\frac{1}{\\min\\{|S_{n_k,j}|:1\\le j\\le \\gamma_{n_k}\\}}\\right) +\\epsilon\\cdot \\dim(K) \\end{align*} for all $m\\ge M$.",
+    "2412-15281_sent_9c394659": "By Proposition \\ref{upperbound} and Corollary \\ref{mdimKG}, we obtain",
+    "2412-15281_eq_d4b439cc": "\\begin{equation}\n\\mdim({X_k},\\sigma)\\le \\mdim(K^G,\\sigma)\\cdot(t+\\frac{1}{\\min\\{|S_{n_k,j}|:1\\le j\\le \\gamma_{n_k}\\}}) +\\epsilon\\dim(K).\n\\end{equation}",
+    "2412-15281_sent_c8cf1703": "Since $k\\in\\mathbb{N}$ and $\\epsilon>0$ are arbitrary, and since $\\mdim(X,\\sigma)\\le\\mdim({X_k},\\sigma)$ for all $k\\in\\mathbb{N}$, it follows that",
+    "2412-15281_eq_38266869": "\\begin{equation}\n\\mdim(X,\\sigma)\\le\\lim_{k\\to\\infty}\\left(\\mdim(K^G,\\sigma)\\cdot(t+\\frac{1}{\\min\\{|S_{n_k,j}|:1\\le j\\le \\gamma_{n_k}\\}}) \\right)= t\\cdot \\mdim(K^G,\\sigma).\n\\end{equation}",
+    "2412-15281_sent_db16bfd9": "This finishes the proof of the upper bound of $\\mdim(X,\\sigma)$.",
+    "2412-15281_sent_67c2a25e": "\\end{proof} We now turn to the lower bound of $\\mdim(X,\\sigma)$.",
+    "2412-15281_sent_f836a02d": "In order to show",
+    "2412-15281_eq_9eab67cc": "\\begin{equation}\n\\mdim(X,\\sigma)\\ge t\\cdot\\mdim(K^G,\\sigma),\n\\end{equation}",
+    "2412-15281_sent_ae70676d": "we need more preparations than the case when $K=P$ is a polyhedron.",
+    "2412-15281_sent_d18fc142": "The following proposition generalizes a useful tool for estimating the lower bound of the mean dimension, as presented in \\cite[Proposition 2.8]{Kri09}, from polyhedra to finite-dimensional compact metric spaces.",
+    "2412-15281_sent_a0cb163f": "We note that this method is originally due to Lindenstrauss and Weiss for $P^{\\mathbb{Z}}$, where $P$ is a polyhedron \\cite[Proposition 3.3]{Lindenstrauss--Weiss}.",
+    "2412-15281_sent_dfc1345f": "To obtain Proposition \\ref{pro:lowerbound}, we employ a recent tool due to Tsukamoto \\cite{Tsukamoto} to overcome the difficulties in both topology and dimension theory arising from general alphabets.",
+    "2412-15281_sent_59208e7b": "\\begin{proposition} Let G be a countable amenable group.",
+    "2412-15281_sent_27a978d6": "Let $(X,\\sigma)\\subset (K^G,\\sigma)$ be a subshift, where $K$ is a finite-dimensional compact metrizable space.",
+    "2412-15281_sent_216fddd4": "Suppose that there exist $x'=(x'_g)_{g\\in G}\\in X$ and a subset $J\\subset G$ satisfying the following condition",
+    "2412-15281_eq_3ce653b1": " \\begin{equation}\n\\pi_{G\\setminus J}(x)=\\pi_{G\\setminus J}(x')\\Rightarrow x\\in X,\n\\end{equation}",
+    "2412-15281_sent_c0edfee0": "for all $x\\in K^G.$ Then we have",
+    "2412-15281_eq_08d55357": " \\begin{equation}\n\\mdim(X,\\sigma)\\ge \\delta(J)\\mdim(K^G,\\sigma).\\footnote{Recall that the density $\\delta(J)$ is defined in \\eqref{density}.}\n\\end{equation}",
+    "2412-15281_sent_8cf458f8": "\\end{proposition} \\begin{proof} Consider a compatible metric $d$ on $K$.",
+    "2412-15281_sent_3540356a": "For every $m\\in\\mathbb{N}$, the closed subset $X^m\\subset K^m$ inherits the metric from $K^m$, which is induced by $d_{\\infty}$ as in \\eqref{metricrho} and denoted by $D_{\\infty}$.",
+    "2412-15281_sent_cf8bd10b": "Let $\\{F_n\\}_{n=1}^\\infty$ be a F\\o lner sequence of $G$ and fix $n\\in\\mathbb{N}$.",
+    "2412-15281_sent_6dd84cf5": "Define $J_n=J\\cap F_n$.",
+    "2412-15281_sent_ed69acc1": "Consider the embedding $f_n:(K^m)^{J_n}\\to (K^m)^G$ which associates to each $u=(u_g)_{g\\in J_n}\\in(K^m)^{J_n}$ the element $u'=(u'_g)_{g\\in G}\\in (K^m)^G$ defined by",
+    "2412-15281_eq_d4d5a000": "\\begin{equation}\nu^\\prime_g=\n\\begin{cases}\nu_g,&\\quad g\\in J_n,\\\\\n(\\underbrace{x_g',\\cdots,x_g'}_{m-\\text{times}}),&\\quad g\\in G\\setminus J_n.\n\\end{cases}\n\\end{equation}",
+    "2412-15281_sent_f63332ba": "The properties satisfied by $x'$ and $J$ imply $f_n(u)\\in X^m$ for all $u\\in (K^m)^{J_n}$.",
+    "2412-15281_sent_a4242594": "\\iffalse For every $u=(u_g)_{g\\in J_n}\\in (K^m)^{J_n}$ we define $u'=(u'_g)_{g\\in G}\\in (K^m)^G$ by",
+    "2412-15281_eq_808cd87f": " \\begin{equation}\nu^\\prime_g=\\begin{cases}\n u_g,&\\quad g\\in J_n,\\\\\n (x'_g)^m,&\\quad g\\in G\\setminus J_n,\n \\end{cases}\n\\end{equation}",
+    "2412-15281_sent_f7239749": "where $(x'_g)^m\\in K^m$, notice that the properties satisfied by $x'$ and $J$ imply $u'\\in X^m$ when $u\\in (K^m)^{J_n}$, then we can consider the map as follows:",
+    "2412-15281_eq_0c2aa07c": " \\begin{equation}\nf_n:(K^m)^{J_n}\\to X^m,\\quad u\\mapsto u^\\prime.\n\\end{equation}",
+    "2412-15281_sent_862e2f97": "\\fi Notice that $(D_\\infty)_{J_n}$ is a compatible metric on $(K^m)^G$ defined as in \\eqref{equ:disdyn}.",
+    "2412-15281_sent_b8769e34": "By \\eqref{equ:bigsmall}, we deduce",
+    "2412-15281_eq_6019ca7c": " \\begin{equation}\nd_{\\infty}(u,v)\\le (D_\\infty)_{J_n}(f_n(u),f_n(v)),\\quad\\forall u,v\\in (K^m)^{J_n}.\n\\end{equation}",
+    "2412-15281_sent_d209b667": "Combining this with the fact that $J_n\\subset F_n,$ we deduce",
+    "2412-15281_eq_3b3c3b07": " \\begin{equation}\nd_{\\infty}(u,v)\\le (D_\\infty)_{J_n}(f_n(u),f_n(v)) \\le (D_\\infty)_{F_n}(f_n(u),f_n(v)),\\quad\\forall u,v\\in (K^m)^{J_n}.\n\\end{equation}",
+    "2412-15281_sent_7c88c5e7": "Hence we have that for any $\\epsilon>0$ and $n\\in \\mathbb N,$",
+    "2412-15281_eq_2d49e21d": " \\begin{equation}\n\\Widim_\\epsilon\\left(X^m,(D_\\infty)_{F_n}\\right)\\ge\\Widim_\\epsilon\\left((K^m)^{J_n},d_{\\infty}\\right).\n\\end{equation}",
+    "2412-15281_sent_ad4c57cf": "By Lemma \\ref{widimlowerbound} we know that there exists $\\delta>0$, such that for any $0<\\epsilon<\\delta$ we deduce",
+    "2412-15281_eq_e7f4784f": " \\begin{equation}\n\\Widim_\\epsilon\\left((K^m)^{J_n},d_{\\infty}\\right)\\ge |J_n|\\cdot\\left(\\dim(K^m)-1\\right) ,\\quad\\forall n\\in\\mathbb{N}.\n\\end{equation}",
+    "2412-15281_sent_18f41a5f": "Then we have",
+    "2412-15281_sent_b8ebb2b0": "\\mdim(X,\\sigma) &\\ge\\frac{\\mdim(X^m,\\sigma)}{m}\\\\ &=\\frac{1}{m}\\cdot\\lim_{\\epsilon\\to0}\\lim_{n\\to\\infty}\\frac{\\Widim_\\epsilon\\left(X^m,(D_\\infty)_{F_n}\\right)}{|F_n|}\\\\ &\\ge \\frac{1}{m}\\cdot\\lim_{\\epsilon\\to0}\\limsup_{n\\to\\infty}\\frac{\\Widim_\\epsilon\\left((K^m)^{J_n},d_{\\infty}\\right)}{|F_n|}\\\\ &\\ge \\limsup_{n\\to\\infty}\\frac{|J_n|}{|F_n|}\\cdot \\frac{\\dim(K^m)-1}{m}.\\end{align*} Since $\\{F_n\\}_{n=1}^\\infty$ is arbitrary, we deduce \\begin{equation} \\mdim(X,\\sigma)\\ge\\delta(J)\\cdot\\frac{\\dim(K^m)-1}{m}.",
+    "2412-15281_sent_3691ffce": "\\end{equation} Sine $m\\in\\mathbb{N}$ is arbitrary, by Corollary \\ref{mdimKG} we finally conclude that",
+    "2412-15281_eq_d0da5ca0": " \\begin{equation}\n\\mdim(X,\\sigma)\\ge \\delta(J)\\cdot\\mdim(K^G,\\sigma).\n\\end{equation}",
+    "2412-15281_sent_1e00c226": "\\end{proof} In order to establish the lower bound, we need the following preparations.",
+    "2412-15281_sent_85c8cc44": "For any $ k\\in\\mathbb{N}$ and $ m\\ge k+1$, we list some properties of our constructions according to (A.k.3), (B.k.2), and (C.k.1):",
+    "2412-15281_sent_e7da08ae": "[(a)] $S_{n_{k},1}h_k\\cdots h_{m-1}\\subset S_{n_{m},1}$;",
+    "2412-15281_sent_e8cbb20a": "[(b)] $x_{k,1}(S_{n_{k},1},\\ast)h_k\\cdots h_{m-1}\\subset x_{m,1}(S_{n_{m},1},\\ast)$.",
+    "2412-15281_sent_2a185f15": "[(c)]$(S_{n_{k},1}\\setminus x_{k,1}(S_{n_{k},1},\\ast))h_k\\cdots h_{m-1}\\subset S_{n_{m},1}\\setminus x_{m,1}(S_{n_{m},1},\\ast).$",
+    "2412-15281_sent_5d5b7869": "Set",
+    "2412-15281_eq_b4de2388": "\\begin{equation}\nT_1^\\prime=S_{n_1,1},\\quad T_k^\\prime=S_{n_k,1}h_{k-1}^{-1}\\cdots h_1^{-1},\\quad\\forall k\\ge2.\n\\end{equation}",
+    "2412-15281_sent_fe796fbd": "Since $\\{S_{n_k,1}\\}_{k=1}^\\infty$ is a F\\o lner sequence of $G$, so is the sequence $\\{T_k^\\prime\\}_{k=1}^\\infty$.",
+    "2412-15281_sent_48d73c74": "According to (a), we have",
+    "2412-15281_eq_aab80621": "\\begin{equation}\nS_{n_k,1}\n\\subset S_{n_{k+1},1}h_k^{-1},\\quad\\forall k\\in\\mathbb{N}.\n\\end{equation}",
+    "2412-15281_eq_74118915": "\\begin{equation}\nT_k^\\prime=S_{n_k,1}h_{k-1}^{-1}\\cdots h_1^{-1}\\subset S_{n_{k+1},1}h_k^{-1}h_{k-1}^{-1}\\cdots h_1^{-1}=T_{k+1}^\\prime,\\quad\\forall k\\in\\mathbb{N}.\n\\end{equation}",
+    "2412-15281_sent_f4a5acd5": "By (B.k.1),",
+    "2412-15281_eq_82964931": "\\begin{equation}\ng_k\\in S_{n_{k+1},1}h_k^{-1}\\cdots h_1^{-1}=T_{k+1}^\\prime,\\quad\\forall k\\in\\mathbb{N}.\n\\end{equation}",
+    "2412-15281_sent_1dd5da29": "Therefore $\\{T_k^\\prime\\}_{k=1}^\\infty$ is an increasing F\\o lner sequence of $G$ with $\\bigcup_{k=1}^{\\infty}T_k^\\prime=G$.",
+    "2412-15281_eq_a355b2d3": "\\begin{equation}\nJ_1=x_{1,1}(S_{n_{1},1},\\ast),\\quad\nJ_k=x_{k,1}(S_{n_{k},1},\\ast)h_{k-1}^{-1}\\cdots h_1^{-1},\\quad\\forall k\\ge2.\n\\end{equation} Then $ J_k\\subset T_k^\\prime$. It follows from (b) that",
+    "2412-15281_eq_a2c09ef2": "\\begin{equation}\nx_{k,1}(S_{n_{k},1},\\ast)h_k\\subset x_{k+1,1}(S_{n_{k+1},1},\\ast),\\quad\\forall k\\in\\mathbb{N}.\n\\end{equation}",
+    "2412-15281_sent_bcd6a552": "Thus,",
+    "2412-15281_eq_746b54d0": "\\begin{equation}\nJ_k\\subset J_{k+1},\\quad\\forall k\\in\\mathbb{N}.\n\\end{equation}",
+    "2412-15281_eq_12fc691c": "\\begin{equation}\n J=\\bigcup_{k=1}^{\\infty}J_k.\n\\end{equation}",
+    "2412-15281_sent_82116433": "The property of $X$ below is crucial for the proof of lower bound of $\\mdim(X,\\sigma)$.",
+    "2412-15281_sent_01012940": "\\begin{proposition} There exists $\\omega \\in K^{G\\setminus J}$, such that for any $u\\in K^J$ we can find $x=x(u)\\in X$ such that",
+    "2412-15281_eq_d33ca9c4": "\\begin{equation}\nx|_J=u,\\quad x|_{G\\setminus J}=\\omega.\n\\end{equation}",
+    "2412-15281_sent_5124291d": "In other words, we have",
+    "2412-15281_eq_f1d9c231": "\\begin{equation}\n\\pi_{G\\setminus J}(x)=\\omega\\Rightarrow x\\in X\n\\end{equation}",
+    "2412-15281_sent_815b75aa": "for all $x\\in K^G.$ \\end{proposition} We now prove the lower bound of $\\mdim(X,\\sigma)$ assuming Proposition \\ref{projection}.",
+    "2412-15281_sent_aa51f4ab": "\\begin{proof}[Lower bound for the mean dimension of $(X,\\sigma)$] Since $\\{T_k'\\}_{k=1}^\\infty$ is a F\\o lner sequence and $J_k= J\\cap T_k'$ for all $k\\in \\mathbb{N}$, we have",
+    "2412-15281_eq_9ec6ec0e": "\\begin{equation}\n\\delta(J)\\ge \\limsup_{k\\to \\infty}\\cfrac{|J\\cap T_k'|}{|T_k'|}= \\limsup_{k\\to \\infty}\\cfrac{|J_k|}{|T_k'|}.\n\\end{equation}",
+    "2412-15281_sent_1d0d2d83": "It follows from (C.k.3) that",
+    "2412-15281_eq_c391cb87": "\\begin{equation}\nt<\\frac{|x_{k,1}(S_{n_k,1},\\ast)|}{|S_{n_k,1}|}=\\frac{|J_k|}{|T_k^\\prime|}\\le t+\\frac{1}{|T_k^\\prime|}.\n\\end{equation}",
+    "2412-15281_sent_4aff4bfa": "Since $k\\in\\mathbb{N}$ is arbitrary, we obtain",
+    "2412-15281_eq_037686dd": "\\begin{equation}\n\\lim_{k\\to \\infty}\\cfrac{|J_k|}{|T_k'|}=t.\n\\end{equation}",
+    "2412-15281_sent_9fdc3d9b": "Combining this with Proposition \\ref{pro:lowerbound} and Proposition \\ref{projection}, we have",
+    "2412-15281_eq_45f42052": "\\begin{equation}\n\\mdim(X,\\sigma)\\ge \\delta(J)\\cdot\\mdim(K^G,\\sigma)\\ge \\lim_{k\\to \\infty}\\cfrac{|J_k|}{|T_k'|}\\cdot \\mdim(K^G,\\sigma)=t\\cdot\\mdim(K^G,\\sigma).\n\\end{equation}",
+    "2412-15281_sent_f254e006": "\\end{proof} It remains to prove Proposition \\ref{projection}.",
+    "2412-15281_sent_26af9d85": "\\begin{proof}[Proof of Proposition \\ref{projection}] Notice that by (c), $T_k^\\prime\\setminus J_k$ is increasing over $k\\in\\mathbb{N}$.",
+    "2412-15281_sent_c29ed4d0": "Moreover, $G\\setminus J=\\bigcup_{k=1}^{\\infty}(T_k^\\prime\\setminus J_k)$.",
+    "2412-15281_sent_f4a7ba8a": "For arbitrary $g\\in G\\setminus J$, choose the smallest $l(g)\\in\\mathbb{N}$ satisfying",
+    "2412-15281_eq_8bdf19a2": "\\begin{equation}\ng\\in T_k^\\prime\\setminus J_k = S_{n_k,1}h_{k-1}^{-1}\\cdots h_1^{-1}\\setminus x_{k,1}(S_{n_k,1},\\ast)h_{k-1}^{-1}\\cdots h_1^{-1},\\quad\\forall k\\ge l(g).\n\\end{equation}",
+    "2412-15281_sent_27fd6123": "Define \\begin{equation} \\omega=(\\omega_g)_{g\\in G\\setminus J}=(z_{gh_1\\cdots h_{l(g)-1}})_{g\\in G\\setminus J}\\in K^{G\\setminus J}.",
+    "2412-15281_sent_4c0bf761": "\\end{equation} Fix $g\\in G\\setminus J$, it follows $gh_1\\cdots h_{l(g)-1}\\in S_{n_{l(g)},1}\\setminus x_{l(g),1}(S_{n_{l(g)},1},\\ast)$.",
+    "2412-15281_sent_def8c965": "For any $k\\ge l(g)$, we have $gh_1\\cdots h_{k-1}=(gh_1\\cdots h_{l(g)-1})\\cdot h_{l(g)}\\cdots h_{k-1}$.",
+    "2412-15281_sent_5434c120": "Combining this with (A.k.3) and $z\\in \\bigcap_{k=1}^{\\infty}X^0_k$, we deduce that",
+    "2412-15281_eq_d6e1236e": "\\begin{equation}\nz_{gh_1\\cdots h_{l(g)-1}}=z_{gh_1\\cdots h_{k-1}}.\n\\end{equation}",
+    "2412-15281_sent_7eb88b64": "For arbitrary $u\\in K^J$, we can define $x=x(u)\\in K^G $ by",
+    "2412-15281_eq_9f41b049": "\\begin{equation}\nx_g=\\begin{cases}\n\\omega_g,&\\quad g\\in G\\setminus J,\\\\\nu_g,&\\quad g\\in J.\n\\end{cases}\n\\end{equation} ",
+    "2412-15281_sent_2745a2bb": "We will show that $x\\in X=\\overline{\\{gz:g\\in G\\}}$.",
+    "2412-15281_sent_0c27883f": "In fact, it is enough to show that for any $\\epsilon>0$, there exists $c\\in G$ such that $D(x,cz)<\\epsilon.$ To this end, we fix $\\epsilon>0$ arbitrarily.",
+    "2412-15281_sent_e89905fb": "Since $\\{\\delta_n\\}_{n=1}^\\infty$ is a sequence strictly decreasing to zero and $ T_k^\\prime$ is increasing over $k\\in\\mathbb{N}$ which eventually covers the group $G$, there exist $s=s(\\epsilon)\\in\\mathbb{N}$ and $p=p(s,\\epsilon)\\ge\\max_{g\\in T_s^\\prime\\setminus J_s}\\{l(g),s+1\\}$ such that",
+    "2412-15281_eq_f6122bfc": "\\begin{equation}\nd_\\infty(x^\\prime|_{T^\\prime _{s}},x^{\\prime\\prime}|_{T^\\prime _{s}} )<\\delta_{p} \\quad\\text{implies}\\quad D(x,x^\\prime)<\\epsilon.\n\\end{equation}",
+    "2412-15281_sent_40f8a86c": "By (b), we have $x_{s,1}(S_{n_{s},1},\\ast)h_s\\cdots h_{p-1}\\subset x_{p,1}(S_{n_{p},1},\\ast)$.",
+    "2412-15281_sent_b7403ced": "Combining this with (A.k.2) and $z\\in \\bigcap_{k=1}^{\\infty}X^0_k$, we deduce that",
+    "2412-15281_eq_9da38d1a": "\\begin{equation}\nK_{p}^{x_{s,1}(S_{n_s,1},\\ast)}\\subset \\left\\{{x_{p+1,1}}|_{x_{s,1}(S_{n_s,1},\\ast)h_s\\cdots h_{p-1}r}:\\;r\\in R_{p}\\right\\}=\\left\\{z|_{x_{s,1}(S_{n_s,1},\\ast)h_s\\cdots h_{p-1}r}:\\;r\\in R_{p}\\right\\} .\n\\end{equation}",
+    "2412-15281_sent_65209036": "There exists $r_0\\in R_{p}$, such that \\begin{equation} d_\\infty(x|_{J_s}, z|_{J_sh_1\\cdots h_{p-1}r_0})=d_\\infty(x|_{J_s}, z|_{x_{s,1}(S_{n_s,1},\\ast)h_s\\cdots h_{p-1}r_0})<\\delta_{p}.",
+    "2412-15281_sent_f15e71e2": "\\end{equation} Notice that $z|_{x_{s,1}(S_{n_s,1},\\ast)h_s\\cdots h_{p-1}r_0}=(h_1\\cdots h_{p-1}r_0z)|_{J_s}$, it follows \\begin{equation} d_\\infty(x|_{J_s},(h_1\\cdots h_{p-1}r_0z)|_{J_s})<\\delta_{p}.",
+    "2412-15281_sent_a159845b": "\\end{equation} By (c), we have $(S_{n_s,1}\\setminus x_{s,1}(S_{n_{s},1},\\ast))h_s\\cdots h_{p-1}\\subset S_{n_{p},1}\\setminus x_{p,1}(S_{n_{p},1},\\ast)$.",
+    "2412-15281_sent_f1961121": "Combining this with (A.k.1) and $z\\in \\bigcap_{k=1}^{\\infty}X^0_k$, we deduce that \\begin{equation} z|_{(S_{n_s,1}\\setminus x_{s,1}(S_{n_{s},1},\\ast))h_s\\cdots h_{p-1}r_0}=z|_{(S_{n_s,1}\\setminus x_{s,1}(S_{n_{s},1},\\ast))h_s\\cdots h_{p-1}}.",
+    "2412-15281_sent_75c8a582": "\\end{equation} Notice that $z|_{(S_{n_s,1}\\setminus x_{s,1}(S_{n_{s},1},\\ast))h_s\\cdots h_{p-1}r_0} =(h_1\\cdots h_{p-1}r_0z)|_{T^\\prime _s\\setminus J_s}$ and $z|_{(S_{n_s,1}\\setminus x_{s,1}(S_{n_{s},1},\\ast))h_s\\cdots h_{p-1}}= (h_1\\cdots h_{p-1}z)|_{T^\\prime _s\\setminus J_s} $ , it follows \\begin{equation} (h_1\\cdots h_{p-1}r_0z)|_{T^\\prime _s\\setminus J_s}= (h_1\\cdots h_{p-1}z)|_{T^\\prime _s\\setminus J_s}.",
+    "2412-15281_sent_8414df7b": "\\end{equation} Therefore,",
+    "2412-15281_eq_599d5369": "\\begin{equation}\nx|_{T_s^\\prime\\setminus J_s}=\\omega|_{T_s^\\prime\\setminus J_s}= (h_1\\cdots h_{p-1}z)|_{T^\\prime _s\\setminus J_s}=(h_1\\cdots h_{p-1}r_0z)|_{T_s^\\prime\\setminus J_s}.\n\\end{equation}",
+    "2412-15281_eq_aab48434": "\\begin{equation}\nd _{\\infty}(x|_{T_s^\\prime},(h_1\\cdots h_{p-1}r_0z)|_{T_s^\\prime})<\\delta_{p},\n\\end{equation} which implies \\begin{equation}\nD(x,h_1\\cdots h_{p-1}r_0z)<\\epsilon.\n\\end{equation} Taking $c=h_1\\cdots h_{p-1}r_0$, thus this completes the proof.",
+    "2412-15281_section_2f8efca8": "Proof of Theorem \\ref{maintheorem b}",
+    "2412-15281_sent_02b43e69": "In this section, we will prove Theorem \\ref{maintheorem b} by constructing a subshift $(M,\\sigma)$ of $([0,1]^G,\\sigma).$ \\begin{proof}[Proof of Theorem \\ref{maintheorem b}] Let $\\{\\delta_n\\}_{n=1}^\\infty$ be a sequence strictly decreasing to zero with $0<\\delta_n<\\frac{1}{2^{n+1}}$ and $\\{r_n\\}_{n=1}^\\infty$ be a sequence strictly increasing to 1 with $0<r_n<1$.",
+    "2412-15281_sent_0ec29387": "For each $n\\in\\mathbb{N}$, let $I_n=[1-\\frac{1}{2^{n-1}},1-\\frac{1}{2^{n}}-\\delta_n]$.",
+    "2412-15281_sent_b11c60e4": "Fix $n\\in\\mathbb{N}$, we now proceed to construct a subshift $(Y_n,\\sigma)$ that corresponds to $r_n$ as follows.",
+    "2412-15281_sent_268eaac1": "Let $\\{\\mathcal{T}_k\\}_{k=1}^{\\infty}$ be the sequence of tilings in Theorem \\ref{tiling}, then $\\{S_{k,1}\\}_{k=1}^{\\infty}$ is an increasing F\\o lner sequence of $G$ with $\\bigcup_{k=1}^{\\infty}S_{k,1}=G$.",
+    "2412-15281_sent_f651e22c": "We take a symbol $\\ast\\notin I_n$ and set $\\hat{I_n}=I_n\\cup\\{\\ast\\}$, then choose $n_1\\in\\mathbb{N}$ sufficiently large so that for every $1\\le i\\le \\gamma_{n_1}$ there is $y_{i}=y_{i}(n)\\in\\hat{I_n}^{S_{n_1,i}}$ with",
+    "2412-15281_eq_26c0838d": "\\begin{equation}\nr_n<\\frac{|y_{i}(S_{n_1,i},\\ast)|}{|S_{n_1,i}|} < 1.\\end{equation}",
+    "2412-15281_eq_bcb341bb": " \\begin{equation}\nB_{1,i}=\\left\\{y=(y_g)_{g\\in S_{n_1,i}}\\in K^{S_{n_1,i}}:\\;y_g=(y_{i})_g,\\;\\forall g\\in S_{n_1,i}\\setminus y_{1,i}(S_{n_1,i},\\ast)\\right\\}.\n\\end{equation}",
+    "2412-15281_sent_d1503823": "We define $y_1\\in\\hat{K}^G$ by",
+    "2412-15281_eq_4a65cf2f": " \\begin{equation}\n{y_1}|_{S_{n_1,i}c}=y_{i},\\quad\\forall1\\le i\\le \\gamma_{n_1},\\;\\forall c\\in C(S_{n_1,i}),\n\\end{equation}",
+    "2412-15281_sent_f1f3640b": "then we set",
+    "2412-15281_eq_4da7ed2f": " \\begin{equation}\nY_n^0=\\left\\{y\\in I_n^G:\\;y|_{S_{n_1,i}c}\\in B_{1,i},\\;\\forall1\\le i\\le \\gamma_{n_1},\\;\\forall c\\in C(S_{n_1,i})\\right\\}\n\\end{equation}",
+    "2412-15281_sent_7e5c6a28": "and the subshift of $K^G$ generated by $Y^0_n$, namely,",
+    "2412-15281_eq_d6f6fba5": " \\begin{equation}\nY_n=\\overline{GY_n^0}=\\overline{\\bigcup_{g\\in G}gY_n^0}.\n\\end{equation}",
+    "2412-15281_sent_77e95fab": "Next, we define",
+    "2412-15281_eq_a65bfb08": "\\begin{equation}\nM=\\cup_{n=1}^{\\infty}Y_n\\cup\\{1\\}^{G}.\n\\end{equation}",
+    "2412-15281_sent_22991562": "Hence $M$ is a shift-invariant closed set.",
+    "2412-15281_sent_53d08cc2": "For any $r\\in[0,1)$, there exists $n\\in \\mathbb{N}$ such that $r_n>r$, now we claim that \\begin{cl} There exists a minimal subsystem $(X,\\sigma)$ of $(Y_n,\\sigma)$ with a mean dimension equal to $r$.",
+    "2412-15281_sent_208259ec": "\\end{cl} \\begin{proof} The construction of minimal dynamical system $(X,\\sigma)$ will be fulfilled by induction: Step 1.",
+    "2412-15281_sent_a4f4d91f": "Since $r_n>r$, by \\eqref{midu} we can define $x_{1,i}=x_{1,i}(n,r)\\in\\hat{I_n}^{S_{n_1,i}}$ by replacing some $*$'s in $y_{i}$ with element in $I_n$ such that there are appropriately many $*$'s satisfying",
+    "2412-15281_eq_f42c54bc": " \\begin{equation}\nr<\\frac{|x_{1,i}(S_{n_1,i},\\ast)|}{|S_{n_1,i}|}\\le r+\\frac{1}{|S_{n_1,i}|}.\n\\end{equation}",
+    "2412-15281_eq_48cc65da": "\\begin{equation}\nB^n_{1,i}=\\left\\{x=(x_g)_{g\\in S_{n_1,i}}\\in I_n^{S_{n_1,i}}:\\;x_g=(x_{1,i})_g,\\;\\forall g\\in S_{n_1,i}\\setminus x_{1,i}(S_{n_1,i},\\ast)\\right\\}.\n\\end{equation}",
+    "2412-15281_eq_1bee1ff1": "\\begin{equation}\nX^0_1=X^0_{1}(n,r)=\\left\\{x\\in I_n^G:\\;x|_{S_{n_1,i}c}\\in B^n_{1,i},\\;\\forall1\\le i\\le \\gamma_{n_1},\\;\\forall c\\in C(S_{n_1,i})\\right\\}\n\\end{equation}",
+    "2412-15281_sent_be5d5d37": "and",
+    "2412-15281_eq_6047b238": "\\begin{equation}\nX_{1}=X_1(n,r)=\\overline{GX^0_{1}}=\\overline{\\bigcup_{g\\in G}gX^0_{1}}.\n\\end{equation}",
+    "2412-15281_sent_feec0bdb": "Let $t=r,$ $K=I_n$ and $X_{1}=X_{1}(n,r)$ in the proof of Theorem \\ref{maintheorem a} (Step 2).",
+    "2412-15281_sent_dc09ee7f": "We can find $n_2\\in \\mathbb N$, $x_2\\in \\hat{I}_n^{G}$, $X_{2}=X_2(n,r)$ and $x_{2,i}=x_{2,i}(n,r)$ satisfies \\begin{equation} r<\\frac{|x_{2,i}(S_{n_2,i},\\ast)|}{|S_{n_2,i}|}\\le r+\\frac{1}{|S_{n_2,i}|}.",
+    "2412-15281_sent_44f6f81a": "Let $t=r,$ $K=I_n$, and $X_k=X_{k}(n,r)$ in the proof of Theorem \\ref{maintheorem a} (Step k).",
+    "2412-15281_sent_f8e1b188": "We can find $n_k\\in \\mathbb N$, $x_k\\in \\hat{I}_n^{G}$, $X_{k}=X_k(n,r)$ and $x_{k,i}=x_{k,i}(n,r)$ satisfies \\begin{equation} r<\\frac{|x_{k,i}(S_{n_k,i},\\ast)|}{|S_{n_k,i}|}\\le r+\\frac{1}{|S_{n_k,i}|}.",
+    "2412-15281_sent_e1cdcb2b": "\\end{equation} By using the same method again as in the proof of Theorem \\ref{maintheorem a}, we can find $z=z(n,r)\\in I_n^{G}$ satisfying",
+    "2412-15281_eq_e570ebc8": " \\begin{equation}\n\\bigcap_{k=1}^{\\infty} X_{k}^0=\\{z\\},\n\\end{equation}",
+    "2412-15281_sent_bca592be": "then set \\begin{equation} X=\\overline{Gz}=\\overline{\\{gz:\\;g\\in G\\}}.",
+    "2412-15281_sent_87ee16e8": "\\end{equation} Using the same method again as in the proof of Theorem \\ref{maintheorem a}, we can prove that $(X,\\sigma)$ is a minimal system of mean dimension $r$.",
+    "2412-15281_sent_bd63ef7f": "\\end{proof} Since each minimal subshift of $(M,\\sigma)$ will either be contained in some $Y_n$ or be a singleton, the attainable values of the mean dimension for minimal subsystems will never reach $1$.",
+    "2412-15281_sent_92c8c109": "Combining this with the fact that $r_n\\le\\mdim(M,\\sigma)\\le 1$ for arbitrary $n \\in\\mathbb{N}$, it follows that \\begin{equation} \\mdim(M,\\sigma)=1.",
+    "2412-15281_sent_99450514": "\\end{equation} This concludes the proof of Theorem \\ref{maintheorem b}.",
+    "2412-15281_sent_0cb14d11": "\\end{proof} It is worth noting that in our construction, the alphabet $[0,1]$, the condition $\\mdim(M,\\sigma)=1$, and the interval of attainable values $[0,1)$ can effectively be replaced by any polyhedron $P$, $\\mdim(M,\\sigma)=\\dim(P)$, and $[0,\\dim(P))$, respectively."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15281_sent_48cf4bf9": "2412-15281_doc_root",
+      "2412-15281_sent_198acb00": "2412-15281_doc_root",
+      "2412-15281_sent_6d119211": "2412-15281_doc_root",
+      "2412-15281_abstract_ce28071e": "2412-15281_doc_root",
+      "2412-15281_sent_efa123a7": "2412-15281_abstract_ce28071e",
+      "2412-15281_sent_45e3ae73": "2412-15281_abstract_ce28071e",
+      "2412-15281_sent_a4560eaf": "2412-15281_abstract_ce28071e",
+      "2412-15281_sent_46552cfa": "2412-15281_doc_root",
+      "2412-15281_section_0b79795d": "2412-15281_doc_root",
+      "2412-15281_sent_371e428d": "2412-15281_section_0b79795d",
+      "2412-15281_sent_c1eb580f": "2412-15281_section_0b79795d",
+      "2412-15281_sent_da71c23a": "2412-15281_section_0b79795d",
+      "2412-15281_sent_84ec82c7": "2412-15281_section_0b79795d",
+      "2412-15281_sent_c448a796": "2412-15281_section_0b79795d",
+      "2412-15281_sent_3666cd9f": "2412-15281_section_0b79795d",
+      "2412-15281_sent_9ab601c6": "2412-15281_section_0b79795d",
+      "2412-15281_sent_f408d868": "2412-15281_section_0b79795d",
+      "2412-15281_sent_c45dc447": "2412-15281_section_0b79795d",
+      "2412-15281_sent_89a04927": "2412-15281_section_0b79795d",
+      "2412-15281_sent_35c3ca28": "2412-15281_section_0b79795d",
+      "2412-15281_sent_c1be38ee": "2412-15281_section_0b79795d",
+      "2412-15281_sent_f0fc5f18": "2412-15281_section_0b79795d",
+      "2412-15281_sent_759c68d4": "2412-15281_section_0b79795d",
+      "2412-15281_sent_98acb747": "2412-15281_section_0b79795d",
+      "2412-15281_sent_d7a87d8c": "2412-15281_section_97220268",
+      "2412-15281_sent_79fa6ad1": "2412-15281_section_0b79795d",
+      "2412-15281_sent_15bc74bd": "2412-15281_section_0b79795d",
+      "2412-15281_sent_8fd78f60": "2412-15281_section_0b79795d",
+      "2412-15281_sent_36c6b0fa": "2412-15281_section_0b79795d",
+      "2412-15281_sent_5784cfd3": "2412-15281_section_0b79795d",
+      "2412-15281_enumerate_963811fa": "2412-15281_section_97220268",
+      "2412-15281_item_fb209a7f": "2412-15281_enumerate_963811fa",
+      "2412-15281_sent_0adfa6d9": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_62917686": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_5d6756ea": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_379c022c": "2412-15281_section_0b79795d",
+      "2412-15281_sent_9a349749": "2412-15281_section_0b79795d",
+      "2412-15281_sent_d6c96a68": "2412-15281_section_0b79795d",
+      "2412-15281_sent_ade6d0fe": "2412-15281_section_0b79795d",
+      "2412-15281_sent_fd8c4a58": "2412-15281_section_0b79795d",
+      "2412-15281_sent_9601c40b": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_533b2b7c": "2412-15281_section_0b79795d",
+      "2412-15281_sent_b7505507": "2412-15281_section_0b79795d",
+      "2412-15281_sent_b3a6546b": "2412-15281_section_0b79795d",
+      "2412-15281_sent_83fb9ffb": "2412-15281_section_0b79795d",
+      "2412-15281_sent_929dae69": "2412-15281_section_0b79795d",
+      "2412-15281_sent_a3123ba1": "2412-15281_section_0b79795d",
+      "2412-15281_sent_01e458c4": "2412-15281_section_0b79795d",
+      "2412-15281_sent_f9ac9de3": "2412-15281_section_0b79795d",
+      "2412-15281_sent_6d07262b": "2412-15281_section_0b79795d",
+      "2412-15281_sent_3538b9eb": "2412-15281_section_0b79795d",
+      "2412-15281_sent_a3e137c0": "2412-15281_section_0b79795d",
+      "2412-15281_sent_93650803": "2412-15281_section_0b79795d",
+      "2412-15281_subsection_0407c271": "2412-15281_section_0b79795d",
+      "2412-15281_sent_f22eaaaf": "2412-15281_subsection_0407c271",
+      "2412-15281_sent_3d2f9e25": "2412-15281_subsection_0407c271",
+      "2412-15281_sent_2510acbf": "2412-15281_subsection_0407c271",
+      "2412-15281_sent_42a2f2ea": "2412-15281_subsection_0407c271",
+      "2412-15281_sent_806f6cf8": "2412-15281_subsection_0407c271",
+      "2412-15281_section_7ad03400": "2412-15281_doc_root",
+      "2412-15281_subsection_29d2b506": "2412-15281_section_7ad03400",
+      "2412-15281_sent_e1b1ac3f": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_465c43bf": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_33b1db2b": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_1619f3f5": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_5db7aae8": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_2ca1e1b6": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_67a5d862": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_15fe9b0e": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_383301c6": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_efb0bbe1": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_51df8f00": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_979a66b4": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_9a1d89a9": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_cc7905de": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_cf1e9fb0": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_dabc21b4": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_867ab7dd": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_30fb44ba": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_1b829bb0": "2412-15281_subsection_29d2b506",
+      "2412-15281_sent_31e5ef0e": "2412-15281_section_97220268",
+      "2412-15281_subsection_c82a81fa": "2412-15281_section_7ad03400",
+      "2412-15281_sent_1921a5e1": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_f67ee077": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_143177c0": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_277830ee": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_f05dee8f": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_ceee54d5": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_1519ea51": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_0dca0166": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_4129e42e": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_517d0845": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_811e3169": "2412-15281_subsection_c82a81fa",
+      "2412-15281_eq_3d55bd58": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_2fb24d12": "2412-15281_subsection_c82a81fa",
+      "2412-15281_eq_329af113": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_dfe7f14c": "2412-15281_subsection_c82a81fa",
+      "2412-15281_eq_442e82d3": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_e1857bd2": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_aa2453f1": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_8c52ca02": "2412-15281_subsection_c82a81fa",
+      "2412-15281_sent_d092eaaf": "2412-15281_subsection_c82a81fa",
+      "2412-15281_subsection_c97300b0": "2412-15281_section_7ad03400",
+      "2412-15281_sent_2e8b6f9c": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_1ffcae9c": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_91f071ea": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_df054d6e": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_1be0b173": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_47dc4af8": "2412-15281_subsection_c97300b0",
+      "2412-15281_eq_5217227d": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_aa17ee8f": "2412-15281_subsection_c97300b0",
+      "2412-15281_eq_f65a6d7c": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_6c0efbc8": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_b5f0cfea": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_441ede13": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_51bf7c85": "2412-15281_subsection_c97300b0",
+      "2412-15281_eq_51100ee0": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_95ada70b": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_ef740be9": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_f72963b3": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_9905972a": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_32860a4d": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_d8154e1c": "2412-15281_subsection_c97300b0",
+      "2412-15281_sent_14538c3d": "2412-15281_subsection_c97300b0",
+      "2412-15281_section_97220268": "2412-15281_doc_root",
+      "2412-15281_sent_bcd416a6": "2412-15281_section_97220268",
+      "2412-15281_sent_503e2e25": "2412-15281_section_97220268",
+      "2412-15281_sent_ca4f80b0": "2412-15281_section_97220268",
+      "2412-15281_sent_542eb5c6": "2412-15281_section_97220268",
+      "2412-15281_sent_223c6361": "2412-15281_section_97220268",
+      "2412-15281_sent_be3ec054": "2412-15281_section_97220268",
+      "2412-15281_sent_0a5453e0": "2412-15281_section_97220268",
+      "2412-15281_sent_29162b69": "2412-15281_section_97220268",
+      "2412-15281_sent_48b0f207": "2412-15281_section_97220268",
+      "2412-15281_sent_46eb37c3": "2412-15281_section_97220268",
+      "2412-15281_sent_0a50b207": "2412-15281_section_97220268",
+      "2412-15281_sent_4dc2a4e9": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_7e2411f9": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_497dec85": "2412-15281_section_97220268",
+      "2412-15281_sent_64832e6d": "2412-15281_section_97220268",
+      "2412-15281_sent_284315e7": "2412-15281_section_97220268",
+      "2412-15281_sent_4037ae1b": "2412-15281_section_97220268",
+      "2412-15281_sent_410f45d5": "2412-15281_section_97220268",
+      "2412-15281_sent_686c4328": "2412-15281_section_97220268",
+      "2412-15281_sent_7ce117ed": "2412-15281_section_97220268",
+      "2412-15281_sent_82296515": "2412-15281_section_97220268",
+      "2412-15281_sent_74807cf9": "2412-15281_section_97220268",
+      "2412-15281_sent_5a88febb": "2412-15281_section_97220268",
+      "2412-15281_eq_6691e4ac": "2412-15281_section_97220268",
+      "2412-15281_sent_cae6404c": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_3173ed9c": "2412-15281_section_97220268",
+      "2412-15281_sent_7998d053": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_7bf3f4b0": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_e910751d": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_6200acef": "2412-15281_section_97220268",
+      "2412-15281_sent_b0641479": "2412-15281_section_97220268",
+      "2412-15281_eq_7684bbfe": "2412-15281_section_97220268",
+      "2412-15281_sent_26b7b8aa": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_ca9e844b": "2412-15281_section_97220268",
+      "2412-15281_eq_1c564aae": "2412-15281_section_97220268",
+      "2412-15281_sent_545c5eb8": "2412-15281_section_97220268",
+      "2412-15281_sent_07d11258": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_884195ae": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_957e0f85": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_1528e2b3": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_f646d432": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_2944de99": "2412-15281_section_97220268",
+      "2412-15281_eq_90249384": "2412-15281_section_97220268",
+      "2412-15281_sent_83c6032f": "2412-15281_section_97220268",
+      "2412-15281_sent_a61b024a": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_65c32474": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_ee84adf0": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_ed713f98": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_2e38ca3b": "2412-15281_section_97220268",
+      "2412-15281_sent_973e1184": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_c1bfb729": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_7c54ae97": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_a39a4f80": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_0ba7e24f": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_01e19039": "2412-15281_section_97220268",
+      "2412-15281_sent_a1ef6528": "2412-15281_section_97220268",
+      "2412-15281_eq_0bfc6a82": "2412-15281_section_97220268",
+      "2412-15281_eq_ba2cd01d": "2412-15281_section_97220268",
+      "2412-15281_sent_f397ebb2": "2412-15281_section_97220268",
+      "2412-15281_eq_5a0a36c4": "2412-15281_section_97220268",
+      "2412-15281_sent_fc255833": "2412-15281_section_97220268",
+      "2412-15281_sent_6d4a9291": "2412-15281_section_97220268",
+      "2412-15281_sent_ff36ed4b": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_70289813": "2412-15281_section_97220268",
+      "2412-15281_eq_249718f6": "2412-15281_section_97220268",
+      "2412-15281_eq_0f3e7a47": "2412-15281_section_97220268",
+      "2412-15281_sent_791d86e5": "2412-15281_section_97220268",
+      "2412-15281_sent_8ba8b092": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_ad36dea8": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_8751d9f6": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_a907c2fe": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_51eb6f73": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_24ca286e": "2412-15281_section_97220268",
+      "2412-15281_eq_90080017": "2412-15281_section_97220268",
+      "2412-15281_sent_a1270962": "2412-15281_section_97220268",
+      "2412-15281_sent_0e73bd10": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_a993e778": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_e6395952": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_cc184468": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_3c9a49c3": "2412-15281_section_97220268",
+      "2412-15281_sent_47f90dd4": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_acf0f4d6": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_4e2b49f4": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_24acb38c": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_cfb52310": "2412-15281_item_fb209a7f",
+      "2412-15281_eq_f0cf1a6e": "2412-15281_section_97220268",
+      "2412-15281_sent_fbbc6b5f": "2412-15281_section_97220268",
+      "2412-15281_eq_78726d94": "2412-15281_section_97220268",
+      "2412-15281_eq_9d791a40": "2412-15281_section_97220268",
+      "2412-15281_sent_319b83e6": "2412-15281_section_97220268",
+      "2412-15281_eq_7c37a759": "2412-15281_section_97220268",
+      "2412-15281_sent_3ec706c3": "2412-15281_section_97220268",
+      "2412-15281_sent_84821acc": "2412-15281_section_97220268",
+      "2412-15281_sent_793f2adf": "2412-15281_section_97220268",
+      "2412-15281_eq_e592c7cb": "2412-15281_section_97220268",
+      "2412-15281_sent_255f735e": "2412-15281_section_97220268",
+      "2412-15281_sent_603374ec": "2412-15281_section_97220268",
+      "2412-15281_sent_51874b1d": "2412-15281_section_97220268",
+      "2412-15281_eq_bed49e63": "2412-15281_section_97220268",
+      "2412-15281_sent_a0d88633": "2412-15281_section_97220268",
+      "2412-15281_eq_374a5371": "2412-15281_section_97220268",
+      "2412-15281_sent_3f24f301": "2412-15281_section_97220268",
+      "2412-15281_sent_e3cd56e1": "2412-15281_section_97220268",
+      "2412-15281_sent_cee057c5": "2412-15281_section_97220268",
+      "2412-15281_sent_c7cc71f5": "2412-15281_section_97220268",
+      "2412-15281_eq_6dc3047a": "2412-15281_section_97220268",
+      "2412-15281_sent_ec9a10d8": "2412-15281_section_97220268",
+      "2412-15281_sent_e0b1d2bc": "2412-15281_section_97220268",
+      "2412-15281_eq_16996026": "2412-15281_section_97220268",
+      "2412-15281_sent_cb276916": "2412-15281_section_97220268",
+      "2412-15281_sent_cb597a91": "2412-15281_section_97220268",
+      "2412-15281_eq_8983b362": "2412-15281_section_97220268",
+      "2412-15281_sent_0a160ab5": "2412-15281_section_97220268",
+      "2412-15281_eq_ac427268": "2412-15281_section_97220268",
+      "2412-15281_sent_80ec7005": "2412-15281_section_97220268",
+      "2412-15281_eq_b7906088": "2412-15281_section_97220268",
+      "2412-15281_sent_a158bbcf": "2412-15281_section_97220268",
+      "2412-15281_sent_091c5c35": "2412-15281_section_97220268",
+      "2412-15281_eq_c3272783": "2412-15281_section_97220268",
+      "2412-15281_sent_66afe597": "2412-15281_section_97220268",
+      "2412-15281_sent_dde96832": "2412-15281_section_97220268",
+      "2412-15281_sent_649ce45e": "2412-15281_section_97220268",
+      "2412-15281_sent_6ff15bb6": "2412-15281_section_97220268",
+      "2412-15281_sent_46c3a395": "2412-15281_section_97220268",
+      "2412-15281_sent_86835c98": "2412-15281_section_97220268",
+      "2412-15281_eq_aeb27b27": "2412-15281_section_97220268",
+      "2412-15281_sent_36c3e120": "2412-15281_section_97220268",
+      "2412-15281_sent_fa161547": "2412-15281_section_97220268",
+      "2412-15281_sent_df616721": "2412-15281_section_97220268",
+      "2412-15281_sent_5c67a4dc": "2412-15281_section_97220268",
+      "2412-15281_eq_173c5729": "2412-15281_section_97220268",
+      "2412-15281_sent_a80c08a0": "2412-15281_section_97220268",
+      "2412-15281_eq_f7f8c6c9": "2412-15281_section_97220268",
+      "2412-15281_sent_dac25214": "2412-15281_section_97220268",
+      "2412-15281_sent_0e2249d0": "2412-15281_section_97220268",
+      "2412-15281_sent_21659941": "2412-15281_section_97220268",
+      "2412-15281_sent_3b787a4f": "2412-15281_section_97220268",
+      "2412-15281_eq_b0702a61": "2412-15281_section_97220268",
+      "2412-15281_sent_f432f4a6": "2412-15281_section_97220268",
+      "2412-15281_sent_38c50b73": "2412-15281_section_97220268",
+      "2412-15281_eq_bfce427f": "2412-15281_section_97220268",
+      "2412-15281_sent_b6823515": "2412-15281_section_97220268",
+      "2412-15281_sent_6eb10a4b": "2412-15281_section_97220268",
+      "2412-15281_sent_fcb0a455": "2412-15281_section_97220268",
+      "2412-15281_sent_e2fbfed7": "2412-15281_section_97220268",
+      "2412-15281_sent_19766599": "2412-15281_section_97220268",
+      "2412-15281_sent_8c80e0da": "2412-15281_section_97220268",
+      "2412-15281_eq_5929aa04": "2412-15281_section_97220268",
+      "2412-15281_sent_347ce0c9": "2412-15281_section_97220268",
+      "2412-15281_eq_a4180c36": "2412-15281_section_97220268",
+      "2412-15281_sent_4469b58b": "2412-15281_section_97220268",
+      "2412-15281_sent_018f5ff3": "2412-15281_section_97220268",
+      "2412-15281_sent_9c394659": "2412-15281_section_97220268",
+      "2412-15281_eq_d4b439cc": "2412-15281_section_97220268",
+      "2412-15281_sent_c8cf1703": "2412-15281_section_97220268",
+      "2412-15281_eq_38266869": "2412-15281_section_97220268",
+      "2412-15281_sent_db16bfd9": "2412-15281_section_97220268",
+      "2412-15281_sent_67c2a25e": "2412-15281_section_97220268",
+      "2412-15281_sent_f836a02d": "2412-15281_section_97220268",
+      "2412-15281_eq_9eab67cc": "2412-15281_section_97220268",
+      "2412-15281_sent_ae70676d": "2412-15281_section_97220268",
+      "2412-15281_sent_d18fc142": "2412-15281_section_97220268",
+      "2412-15281_sent_a0cb163f": "2412-15281_section_97220268",
+      "2412-15281_sent_dfc1345f": "2412-15281_section_97220268",
+      "2412-15281_sent_59208e7b": "2412-15281_section_97220268",
+      "2412-15281_sent_27a978d6": "2412-15281_section_97220268",
+      "2412-15281_sent_216fddd4": "2412-15281_section_97220268",
+      "2412-15281_eq_3ce653b1": "2412-15281_section_97220268",
+      "2412-15281_sent_c0edfee0": "2412-15281_section_97220268",
+      "2412-15281_eq_08d55357": "2412-15281_section_97220268",
+      "2412-15281_sent_8cf458f8": "2412-15281_section_97220268",
+      "2412-15281_sent_3540356a": "2412-15281_section_97220268",
+      "2412-15281_sent_cf8bd10b": "2412-15281_section_97220268",
+      "2412-15281_sent_6dd84cf5": "2412-15281_section_97220268",
+      "2412-15281_sent_ed69acc1": "2412-15281_section_97220268",
+      "2412-15281_eq_d4d5a000": "2412-15281_section_97220268",
+      "2412-15281_sent_f63332ba": "2412-15281_section_97220268",
+      "2412-15281_sent_a4242594": "2412-15281_section_97220268",
+      "2412-15281_eq_808cd87f": "2412-15281_section_97220268",
+      "2412-15281_sent_f7239749": "2412-15281_section_97220268",
+      "2412-15281_eq_0c2aa07c": "2412-15281_section_97220268",
+      "2412-15281_sent_862e2f97": "2412-15281_section_97220268",
+      "2412-15281_sent_b8769e34": "2412-15281_section_97220268",
+      "2412-15281_eq_6019ca7c": "2412-15281_section_97220268",
+      "2412-15281_sent_d209b667": "2412-15281_section_97220268",
+      "2412-15281_eq_3b3c3b07": "2412-15281_section_97220268",
+      "2412-15281_sent_7c88c5e7": "2412-15281_section_97220268",
+      "2412-15281_eq_2d49e21d": "2412-15281_section_97220268",
+      "2412-15281_sent_ad4c57cf": "2412-15281_section_97220268",
+      "2412-15281_eq_e7f4784f": "2412-15281_section_97220268",
+      "2412-15281_sent_18f41a5f": "2412-15281_section_97220268",
+      "2412-15281_sent_b8ebb2b0": "2412-15281_section_97220268",
+      "2412-15281_sent_3691ffce": "2412-15281_section_97220268",
+      "2412-15281_eq_d0da5ca0": "2412-15281_section_97220268",
+      "2412-15281_sent_1e00c226": "2412-15281_section_97220268",
+      "2412-15281_sent_85c8cc44": "2412-15281_section_97220268",
+      "2412-15281_sent_e7da08ae": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_e8cbb20a": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_2a185f15": "2412-15281_item_fb209a7f",
+      "2412-15281_sent_5d5b7869": "2412-15281_section_97220268",
+      "2412-15281_eq_b4de2388": "2412-15281_section_97220268",
+      "2412-15281_sent_fe796fbd": "2412-15281_section_97220268",
+      "2412-15281_sent_48d73c74": "2412-15281_section_97220268",
+      "2412-15281_eq_aab80621": "2412-15281_section_97220268",
+      "2412-15281_eq_74118915": "2412-15281_section_97220268",
+      "2412-15281_sent_f4a5acd5": "2412-15281_section_97220268",
+      "2412-15281_eq_82964931": "2412-15281_section_97220268",
+      "2412-15281_sent_1dd5da29": "2412-15281_section_97220268",
+      "2412-15281_eq_a355b2d3": "2412-15281_section_97220268",
+      "2412-15281_eq_a2c09ef2": "2412-15281_section_97220268",
+      "2412-15281_sent_bcd6a552": "2412-15281_section_97220268",
+      "2412-15281_eq_746b54d0": "2412-15281_section_97220268",
+      "2412-15281_eq_12fc691c": "2412-15281_section_97220268",
+      "2412-15281_sent_82116433": "2412-15281_section_97220268",
+      "2412-15281_sent_01012940": "2412-15281_section_97220268",
+      "2412-15281_eq_d33ca9c4": "2412-15281_section_97220268",
+      "2412-15281_sent_5124291d": "2412-15281_section_97220268",
+      "2412-15281_eq_f1d9c231": "2412-15281_section_97220268",
+      "2412-15281_sent_815b75aa": "2412-15281_section_97220268",
+      "2412-15281_sent_aa51f4ab": "2412-15281_section_97220268",
+      "2412-15281_eq_9ec6ec0e": "2412-15281_section_97220268",
+      "2412-15281_sent_1d0d2d83": "2412-15281_section_97220268",
+      "2412-15281_eq_c391cb87": "2412-15281_section_97220268",
+      "2412-15281_sent_4aff4bfa": "2412-15281_section_97220268",
+      "2412-15281_eq_037686dd": "2412-15281_section_97220268",
+      "2412-15281_sent_9fdc3d9b": "2412-15281_section_97220268",
+      "2412-15281_eq_45f42052": "2412-15281_section_97220268",
+      "2412-15281_sent_f254e006": "2412-15281_section_97220268",
+      "2412-15281_sent_26af9d85": "2412-15281_section_97220268",
+      "2412-15281_sent_c29ed4d0": "2412-15281_section_97220268",
+      "2412-15281_sent_f4a7ba8a": "2412-15281_section_97220268",
+      "2412-15281_eq_8bdf19a2": "2412-15281_section_97220268",
+      "2412-15281_sent_27fd6123": "2412-15281_section_97220268",
+      "2412-15281_sent_4c0bf761": "2412-15281_section_97220268",
+      "2412-15281_sent_def8c965": "2412-15281_section_97220268",
+      "2412-15281_sent_5434c120": "2412-15281_section_97220268",
+      "2412-15281_eq_d6e1236e": "2412-15281_section_97220268",
+      "2412-15281_sent_7eb88b64": "2412-15281_section_97220268",
+      "2412-15281_eq_9f41b049": "2412-15281_section_97220268",
+      "2412-15281_sent_2745a2bb": "2412-15281_section_97220268",
+      "2412-15281_sent_0c27883f": "2412-15281_section_97220268",
+      "2412-15281_sent_e89905fb": "2412-15281_section_97220268",
+      "2412-15281_eq_f6122bfc": "2412-15281_section_97220268",
+      "2412-15281_sent_40f8a86c": "2412-15281_section_97220268",
+      "2412-15281_sent_b7403ced": "2412-15281_section_97220268",
+      "2412-15281_eq_9da38d1a": "2412-15281_section_97220268",
+      "2412-15281_sent_65209036": "2412-15281_section_97220268",
+      "2412-15281_sent_f15e71e2": "2412-15281_section_97220268",
+      "2412-15281_sent_a159845b": "2412-15281_section_97220268",
+      "2412-15281_sent_f1961121": "2412-15281_section_97220268",
+      "2412-15281_sent_75c8a582": "2412-15281_section_97220268",
+      "2412-15281_sent_8414df7b": "2412-15281_section_97220268",
+      "2412-15281_eq_599d5369": "2412-15281_section_97220268",
+      "2412-15281_eq_aab48434": "2412-15281_section_97220268",
+      "2412-15281_section_2f8efca8": "2412-15281_doc_root",
+      "2412-15281_sent_02b43e69": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_0ec29387": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_b11c60e4": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_268eaac1": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_f651e22c": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_26c0838d": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_bcb341bb": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_d1503823": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_4a65cf2f": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_f1f3640b": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_4da7ed2f": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_7e5c6a28": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_d6f6fba5": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_77e95fab": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_a65bfb08": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_22991562": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_53d08cc2": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_208259ec": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_a4f4d91f": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_f42c54bc": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_48cc65da": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_1bee1ff1": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_be5d5d37": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_6047b238": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_feec0bdb": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_dc09ee7f": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_44f6f81a": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_f8e1b188": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_e1cdcb2b": "2412-15281_section_2f8efca8",
+      "2412-15281_eq_e570ebc8": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_bca592be": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_87ee16e8": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_bd63ef7f": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_92c8c109": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_99450514": "2412-15281_section_2f8efca8",
+      "2412-15281_sent_0cb14d11": "2412-15281_section_2f8efca8"
+    }
+  },
+  "merged_parents": {
+    "2412-15281_sent_48cf4bf9": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_sent_198acb00": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_sent_6d119211": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_abstract_ce28071e": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_sent_efa123a7": [
+      "2412-15281_abstract_ce28071e"
+    ],
+    "2412-15281_sent_45e3ae73": [
+      "2412-15281_abstract_ce28071e"
+    ],
+    "2412-15281_sent_a4560eaf": [
+      "2412-15281_abstract_ce28071e"
+    ],
+    "2412-15281_sent_46552cfa": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_section_0b79795d": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_sent_371e428d": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_c1eb580f": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_da71c23a": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_84ec82c7": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_c448a796": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_3666cd9f": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_9ab601c6": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_f408d868": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_c45dc447": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_89a04927": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_35c3ca28": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_c1be38ee": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_f0fc5f18": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_759c68d4": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_98acb747": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_d7a87d8c": [
+      "2412-15281_section_0b79795d",
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_79fa6ad1": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_15bc74bd": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_8fd78f60": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_36c6b0fa": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_5784cfd3": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_enumerate_963811fa": [
+      "2412-15281_section_0b79795d",
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_item_fb209a7f": [
+      "2412-15281_enumerate_963811fa"
+    ],
+    "2412-15281_sent_0adfa6d9": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_62917686": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_5d6756ea": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_379c022c": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_9a349749": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_d6c96a68": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_ade6d0fe": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_fd8c4a58": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_9601c40b": [
+      "2412-15281_section_0b79795d",
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_533b2b7c": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_b7505507": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_b3a6546b": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_83fb9ffb": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_929dae69": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_a3123ba1": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_01e458c4": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_f9ac9de3": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_6d07262b": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_3538b9eb": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_a3e137c0": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_93650803": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_subsection_0407c271": [
+      "2412-15281_section_0b79795d"
+    ],
+    "2412-15281_sent_f22eaaaf": [
+      "2412-15281_subsection_0407c271"
+    ],
+    "2412-15281_sent_3d2f9e25": [
+      "2412-15281_subsection_0407c271"
+    ],
+    "2412-15281_sent_2510acbf": [
+      "2412-15281_subsection_0407c271"
+    ],
+    "2412-15281_sent_42a2f2ea": [
+      "2412-15281_subsection_0407c271"
+    ],
+    "2412-15281_sent_806f6cf8": [
+      "2412-15281_subsection_0407c271"
+    ],
+    "2412-15281_section_7ad03400": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_subsection_29d2b506": [
+      "2412-15281_section_7ad03400"
+    ],
+    "2412-15281_sent_e1b1ac3f": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_465c43bf": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_33b1db2b": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_1619f3f5": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_5db7aae8": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_2ca1e1b6": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_67a5d862": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_15fe9b0e": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_383301c6": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_efb0bbe1": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_51df8f00": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_979a66b4": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_9a1d89a9": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_cc7905de": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_cf1e9fb0": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_dabc21b4": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_867ab7dd": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_30fb44ba": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_1b829bb0": [
+      "2412-15281_subsection_29d2b506"
+    ],
+    "2412-15281_sent_31e5ef0e": [
+      "2412-15281_section_97220268",
+      "2412-15281_subsection_29d2b506",
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_subsection_c82a81fa": [
+      "2412-15281_section_7ad03400"
+    ],
+    "2412-15281_sent_1921a5e1": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_f67ee077": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_143177c0": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_277830ee": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_f05dee8f": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_ceee54d5": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_1519ea51": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_0dca0166": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_4129e42e": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_517d0845": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_811e3169": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_eq_3d55bd58": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_2fb24d12": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_eq_329af113": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_dfe7f14c": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_eq_442e82d3": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_e1857bd2": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_aa2453f1": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_8c52ca02": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_sent_d092eaaf": [
+      "2412-15281_subsection_c82a81fa"
+    ],
+    "2412-15281_subsection_c97300b0": [
+      "2412-15281_section_7ad03400"
+    ],
+    "2412-15281_sent_2e8b6f9c": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_1ffcae9c": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_91f071ea": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_df054d6e": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_1be0b173": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_47dc4af8": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_eq_5217227d": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_aa17ee8f": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_eq_f65a6d7c": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_6c0efbc8": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_b5f0cfea": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_441ede13": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_51bf7c85": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_eq_51100ee0": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_95ada70b": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_ef740be9": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_f72963b3": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_9905972a": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_32860a4d": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_d8154e1c": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_sent_14538c3d": [
+      "2412-15281_subsection_c97300b0"
+    ],
+    "2412-15281_section_97220268": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_sent_bcd416a6": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_503e2e25": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_ca4f80b0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_542eb5c6": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_223c6361": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_be3ec054": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_0a5453e0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_29162b69": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_48b0f207": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_46eb37c3": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_0a50b207": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_4dc2a4e9": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_7e2411f9": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_497dec85": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_64832e6d": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_284315e7": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_4037ae1b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_410f45d5": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_686c4328": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_7ce117ed": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_82296515": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_74807cf9": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_5a88febb": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_6691e4ac": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_cae6404c": [
+      "2412-15281_section_2f8efca8",
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_3173ed9c": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_7998d053": [
+      "2412-15281_section_2f8efca8",
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_7bf3f4b0": [
+      "2412-15281_section_2f8efca8",
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_e910751d": [
+      "2412-15281_section_2f8efca8",
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_6200acef": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_b0641479": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_7684bbfe": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_26b7b8aa": [
+      "2412-15281_section_2f8efca8",
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_ca9e844b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_1c564aae": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_545c5eb8": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_07d11258": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_884195ae": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_957e0f85": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_1528e2b3": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_f646d432": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_2944de99": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_90249384": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_83c6032f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a61b024a": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_65c32474": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_ee84adf0": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_ed713f98": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_2e38ca3b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_973e1184": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_c1bfb729": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_7c54ae97": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_a39a4f80": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_0ba7e24f": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_01e19039": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a1ef6528": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_0bfc6a82": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_ba2cd01d": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f397ebb2": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_5a0a36c4": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_fc255833": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_6d4a9291": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_ff36ed4b": [
+      "2412-15281_section_2f8efca8",
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_70289813": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_249718f6": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_0f3e7a47": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_791d86e5": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_8ba8b092": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_ad36dea8": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_8751d9f6": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_a907c2fe": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_51eb6f73": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_24ca286e": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_90080017": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a1270962": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_0e73bd10": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_a993e778": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_e6395952": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_cc184468": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_3c9a49c3": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_47f90dd4": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_acf0f4d6": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_4e2b49f4": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_24acb38c": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_cfb52310": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_eq_f0cf1a6e": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_fbbc6b5f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_78726d94": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_9d791a40": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_319b83e6": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_7c37a759": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_3ec706c3": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_84821acc": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_793f2adf": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_e592c7cb": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_255f735e": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_603374ec": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_51874b1d": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_bed49e63": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a0d88633": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_374a5371": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_3f24f301": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_e3cd56e1": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_cee057c5": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_c7cc71f5": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_6dc3047a": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_ec9a10d8": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_e0b1d2bc": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_16996026": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_cb276916": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_cb597a91": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_8983b362": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_0a160ab5": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_ac427268": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_80ec7005": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_b7906088": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a158bbcf": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_091c5c35": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_c3272783": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_66afe597": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_dde96832": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_649ce45e": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_6ff15bb6": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_46c3a395": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_86835c98": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_aeb27b27": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_36c3e120": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_fa161547": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_df616721": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_5c67a4dc": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_173c5729": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a80c08a0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_f7f8c6c9": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_dac25214": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_0e2249d0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_21659941": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_3b787a4f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_b0702a61": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f432f4a6": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_38c50b73": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_bfce427f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_b6823515": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_6eb10a4b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_fcb0a455": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_e2fbfed7": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_19766599": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_8c80e0da": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_5929aa04": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_347ce0c9": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_a4180c36": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_4469b58b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_018f5ff3": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_9c394659": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_d4b439cc": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_c8cf1703": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_38266869": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_db16bfd9": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_67c2a25e": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f836a02d": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_9eab67cc": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_ae70676d": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_d18fc142": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a0cb163f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_dfc1345f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_59208e7b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_27a978d6": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_216fddd4": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_3ce653b1": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_c0edfee0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_08d55357": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_8cf458f8": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_3540356a": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_cf8bd10b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_6dd84cf5": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_ed69acc1": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_d4d5a000": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f63332ba": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a4242594": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_808cd87f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f7239749": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_0c2aa07c": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_862e2f97": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_b8769e34": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_6019ca7c": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_d209b667": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_3b3c3b07": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_7c88c5e7": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_2d49e21d": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_ad4c57cf": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_e7f4784f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_18f41a5f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_b8ebb2b0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_3691ffce": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_d0da5ca0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_1e00c226": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_85c8cc44": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_e7da08ae": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_e8cbb20a": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_2a185f15": [
+      "2412-15281_item_fb209a7f"
+    ],
+    "2412-15281_sent_5d5b7869": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_b4de2388": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_fe796fbd": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_48d73c74": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_aab80621": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_74118915": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f4a5acd5": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_82964931": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_1dd5da29": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_a355b2d3": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_a2c09ef2": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_bcd6a552": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_746b54d0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_12fc691c": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_82116433": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_01012940": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_d33ca9c4": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_5124291d": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_f1d9c231": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_815b75aa": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_aa51f4ab": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_9ec6ec0e": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_1d0d2d83": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_c391cb87": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_4aff4bfa": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_037686dd": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_9fdc3d9b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_45f42052": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f254e006": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_26af9d85": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_c29ed4d0": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f4a7ba8a": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_8bdf19a2": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_27fd6123": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_4c0bf761": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_def8c965": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_5434c120": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_d6e1236e": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_7eb88b64": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_9f41b049": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_2745a2bb": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_0c27883f": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_e89905fb": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_f6122bfc": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_40f8a86c": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_b7403ced": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_9da38d1a": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_65209036": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f15e71e2": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_a159845b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_f1961121": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_75c8a582": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_sent_8414df7b": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_599d5369": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_eq_aab48434": [
+      "2412-15281_section_97220268"
+    ],
+    "2412-15281_section_2f8efca8": [
+      "2412-15281_doc_root"
+    ],
+    "2412-15281_sent_02b43e69": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_0ec29387": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_b11c60e4": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_268eaac1": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_f651e22c": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_26c0838d": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_bcb341bb": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_d1503823": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_4a65cf2f": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_f1f3640b": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_4da7ed2f": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_7e5c6a28": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_d6f6fba5": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_77e95fab": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_a65bfb08": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_22991562": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_53d08cc2": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_208259ec": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_a4f4d91f": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_f42c54bc": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_48cc65da": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_1bee1ff1": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_be5d5d37": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_6047b238": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_feec0bdb": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_dc09ee7f": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_44f6f81a": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_f8e1b188": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_e1cdcb2b": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_eq_e570ebc8": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_bca592be": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_87ee16e8": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_bd63ef7f": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_92c8c109": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_99450514": [
+      "2412-15281_section_2f8efca8"
+    ],
+    "2412-15281_sent_0cb14d11": [
+      "2412-15281_section_2f8efca8"
+    ]
+  }
+}

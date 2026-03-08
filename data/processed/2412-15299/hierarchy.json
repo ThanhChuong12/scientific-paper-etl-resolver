@@ -1,0 +1,2198 @@
+{
+  "elements": {
+    "2412-15299_doc_root": "DOCUMENT_ROOT",
+    "2412-15299_sent_676977e1": "\\maketitle",
+    "2412-15299_abstract_ce28071e": "abstract",
+    "2412-15299_sent_d0757f32": "Building a universal multilingual automatic speech recognition (ASR) model that performs equitably across languages has long been a challenge due to its inherent difficulties.",
+    "2412-15299_sent_0368d2c1": "To address this task we introduce a Language-Agnostic Multilingual ASR pipeline through orthography Unification and language-specific Transliteration (\\shortname).",
+    "2412-15299_sent_718f7774": "\\shortname~operates without any language-specific modules while matching the performance of state-of-the-art models trained on a minimal amount of data.",
+    "2412-15299_sent_6747174d": "Our pipeline consists of two key steps.",
+    "2412-15299_sent_45232bee": "First, we utilize a universal transcription generator to unify orthographic features into Romanized form and capture common phonetic characteristics across diverse languages.",
+    "2412-15299_sent_35bd3a7a": "Second, we utilize a universal converter to transform these universal transcriptions into language-specific ones.",
+    "2412-15299_sent_5fe01f4d": "In experiments, we demonstrate the effectiveness of our proposed method leveraging universal transcriptions for massively multilingual ASR.",
+    "2412-15299_sent_0d512cdd": "Our pipeline achieves a relative error reduction rate of 45\\% when compared to Whisper and performs comparably to MMS, despite being trained on only 0.1\\% of Whisper's training data.",
+    "2412-15299_sent_4680d8e2": "Furthermore, our pipeline does not rely on any language-specific modules.",
+    "2412-15299_sent_0d164f43": "However, it performs on par with zero-shot ASR approaches which utilize additional language-specific lexicons and language models.",
+    "2412-15299_sent_6d541906": "We expect this framework to serve as a cornerstone for flexible multilingual ASR systems that are generalizable even to unseen languages.",
+    "2412-15299_section_0b79795d": "Introduction",
+    "2412-15299_sent_0d5fa005": "Developing a model for multilingual automatic speech recognition (ASR) is appealing due to its applicability to universal languages, including low-resource or unseen languages.",
+    "2412-15299_sent_a2b8731a": "However, this task presents significant challenges as it requires extensive datasets and involves the complexity of capturing shared characteristics across diverse languages in both phonetic and orthographic domains.",
+    "2412-15299_sent_5ddb8c16": "Since the revolution in ASR technologies driven by self-supervised learning (SSL) models~\\cite{NEURIPS2020_92d1e1eb,conneau2020unsupervisedcrosslingualrepresentationlearning,hsu2021hubert,chen2022wavlm}, monolingual ASR has achieved superhuman transcription performance, shifting the main focus of recent research towards developing a universal model that spans multiple languages.",
+    "2412-15299_sent_64672fc0": "There are two primary methods for building a multilingual ASR model.",
+    "2412-15299_sent_4bc87417": "The first approach involves scaling the size of both the labeled dataset and the model itself, using a single universal model to enhance its capacity and cover a vast number (100+) of languages, thereby achieving multilingual ASR~\\cite{radford2023robust}.",
+    "2412-15299_sent_8879f902": "Another approach involves incorporating language-specific modules into the universal model to address the performance inconsistencies of previous methods.",
+    "2412-15299_sent_e38ce746": "For example, MMS~\\cite {JMLR:v25:23-1318} demonstrated the feasibility of scaling multilingual technology to over 1,000 languages by leveraging common features across languages and adding language-specific modules to improve the performance of each language.",
+    "2412-15299_sent_b80c8d4c": "Indeed, there have been efforts to integrate both methods~\\cite{zhang2023googleusmscalingautomatic}, combining their strengths to build a more robust and versatile model.",
+    "2412-15299_sent_0675f71b": "Although these works have demonstrated strong performance across various languages, the trade-off between performance and complexity remains a substantial challenge.",
+    "2412-15299_sent_efb9eea5": "The first method, using a single universal pipeline, struggles to achieve consistent performance across languages, and its effectiveness in low-resource languages remains uncertain.",
+    "2412-15299_sent_2421ad24": "On the other hand, despite achieving state-of-the-art performance and parameter efficiency, the second method cannot be considered a single universal model due to the inclusion of language-specific modules.",
+    "2412-15299_sent_27a174b1": "Moreover, the use of language-specific modules like adapters, heads, and language models (LMs) sometimes complicates the training and inference pipeline, suggesting potential areas for future improvement.",
+    "2412-15299_fig_b71837c1": "\\begin{figure*}",
+    "2412-15299_sent_1fcf438b": "\\includegraphics[width=\\textwidth]{figures/pipeline.png} \\caption{Illustration of our universal ASR pipeline.} \\end{figure*} Simultaneously, large language models (LLMs) have garnered considerable attention for their remarkable capabilities in the natural language processing (NLP) domain.",
+    "2412-15299_sent_cadf825a": "Following this trend, ASR pipelines have integrated audio SSL models as encoders and LLMs as decoders to enhance transcription quality~\\cite{li2023prompting,fathullah2024prompting}.",
+    "2412-15299_sent_fc06d126": "These approaches involve using projectors~\\cite{yu2024connecting} or fine-tuning strategies~\\cite{tang2024salmonn,du2024lauragptlistenattendunderstand} to align modalities and improve transcription capabilities across multilingual datasets.",
+    "2412-15299_sent_e91e7cfb": "Subsequently, shallow fusion~\\cite{chorowski2016betterdecodinglanguagemodel,kannan2018analysis} based scoring methods~\\cite{hu2023massively,huang2024multilingual} were attempted to replace conventional LMs with LLMs during the decoding stage.",
+    "2412-15299_sent_f930f856": "Despite these efforts resulting in performance gain across various languages, a comprehensive method to fully leverage the diverse emergent abilities of LLMs remains to be developed. In this paper, we introduce a novel language-agnostic multilingual ASR pipeline that spans over 100 languages, including completely unseen languages.",
+    "2412-15299_sent_7abf1d4c": "As in Fig~\\ref{fig:pipeline}, the proposed pipeline consists of two phases: universal transcription generation and language-specific transliteration.",
+    "2412-15299_sent_7e18c75a": "In the universal transcription generation phase, we focused on reducing orthographic complexity by unifying diverse orthographic systems into a consistent format, approximating phonetic features across multiple languages.",
+    "2412-15299_sent_25302e5b": "In the language-specific transliteration phase, we regard the transformation from universal transcription to language-specific transcription as a transliteration task by leveraging a universal converter.",
+    "2412-15299_sent_06145344": "Our experiments demonstrate notable transcription performance of~\\shortname~across over 100 languages while using significantly smaller training data (only 680 hours) compared to other state-of-the-art multilingual ASR models.",
+    "2412-15299_sent_a2f3ca97": "Furthermore, our proposed pipeline outperforms previous methods, especially in low-resource languages, and demonstrates proficiency in completely unseen languages, achieving performance comparable to existing language-agnostic ASR methods without relying on any language-specific modules.",
+    "2412-15299_sent_5a72cb0d": "Our contributions are summarized as follows:",
+    "2412-15299_itemize_3e8a3b4d": "itemize",
+    "2412-15299_item_436a9020": "item",
+    "2412-15299_sent_40cd52a2": "We propose a novel language-agnostic multilingual ASR pipeline consisting of two phases: universal transcription generation and language-specific transliteration.",
+    "2412-15299_sent_e293b0c1": "We enabled our proposed pipeline to perform multilingual ASR with minimal data by unifying diverse orthographic systems through Romanization.",
+    "2412-15299_sent_3b9f98d3": "Our pipeline demonstrates consistent performance across over 100 seen languages and excels with completely unseen languages, all without relying on any language-specific modules or additional fine-tuning.",
+    "2412-15299_section_a7f20481": "Related Works",
+    "2412-15299_subsection_0c38ca86": "Multilingual ASR",
+    "2412-15299_sent_8ef6da12": "Initially, multilingual ASR models handled a limited number of languages~\\cite{toshniwal2018multilingual,pratap2020massivelymultilingualasr50}, under 60.",
+    "2412-15299_sent_3d4416d8": "However, recent advancements have led to the development of models capable of managing a broader range of languages.",
+    "2412-15299_sent_c90bb664": "Whisper~\\cite{radford2023robust} uses a sequence-to-sequence~\\cite{NIPS2014_a14ac55a} approach with 680,000 hours of weakly supervised data, and its neural decoder serves as a LM, enhancing transcription performance.",
+    "2412-15299_sent_552b6d7b": "With this method, Whisper attained impressive performance across most supported languages.",
+    "2412-15299_sent_0e68508f": "Google USM~\\cite{zhang2023googleusmscalingautomatic} employs a Conformer~\\cite{gulati20_interspeech} encoder with various types of heads~\\cite{graves2012sequencetransductionrecurrentneural,chan2016listen} and is trained on an extensive dataset.",
+    "2412-15299_sent_f54b54fc": "It also employs a three-stage training incorporating speech-only, speech-text paired, and text-only data.",
+    "2412-15299_sent_758e59bc": "Furthermore, to enhance transcription performance for low-resource languages, USM integrates language-specific adapters and employs Noisy Student Training (NST) techniques~\\cite{9156610,Park_2020}.",
+    "2412-15299_sent_3f45955d": "MMS~\\cite{JMLR:v25:23-1318}, a state-of-the-art multilingual ASR model, employed a Connectionist Temporal Classification (CTC) based approach~\\cite{graves2006connectionist} on a dataset covering over 1,000 languages.",
+    "2412-15299_sent_231d59ca": "It utilizes a two-stage fine-tuning pipeline.",
+    "2412-15299_sent_c470ce47": "The first stage involves Romanization-based fine-tuning to learn a global representation across diverse languages.",
+    "2412-15299_sent_f4a9db9c": "In the second stage, language-specific adapters and heads are added to capture detailed features for each language and fine-tuned.",
+    "2412-15299_subsection_c1760bda": "Zero-Shot ASR",
+    "2412-15299_sent_ac9e8f90": "ASR-2K~\\cite{li22aa_interspeech} is a zero-shot ASR model which utilizes three universal models to cover a range of languages: an acoustic model~\\cite{li2020universal}, a pronunciation model~\\cite{li2022zero}, and a LM~\\cite{scannell12007crubadan}.",
+    "2412-15299_sent_e3a96642": "This suggests the potential for a universal multilingual ASR model capable of functioning in a zero-shot environment without relying on any language-specific components.",
+    "2412-15299_sent_6bcfc47e": "Consequently, Zero-Shot MMS~\\cite{zhao2024scalingsimpleapproachzeroshot} utilized language-specific lexicon and n-gram LMs in the decoding phase to enhance zero-shot transcription performance.",
+    "2412-15299_subsection_7097c845": "LLM-Supported Multilingual ASR",
+    "2412-15299_sent_f10c3b3b": "\\citealt{hu2023massively} trained a multilingual LLM covering 84 languages and employed a shallow fusion-based per-frame scoring to enhance transcription quality in multilingual ASR.",
+    "2412-15299_sent_746cefac": "Subsequently,~\\citealt{huang2024multilingual} introduced non-autoregressive per-segment scoring, which improves transcription performance and reduces the computational burden.",
+    "2412-15299_sent_16475a17": "These methods primarily leveraged the strengths of a multilingual acoustic model (USM) and achieved further accuracy by incorporating LLMs into the decoding step.",
+    "2412-15299_section_a5ecd91e": "Proposed Method",
+    "2412-15299_sent_5cc24c33": "The overall structure of the proposed multilingual ASR pipeline,~\\shortname, comprises a universal transcription generation phase and a language-specific transliteration phase, as shown in Fig~\\ref{fig:pipeline}.",
+    "2412-15299_sent_1c2ebe49": "We produce universal transcriptions by finetuning an audio encoder with an additional classification layer.",
+    "2412-15299_sent_28b40d0d": "Consequently, we manually select a prompt type from a predefined dictionary and combine it with language information to generate the input prompt for the universal converter.",
+    "2412-15299_sent_ea5e5cb5": "Finally, by feeding this input prompt into the universal converter, we translate the universal transcription into language-specific ones.",
+    "2412-15299_subsection_6a3bd011": "Universal Transcription Generation",
+    "2412-15299_sent_a59eef14": "Previous studies in linguistics~\\cite{ladefoged1996sounds,clark2007introduction} have shown that the phonological characteristics of human speech are constrained by a limited range of sounds due to the anatomical structure of the vocal tract.",
+    "2412-15299_sent_e89e1b14": "Similarly, in the ASR domain, prior research~\\cite{taguchi-chiang-2024-language} has empirically demonstrated that the primary obstacle in multilingual ASR is the orthographic complexity across languages.",
+    "2412-15299_sent_b76c76a8": "Through the integration of these two insights, we aim to unify orthographic systems across diverse languages by standardization of notations into a Latin character system.",
+    "2412-15299_sent_871e195f": "This approach establishes alignment between phonetic and orthographic features through a unified transcription system.",
+    "2412-15299_sent_5abd233c": "As a result, we develop a universal transcription generator capable of producing consistent transcriptions across multilingual speech corpora, including unseen languages.",
+    "2412-15299_subsubsection_87390fde": "International Phonetic Alphabet.",
+    "2412-15299_sent_17469f50": "The first method for orthography unification is to use the international phonetic alphabet (IPA).",
+    "2412-15299_sent_8f65b5ad": "IPA is a phonetic notation system that includes four elements: consonants, vowels, diacritics, and suprasegmentals.",
+    "2412-15299_sent_88749dd9": "IPA can precisely transcribe pronunciations in a consistent format with a combination of the four elements.",
+    "2412-15299_sent_37a3ee92": "There are challenges with the IPA, especially in vocabulary mapping, and one possible solution is to treat the combination of elements as a single token (e.g., ts, dz, etc.).",
+    "2412-15299_sent_c9b0a207": "However, due to the vast diversity of possible combinations makes this approach difficult to implement.",
+    "2412-15299_sent_0d33db01": "Conversely, treating each IPA character as a distinct token introduces another issue: characters without phonetic value must be mapped to specific frames as shown in Fig~\\ref{fig:problems}.",
+    "2412-15299_sent_738a45bd": "Since diacritics and suprasegmentals provide detailed information about pronunciation (e.g., length, tone, and stress) but do not carry specific phonetic values, mapping them to distinct frames can introduce confusion during the training process.",
+    "2412-15299_sent_7d2e491c": "\\begin{tabular}{l||l} Zero-Shot & Transcribe following Romanized sentence into a \\{lang\\} sentence: \\{roman\\}.",
+    "2412-15299_sent_93bfc1c9": "\\\\ Few-Shot & \\begin{tabular}[l]{@{}l@{}}Here are some examples of transcribing a Romanized sentence into a \\{lang\\} sentence: \\{shots\\}.\\\\Considering the examples above, transcribe the following Romanized sentence into a \\{lang\\} sentence: \\{roman\\}.\\end{tabular} \\\\ Zero-Shot CoT & Transcribe the following Romanized sentence into a \\{lang\\} sentence.",
+    "2412-15299_sent_d6d602de": "Think step by step: \\{roman\\}.",
+    "2412-15299_sent_ddee4d68": "\\\\ \\textbf{\\begin{tabular}[l]{@{}l@{}}Few-Shot +\\\\ Zero-Shot CoT\\end{tabular} } & \\begin{tabular}[l]{@{}l@{}}Here are some examples of transcribing a Romanized sentence into a \\{lang\\} sentence: \\{shots\\}.\\\\Considering the examples above, transcribe the following Romanized sentence into a \\{lang\\} sentence.",
+    "2412-15299_sent_a67ea1d2": "\\\\Think step by step: \\{roman\\}.\\end{tabular} \\\\ \\textbf{\\multirow{2}{*}{\\begin{tabular}[l]{@{}l@{}}Prompt\\\\Chaining\\end{tabular}}} & \\begin{tabular}[l]{@{}l@{}}Transcribe the following Romanized sentence into a \\{lang\\} sentence, based on its pronunciation: \\{roman\\}.\\end{tabular}\\\\ \\cmidrule{2-2} & \\begin{tabular}[l]{@{}l@{}}Correct the typographical and spacing errors in the following \\{lang\\} sentence: \\{pred\\}.\\end{tabular} \\\\ \\end{tabular} \\caption{Specific format of the prompt.",
+    "2412-15299_sent_932aed5d": "roman refers to the predicted Romanized transcription, shots indicates generated examples sampled from the training data, pred denotes output from first prompt and lang indicates the name of the language.} \\end{table*}",
+    "2412-15299_subsubsection_234495b0": "Romanization.",
+    "2412-15299_sent_58733547": "While Romanization does not preserve phonetic features as precisely as the IPA, it generally retains phonetic information.",
+    "2412-15299_sent_04594c27": "Additionally, Romanization offers several advantages over the IPA.",
+    "2412-15299_sent_cceb348b": "Romanization standardizes diverse writing systems using the Latin alphabet, which is already employed by the majority of languages.",
+    "2412-15299_sent_ea50b525": "In contrast, IPA requires a specific set of rules for converting the orthography of each language into its IPA representation.",
+    "2412-15299_sent_a934d758": "Thus, Romanization is more efficient as it only requires conversion for languages that do not use the Latin alphabet.",
+    "2412-15299_sent_16d9510f": "Furthermore, Romanization is advantageous for LLMs, as a large portion of their training data consists of Latin characters.",
+    "2412-15299_sent_4088db73": "Given these benefits, we adopt Romanization as a method for orthography unification.",
+    "2412-15299_fig_be7fea8e": "\\begin{figure}\n\n \\includegraphics[width=\\columnwidth]{figures/problems.png}\n \\caption{Problems derived in single-token IPA recognition. Diacritic `:' indicates phoneme length, which has no explicit phonetic value. $\\epsilon$ denotes a blank token in CTC.}\n\n\\end{figure}",
+    "2412-15299_subsubsection_71498cb8": "Universal Transcription Generator.",
+    "2412-15299_sent_7ebc2875": "Since our goal is to generate a universal transcription with unified orthography, our first approach was leveraging a wav2vec2.0-phoneme~\\cite{xu2021simpleeffectivezeroshotcrosslingual}.",
+    "2412-15299_sent_b99ef6ba": "However, we found that directly passing phoneme tokens to the universal converter is suboptimal for transliteration, as it generates phoneme-level tokens without accounting for spacing.",
+    "2412-15299_sent_93d38514": "To address this, we shifted our focus to developing a universal transcription generator that produces character-level tokens while incorporating spacing information.",
+    "2412-15299_sent_5cbb6124": "In this context, Romanization provides a universal character-level orthographic representation, effectively reducing the vocabulary size to around 30 tokens compared to IPA.",
+    "2412-15299_sent_5133e84e": "Since Romanization aligns with the common phonetic features preserved across languages, we are also confident in the proposed method's strong generalization ability for languages not explicitly included in the training data.",
+    "2412-15299_sent_1f898b12": "We selected wav2vec2.0-XLS-R~\\cite{babu2021xlsrselfsupervisedcrosslingualspeech} with 1 billion parameters, an SSL model pre-trained on 128 languages, as the audio encoder to leverage the advantages of pre-training on a diverse set of languages.",
+    "2412-15299_sent_3c4005c0": "We then attach a classification layer on top and fine-tune both the audio encoder and the classification layer with speech and Romanized transcription pairs to generate universal transcriptions.",
+    "2412-15299_subsection_6dce0127": "Language-Specific Transliteration",
+    "2412-15299_sent_d0f69637": "The next step is to revert the universal transcription, which retains phonetic features, back to its original language-specific form.",
+    "2412-15299_sent_6b63a956": "Since this process involves a text-to-text transformation, we approach it as a transliteration task.",
+    "2412-15299_sent_5c78a76e": "Consequently, we focused on the versatility of LLMs which excel in multilingual and multitask benchmarks due to extensive training on diverse text data.",
+    "2412-15299_sent_4036b06a": "Therefore, we aim to utilize LLMs as universal converters to transform Romanized transcriptions into language-specific ones.",
+    "2412-15299_subsubsection_73703e27": "Prompt Generation.",
+    "2412-15299_sent_71075c03": "While LLMs have brought a tectonic shift to the NLP domain, additional techniques are still needed to fully harness their emergent abilities.",
+    "2412-15299_sent_2651a152": "In this context, prompt engineering has emerged as a field focused on crafting and refining prompts to effectively utilize LLMs across diverse applications and research areas.",
+    "2412-15299_sent_f693e0b7": "To maximize the performance of the inversion process, in the ablation study, we empirically investigated various prompt types: zero-shot, few-shot, zero-shot chain-of-thought (CoT), and prompt chaining, to determine which is the most appropriate for this task.",
+    "2412-15299_subsubsection_9b353ca3": "Universal Converter.",
+    "2412-15299_sent_f1462596": "We transliterate the unified Romanized transcription by leveraging LLM's multilingual and multitask language understanding ability without finetuning.",
+    "2412-15299_sent_c6b9c310": "Since our approach does not require any special fine-tuning, the universal converter can be replaced with any superior LLMs, potentially improving the performance of our proposed pipeline in line with the rapidly advancing capabilities of LLMs. For this paper implementation, we utilize LLaMA3-8B, 4-bit quantized LLaMA3-70B~\\cite{touvron2023llamaopenefficientfoundation}, and GPT-4o-mini~\\cite{openai2024gpt4technicalreport} as the universal converter.",
+    "2412-15299_section_4829262c": "Experiments",
+    "2412-15299_subsection_239658e0": "Dataset",
+    "2412-15299_subsubsection_df278c0b": "FLEURS.",
+    "2412-15299_sent_e0acb52e": "Given our focus on demonstrating effective multilingual ASR with minimal data, we utilize the FLEURS and its official splits for experiments.",
+    "2412-15299_subsubsection_71cdbf95": "CommonVoice.",
+    "2412-15299_subsection_3ce93175": "Data Preprocessing",
+    "2412-15299_sent_f40b1944": "We initially applied NFKC normalization and lowercase transformation to the text transcriptions.",
+    "2412-15299_sent_a9afb9dd": "Subsequently, we excluded samples containing parentheses or numbers from the dataset for the following reasons: parentheses and digits in transcriptions introduced ambiguity, as some enclosed phrases were pronounced while others were not, and digits had one-to-many pronunciation mappings across languages (e.g. `1' can be pronounced as `one', `eins', `uno', `yi', etc.).",
+    "2412-15299_sent_457e6bb8": "Finally, we utilized the Python library Uroman~\\cite{hermjakob-etal-2018-box} to obtain Romanized transcription and Phonemizer~\\cite{Bernard2021} for IPA transcription.",
+    "2412-15299_sent_8af7242a": "For Japanese, we employed Pykakasi~\\cite{takahashi1992kakasi} due to the limitation of Uroman, which treats Japanese kanji as Chinese characters.",
+    "2412-15299_sent_799712b2": "Following these preprocessing steps, we obtained approximately 6 to 8 hours of speech-transcription paired data per language on average.",
+    "2412-15299_sent_03176efb": "\\begin{tabular}{l||ccccccc|cccc} \\multirow{2}{*}{Model} & \\multicolumn{7}{c|}{Seen (PER / CER $\\downarrow$)} & \\multicolumn{4}{c}{Unseen (PER / CER $\\downarrow$)} \\\\ & de & nl & fr & es & it & \\multicolumn{1}{c|}{pt} & avg & ia & eo & \\multicolumn{1}{c|}{eu} & avg \\\\ \\multirow{2}{*}{\\begin{tabular}[c]{@{}l@{}}wav2vec2.0-phoneme\\textsuperscript{\\dag}\\\\ + n-gram LM\\textsuperscript{\\dag}\\end{tabular}} & 23.8 & 38.0 & 31.0 & 28.7 & 33.5 & \\multicolumn{1}{c|}{45.0} & 33.0 & 10.7 & - & \\multicolumn{1}{c|}{20.8} & 31.4 \\\\ & 14.8 & 26.0 & 26.4 & 12.3 & 21.7 & \\multicolumn{1}{c|}{36.5} & 22.9 & 6.1 & - & \\multicolumn{1}{c|}{13.7} & 22.2 \\\\ IPA generator (\\shortname) & 10.2 & 10.5 & 9.6 & 4.2 & 4.6 & \\multicolumn{1}{c|}{10.9} & 14.4 & 29.0 & 32.0 & \\multicolumn{1}{c|}{36.6} & 35.1 \\\\ Roman generator (\\shortname) & 7.3 & 9.6 & 12.9 & 4.4 & 3.6 & \\multicolumn{1}{c|}{7.2} & 11.3 & 14.0 & 20.8 & \\multicolumn{1}{c|}{30.3} & 32.3 \\\\ \\end{tabular} \\caption{ Comparison between two orthography unification methods.",
+    "2412-15299_sent_7a167b56": "We report PER and CER for seen and unseen languages.",
+    "2412-15299_sent_4de2a444": "Average values are calculated over all 102 seen and 25 unseen languages, respectively.",
+    "2412-15299_sent_87d52d42": "For a fair comparison, all the model sizes are set to 300 million.",
+    "2412-15299_sent_42324ff2": "$\\dagger$ denotes results measured by PER, which does not allow for a strict comparison with other results.",
+    "2412-15299_sent_d04eb245": "The language codes and their corresponding language names are provided in the appendix.} \\end{table*}",
+    "2412-15299_fig_4db0ccee": "\\begin{table}\n\n\\begin{tabular}{c|ccc}\n\nModel & \\begin{tabular}[c]{@{}c@{}}Data (h)\\end{tabular}& \\begin{tabular}[c]{@{}c@{}}Universal\\end{tabular} & \\begin{tabular}[c]{@{}c@{}}Zero-Shot\\end{tabular} \\\\ \n\nWhisper & 680k & O & X \\\\\nMMS-1162 & 122k & X & X \\\\\n\\shortname & 0.6k & O & O \\\\ \n\\end{tabular}\n\\caption{Comparison of previous multi-lingual ASR models with the proposed pipeline. Data denotes the total amount of training dataset, Universal indicates that no language-specific module is needed, and Zero-Shot denotes whether inference on unseen languages is feasible.}\n\n\\end{table}",
+    "2412-15299_subsection_f75bd3b3": "Training Detail",
+    "2412-15299_sent_55128b9b": "We performed fine-tuning on all layers except the feature extractor for 3,000 steps with a CTC loss and a batch size of 128.",
+    "2412-15299_sent_e20aa286": "We bypassed the two-stage fine-tuning pipeline from prior studies~\\cite{xu2021simpleeffectivezeroshotcrosslingual,JMLR:v25:23-1318} because our distinct methodology, which used a smaller dataset, caused the divided fine-tuning approach to result in premature convergence and instability.",
+    "2412-15299_sent_e4c7f5b3": "For hyperparameters, we employed the default AdamW optimizer~\\cite{kingma2017adammethodstochasticoptimization,loshchilov2018decoupled} with a tri-stage learning rate scheduler.",
+    "2412-15299_sent_b75b71ca": "The warm-up, hold, and decay phases were configured to 10\\%, 60\\%, and 30\\% of the total training steps, respectively.",
+    "2412-15299_sent_dfcba616": "We then performed a series of experiments to determine the optimal learning rate schedule within the range of 5e-6 to 5e-4.",
+    "2412-15299_sent_83f0b9cd": "Finally, the entire training pipeline was conducted on two RTX-3090 GPUs with 24GB of VRAM each, and we leveraged gradient accumulation techniques to address memory issues.",
+    "2412-15299_subsection_b41dd9d9": "Inference Detail",
+    "2412-15299_sent_1446e897": "We leveraged a beam search decoder from flashlight~\\cite{kahn2022flashlight} with a beam size of 100.",
+    "2412-15299_sent_9d33bae3": "No additional lexicons or LMs were utilized in the decoding pipeline to maintain a universal pipeline without relying on language-specific elements.",
+    "2412-15299_subsubsection_a52f1680": "Prompting Strategy.",
+    "2412-15299_sent_9e74a087": "For the prompting strategy, we utilized language information and a subset of the training data to construct our hypothesis prompt.",
+    "2412-15299_sent_6b1bafe3": "The specific format of the prompt employed is detailed in Table~\\ref{prompt_example_tab}.",
+    "2412-15299_sent_b0361c61": "In zero-shot prompting, the universal converter automatically transforms Romanized transcriptions into language-specific ones using only the Romanized transcriptions and language information.",
+    "2412-15299_sent_eee6385b": "We employed zero-shot prompting to evaluate the performance of the LLM with minimal input.",
+    "2412-15299_sent_0f4febc1": "Few-shot prompting~\\cite{NEURIPS2020_1457c0d6} involves providing examples to help the model generate responses to subsequent instances.",
+    "2412-15299_sent_e75336c0": "We hypothesized that this approach would be particularly effective for low-resource or unseen languages by inducing in-context learning.",
+    "2412-15299_sent_9f6cfc93": "Specifically, we randomly sampled five Romanized transcription and target transcription pairs for each few-shot example.",
+    "2412-15299_sent_f656ac37": "Zero-shot CoT prompting~\\cite{NEURIPS2022_8bb0d291} is a technique that supports complex reasoning by inducing the decomposition of intricate tasks into detailed steps.",
+    "2412-15299_sent_9b2b19af": "Specifically, we appended the phrase ``Let's think step by step'' to the input prompt to encourage the reasoning of the model.",
+    "2412-15299_sent_530c61b6": "Prompt chaining employs a sequence of prompts, with each prompt building upon the output of the previous one, to manage complex multi-step tasks.",
+    "2412-15299_sent_f15f698a": "In this aspect, we concentrated on the decomposable process of converting predicted Romanized transcriptions into language-specific transcriptions through (i) reverse-Romanization and (ii) error correction.",
+    "2412-15299_sent_a2009981": "We considered that errors in Romanized transcriptions could propagate during transliteration to language-specific ones, potentially reducing system performance.",
+    "2412-15299_fig_71d0319b": "\\begin{table}\n\n\\begin{tabular}{c|ccc}\n\n & Universal Converter & CER $\\downarrow$ & WER $\\downarrow$ \\\\ \n\\multirow{3}{*}{Seen} & LLaMA-8B & 26.6 & 46.7 \\\\\n & LLaMA-70B & 15.5 & 35.3 \\\\\n & GPT-4o-mini & 7.5 & 18.1 \\\\ \n\\multirow{3}{*}{Unseen} & LLaMA-8B & 33.0 & 50.2 \\\\\n & LLaMA-70B & 27.2 & 58.9 \\\\\n & GPT-4o-mini & 15.8 & 38.3 \\\\ \n\\end{tabular}\n\\caption{\nUpper bound performance of the universal converter. \nThis upper bound is assessed by feeding ground truth Romanized transcriptions into the universal converter with zero-shot prompting.}\n\n\\end{table}",
+    "2412-15299_sent_7d795be0": "Finally, we required the output of the universal converter to conform to a specific format.",
+    "2412-15299_sent_ec05c164": "We instruct the model to enclose the output within three backticks (e.g., ```), which allows us to isolate and sort only the language-specific transcription from the output of the model.",
+    "2412-15299_sent_b2f4c626": "We set the temperature value to 0.0 for all LLMs to obtain deterministic results.",
+    "2412-15299_sent_e3c95eee": "\\begin{tabular}{c|c||rrr|rrr|rrr} \\multirow{2}{*}{Resource} & \\multirow{2}{*}{Lang.} & \\multicolumn{3}{c|}{Whisper-large-v3} & \\multicolumn{3}{c|}{MMS-1162} & \\multicolumn{3}{c}{\\shortname} \\\\ & &Data (h) &CER $\\downarrow$ &WER $\\downarrow$ &Data (h) &CER $\\downarrow$ &WER $\\downarrow$ &Data (h) &CER $\\downarrow$ &WER $\\downarrow$ \\\\ \\multirow{3}{*}{High} & es & 11000 & 1.2 & 3.1 & 2969 & 1.6 & 5.8 & 6.1 & 2.8 & 7.3 \\\\ & it & 2585 & 0.5 & 1.6 & 1566 & 1.2 & 5.2 & 6.8 & 2.0 & 5.2 \\\\ & id & 1014 & 1.4 & 5.7 & 71 & 2.9 & 14.2 & 6.8 & 4.2 & 11.5 \\\\ \\multirow{3}{*}{Middle} & ta & 136 & 18.3 & 26.7 & 265 & 11.0 & 41.5 & 6.3 & 19.5 & 31.9 \\\\ & ur & 104 & 30.9 & 65.0 & 57 & 9.0 & 29.0 & 4.9 & 14.9 & 31.9 \\\\ & sk & 90 & 2.9 & 8.7 & 301 & 2.2 & 8.8 & 4.5 & 3.8 & 10.2 \\\\ \\multirow{3}{*}{Low} & mk & 16 & 10.3 & 26.3 & 45 & 1.5 & 8.1 & 5.1 & 5.5 & 17.2 \\\\ & hi & 12 & 35.9 & 43.3 & 57 & 5.8 & 19.6 & 5.0 & 8.2 & 15.0 \\\\ & kk & 12 & 8.5 & 35.1 & 46 & 2.8 & 15.2 & 8.1 & 6.7 & 22.9 \\\\ \\multicolumn{2}{c||}{Average} & - & 23.9 & 42.9 & - & 7.8 & 28.8 & - & 14.8 & 33.2 \\\\ \\end{tabular} \\caption{ Comparison results with the baseline models.",
+    "2412-15299_sent_ed8e65e4": "Average CER and WER have reported over 82 languages from FLEURS that are covered by Whisper, MMS, and our method.",
+    "2412-15299_sent_41d5277e": "The classification of the amount of resources is based on the volume of training data used by Whisper.",
+    "2412-15299_sent_fc192297": "We utilized MMS which encompasses 1162 languages, trained on a combined dataset from MMS-lab, FLEURS, CommonVoice, Voxpopuli~\\cite{wang-etal-2021-voxpopuli}, and MLS~\\cite{Pratap_2020}.} \\end{table*}",
+    "2412-15299_sent_c7a5f704": "\\begin{tikzpicture} \\begin{axis}[ width=\\textwidth, height=4.2cm, ylabel={CER (\\%)}, ylabel style={yshift=-7pt}, xtick={1,2,...,77}, xticklabels={it, ru, pt, de, ca, es, uk, fi, en, id, fr, nl, tr, pl, ms, sv, ko, ro, hr, no, et, sk, ar, hu, bg, sr, bs, da, cs, lv, gl, vi, el, lt, sl, fa, az, sw, kk, is, mk, cy, mi, af, ta, ln, be, hy, ne, sn, jv, mr, ur, oc, hi, mn, mt, kn, ps, lb, pa, ha, te, bn, yo, as, gu, ka, uz, sd, so, km, ml, my, lo, tg, am }, x tick label style={rotate=90, font=}, xtick pos=bottom, grid=major, xmajorgrids=false, legend style={at={(0.4,0.95)}, column sep=5pt}, legend cell align={left}, legend columns=2, ymin=0, ymax=120., ytick={0, 20, 40, 60, 80, 100}, y tick label style={font=}, xmin=-0.1, xmax=78.1, ybar, ] \\addplot+[style={blue, opacity=0.5, bar width=0.3, xshift=0.065cm}] coordinates {(1, 2.0434) (2, 5.9955) (3, 7.8678) (4, 5.5343) (5, 6.3371) (6, 2.8268) (7, 9.7158) (8, 4.6651) (9, 8.1988) (10, 4.2642) (11, 8.2475) (12, 8.7417) (13, 5.1053) (14, 8.641) (15, 6.9177) (16, 9.4787) (17, 18.8081) (18, 11.0193) (19, 5.1653) (20, 6.9627) (21, 5.7385) (22, 3.802) (23, 13.936) (24, 16.6712) (25, 8.165) (26, 5.6728) (27, 5.934) (28, 12.8908) (29, 9.879) (30, 7.9353) (31, 6.0453) (32, 18.996) (33, 15.6008) (34, 8.6398) (35, 9.3782) (36, 11.8909) (37, 11.9132) (38, 5.297) (39, 6.7) (40, 18.1172) (41, 5.5156) (42, 12.3207) (43, 12.0296) (44, 18.294) (45, 19.578) (46, 7.8321) (47, 11.334) (48, 22.4033) (49, 13.1836) (50, 8.6191) (51, 6.5947) (52, 14.0207) (53, 14.906) (54, 19.8681) (55, 8.262) (56, 21.4495) (57, 9.8208) (58, 13.8512) (59, 32.7213) (60, 16.4643) (61, 19.5122) (62, 10.1785) (63, 15.4543) (64, 13.7857) (65, 25.5422) (66, 18.8821) (67, 11.9323) (68, 23.5731) (69, 14.4503) (70, 29.063) (71, 15.4388) (72, 66.2708) (73, 24.1487) (74, 52.5678) (75, 55.0304) (76, 8.8922) (77, 47.412) }; \\addplot+[style={orange, opacity=0.5, bar width=0.7, xshift=-0.108cm}] coordinates {(1, 0.5042) (2, 0.8322) (3, 1.0532) (4, 1.125) (5, 1.1619) (6, 1.2367) (7, 1.262) (8, 1.3227) (9, 1.3455) (10, 1.4227) (11, 1.4741) (12, 1.5291) (13, 2.0229) (14, 2.0259) (15, 2.1292) (16, 2.2921) (17, 2.435) (18, 2.439) (19, 2.7453) (20, 2.7863) (21, 2.8731) (22, 2.95) (23, 2.9691) (24, 3.0123) (25, 3.1288) (26, 3.2842) (27, 3.5021) (28, 3.5785) (29, 3.6759) (30, 3.9959) (31, 4.0121) (32, 4.1578) (33, 4.7334) (34, 5.0884) (35, 5.2598) (36, 6.2866) (37, 6.8326) (38, 6.8898) (39, 8.5976) (40, 9.8542) (41, 10.3047) (42, 10.5821) (43, 12.9372) (44, 12.9688) (45, 18.3992) (46, 21.3185) (47, 24.3413) (48, 25.8559) (49, 27.2432) (50, 27.9583) (51, 29.2573) (52, 29.5538) (53, 30.9432) (54, 31.085) (55, 35.9342) (56, 37.2523) (57, 37.4938) (58, 41.0351) (59, 41.4955) (60, 43.4683) (61, 46.3415) (62, 47.9747) (63, 50.7616) (64, 51.0178) (65, 53.9499) (66, 59.2416) (67, 61.9198) (68, 63.2461) (69, 66.0443) (70, 66.866) (71, 69.925) (72, 71.1143) (73, 80.2781) (74, 81.1047) (75, 87.0318) (76, 87.4952) (77, 115.0166)}; \\legend{LAMA-UT (proposed)\\qquad, Whisper} \\end{axis} \\end{tikzpicture} \\caption{CER comparison between \\shortname~and Whisper} \\end{figure*}",
+    "2412-15299_section_fd69c5cf": "Results",
+    "2412-15299_sent_d82a949e": "Table~\\ref{brief_comp_tab} shows that \\shortname~effectively achieves multilingual ASR with a universal model.",
+    "2412-15299_sent_e6188406": "This approach even operates in a zero-shot environment without requiring language-specific modules while utilizing only a minimal amount of training data.",
+    "2412-15299_sent_1ab61c8a": "In the subsequent results, we aim to validate the performance of each component within the pipeline.",
+    "2412-15299_subsection_028fa47e": "Universal Transcription Generator",
+    "2412-15299_subsubsection_33bd1792": "Comparison to Baseline Model.",
+    "2412-15299_sent_91d4fd0d": "We conducted a performance comparison between our universal transcription generator and the existing baseline, wav2vec2 phoneme~\\cite{xu2021simpleeffectivezeroshotcrosslingual}.",
+    "2412-15299_sent_a21cd39c": "Our universal transcription generator focuses on generating character-level tokens and is measured using Character Error Rate (CER), while the baseline wav2vec2 phoneme is measured using Phoneme Error Rate (PER).",
+    "2412-15299_sent_8c1aff8f": "However, since both metrics are fundamentally used for estimating phonetic symbols, this comparison can be considered meaningful.",
+    "2412-15299_sent_2477dbec": "Following the Table~\\ref{orthography_comp_tab}, the results show that the proposed method demonstrated significantly better performance across a broader range of languages compared to existing approaches even not utilizing language-specific modules (e.g. n-gram LM).",
+    "2412-15299_sent_e0359000": "Furthermore, our pipeline demonstrated relatively strong transcription capabilities for unseen languages that were not explicitly included in the training data.",
+    "2412-15299_sent_4b2c6bf7": "In conclusion, transcribing diverse languages based on their pronunciation can produce a universal transcription which is highly effective.",
+    "2412-15299_subsubsection_2969d9ad": "Orthography Unification Methods.",
+    "2412-15299_sent_09934e76": "Among the two methods for standardizing orthographic features, Romanization proved to be more effective than IPA.",
+    "2412-15299_sent_1119b7bc": "Its ability to represent pronunciation across languages while reducing complexity makes it a superior choice for meaningful results.",
+    "2412-15299_sent_67545fee": "Romanization balances phonetic accuracy with simplicity, providing better alignment with LLMs and ensuring efficient processing across multilingual ASR tasks.",
+    "2412-15299_sent_714e9789": "However, since these results are only constrained to the first phase of the pipeline, we have constructed the full end-to-end performance comparison between IPA-based and Romanization-based \\shortname, and the results are shown in the appendix.",
+    "2412-15299_subsection_931baffe": "Universal Converter Verification",
+    "2412-15299_sent_07317449": "Despite the effectiveness of orthography unification, the success of the entire pipeline hinges on the proper functioning of the universal converter.",
+    "2412-15299_sent_f23cc91b": "Therefore, the most critical aspect to validate before experimentation was whether a frozen LLM could effectively serve as a universal converter.",
+    "2412-15299_sent_6b5608f3": "To validate this objective, we passed ground truth Romanized transcriptions into the frozen universal converter and assessed its performance.",
+    "2412-15299_sent_0b420743": "This approach not only tests the converter's capability to accurately produce language-specific transcriptions but also serves to evaluate the upper bound performance of the universal converter within the proposed ASR pipeline.",
+    "2412-15299_sent_c6310a1a": "In Table~\\ref{upper_bound_tab}, results demonstrated that universal transcription based on pronunciation characteristics can yield significant performance improvements compared to previous works when the universal transcription generator operates ideally.",
+    "2412-15299_sent_2a9eafe6": "However, the upper bound performance for unseen languages showed a slight decrease compared to seen languages.",
+    "2412-15299_sent_16c8ec7a": "This decrease is likely because the unseen languages we tested are typically extremely low-resource languages within the training data of the LLM.",
+    "2412-15299_sent_ec19b39d": "\\begin{tabular}{c||c|cc|cc|cc|cc|cc} \\multirow{4}{*}{Model} & \\multirow{4}{*}{\\begin{tabular}[c]{@{}c@{}}Repetition \\\\ \\enspace Rate (\\%) $\\downarrow$ \\end{tabular}} & \\multicolumn{10}{c}{Prompting Strategy} \\\\ & & \\multicolumn{2}{c}{Zero-Shot} & \\multicolumn{2}{c}{\\begin{tabular}[c]{@{}c@{}}Few-Shot (5)\\end{tabular}} & \\multicolumn{2}{c}{Zero-Shot CoT} & \\multicolumn{2}{c}{\\begin{tabular}[c]{@{}c@{}}Few-Shot (5) +\\\\ Zero-Shot CoT\\end{tabular}} & \\multicolumn{2}{c}{\\begin{tabular}[c]{@{}c@{}}Prompt\\\\ Chaining\\end{tabular}} \\\\ & & CER $\\downarrow$ & WER $\\downarrow$ & CER $\\downarrow$ & WER $\\downarrow$ & CER $\\downarrow$ & WER $\\downarrow$ & CER $\\downarrow$ & WER $\\downarrow$ & CER $\\downarrow$ & WER $\\downarrow$ \\\\ LLaMA-8B & 12 & 35.1 & 70.6 & 22.7 & 49.6 & 37.2 & 77.4 & 22.1 & 49.8 & 35.9 & 70.8 \\\\ LLaMA-70B & 1 & 24.3 & 53.8 & 17.4 & 43.8 & 25.4 & 54.6 & 16.8 & 43.7 & 26.7 & 55.2 \\\\ GPT-4o-mini & 0.2 & 16.6 & 39.3 & 15.3 & 37.2 & 18.2 & 41.0 & 15.7 & 37.9 & 16.9 & 38.7 \\\\ \\end{tabular} \\caption{Effects of prompting strategy and model type on the universal converter.",
+    "2412-15299_sent_b62d5b89": "The repetition rate indicates the proportion of samples with format errors (e.g., no section enclosed in three backticks until the maximum token limit) due to word repetition.} \\end{table*}",
+    "2412-15299_fig_3aedb8e0": "\\begin{table}\n\n\\begin{tabular}{l|cccc}\n\nModel & \\begin{tabular}[c]{@{}c@{}}Data (h)\\end{tabular} & \\begin{tabular}[c]{@{}c@{}}\\# Lang.\\end{tabular} & \\begin{tabular}[c]{@{}c@{}}Universal\\end{tabular} & CER $\\downarrow$ \\\\ \nASR-2K & 2k & 8 & O & 65.5 \\\\\n\n\\shortname (Roman) & 0.6k & 102 & O & 34.7 \\\\\n\nMMS-ZS & 40k & 1078 & X & 29.2 \\\\\n+ n-gram LM & 40k & 1078 & X & 25.2 \\\\\n\n\\end{tabular}\n\\caption{\nComparison with previous zero-shot approaches. \nWe evaluated transcription quality on 25 unseen languages from the CommonVoice 17.0 dataset. \\# Lang. denotes the number of languages leveraged in training.}\n\n\\end{table}",
+    "2412-15299_subsection_ae249621": "Overall Pipeline",
+    "2412-15299_subsubsection_0743a277": "Seen Languages.",
+    "2412-15299_sent_c0e758a9": "We leveraged two baseline models for comparison: Whisper and MMS.",
+    "2412-15299_sent_c071bf24": "In Table~\\ref{baseline_comparison_tab}, results demonstrate that the proposed method achieved a relative reduction of 60\\% in CER and 30\\% in WER compared to Whisper.",
+    "2412-15299_sent_12599aaf": "Moreover,~\\shortname~matches the performance of MMS despite the absence of language-specific adapters, heads, and n-gram LMs. Notably, the performance improvements were most pronounced for low-resource languages.",
+    "2412-15299_sent_0a14c32a": "While Whisper exhibited increased error rates for these languages due to limited training data, our method showed substantial performance enhancements with minimal data resources.",
+    "2412-15299_sent_4307a441": "Despite the slight performance degradation in high-resource languages, the improvement observed in low-resource languages is remarkably meaningful.",
+    "2412-15299_sent_71b38201": "The full comparison results are presented in Fig~\\ref{fig:histogram}.",
+    "2412-15299_sent_f7f52f5f": "It is noteworthy that these results were achieved with considerably smaller training data compared to Whisper and MMS.",
+    "2412-15299_subsubsection_7d51c297": "Unseen Languages.",
+    "2412-15299_sent_6ef05a92": "Our main focus was developing a generalized pipeline that demonstrates strong performance with unseen languages.",
+    "2412-15299_sent_060f2368": "To validate this objective, we utilized two zero-shot ASR models as baselines: ASR-2K and Zero-Shot MMS (MMS-ZS).",
+    "2412-15299_sent_61bad212": "In Table~\\ref{unseen_comp_tab}, our method demonstrated a reduction in CER by half while using significantly less training data compared to ASR-2K.",
+    "2412-15299_sent_ba60dc85": "Furthermore, it is noteworthy that our proposed pipeline performs remarkably well even without language-specific modules, demonstrating comparable performance to MMS-ZS which leverages language-specific lexicon and n-gram LM.",
+    "2412-15299_subsection_feb8fbab": "Ablation Study",
+    "2412-15299_sent_411464e3": "In Table~\\ref{tab_ablation}, few-shot prompting showed the highest performance across all models and prompting strategies.",
+    "2412-15299_sent_33bf119a": "Interestingly, even with zero-shot prompting, the proposed pipeline consistently outperforms Whisper on average in CER and WER, where Whisper records 23.9\\% and 42.9\\% respectively, as shown in Table~\\ref{baseline_comparison_tab}.",
+    "2412-15299_sent_2b3800f2": "On the other hand, the use of sequential reasoning failed to achieve the anticipated improvements.",
+    "2412-15299_sent_68208473": "Specifically, we observed considerable error propagation when utilizing zero-shot CoT prompts and prompt chaining techniques.",
+    "2412-15299_sent_4eaf0595": "Minor inaccuracies in the Romanization phase were amplified as they were processed by the LLM, leading to transcriptions that deviated in meaning from the intended output.",
+    "2412-15299_subsubsection_088246dc": "Model Size and Training Data.",
+    "2412-15299_sent_67908a61": "From the perspective of model size, using a relatively smaller LLM like LLaMA-8B frequently resulted in issues such as word repetition, which complicated the transcription sorting process.",
+    "2412-15299_sent_968e65b6": "Additionally, this model faced challenges with language misprediction, often generating transcriptions in languages other than the intended target language.",
+    "2412-15299_sent_2df1b96a": "This issue was particularly noticeable with low-resource languages such as Arabic.",
+    "2412-15299_sent_f82d6f8f": "With the LLaMA-70B model, while word repetition was less pronounced compared to the LLaMA-8B model, the issue of language misprediction persisted, albeit at a reduced frequency.",
+    "2412-15299_sent_3203a1d8": "Among the LLMs tested, GPT-4o-mini demonstrated the best performance overall.",
+    "2412-15299_sent_5e489c42": "It outperformed the other models across all prompting strategies, achieving an impressive average CER of 15\\% across 102 languages.",
+    "2412-15299_section_6f8b794f": "Conclusion",
+    "2412-15299_sent_63c0c1ab": "In this paper, we introduced a generalized multilingual ASR pipeline~\\shortname, that operates effectively without relying on language-specific modules.",
+    "2412-15299_sent_fa42f5ae": "By utilizing Romanized transcription as a unified representation across languages, we structured the multilingual ASR pipeline into two phases.",
+    "2412-15299_sent_705b81d9": "Initially, Romanization aligns phonetic and orthographic features, allowing the universal transcription to be effectively generalized across diverse languages and trained efficiently with a smaller dataset.",
+    "2412-15299_sent_240b49ab": "Subsequently, we used a frozen LLM to convert the universal transcription into language-specific ones.",
+    "2412-15299_sent_43df99cc": "This inversion process showed remarkable performance across languages, including those not previously encountered. Our experiments demonstrated that the proposed method not only maintains performance for high-resource languages but also significantly outperforms existing methods for low-resource languages, all while effectively handling unseen languages.",
+    "2412-15299_sent_080c663b": "Furthermore, our approach matched the performance of models that employ language-specific modules, despite not using any such components.",
+    "2412-15299_sent_2c4b0f7d": "We anticipate that this research will provide a viable alternative for utilizing LLMs to support universal multilingual ASR systems across a variety of applications.",
+    "2412-15299_sent_052e9a25": "\\appendix",
+    "2412-15299_sent_641b066e": "The following appendix sections propose additional experimental results and specifications for \\shortname, which can be instrumental in deeper understanding or validating the strengths of the proposed pipeline.",
+    "2412-15299_sent_f67d956f": "The first section of the appendix presents the specifications of the languages we leveraged in the experiments, given the corresponding ISO-639 language code.",
+    "2412-15299_sent_76a6d1cc": "Consequently, the second section demonstrates the transcription performance of \\shortname~for each language used in the experiments.",
+    "2412-15299_sent_6c1dcb96": "Then, the third section suggests the end-to-end transcription performance comparison between IPA-based \\shortname~and Romanization-based \\shortname, further to validate the effectiveness of Romanization in orthography unification.",
+    "2412-15299_sent_b25b9691": "Finally, in the last section, we would like to discuss possible advancements of \\shortname~and our further research direction.",
+    "2412-15299_section_e473d231": "Languages and Language Codes",
+    "2412-15299_sent_273fb02c": "\\begin{tabular}{l||l} Seen & \\begin{tabular}[l]{@{}l@{}}Afrikaans (af), Amharic (am), Arabic (ar), Assamese (as), Asturian (ast), Azerbaijani (az), Belarusian (be),\\\\Bulgarian (bg), Bengali (bn), Bosnian (bs), Catalan (ca), Cebuano (ceb), Sorani-Kurdish (ku), Mandarin Chinese (cmn),\\\\Czech (cs), Welsh (cy), Danish (da), German (de), Greek (el), English (en), Spanish (es), Estonian (et), Persian (fa),\\\\Fula (ff), Finnish (fi), Filipino (fil), French (fr), Irish (ga), Galician (gl), Gujarati (gu), Hausa (ha), Hebrew (he),\\\\Hindi (hi), Croatian (hr),Hungarian (hu), Armenian (hy), Indonesian (id), Igbo (ig), Icelandic (is), Italian (it),\\\\Japanese (ja), Javanese (jv), Georgian (ka), Kamba (kam),Kabuverdianu (kea), Kazakh (kk), Khmer (km), Kannada (kn),\\\\Korean (ko), Kyrgyz (ky), Luxembourgish (lb), Ganda (lg), Lingala (ln), Lao (lo), Lithuanian (lt), Luo (luw), Latvian (lv),\\\\Maori (mi), Macedonian (mk), Malayalam (ml), Mongolian (mn), Marathi (mr), Malay (ms), Maltese (mt), Burmese (my),\\\\Norwegian (no), Nepali (ne), Dutch (nl), Northern-Sotho (nso), Nyanja (ny), Occitan (oc), Oromo (om), Oriya (or),\\\\Punjabi (pa), Polish (pl), Pashto (ps), Portuguese (pt), Romanian (ro), Russian (ru), Sindhi (sd), Slovak (sk), Slovenian (sl),\\\\Shona (sn), Somali (so), Serbian (sr), Swedish (sv), Swahili (sw), Tamil (ta), Telugu (te), Tajik (tg), Thai (th), Turkish (tr),\\\\Ukrainian (uk), Umbundu (umb), Urdu (ur), Uzbek (uz), Vietnamese (vi), Wolof (wo), Xhosa (xh), Yoruba (yo),\\\\Cantonese Chinese (yue), Zulu (zu)\\end{tabular} \\\\ Unseen & \\begin{tabular}[l]{@{}l@{}}Abkhazian (ab), Albanian (sq), Basaa (bas), Bashkir (ba), Basque (eu), Breton (br), Chuvash (cv), Eastern Mari (mhr),\\\\Erzya (myv), Esperanto (eo), Guarani (gn), Hakha Chin (cnh), Interlingua (ia), Kinyarwanda (rw), Latgalian (ltg),\\\\Norwegian Nynorsk (nn), Romansh (rm), Tatar (tt), Toki Pona (tok), Turkmen (tk), Uighur (ug), Upper Sorbian (hsb),\\\\Western Frisian (fy), Western Mari (mrj), Yakut (sah)\\end{tabular} \\\\ \\end{tabular} \\caption{Specifications of 102 seen languages and 25 unseen languages for experiments.",
+    "2412-15299_sent_0c968ace": "We primarily reported ISO-639-1 codes and provided ISO-639-3 codes when the former were unavailable.",
+    "2412-15299_sent_a140810c": "Sursilvan and Vallader dialects are both considered Romansh languages.} \\end{table*} Table~\\ref{appendix_langcode} indicates the languages that were leveraged in the experiments of our manuscript.",
+    "2412-15299_sent_7d60c3b0": "All of the seen languages comprise 102 languages in the FLEURS dataset, and they are used in both training and evaluation of \\shortname.",
+    "2412-15299_sent_57ffb78f": "Evaluation samples for unseen languages were chosen from the official test split of the CommonVoice 17.0 dataset, which ensured that they possessed an adequate volume of data.",
+    "2412-15299_section_857398f0": "Language-Specific Performance of \\shortname",
+    "2412-15299_sent_c9c4ef1f": "\\begin{tabular}{l||l|l||l|l||l|l||l|l} & Language & CER $\\downarrow$ & Language & CER $\\downarrow$ & Language & CER $\\downarrow$ & Language & CER $\\downarrow$ \\\\ \\multirow{26}{*}{Seen} & Afrikaans & 19.3 & Ganda & 10.6 & Lithuanian & 8.7 & Shona & 9.0 \\\\ & Amharic & 8.7 & Georgian & 9.4 & Luo & 7.4 & Sindhi & 29.7 \\\\ & Arabic & 8.8 & German & 8.4 & Luxembourgish & 13.6 & Slovak & 5.4 \\\\ & Armenian & 5.6 & Greek & 11.5 & Macedonian & 5.3 & Slovenian & 9.1 \\\\ & Assamese & 12.9 & Gujarati & 8.9 & Malay & 8.3 & Somali & 16.8 \\\\ & Asturian & 9.3 & Hausa & 9.7 & Malayalam & 7.7 & Sorani-Kurdish & 11.8 \\\\ & Azerbaijani & 10.7 & Hebrew & 20.5 & Maltese & 8.4 & Spanish & 4.7 \\\\ & Belarusian & 8.0 & Hindi & 11.6 & Mandarin Chinese & 6.5 & Swahili & 6.4 \\\\ & Bengali & 9.8 & Hungarian & 14.5 & Maori & 8.7 & Swedish & 11.8 \\\\ & Bosnian & 6.9 & Icelandic & 18.7 & Marathi & 11.9 & Tajik & 5.3 \\\\ & Bulgarian & 7.6 & Igbo & 14.0 & Mongolian & 14.7 & Tamil & 11.9 \\\\ & Burmese & 19.4 & Indonesian & 6.0 & Nepali & 11.2 & Telugu & 10.8 \\\\ & Cantonese Chinese & 16.6 & Irish & 28.4 & Northern-Sotho & 13.8 & Thai & 15.9 \\\\ & Catalan & 7.5 & Italian & 3.7 & Norwegian & 9.2 & Turkish & 6.4 \\\\ & Cebuano & 7.5 & Japanese & 33.4 & Nyanja & 12.4 & Ukrainian & 11.2 \\\\ & Croatian & 6.3 & Javanese & 7.0 & Occitan & 17.7 & Umbundu & 9.5 \\\\ & Czech & 11.0 & Kabuverdianu & 6.8 & Oriya & 14.3 & Urdu & 44.0 \\\\ & Danish & 15.6 & Kamba & 10.9 & Oromo & 20.2 & Uzbek & 16.3 \\\\ & Dutch & 11.3 & Kannada & 7.4 & Pashto & 20.0 & Vietnamese & 13.0 \\\\ & English & 13.1 & Kazakh & 5.1 & Persian & 6.9 & Welsh & 12.8 \\\\ & Estonian & 4.4 & Khmer & 23.6 & Polish & 10.9 & Wolof & 14.9 \\\\ & Filipino & 4.8 & Korean & 9.6 & Portuguese & 9.0 & Xhosa & 10.4 \\\\ & Finnish & 4.9 & Kyrgyz & 5.2 & Punjabi & 20.3 & Yoruba & 10.9 \\\\ & French & 12.3 & Lao & 17.8 & Romanian & 11.8 & Zulu & 9.5 \\\\ & Fula & 14.7 & Latvian & 7.0 & Russian & 9.0 & & \\\\ & Galician & 6.7 & Lingala & 7.7 & Serbian & 8.9 & & \\\\ \\multirow{7}{*}{Unseen} & Abkhazian & 45.8 & Eastern Mari & 30.9 & Latgalian & 28.8 & Upper Sorbian & 35.3 \\\\ & Albanian & 34.8 & Erzya & 29.9 & Norwegian Nynorsk & 27.1 & Western Frisian & 33.8 \\\\ & Basa & 33.4 & Esperanto & 22.1 & Romansh & 31.9 & Western Mari & 36.7 \\\\ & Bashkir & 33.5 & Guarani & 33.5 & Tatar & 31.8 & Yakut & 36.3 \\\\ & Basque & 33.0 & Hakha Chin & 42.9 & Toki Pona & 28.7 & & \\\\ & Breton & 49.1 & Interlingua & 17.3 & Turkmen & 41.3 & & \\\\ & Chuvash & 37.4 & Kinyarwanda & 37.2 & Uighur & 27.1 & & \\\\ \\end{tabular} \\caption{Performance of Romanization-based universal transcription generator in 102 seen and 25 unseen languages.",
+    "2412-15299_sent_ebd8fa31": "Results are reported in CER, which calculates the character-level difference between ground truth Romanized transcription and predicted Romanized transcription.} \\end{table*}",
+    "2412-15299_sent_b357dd06": "\\begin{tabular}{l||l|l||l|l||l|l||l|l} & Language & CER $\\downarrow$ & Language & CER $\\downarrow$ & Language & CER $\\downarrow$ & Language & CER $\\downarrow$ \\\\ \\multirow{26}{*}{Seen} & Afrikaans & 18.3 & Ganda & 10.4 & Luo & 7.3 & Sindhi & 29.1 \\\\ & Amharic & 47.4 & Georgian & 23.6 & Luxembourgish & 16.5 & Slovak & 3.8 \\\\ & Arabic & 13.9 & German & 5.5 & Macedonian & 5.5 & Slovenian & 9.4 \\\\ & Armenian & 22.4 & Greek & 15.6 & Malay & 6.9 & Somali & 15.4 \\\\ & Assamese & 18.9 & Gujarati & 11.9 & Malayalam & 24.1 & Sorani-Kurdish & 26.4 \\\\ & Asturian & 9.8 & Hausa & 10.2 & Maltese & 9.8 & Spanish & 2.8 \\\\ & Azerbaijani & 11.9 & Hebrew & 35.2 & Mandarin Chinese & 36.0 & Swahili & 5.3 \\\\ & Belarusian & 11.3 & Hindi & 8.3 & Maori & 12.0 & Swedish & 9.5 \\\\ & Bengali & 13.8 & Hungarian & 16.7 & Marathi & 14.0 & Tajik & 8.9 \\\\ & Bosnian & 5.9 & Icelandic & 18.1 & Mongolian & 21.4 & Tamil & 19.6 \\\\ & Bulgarian & 8.2 & Igbo & 17.9 & Nepali & 13.2 & Telugu & 15.5 \\\\ & Burmese & 52.6 & Indonesian & 4.3 & Northern-Sotho & 15.1 & Thai & 45.3 \\\\ & Cantonese Chinese & 61.6 & Irish & 34.8 & Norwegian & 7.0 & Turkish & 5.1 \\\\ & Catalan & 6.3 & Italian & 2.0 & Nyanja & 12.1 & Ukrainian & 9.7 \\\\ & Cebuano & 7.4 & Javanese & 6.6 & Occitan & 19.9 & Umbundu & 10.5 \\\\ & Croatian & 5.2 & Kabuverdianu & 8.3 & Oriya & 18.3 & Urdu & 14.9 \\\\ & Czech & 9.9 & Kamba & 14.6 & Oromo & 19.8 & Uzbek & 14.5 \\\\ & Danish & 12.9 & Kannada & 13.9 & Pashto & 32.7 & Vietnamese & 19.0 \\\\ & Dutch & 8.7 & Kazakh & 6.7 & Persian & 11.9 & Welsh & 12.3 \\\\ & English & 8.2 & Khmer & 66.3 & Polish & 8.6 & Wolof & 18.0 \\\\ & Estonian & 5.7 & Korean & 18.8 & Portuguese & 7.9 & Xhosa & 10.5 \\\\ & Filipino & 4.4 & Kyrgyz & 8.8 & Punjabi & 19.5 & Yoruba & 25.5 \\\\ & Finnish & 4.7 & Lao & 55.0 & Romanian & 11.0 & Zulu & 9.6 \\\\ & French & 8.2 & Latvian & 7.9 & Russian & 6.0 & & \\\\ & Fula & 16.6 & Lingala & 7.8 & Serbian & 5.7 & & \\\\ & Galician & 6.0 & Lithuanian & 8.6 & Shona & 8.6 & & \\\\ \\multirow{7}{*}{Unseen} & Abkhazian & 55.9 & Eastern Mari & 35.3 & Latgalian & 34.7 & Upper Sorbian & 35.2 \\\\ & Albanian & 35.4 & Erzya & 35.7 & Norwegian Nynorsk & 23.9 & Western Frisian & 29.6 \\\\ & Basa & 42.1 & Esperanto & 19.7 & Romansh & 30.0 & Western Mari & 41.4 \\\\ & Bashkir & 29.7 & Guarani & 40.0 & Tatar & 24.2 & Yakut & 38.2 \\\\ & Basque & 32.8 & Hakha Chin & 42.8 & Toki Pona & 29.0 & & \\\\ & Breton & 49.9 & Interlingua & 15.2 & Turkmen & 43.1 & & \\\\ & Chuvash & 44.3 & Kinyarwanda & 36.7 & Uighur & 24.5 & & \\\\ \\end{tabular} \\caption{Performance of LAMA-UT in 101 seen and 25 unseen languages.",
+    "2412-15299_sent_e1666cb0": "We leveraged a Romanization-based universal transcription generator and GPT-4o-mini model with a few-shot prompting as a universal converter.",
+    "2412-15299_sent_dcfbb4cc": "All of the results are reported in CER, which calculates the character-level difference between ground truth language-specific transcription and predicted language-specific transcription.",
+    "2412-15299_sent_492f353a": "Japanese was excluded from the results due to the ambiguity in evaluation criteria arising from its mixed use of Hiragana, Katakana, and Kanji.} \\end{table*} In this section, we present a detailed performance analysis for each language, comparing transcription performance from the universal transcription generation phase to that after passing through the universal converter.",
+    "2412-15299_sent_d465a455": "Additionally, we analyze these results further to explore the correlation between orthographic characteristics and transcription performance.",
+    "2412-15299_sent_b0bd7472": "First of all, Table ~\\ref{appendix_cer_roman_all} suggests the language-specific transcription performance of the Romanization-based universal transcription generator, and Table~\\ref{appendix_performance_every_all} presents the language-specific end-to-end (E2E) language-specific transcription performance of \\shortname.",
+    "2412-15299_sent_9e6249da": "In the case of the universal transcription generator, CERs were consistently similar across most languages with minimal variation.",
+    "2412-15299_sent_5388bc07": "However, in the end-to-end pipeline with language-specific transliteration, notably higher error rates were observed for certain languages, and the languages highlighted in bold represent the top 10 languages with the most significant increases in error rate observed in the end-to-end pipeline compared to the CER values during the universal transcription phase.",
+    "2412-15299_sent_ec6aca3a": "Interestingly, the 10 languages that exhibited the most significant performance degradation after passing through the universal converter were all non-Latin script languages, with the majority being languages that do not employ spacing in their orthography.",
+    "2412-15299_sent_62139a1a": "This suggests that when a pre-trained LLM is utilized as a universal converter, languages with non-Latin orthography which inherently exhibit different structural characteristics compared to Latin-based languages, are more prone to error propagation.",
+    "2412-15299_section_d6607e2d": "E2E Comparison on Unification Methods",
+    "2412-15299_sent_09b13964": "\\begin{tabular}{c||c||cc|cc||cc|cc} \\multirow{3}{*}{} & \\multirow{3}{*}{\\begin{tabular}[c]{@{}c@{}}Universal \\\\ Converter \\end{tabular}} & \\multicolumn{4}{c}{IPA} & \\multicolumn{4}{c}{Roman} \\\\ & & \\multicolumn{2}{c}{Upper Bound} & \\multicolumn{2}{c}{Few Shot} & \\multicolumn{2}{c}{Upper Bound} & \\multicolumn{2}{c}{Few Shot} \\\\ & & CER $\\downarrow$ & WER $\\downarrow$ & CER $\\downarrow$ & WER $\\downarrow$ & CER $\\downarrow$ & WER $\\downarrow$ & CER $\\downarrow$ & WER $\\downarrow$ \\\\ \\multirow{3}{*}{Seen} & LLaMA-8B & 51.4 & 82.4 & 56.5 & 80.8 & 33.0 & 44.4 & 38.1 & 64.7 \\\\ & LLaMA-70B & 40.0 & 64.6 & 33.8 & 67.8 & 15.6 & 34.6 & 23.1 & 56.2 \\\\ & GPT-4o-mini & 27.3 & 49.2 & 33.0 & 70.6 & 10.0 & 28.6 & 19.9 & 49.4 \\\\ \\multirow{3}{*}{Unseen} & LLaMA-8B & 52.0 & 93.0 & 43.4 & 93.3 & 32.7 & 60.2 & 41.6 & 94.4 \\\\ & LLaMA-70B & 42.5 & 89.0 & 38.1 & 94.6 & 17.0 & 57.5 & 34.7 & 93.9 \\\\ & GPT-4o-mini & 40.4 & 78.2 & 35.2 & 84.1 & 12.3 & 42.1 & 29.7 & 83.0 \\\\ \\end{tabular} \\caption{An end-to-end (E2E) comparison between IPA and Romanization.",
+    "2412-15299_sent_92d18388": "Since Phonemizer (IPA transliterator) supports a smaller amount of language compared to Uroman (Romanization transliterator), all of the metrics were calculated and averaged within the common languages which are both available in the IPA-based and the Romanization-based version of the universal transcription generator.} \\end{table*} In this section, we would like to further clarify the effectiveness of utilizing Romanization as an intermediate representation.",
+    "2412-15299_sent_cdf119d7": "Since the experimental results from Table~\\ref{orthography_comp_tab} were limited to the universal transcription generation phase, we supplement the previous results with the full performance comparison between IPA-based and Romanization-based end-to-end architecture of \\shortname, both in upper bound assessment and transcription performance.",
+    "2412-15299_sent_b5488310": "Table~\\ref{appendix_e2e} proposes the end-to-end performance comparison between IPA-based \\shortname~and Romanization-based \\shortname.",
+    "2412-15299_sent_1a2d8e42": "The only difference between the two models is the orthography unification method utilized in the universal transcription generator.",
+    "2412-15299_sent_8ac8c2e5": "(e.g., the IPA-based model utilizes IPA as an intermediate representation, while the Romanization-based one leverages Romanized transcription as an intermediate representation.",
+    "2412-15299_sent_048ca8e8": "In the results, Romanization-based \\shortname~consistently outperforms IPA-based \\shortname~as a substantial difference in both CER and WER.",
+    "2412-15299_sent_fa8a4403": "These results strongly demonstrate the superiority of Romanization over IPA when leveraging LLMs as a universal converter, since LLMs are primarily trained with Latin scripts and optimized tokenization strategy for them.",
+    "2412-15299_sent_1591e81b": "Furthermore, there are some inconsistencies in the results of the IPA-based \\shortname, where passing predicted IPA transcriptions along with a few examples to the universal converter yielded better performance than passing ground truth IPA transcriptions without examples.",
+    "2412-15299_sent_4cdee045": "This is presumably because the LLMs did not frequently encounter IPA-driven tokens during its training process.",
+    "2412-15299_section_bf9f4449": "Discussion and Future Work",
+    "2412-15299_sent_b4b45060": "\\shortname~showed comparable or better performance compared to previous works even without language-specific modules (e.g., adapters, lexicons, n-gram LMs), while achieving efficient training with a significantly reduced dataset size.",
+    "2412-15299_sent_3a3257dc": "However, there is still room for further improvement in both the universal transcription generator and the universal converter.",
+    "2412-15299_sent_83c9e5b8": "First, the transcription performance of the universal transcription generator can be improved. For instance, the universal transcription generator of \\shortname~can leverage additional linguistic information (e.g., embedding from a pre-trained language classifier) to further enhance the transcription quality of the first phase.",
+    "2412-15299_sent_efee6e82": "Secondly, our pipeline shows relatively lower performance for languages with distinct linguistic structures, like Korean, and those with additional features (e.g., tones), such as Chinese, in the language-specific transliteration phase.",
+    "2412-15299_sent_d283c5a4": "Since our universal converter is replaceable, this issue will naturally be resolved in line with the development of LLMs. Finally, the utilization of prompt learning techniques~\\cite{li2021prefixtuningoptimizingcontinuousprompts,liu2022ptuningv2prompttuning,gu-etal-2022-ppt} might improve transliteration performance.",
+    "2412-15299_sent_2e960412": "We plan to address these aspects in future research.",
+    "2412-15299_sent_5b4227c0": "\\includegraphics[width=\\textwidth]{pipeline.png} \\caption{Illustration of our universal ASR pipeline.} \\end{figure*} Simultaneously, large language models (LLMs) have garnered considerable attention for their remarkable capabilities in the natural language processing (NLP) domain.",
+    "2412-15299_fig_5663f0a4": "\\begin{figure}\n\n \\includegraphics[width=\\columnwidth]{problems.png}\n \\caption{Problems derived in single-token IPA recognition. Diacritic `:' indicates phoneme length, which has no explicit phonetic value. Epsilon denotes a blank token in CTC.}\n\n\\end{figure}",
+    "2412-15299_sent_5480582c": "We conducted a performance comparison between our universal transcription generator and the existing baseline, wav2vec2.0-phoneme~\\cite{xu2021simpleeffectivezeroshotcrosslingual}.",
+    "2412-15299_sent_b44cccee": "Our universal transcription generator focuses on generating character-level tokens and is measured using Character Error Rate (CER), while the baseline wav2vec2.0-phoneme is measured using Phoneme Error Rate (PER).",
+    "2412-15299_sent_4f1808e6": "However, since these results are constrained to the first phase, we have constructed the end-to-end performance comparison between IPA-based and Romanization-based \\shortname, and the results are shown in the appendices\\footnote{https://github.com/sanghyang00/LAMA-UT-Appendices}."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15299_sent_676977e1": "2412-15299_doc_root",
+      "2412-15299_abstract_ce28071e": "2412-15299_doc_root",
+      "2412-15299_sent_d0757f32": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0368d2c1": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_718f7774": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_6747174d": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_45232bee": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_35bd3a7a": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_5fe01f4d": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0d512cdd": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_4680d8e2": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0d164f43": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_6d541906": "2412-15299_abstract_ce28071e",
+      "2412-15299_section_0b79795d": "2412-15299_doc_root",
+      "2412-15299_sent_0d5fa005": "2412-15299_section_0b79795d",
+      "2412-15299_sent_a2b8731a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_5ddb8c16": "2412-15299_section_0b79795d",
+      "2412-15299_sent_64672fc0": "2412-15299_section_0b79795d",
+      "2412-15299_sent_4bc87417": "2412-15299_section_0b79795d",
+      "2412-15299_sent_8879f902": "2412-15299_section_0b79795d",
+      "2412-15299_sent_e38ce746": "2412-15299_section_0b79795d",
+      "2412-15299_sent_b80c8d4c": "2412-15299_section_0b79795d",
+      "2412-15299_sent_0675f71b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_efb9eea5": "2412-15299_section_0b79795d",
+      "2412-15299_sent_2421ad24": "2412-15299_section_0b79795d",
+      "2412-15299_sent_27a174b1": "2412-15299_section_0b79795d",
+      "2412-15299_fig_b71837c1": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_1fcf438b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_cadf825a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_fc06d126": "2412-15299_section_0b79795d",
+      "2412-15299_sent_e91e7cfb": "2412-15299_section_0b79795d",
+      "2412-15299_sent_f930f856": "2412-15299_section_0b79795d",
+      "2412-15299_sent_7abf1d4c": "2412-15299_section_0b79795d",
+      "2412-15299_sent_7e18c75a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_25302e5b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_06145344": "2412-15299_section_0b79795d",
+      "2412-15299_sent_a2f3ca97": "2412-15299_section_0b79795d",
+      "2412-15299_sent_5a72cb0d": "2412-15299_section_0b79795d",
+      "2412-15299_itemize_3e8a3b4d": "2412-15299_section_0b79795d",
+      "2412-15299_item_436a9020": "2412-15299_itemize_3e8a3b4d",
+      "2412-15299_sent_40cd52a2": "2412-15299_item_436a9020",
+      "2412-15299_sent_e293b0c1": "2412-15299_item_436a9020",
+      "2412-15299_sent_3b9f98d3": "2412-15299_item_436a9020",
+      "2412-15299_section_a7f20481": "2412-15299_doc_root",
+      "2412-15299_subsection_0c38ca86": "2412-15299_section_a7f20481",
+      "2412-15299_sent_8ef6da12": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_3d4416d8": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_c90bb664": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_552b6d7b": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_0e68508f": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_f54b54fc": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_758e59bc": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_3f45955d": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_231d59ca": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_c470ce47": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_f4a9db9c": "2412-15299_subsection_0c38ca86",
+      "2412-15299_subsection_c1760bda": "2412-15299_section_a7f20481",
+      "2412-15299_sent_ac9e8f90": "2412-15299_subsection_c1760bda",
+      "2412-15299_sent_e3a96642": "2412-15299_subsection_c1760bda",
+      "2412-15299_sent_6bcfc47e": "2412-15299_subsection_c1760bda",
+      "2412-15299_subsection_7097c845": "2412-15299_section_a7f20481",
+      "2412-15299_sent_f10c3b3b": "2412-15299_subsection_7097c845",
+      "2412-15299_sent_746cefac": "2412-15299_subsection_7097c845",
+      "2412-15299_sent_16475a17": "2412-15299_subsection_7097c845",
+      "2412-15299_section_a5ecd91e": "2412-15299_doc_root",
+      "2412-15299_sent_5cc24c33": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_1c2ebe49": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_28b40d0d": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_ea5e5cb5": "2412-15299_section_a5ecd91e",
+      "2412-15299_subsection_6a3bd011": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_a59eef14": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_e89e1b14": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_b76c76a8": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_871e195f": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_5abd233c": "2412-15299_subsection_6a3bd011",
+      "2412-15299_subsubsection_87390fde": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_17469f50": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_8f65b5ad": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_88749dd9": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_37a3ee92": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_c9b0a207": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_0d33db01": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_738a45bd": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_7d2e491c": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_93bfc1c9": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_d6d602de": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_ddee4d68": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_a67ea1d2": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_932aed5d": "2412-15299_subsubsection_87390fde",
+      "2412-15299_subsubsection_234495b0": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_58733547": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_04594c27": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_cceb348b": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_ea50b525": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_a934d758": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_16d9510f": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_4088db73": "2412-15299_subsubsection_234495b0",
+      "2412-15299_fig_be7fea8e": "2412-15299_subsubsection_234495b0",
+      "2412-15299_subsubsection_71498cb8": "2412-15299_subsection_b41dd9d9",
+      "2412-15299_sent_7ebc2875": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_b99ef6ba": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_93d38514": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_5cbb6124": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_5133e84e": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_1f898b12": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_3c4005c0": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_subsection_6dce0127": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_d0f69637": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_6b63a956": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_5c78a76e": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_4036b06a": "2412-15299_subsection_6dce0127",
+      "2412-15299_subsubsection_73703e27": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_71075c03": "2412-15299_subsubsection_73703e27",
+      "2412-15299_sent_2651a152": "2412-15299_subsubsection_73703e27",
+      "2412-15299_sent_f693e0b7": "2412-15299_subsubsection_73703e27",
+      "2412-15299_subsubsection_9b353ca3": "2412-15299_subsection_b41dd9d9",
+      "2412-15299_sent_f1462596": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_c6b9c310": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_section_4829262c": "2412-15299_doc_root",
+      "2412-15299_subsection_239658e0": "2412-15299_section_4829262c",
+      "2412-15299_subsubsection_df278c0b": "2412-15299_subsection_239658e0",
+      "2412-15299_sent_e0acb52e": "2412-15299_subsubsection_df278c0b",
+      "2412-15299_subsubsection_71cdbf95": "2412-15299_subsection_239658e0",
+      "2412-15299_subsection_3ce93175": "2412-15299_section_4829262c",
+      "2412-15299_sent_f40b1944": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_a9afb9dd": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_457e6bb8": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_8af7242a": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_799712b2": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_03176efb": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_7a167b56": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_4de2a444": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_87d52d42": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_42324ff2": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_d04eb245": "2412-15299_subsection_3ce93175",
+      "2412-15299_fig_4db0ccee": "2412-15299_subsection_3ce93175",
+      "2412-15299_subsection_f75bd3b3": "2412-15299_section_4829262c",
+      "2412-15299_sent_55128b9b": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_e20aa286": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_e4c7f5b3": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_b75b71ca": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_dfcba616": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_83f0b9cd": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_subsection_b41dd9d9": "2412-15299_section_4829262c",
+      "2412-15299_sent_1446e897": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_9d33bae3": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_subsubsection_a52f1680": "2412-15299_subsection_feb8fbab",
+      "2412-15299_sent_9e74a087": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_6b1bafe3": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_b0361c61": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_eee6385b": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_0f4febc1": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_e75336c0": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_9f6cfc93": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_f656ac37": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_9b2b19af": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_530c61b6": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_f15f698a": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_a2009981": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_fig_71d0319b": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_7d795be0": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_ec05c164": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_b2f4c626": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_e3c95eee": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_ed8e65e4": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_41d5277e": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_fc192297": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_c7a5f704": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_section_fd69c5cf": "2412-15299_doc_root",
+      "2412-15299_sent_d82a949e": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_e6188406": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_1ab61c8a": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsection_028fa47e": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsubsection_33bd1792": "2412-15299_subsection_028fa47e",
+      "2412-15299_sent_91d4fd0d": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_a21cd39c": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_8c1aff8f": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_2477dbec": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_e0359000": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_4b2c6bf7": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_subsubsection_2969d9ad": "2412-15299_subsection_028fa47e",
+      "2412-15299_sent_09934e76": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_1119b7bc": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_67545fee": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_714e9789": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_subsection_931baffe": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_07317449": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_f23cc91b": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_6b5608f3": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_0b420743": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_c6310a1a": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_2a9eafe6": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_16c8ec7a": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_ec19b39d": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_b62d5b89": "2412-15299_subsection_931baffe",
+      "2412-15299_fig_3aedb8e0": "2412-15299_subsection_931baffe",
+      "2412-15299_subsection_ae249621": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsubsection_0743a277": "2412-15299_subsection_ae249621",
+      "2412-15299_sent_c0e758a9": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_c071bf24": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_12599aaf": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_0a14c32a": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_4307a441": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_71b38201": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_f7f52f5f": "2412-15299_subsubsection_0743a277",
+      "2412-15299_subsubsection_7d51c297": "2412-15299_subsection_ae249621",
+      "2412-15299_sent_6ef05a92": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_060f2368": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_61bad212": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_ba60dc85": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_subsection_feb8fbab": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_411464e3": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_33bf119a": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_2b3800f2": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_68208473": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_4eaf0595": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_subsubsection_088246dc": "2412-15299_subsection_feb8fbab",
+      "2412-15299_sent_67908a61": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_968e65b6": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_2df1b96a": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_f82d6f8f": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_3203a1d8": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_5e489c42": "2412-15299_subsubsection_088246dc",
+      "2412-15299_section_6f8b794f": "2412-15299_doc_root",
+      "2412-15299_sent_63c0c1ab": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_fa42f5ae": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_705b81d9": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_240b49ab": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_43df99cc": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_080c663b": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_2c4b0f7d": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_052e9a25": "2412-15299_doc_root",
+      "2412-15299_sent_641b066e": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_f67d956f": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_76a6d1cc": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_6c1dcb96": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_b25b9691": "2412-15299_sent_052e9a25",
+      "2412-15299_section_e473d231": "2412-15299_doc_root",
+      "2412-15299_sent_273fb02c": "2412-15299_section_e473d231",
+      "2412-15299_sent_0c968ace": "2412-15299_section_e473d231",
+      "2412-15299_sent_a140810c": "2412-15299_section_e473d231",
+      "2412-15299_sent_7d60c3b0": "2412-15299_section_e473d231",
+      "2412-15299_sent_57ffb78f": "2412-15299_section_e473d231",
+      "2412-15299_section_857398f0": "2412-15299_doc_root",
+      "2412-15299_sent_c9c4ef1f": "2412-15299_section_857398f0",
+      "2412-15299_sent_ebd8fa31": "2412-15299_section_857398f0",
+      "2412-15299_sent_b357dd06": "2412-15299_section_857398f0",
+      "2412-15299_sent_e1666cb0": "2412-15299_section_857398f0",
+      "2412-15299_sent_dcfbb4cc": "2412-15299_section_857398f0",
+      "2412-15299_sent_492f353a": "2412-15299_section_857398f0",
+      "2412-15299_sent_d465a455": "2412-15299_section_857398f0",
+      "2412-15299_sent_b0bd7472": "2412-15299_section_857398f0",
+      "2412-15299_sent_9e6249da": "2412-15299_section_857398f0",
+      "2412-15299_sent_5388bc07": "2412-15299_section_857398f0",
+      "2412-15299_sent_ec6aca3a": "2412-15299_section_857398f0",
+      "2412-15299_sent_62139a1a": "2412-15299_section_857398f0",
+      "2412-15299_section_d6607e2d": "2412-15299_doc_root",
+      "2412-15299_sent_09b13964": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_92d18388": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_cdf119d7": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_b5488310": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_1a2d8e42": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_8ac8c2e5": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_048ca8e8": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_fa8a4403": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_1591e81b": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_4cdee045": "2412-15299_section_d6607e2d",
+      "2412-15299_section_bf9f4449": "2412-15299_doc_root",
+      "2412-15299_sent_b4b45060": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_3a3257dc": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_83c9e5b8": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_efee6e82": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_d283c5a4": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_2e960412": "2412-15299_section_bf9f4449"
+    },
+    "2": {
+      "2412-15299_sent_676977e1": "2412-15299_doc_root",
+      "2412-15299_abstract_ce28071e": "2412-15299_doc_root",
+      "2412-15299_sent_d0757f32": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0368d2c1": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_718f7774": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_6747174d": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_45232bee": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_35bd3a7a": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_5fe01f4d": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0d512cdd": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_4680d8e2": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0d164f43": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_6d541906": "2412-15299_abstract_ce28071e",
+      "2412-15299_section_0b79795d": "2412-15299_doc_root",
+      "2412-15299_sent_0d5fa005": "2412-15299_section_0b79795d",
+      "2412-15299_sent_a2b8731a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_5ddb8c16": "2412-15299_section_0b79795d",
+      "2412-15299_sent_64672fc0": "2412-15299_section_0b79795d",
+      "2412-15299_sent_4bc87417": "2412-15299_section_0b79795d",
+      "2412-15299_sent_8879f902": "2412-15299_section_0b79795d",
+      "2412-15299_sent_e38ce746": "2412-15299_section_0b79795d",
+      "2412-15299_sent_b80c8d4c": "2412-15299_section_0b79795d",
+      "2412-15299_sent_0675f71b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_efb9eea5": "2412-15299_section_0b79795d",
+      "2412-15299_sent_2421ad24": "2412-15299_section_0b79795d",
+      "2412-15299_sent_27a174b1": "2412-15299_section_0b79795d",
+      "2412-15299_fig_b71837c1": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_1fcf438b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_cadf825a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_fc06d126": "2412-15299_section_0b79795d",
+      "2412-15299_sent_e91e7cfb": "2412-15299_section_0b79795d",
+      "2412-15299_sent_f930f856": "2412-15299_section_0b79795d",
+      "2412-15299_sent_7abf1d4c": "2412-15299_section_0b79795d",
+      "2412-15299_sent_7e18c75a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_25302e5b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_06145344": "2412-15299_section_0b79795d",
+      "2412-15299_sent_a2f3ca97": "2412-15299_section_0b79795d",
+      "2412-15299_sent_5a72cb0d": "2412-15299_section_0b79795d",
+      "2412-15299_itemize_3e8a3b4d": "2412-15299_section_0b79795d",
+      "2412-15299_item_436a9020": "2412-15299_itemize_3e8a3b4d",
+      "2412-15299_sent_40cd52a2": "2412-15299_item_436a9020",
+      "2412-15299_sent_e293b0c1": "2412-15299_item_436a9020",
+      "2412-15299_sent_3b9f98d3": "2412-15299_item_436a9020",
+      "2412-15299_section_a7f20481": "2412-15299_doc_root",
+      "2412-15299_subsection_0c38ca86": "2412-15299_section_a7f20481",
+      "2412-15299_sent_8ef6da12": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_3d4416d8": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_c90bb664": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_552b6d7b": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_0e68508f": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_f54b54fc": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_758e59bc": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_3f45955d": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_231d59ca": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_c470ce47": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_f4a9db9c": "2412-15299_subsection_0c38ca86",
+      "2412-15299_subsection_c1760bda": "2412-15299_section_a7f20481",
+      "2412-15299_sent_ac9e8f90": "2412-15299_subsection_c1760bda",
+      "2412-15299_sent_e3a96642": "2412-15299_subsection_c1760bda",
+      "2412-15299_sent_6bcfc47e": "2412-15299_subsection_c1760bda",
+      "2412-15299_subsection_7097c845": "2412-15299_section_a7f20481",
+      "2412-15299_sent_f10c3b3b": "2412-15299_subsection_7097c845",
+      "2412-15299_sent_746cefac": "2412-15299_subsection_7097c845",
+      "2412-15299_sent_16475a17": "2412-15299_subsection_7097c845",
+      "2412-15299_section_a5ecd91e": "2412-15299_doc_root",
+      "2412-15299_sent_5cc24c33": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_1c2ebe49": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_28b40d0d": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_ea5e5cb5": "2412-15299_section_a5ecd91e",
+      "2412-15299_subsection_6a3bd011": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_a59eef14": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_e89e1b14": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_b76c76a8": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_871e195f": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_5abd233c": "2412-15299_subsection_6a3bd011",
+      "2412-15299_subsubsection_87390fde": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_17469f50": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_8f65b5ad": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_88749dd9": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_37a3ee92": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_c9b0a207": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_0d33db01": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_738a45bd": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_7d2e491c": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_93bfc1c9": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_d6d602de": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_ddee4d68": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_a67ea1d2": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_932aed5d": "2412-15299_subsubsection_87390fde",
+      "2412-15299_subsubsection_234495b0": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_58733547": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_04594c27": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_cceb348b": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_ea50b525": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_a934d758": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_16d9510f": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_4088db73": "2412-15299_subsubsection_234495b0",
+      "2412-15299_fig_be7fea8e": "2412-15299_subsubsection_234495b0",
+      "2412-15299_subsubsection_71498cb8": "2412-15299_subsection_b41dd9d9",
+      "2412-15299_sent_7ebc2875": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_b99ef6ba": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_93d38514": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_5cbb6124": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_5133e84e": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_1f898b12": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_3c4005c0": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_subsection_6dce0127": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_d0f69637": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_6b63a956": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_5c78a76e": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_4036b06a": "2412-15299_subsection_6dce0127",
+      "2412-15299_subsubsection_73703e27": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_71075c03": "2412-15299_subsubsection_73703e27",
+      "2412-15299_sent_2651a152": "2412-15299_subsubsection_73703e27",
+      "2412-15299_sent_f693e0b7": "2412-15299_subsubsection_73703e27",
+      "2412-15299_subsubsection_9b353ca3": "2412-15299_subsection_b41dd9d9",
+      "2412-15299_sent_f1462596": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_c6b9c310": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_section_4829262c": "2412-15299_doc_root",
+      "2412-15299_subsection_239658e0": "2412-15299_section_4829262c",
+      "2412-15299_subsubsection_df278c0b": "2412-15299_subsection_239658e0",
+      "2412-15299_sent_e0acb52e": "2412-15299_subsubsection_df278c0b",
+      "2412-15299_subsubsection_71cdbf95": "2412-15299_subsection_239658e0",
+      "2412-15299_subsection_3ce93175": "2412-15299_section_4829262c",
+      "2412-15299_sent_f40b1944": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_a9afb9dd": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_457e6bb8": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_8af7242a": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_799712b2": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_03176efb": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_7a167b56": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_4de2a444": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_87d52d42": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_42324ff2": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_d04eb245": "2412-15299_subsection_3ce93175",
+      "2412-15299_fig_4db0ccee": "2412-15299_subsection_3ce93175",
+      "2412-15299_subsection_f75bd3b3": "2412-15299_section_4829262c",
+      "2412-15299_sent_55128b9b": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_e20aa286": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_e4c7f5b3": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_b75b71ca": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_dfcba616": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_83f0b9cd": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_subsection_b41dd9d9": "2412-15299_section_4829262c",
+      "2412-15299_sent_1446e897": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_9d33bae3": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_subsubsection_a52f1680": "2412-15299_subsection_feb8fbab",
+      "2412-15299_sent_9e74a087": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_6b1bafe3": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_b0361c61": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_eee6385b": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_0f4febc1": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_e75336c0": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_9f6cfc93": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_f656ac37": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_9b2b19af": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_530c61b6": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_f15f698a": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_a2009981": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_fig_71d0319b": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_7d795be0": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_ec05c164": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_b2f4c626": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_e3c95eee": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_ed8e65e4": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_41d5277e": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_fc192297": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_c7a5f704": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_section_fd69c5cf": "2412-15299_doc_root",
+      "2412-15299_sent_d82a949e": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_e6188406": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_1ab61c8a": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsection_028fa47e": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsubsection_33bd1792": "2412-15299_subsection_028fa47e",
+      "2412-15299_sent_91d4fd0d": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_a21cd39c": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_8c1aff8f": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_2477dbec": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_e0359000": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_4b2c6bf7": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_subsubsection_2969d9ad": "2412-15299_subsection_028fa47e",
+      "2412-15299_sent_09934e76": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_1119b7bc": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_67545fee": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_714e9789": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_subsection_931baffe": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_07317449": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_f23cc91b": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_6b5608f3": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_0b420743": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_c6310a1a": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_2a9eafe6": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_16c8ec7a": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_ec19b39d": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_b62d5b89": "2412-15299_subsection_931baffe",
+      "2412-15299_fig_3aedb8e0": "2412-15299_subsection_931baffe",
+      "2412-15299_subsection_ae249621": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsubsection_0743a277": "2412-15299_subsection_ae249621",
+      "2412-15299_sent_c0e758a9": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_c071bf24": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_12599aaf": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_0a14c32a": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_4307a441": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_71b38201": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_f7f52f5f": "2412-15299_subsubsection_0743a277",
+      "2412-15299_subsubsection_7d51c297": "2412-15299_subsection_ae249621",
+      "2412-15299_sent_6ef05a92": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_060f2368": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_61bad212": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_ba60dc85": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_subsection_feb8fbab": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_411464e3": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_33bf119a": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_2b3800f2": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_68208473": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_4eaf0595": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_subsubsection_088246dc": "2412-15299_subsection_feb8fbab",
+      "2412-15299_sent_67908a61": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_968e65b6": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_2df1b96a": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_f82d6f8f": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_3203a1d8": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_5e489c42": "2412-15299_subsubsection_088246dc",
+      "2412-15299_section_6f8b794f": "2412-15299_doc_root",
+      "2412-15299_sent_63c0c1ab": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_fa42f5ae": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_705b81d9": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_240b49ab": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_43df99cc": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_080c663b": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_2c4b0f7d": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_052e9a25": "2412-15299_doc_root",
+      "2412-15299_sent_641b066e": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_f67d956f": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_76a6d1cc": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_6c1dcb96": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_b25b9691": "2412-15299_sent_052e9a25",
+      "2412-15299_section_e473d231": "2412-15299_doc_root",
+      "2412-15299_sent_273fb02c": "2412-15299_section_e473d231",
+      "2412-15299_sent_0c968ace": "2412-15299_section_e473d231",
+      "2412-15299_sent_a140810c": "2412-15299_section_e473d231",
+      "2412-15299_sent_7d60c3b0": "2412-15299_section_e473d231",
+      "2412-15299_sent_57ffb78f": "2412-15299_section_e473d231",
+      "2412-15299_section_857398f0": "2412-15299_doc_root",
+      "2412-15299_sent_c9c4ef1f": "2412-15299_section_857398f0",
+      "2412-15299_sent_ebd8fa31": "2412-15299_section_857398f0",
+      "2412-15299_sent_b357dd06": "2412-15299_section_857398f0",
+      "2412-15299_sent_e1666cb0": "2412-15299_section_857398f0",
+      "2412-15299_sent_dcfbb4cc": "2412-15299_section_857398f0",
+      "2412-15299_sent_492f353a": "2412-15299_section_857398f0",
+      "2412-15299_sent_d465a455": "2412-15299_section_857398f0",
+      "2412-15299_sent_b0bd7472": "2412-15299_section_857398f0",
+      "2412-15299_sent_9e6249da": "2412-15299_section_857398f0",
+      "2412-15299_sent_5388bc07": "2412-15299_section_857398f0",
+      "2412-15299_sent_ec6aca3a": "2412-15299_section_857398f0",
+      "2412-15299_sent_62139a1a": "2412-15299_section_857398f0",
+      "2412-15299_section_d6607e2d": "2412-15299_doc_root",
+      "2412-15299_sent_09b13964": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_92d18388": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_cdf119d7": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_b5488310": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_1a2d8e42": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_8ac8c2e5": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_048ca8e8": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_fa8a4403": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_1591e81b": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_4cdee045": "2412-15299_section_d6607e2d",
+      "2412-15299_section_bf9f4449": "2412-15299_doc_root",
+      "2412-15299_sent_b4b45060": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_3a3257dc": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_83c9e5b8": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_efee6e82": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_d283c5a4": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_2e960412": "2412-15299_section_bf9f4449"
+    },
+    "3": {
+      "2412-15299_sent_676977e1": "2412-15299_doc_root",
+      "2412-15299_abstract_ce28071e": "2412-15299_doc_root",
+      "2412-15299_sent_d0757f32": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0368d2c1": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_718f7774": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_6747174d": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_45232bee": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_35bd3a7a": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_5fe01f4d": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0d512cdd": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_4680d8e2": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0d164f43": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_6d541906": "2412-15299_abstract_ce28071e",
+      "2412-15299_section_0b79795d": "2412-15299_doc_root",
+      "2412-15299_sent_0d5fa005": "2412-15299_section_0b79795d",
+      "2412-15299_sent_a2b8731a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_5ddb8c16": "2412-15299_section_0b79795d",
+      "2412-15299_sent_64672fc0": "2412-15299_section_0b79795d",
+      "2412-15299_sent_4bc87417": "2412-15299_section_0b79795d",
+      "2412-15299_sent_8879f902": "2412-15299_section_0b79795d",
+      "2412-15299_sent_e38ce746": "2412-15299_section_0b79795d",
+      "2412-15299_sent_b80c8d4c": "2412-15299_section_0b79795d",
+      "2412-15299_sent_0675f71b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_efb9eea5": "2412-15299_section_0b79795d",
+      "2412-15299_sent_2421ad24": "2412-15299_section_0b79795d",
+      "2412-15299_sent_27a174b1": "2412-15299_section_0b79795d",
+      "2412-15299_fig_b71837c1": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_5b4227c0": "2412-15299_section_0b79795d",
+      "2412-15299_sent_cadf825a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_fc06d126": "2412-15299_section_0b79795d",
+      "2412-15299_sent_e91e7cfb": "2412-15299_section_0b79795d",
+      "2412-15299_sent_f930f856": "2412-15299_section_0b79795d",
+      "2412-15299_sent_7abf1d4c": "2412-15299_section_0b79795d",
+      "2412-15299_sent_7e18c75a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_25302e5b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_06145344": "2412-15299_section_0b79795d",
+      "2412-15299_sent_a2f3ca97": "2412-15299_section_0b79795d",
+      "2412-15299_sent_5a72cb0d": "2412-15299_section_0b79795d",
+      "2412-15299_itemize_3e8a3b4d": "2412-15299_section_0b79795d",
+      "2412-15299_item_436a9020": "2412-15299_itemize_3e8a3b4d",
+      "2412-15299_sent_40cd52a2": "2412-15299_item_436a9020",
+      "2412-15299_sent_e293b0c1": "2412-15299_item_436a9020",
+      "2412-15299_sent_3b9f98d3": "2412-15299_item_436a9020",
+      "2412-15299_section_a7f20481": "2412-15299_doc_root",
+      "2412-15299_subsection_0c38ca86": "2412-15299_section_a7f20481",
+      "2412-15299_sent_8ef6da12": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_3d4416d8": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_c90bb664": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_552b6d7b": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_0e68508f": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_f54b54fc": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_758e59bc": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_3f45955d": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_231d59ca": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_c470ce47": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_f4a9db9c": "2412-15299_subsection_0c38ca86",
+      "2412-15299_subsection_c1760bda": "2412-15299_section_a7f20481",
+      "2412-15299_sent_ac9e8f90": "2412-15299_subsection_c1760bda",
+      "2412-15299_sent_e3a96642": "2412-15299_subsection_c1760bda",
+      "2412-15299_sent_6bcfc47e": "2412-15299_subsection_c1760bda",
+      "2412-15299_subsection_7097c845": "2412-15299_section_a7f20481",
+      "2412-15299_sent_f10c3b3b": "2412-15299_subsection_7097c845",
+      "2412-15299_sent_746cefac": "2412-15299_subsection_7097c845",
+      "2412-15299_sent_16475a17": "2412-15299_subsection_7097c845",
+      "2412-15299_section_a5ecd91e": "2412-15299_doc_root",
+      "2412-15299_sent_5cc24c33": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_1c2ebe49": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_28b40d0d": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_ea5e5cb5": "2412-15299_section_a5ecd91e",
+      "2412-15299_subsection_6a3bd011": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_a59eef14": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_e89e1b14": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_b76c76a8": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_871e195f": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_5abd233c": "2412-15299_subsection_6a3bd011",
+      "2412-15299_subsubsection_87390fde": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_17469f50": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_8f65b5ad": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_88749dd9": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_37a3ee92": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_c9b0a207": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_0d33db01": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_738a45bd": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_7d2e491c": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_93bfc1c9": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_d6d602de": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_ddee4d68": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_a67ea1d2": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_932aed5d": "2412-15299_subsubsection_87390fde",
+      "2412-15299_subsubsection_234495b0": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_58733547": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_04594c27": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_cceb348b": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_ea50b525": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_a934d758": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_16d9510f": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_4088db73": "2412-15299_subsubsection_234495b0",
+      "2412-15299_fig_5663f0a4": "2412-15299_subsubsection_234495b0",
+      "2412-15299_subsubsection_71498cb8": "2412-15299_subsection_b41dd9d9",
+      "2412-15299_sent_7ebc2875": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_b99ef6ba": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_93d38514": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_5cbb6124": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_5133e84e": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_1f898b12": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_3c4005c0": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_subsection_6dce0127": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_d0f69637": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_6b63a956": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_5c78a76e": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_4036b06a": "2412-15299_subsection_6dce0127",
+      "2412-15299_subsubsection_73703e27": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_71075c03": "2412-15299_subsubsection_73703e27",
+      "2412-15299_sent_2651a152": "2412-15299_subsubsection_73703e27",
+      "2412-15299_sent_f693e0b7": "2412-15299_subsubsection_73703e27",
+      "2412-15299_subsubsection_9b353ca3": "2412-15299_subsection_b41dd9d9",
+      "2412-15299_sent_f1462596": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_c6b9c310": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_section_4829262c": "2412-15299_doc_root",
+      "2412-15299_subsection_239658e0": "2412-15299_section_4829262c",
+      "2412-15299_subsubsection_df278c0b": "2412-15299_subsection_239658e0",
+      "2412-15299_sent_e0acb52e": "2412-15299_subsubsection_df278c0b",
+      "2412-15299_subsubsection_71cdbf95": "2412-15299_subsection_239658e0",
+      "2412-15299_subsection_3ce93175": "2412-15299_section_4829262c",
+      "2412-15299_sent_f40b1944": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_a9afb9dd": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_457e6bb8": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_8af7242a": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_799712b2": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_03176efb": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_7a167b56": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_4de2a444": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_87d52d42": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_42324ff2": "2412-15299_subsection_3ce93175",
+      "2412-15299_fig_4db0ccee": "2412-15299_subsection_3ce93175",
+      "2412-15299_subsection_f75bd3b3": "2412-15299_section_4829262c",
+      "2412-15299_sent_55128b9b": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_e20aa286": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_e4c7f5b3": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_b75b71ca": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_dfcba616": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_83f0b9cd": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_subsection_b41dd9d9": "2412-15299_section_4829262c",
+      "2412-15299_sent_1446e897": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_9d33bae3": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_subsubsection_a52f1680": "2412-15299_subsection_feb8fbab",
+      "2412-15299_sent_9e74a087": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_6b1bafe3": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_b0361c61": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_eee6385b": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_0f4febc1": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_e75336c0": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_9f6cfc93": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_f656ac37": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_9b2b19af": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_530c61b6": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_f15f698a": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_a2009981": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_fig_71d0319b": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_7d795be0": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_ec05c164": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_b2f4c626": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_e3c95eee": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_ed8e65e4": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_41d5277e": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_fc192297": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_c7a5f704": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_section_fd69c5cf": "2412-15299_doc_root",
+      "2412-15299_sent_d82a949e": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_e6188406": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_1ab61c8a": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsection_028fa47e": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsubsection_33bd1792": "2412-15299_subsection_028fa47e",
+      "2412-15299_sent_5480582c": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_b44cccee": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_8c1aff8f": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_2477dbec": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_e0359000": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_4b2c6bf7": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_subsubsection_2969d9ad": "2412-15299_subsection_028fa47e",
+      "2412-15299_sent_09934e76": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_1119b7bc": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_67545fee": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_4f1808e6": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_subsection_931baffe": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_07317449": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_f23cc91b": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_6b5608f3": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_0b420743": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_c6310a1a": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_2a9eafe6": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_16c8ec7a": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_ec19b39d": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_b62d5b89": "2412-15299_subsection_931baffe",
+      "2412-15299_fig_3aedb8e0": "2412-15299_subsection_931baffe",
+      "2412-15299_subsection_ae249621": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsubsection_0743a277": "2412-15299_subsection_ae249621",
+      "2412-15299_sent_c0e758a9": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_c071bf24": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_12599aaf": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_0a14c32a": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_4307a441": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_71b38201": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_f7f52f5f": "2412-15299_subsubsection_0743a277",
+      "2412-15299_subsubsection_7d51c297": "2412-15299_subsection_ae249621",
+      "2412-15299_sent_6ef05a92": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_060f2368": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_61bad212": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_ba60dc85": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_subsection_feb8fbab": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_411464e3": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_33bf119a": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_2b3800f2": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_68208473": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_4eaf0595": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_subsubsection_088246dc": "2412-15299_subsection_feb8fbab",
+      "2412-15299_sent_67908a61": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_968e65b6": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_2df1b96a": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_f82d6f8f": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_3203a1d8": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_5e489c42": "2412-15299_subsubsection_088246dc",
+      "2412-15299_section_6f8b794f": "2412-15299_doc_root",
+      "2412-15299_sent_63c0c1ab": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_fa42f5ae": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_705b81d9": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_240b49ab": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_43df99cc": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_080c663b": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_2c4b0f7d": "2412-15299_section_6f8b794f"
+    },
+    "4": {
+      "2412-15299_sent_676977e1": "2412-15299_doc_root",
+      "2412-15299_abstract_ce28071e": "2412-15299_doc_root",
+      "2412-15299_sent_d0757f32": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0368d2c1": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_718f7774": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_6747174d": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_45232bee": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_35bd3a7a": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_5fe01f4d": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0d512cdd": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_4680d8e2": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_0d164f43": "2412-15299_abstract_ce28071e",
+      "2412-15299_sent_6d541906": "2412-15299_abstract_ce28071e",
+      "2412-15299_section_0b79795d": "2412-15299_doc_root",
+      "2412-15299_sent_0d5fa005": "2412-15299_section_0b79795d",
+      "2412-15299_sent_a2b8731a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_5ddb8c16": "2412-15299_section_0b79795d",
+      "2412-15299_sent_64672fc0": "2412-15299_section_0b79795d",
+      "2412-15299_sent_4bc87417": "2412-15299_section_0b79795d",
+      "2412-15299_sent_8879f902": "2412-15299_section_0b79795d",
+      "2412-15299_sent_e38ce746": "2412-15299_section_0b79795d",
+      "2412-15299_sent_b80c8d4c": "2412-15299_section_0b79795d",
+      "2412-15299_sent_0675f71b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_efb9eea5": "2412-15299_section_0b79795d",
+      "2412-15299_sent_2421ad24": "2412-15299_section_0b79795d",
+      "2412-15299_sent_27a174b1": "2412-15299_section_0b79795d",
+      "2412-15299_fig_b71837c1": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_1fcf438b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_cadf825a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_fc06d126": "2412-15299_section_0b79795d",
+      "2412-15299_sent_e91e7cfb": "2412-15299_section_0b79795d",
+      "2412-15299_sent_f930f856": "2412-15299_section_0b79795d",
+      "2412-15299_sent_7abf1d4c": "2412-15299_section_0b79795d",
+      "2412-15299_sent_7e18c75a": "2412-15299_section_0b79795d",
+      "2412-15299_sent_25302e5b": "2412-15299_section_0b79795d",
+      "2412-15299_sent_06145344": "2412-15299_section_0b79795d",
+      "2412-15299_sent_a2f3ca97": "2412-15299_section_0b79795d",
+      "2412-15299_sent_5a72cb0d": "2412-15299_section_0b79795d",
+      "2412-15299_itemize_3e8a3b4d": "2412-15299_section_0b79795d",
+      "2412-15299_item_436a9020": "2412-15299_itemize_3e8a3b4d",
+      "2412-15299_sent_40cd52a2": "2412-15299_item_436a9020",
+      "2412-15299_sent_e293b0c1": "2412-15299_item_436a9020",
+      "2412-15299_sent_3b9f98d3": "2412-15299_item_436a9020",
+      "2412-15299_section_a7f20481": "2412-15299_doc_root",
+      "2412-15299_subsection_0c38ca86": "2412-15299_section_a7f20481",
+      "2412-15299_sent_8ef6da12": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_3d4416d8": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_c90bb664": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_552b6d7b": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_0e68508f": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_f54b54fc": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_758e59bc": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_3f45955d": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_231d59ca": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_c470ce47": "2412-15299_subsection_0c38ca86",
+      "2412-15299_sent_f4a9db9c": "2412-15299_subsection_0c38ca86",
+      "2412-15299_subsection_c1760bda": "2412-15299_section_a7f20481",
+      "2412-15299_sent_ac9e8f90": "2412-15299_subsection_c1760bda",
+      "2412-15299_sent_e3a96642": "2412-15299_subsection_c1760bda",
+      "2412-15299_sent_6bcfc47e": "2412-15299_subsection_c1760bda",
+      "2412-15299_subsection_7097c845": "2412-15299_section_a7f20481",
+      "2412-15299_sent_f10c3b3b": "2412-15299_subsection_7097c845",
+      "2412-15299_sent_746cefac": "2412-15299_subsection_7097c845",
+      "2412-15299_sent_16475a17": "2412-15299_subsection_7097c845",
+      "2412-15299_section_a5ecd91e": "2412-15299_doc_root",
+      "2412-15299_sent_5cc24c33": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_1c2ebe49": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_28b40d0d": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_ea5e5cb5": "2412-15299_section_a5ecd91e",
+      "2412-15299_subsection_6a3bd011": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_a59eef14": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_e89e1b14": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_b76c76a8": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_871e195f": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_5abd233c": "2412-15299_subsection_6a3bd011",
+      "2412-15299_subsubsection_87390fde": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_17469f50": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_8f65b5ad": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_88749dd9": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_37a3ee92": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_c9b0a207": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_0d33db01": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_738a45bd": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_7d2e491c": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_93bfc1c9": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_d6d602de": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_ddee4d68": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_a67ea1d2": "2412-15299_subsubsection_87390fde",
+      "2412-15299_sent_932aed5d": "2412-15299_subsubsection_87390fde",
+      "2412-15299_subsubsection_234495b0": "2412-15299_subsection_6a3bd011",
+      "2412-15299_sent_58733547": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_04594c27": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_cceb348b": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_ea50b525": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_a934d758": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_16d9510f": "2412-15299_subsubsection_234495b0",
+      "2412-15299_sent_4088db73": "2412-15299_subsubsection_234495b0",
+      "2412-15299_fig_be7fea8e": "2412-15299_subsubsection_234495b0",
+      "2412-15299_subsubsection_71498cb8": "2412-15299_subsection_b41dd9d9",
+      "2412-15299_sent_7ebc2875": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_b99ef6ba": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_93d38514": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_5cbb6124": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_5133e84e": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_1f898b12": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_3c4005c0": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_subsection_6dce0127": "2412-15299_section_a5ecd91e",
+      "2412-15299_sent_d0f69637": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_6b63a956": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_5c78a76e": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_4036b06a": "2412-15299_subsection_6dce0127",
+      "2412-15299_subsubsection_73703e27": "2412-15299_subsection_6dce0127",
+      "2412-15299_sent_71075c03": "2412-15299_subsubsection_73703e27",
+      "2412-15299_sent_2651a152": "2412-15299_subsubsection_73703e27",
+      "2412-15299_sent_f693e0b7": "2412-15299_subsubsection_73703e27",
+      "2412-15299_subsubsection_9b353ca3": "2412-15299_subsection_b41dd9d9",
+      "2412-15299_sent_f1462596": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_c6b9c310": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_section_4829262c": "2412-15299_doc_root",
+      "2412-15299_subsection_239658e0": "2412-15299_section_4829262c",
+      "2412-15299_subsubsection_df278c0b": "2412-15299_subsection_239658e0",
+      "2412-15299_sent_e0acb52e": "2412-15299_subsubsection_df278c0b",
+      "2412-15299_subsubsection_71cdbf95": "2412-15299_subsection_239658e0",
+      "2412-15299_subsection_3ce93175": "2412-15299_section_4829262c",
+      "2412-15299_sent_f40b1944": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_a9afb9dd": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_457e6bb8": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_8af7242a": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_799712b2": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_03176efb": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_7a167b56": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_4de2a444": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_87d52d42": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_42324ff2": "2412-15299_subsection_3ce93175",
+      "2412-15299_sent_d04eb245": "2412-15299_subsection_3ce93175",
+      "2412-15299_fig_4db0ccee": "2412-15299_subsection_3ce93175",
+      "2412-15299_subsection_f75bd3b3": "2412-15299_section_4829262c",
+      "2412-15299_sent_55128b9b": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_e20aa286": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_e4c7f5b3": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_b75b71ca": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_dfcba616": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_sent_83f0b9cd": "2412-15299_subsection_f75bd3b3",
+      "2412-15299_subsection_b41dd9d9": "2412-15299_section_4829262c",
+      "2412-15299_sent_1446e897": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_sent_9d33bae3": "2412-15299_subsubsection_71498cb8",
+      "2412-15299_subsubsection_a52f1680": "2412-15299_subsection_feb8fbab",
+      "2412-15299_sent_9e74a087": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_6b1bafe3": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_b0361c61": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_eee6385b": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_0f4febc1": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_e75336c0": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_9f6cfc93": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_f656ac37": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_9b2b19af": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_530c61b6": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_f15f698a": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_a2009981": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_fig_71d0319b": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_7d795be0": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_ec05c164": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_b2f4c626": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_e3c95eee": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_ed8e65e4": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_41d5277e": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_fc192297": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_sent_c7a5f704": "2412-15299_subsubsection_9b353ca3",
+      "2412-15299_section_fd69c5cf": "2412-15299_doc_root",
+      "2412-15299_sent_d82a949e": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_e6188406": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_1ab61c8a": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsection_028fa47e": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsubsection_33bd1792": "2412-15299_subsection_028fa47e",
+      "2412-15299_sent_91d4fd0d": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_a21cd39c": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_8c1aff8f": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_2477dbec": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_e0359000": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_sent_4b2c6bf7": "2412-15299_subsubsection_33bd1792",
+      "2412-15299_subsubsection_2969d9ad": "2412-15299_subsection_028fa47e",
+      "2412-15299_sent_09934e76": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_1119b7bc": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_67545fee": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_sent_714e9789": "2412-15299_subsubsection_2969d9ad",
+      "2412-15299_subsection_931baffe": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_07317449": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_f23cc91b": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_6b5608f3": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_0b420743": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_c6310a1a": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_2a9eafe6": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_16c8ec7a": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_ec19b39d": "2412-15299_subsection_931baffe",
+      "2412-15299_sent_b62d5b89": "2412-15299_subsection_931baffe",
+      "2412-15299_fig_3aedb8e0": "2412-15299_subsection_931baffe",
+      "2412-15299_subsection_ae249621": "2412-15299_section_fd69c5cf",
+      "2412-15299_subsubsection_0743a277": "2412-15299_subsection_ae249621",
+      "2412-15299_sent_c0e758a9": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_c071bf24": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_12599aaf": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_0a14c32a": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_4307a441": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_71b38201": "2412-15299_subsubsection_0743a277",
+      "2412-15299_sent_f7f52f5f": "2412-15299_subsubsection_0743a277",
+      "2412-15299_subsubsection_7d51c297": "2412-15299_subsection_ae249621",
+      "2412-15299_sent_6ef05a92": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_060f2368": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_61bad212": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_sent_ba60dc85": "2412-15299_subsubsection_7d51c297",
+      "2412-15299_subsection_feb8fbab": "2412-15299_section_fd69c5cf",
+      "2412-15299_sent_411464e3": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_33bf119a": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_2b3800f2": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_68208473": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_sent_4eaf0595": "2412-15299_subsubsection_a52f1680",
+      "2412-15299_subsubsection_088246dc": "2412-15299_subsection_feb8fbab",
+      "2412-15299_sent_67908a61": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_968e65b6": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_2df1b96a": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_f82d6f8f": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_3203a1d8": "2412-15299_subsubsection_088246dc",
+      "2412-15299_sent_5e489c42": "2412-15299_subsubsection_088246dc",
+      "2412-15299_section_6f8b794f": "2412-15299_doc_root",
+      "2412-15299_sent_63c0c1ab": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_fa42f5ae": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_705b81d9": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_240b49ab": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_43df99cc": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_080c663b": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_2c4b0f7d": "2412-15299_section_6f8b794f",
+      "2412-15299_sent_052e9a25": "2412-15299_doc_root",
+      "2412-15299_sent_641b066e": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_f67d956f": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_76a6d1cc": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_6c1dcb96": "2412-15299_sent_052e9a25",
+      "2412-15299_sent_b25b9691": "2412-15299_sent_052e9a25",
+      "2412-15299_section_e473d231": "2412-15299_doc_root",
+      "2412-15299_sent_273fb02c": "2412-15299_section_e473d231",
+      "2412-15299_sent_0c968ace": "2412-15299_section_e473d231",
+      "2412-15299_sent_a140810c": "2412-15299_section_e473d231",
+      "2412-15299_sent_7d60c3b0": "2412-15299_section_e473d231",
+      "2412-15299_sent_57ffb78f": "2412-15299_section_e473d231",
+      "2412-15299_section_857398f0": "2412-15299_doc_root",
+      "2412-15299_sent_c9c4ef1f": "2412-15299_section_857398f0",
+      "2412-15299_sent_ebd8fa31": "2412-15299_section_857398f0",
+      "2412-15299_sent_b357dd06": "2412-15299_section_857398f0",
+      "2412-15299_sent_e1666cb0": "2412-15299_section_857398f0",
+      "2412-15299_sent_dcfbb4cc": "2412-15299_section_857398f0",
+      "2412-15299_sent_492f353a": "2412-15299_section_857398f0",
+      "2412-15299_sent_d465a455": "2412-15299_section_857398f0",
+      "2412-15299_sent_b0bd7472": "2412-15299_section_857398f0",
+      "2412-15299_sent_9e6249da": "2412-15299_section_857398f0",
+      "2412-15299_sent_5388bc07": "2412-15299_section_857398f0",
+      "2412-15299_sent_ec6aca3a": "2412-15299_section_857398f0",
+      "2412-15299_sent_62139a1a": "2412-15299_section_857398f0",
+      "2412-15299_section_d6607e2d": "2412-15299_doc_root",
+      "2412-15299_sent_09b13964": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_92d18388": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_cdf119d7": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_b5488310": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_1a2d8e42": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_8ac8c2e5": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_048ca8e8": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_fa8a4403": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_1591e81b": "2412-15299_section_d6607e2d",
+      "2412-15299_sent_4cdee045": "2412-15299_section_d6607e2d",
+      "2412-15299_section_bf9f4449": "2412-15299_doc_root",
+      "2412-15299_sent_b4b45060": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_3a3257dc": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_83c9e5b8": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_efee6e82": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_d283c5a4": "2412-15299_section_bf9f4449",
+      "2412-15299_sent_2e960412": "2412-15299_section_bf9f4449"
+    }
+  },
+  "merged_parents": {
+    "2412-15299_sent_676977e1": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_abstract_ce28071e": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_d0757f32": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_0368d2c1": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_718f7774": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_6747174d": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_45232bee": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_35bd3a7a": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_5fe01f4d": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_0d512cdd": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_4680d8e2": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_0d164f43": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_sent_6d541906": [
+      "2412-15299_abstract_ce28071e"
+    ],
+    "2412-15299_section_0b79795d": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_0d5fa005": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_a2b8731a": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_5ddb8c16": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_64672fc0": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_4bc87417": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_8879f902": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_e38ce746": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_b80c8d4c": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_0675f71b": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_efb9eea5": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_2421ad24": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_27a174b1": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_fig_b71837c1": [
+      "2412-15299_section_0b79795d",
+      "2412-15299_section_6f8b794f",
+      "2412-15299_section_857398f0",
+      "2412-15299_section_bf9f4449",
+      "2412-15299_section_d6607e2d",
+      "2412-15299_section_e473d231",
+      "2412-15299_subsection_3ce93175",
+      "2412-15299_subsection_931baffe",
+      "2412-15299_subsubsection_87390fde",
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_1fcf438b": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_cadf825a": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_fc06d126": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_e91e7cfb": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_f930f856": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_7abf1d4c": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_7e18c75a": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_25302e5b": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_06145344": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_a2f3ca97": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_sent_5a72cb0d": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_itemize_3e8a3b4d": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_item_436a9020": [
+      "2412-15299_itemize_3e8a3b4d"
+    ],
+    "2412-15299_sent_40cd52a2": [
+      "2412-15299_item_436a9020"
+    ],
+    "2412-15299_sent_e293b0c1": [
+      "2412-15299_item_436a9020"
+    ],
+    "2412-15299_sent_3b9f98d3": [
+      "2412-15299_item_436a9020"
+    ],
+    "2412-15299_section_a7f20481": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_subsection_0c38ca86": [
+      "2412-15299_section_a7f20481"
+    ],
+    "2412-15299_sent_8ef6da12": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_3d4416d8": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_c90bb664": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_552b6d7b": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_0e68508f": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_f54b54fc": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_758e59bc": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_3f45955d": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_231d59ca": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_c470ce47": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_sent_f4a9db9c": [
+      "2412-15299_subsection_0c38ca86"
+    ],
+    "2412-15299_subsection_c1760bda": [
+      "2412-15299_section_a7f20481"
+    ],
+    "2412-15299_sent_ac9e8f90": [
+      "2412-15299_subsection_c1760bda"
+    ],
+    "2412-15299_sent_e3a96642": [
+      "2412-15299_subsection_c1760bda"
+    ],
+    "2412-15299_sent_6bcfc47e": [
+      "2412-15299_subsection_c1760bda"
+    ],
+    "2412-15299_subsection_7097c845": [
+      "2412-15299_section_a7f20481"
+    ],
+    "2412-15299_sent_f10c3b3b": [
+      "2412-15299_subsection_7097c845"
+    ],
+    "2412-15299_sent_746cefac": [
+      "2412-15299_subsection_7097c845"
+    ],
+    "2412-15299_sent_16475a17": [
+      "2412-15299_subsection_7097c845"
+    ],
+    "2412-15299_section_a5ecd91e": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_5cc24c33": [
+      "2412-15299_section_a5ecd91e"
+    ],
+    "2412-15299_sent_1c2ebe49": [
+      "2412-15299_section_a5ecd91e"
+    ],
+    "2412-15299_sent_28b40d0d": [
+      "2412-15299_section_a5ecd91e"
+    ],
+    "2412-15299_sent_ea5e5cb5": [
+      "2412-15299_section_a5ecd91e"
+    ],
+    "2412-15299_subsection_6a3bd011": [
+      "2412-15299_section_a5ecd91e"
+    ],
+    "2412-15299_sent_a59eef14": [
+      "2412-15299_subsection_6a3bd011"
+    ],
+    "2412-15299_sent_e89e1b14": [
+      "2412-15299_subsection_6a3bd011"
+    ],
+    "2412-15299_sent_b76c76a8": [
+      "2412-15299_subsection_6a3bd011"
+    ],
+    "2412-15299_sent_871e195f": [
+      "2412-15299_subsection_6a3bd011"
+    ],
+    "2412-15299_sent_5abd233c": [
+      "2412-15299_subsection_6a3bd011"
+    ],
+    "2412-15299_subsubsection_87390fde": [
+      "2412-15299_subsection_6a3bd011"
+    ],
+    "2412-15299_sent_17469f50": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_8f65b5ad": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_88749dd9": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_37a3ee92": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_c9b0a207": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_0d33db01": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_738a45bd": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_7d2e491c": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_93bfc1c9": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_d6d602de": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_ddee4d68": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_a67ea1d2": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_sent_932aed5d": [
+      "2412-15299_subsubsection_87390fde"
+    ],
+    "2412-15299_subsubsection_234495b0": [
+      "2412-15299_subsection_6a3bd011"
+    ],
+    "2412-15299_sent_58733547": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_sent_04594c27": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_sent_cceb348b": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_sent_ea50b525": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_sent_a934d758": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_sent_16d9510f": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_sent_4088db73": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_fig_be7fea8e": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_subsubsection_71498cb8": [
+      "2412-15299_subsection_6a3bd011",
+      "2412-15299_subsection_b41dd9d9"
+    ],
+    "2412-15299_sent_7ebc2875": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_sent_b99ef6ba": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_sent_93d38514": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_sent_5cbb6124": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_sent_5133e84e": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_sent_1f898b12": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_sent_3c4005c0": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_subsection_6dce0127": [
+      "2412-15299_section_a5ecd91e"
+    ],
+    "2412-15299_sent_d0f69637": [
+      "2412-15299_subsection_6dce0127"
+    ],
+    "2412-15299_sent_6b63a956": [
+      "2412-15299_subsection_6dce0127"
+    ],
+    "2412-15299_sent_5c78a76e": [
+      "2412-15299_subsection_6dce0127"
+    ],
+    "2412-15299_sent_4036b06a": [
+      "2412-15299_subsection_6dce0127"
+    ],
+    "2412-15299_subsubsection_73703e27": [
+      "2412-15299_subsection_6dce0127"
+    ],
+    "2412-15299_sent_71075c03": [
+      "2412-15299_subsubsection_73703e27"
+    ],
+    "2412-15299_sent_2651a152": [
+      "2412-15299_subsubsection_73703e27"
+    ],
+    "2412-15299_sent_f693e0b7": [
+      "2412-15299_subsubsection_73703e27"
+    ],
+    "2412-15299_subsubsection_9b353ca3": [
+      "2412-15299_subsection_6dce0127",
+      "2412-15299_subsection_b41dd9d9"
+    ],
+    "2412-15299_sent_f1462596": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_c6b9c310": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_section_4829262c": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_subsection_239658e0": [
+      "2412-15299_section_4829262c"
+    ],
+    "2412-15299_subsubsection_df278c0b": [
+      "2412-15299_subsection_239658e0"
+    ],
+    "2412-15299_sent_e0acb52e": [
+      "2412-15299_subsubsection_df278c0b"
+    ],
+    "2412-15299_subsubsection_71cdbf95": [
+      "2412-15299_subsection_239658e0"
+    ],
+    "2412-15299_subsection_3ce93175": [
+      "2412-15299_section_4829262c"
+    ],
+    "2412-15299_sent_f40b1944": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_a9afb9dd": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_457e6bb8": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_8af7242a": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_799712b2": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_03176efb": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_7a167b56": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_4de2a444": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_87d52d42": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_42324ff2": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_sent_d04eb245": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_fig_4db0ccee": [
+      "2412-15299_subsection_3ce93175"
+    ],
+    "2412-15299_subsection_f75bd3b3": [
+      "2412-15299_section_4829262c"
+    ],
+    "2412-15299_sent_55128b9b": [
+      "2412-15299_subsection_f75bd3b3"
+    ],
+    "2412-15299_sent_e20aa286": [
+      "2412-15299_subsection_f75bd3b3"
+    ],
+    "2412-15299_sent_e4c7f5b3": [
+      "2412-15299_subsection_f75bd3b3"
+    ],
+    "2412-15299_sent_b75b71ca": [
+      "2412-15299_subsection_f75bd3b3"
+    ],
+    "2412-15299_sent_dfcba616": [
+      "2412-15299_subsection_f75bd3b3"
+    ],
+    "2412-15299_sent_83f0b9cd": [
+      "2412-15299_subsection_f75bd3b3"
+    ],
+    "2412-15299_subsection_b41dd9d9": [
+      "2412-15299_section_4829262c"
+    ],
+    "2412-15299_sent_1446e897": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_sent_9d33bae3": [
+      "2412-15299_subsubsection_71498cb8"
+    ],
+    "2412-15299_subsubsection_a52f1680": [
+      "2412-15299_subsection_b41dd9d9",
+      "2412-15299_subsection_feb8fbab"
+    ],
+    "2412-15299_sent_9e74a087": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_6b1bafe3": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_b0361c61": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_eee6385b": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_0f4febc1": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_e75336c0": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_9f6cfc93": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_f656ac37": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_9b2b19af": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_530c61b6": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_f15f698a": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_a2009981": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_fig_71d0319b": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_7d795be0": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_ec05c164": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_b2f4c626": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_e3c95eee": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_ed8e65e4": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_41d5277e": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_fc192297": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_sent_c7a5f704": [
+      "2412-15299_subsubsection_9b353ca3"
+    ],
+    "2412-15299_section_fd69c5cf": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_d82a949e": [
+      "2412-15299_section_fd69c5cf"
+    ],
+    "2412-15299_sent_e6188406": [
+      "2412-15299_section_fd69c5cf"
+    ],
+    "2412-15299_sent_1ab61c8a": [
+      "2412-15299_section_fd69c5cf"
+    ],
+    "2412-15299_subsection_028fa47e": [
+      "2412-15299_section_fd69c5cf"
+    ],
+    "2412-15299_subsubsection_33bd1792": [
+      "2412-15299_subsection_028fa47e"
+    ],
+    "2412-15299_sent_91d4fd0d": [
+      "2412-15299_subsubsection_33bd1792"
+    ],
+    "2412-15299_sent_a21cd39c": [
+      "2412-15299_subsubsection_33bd1792"
+    ],
+    "2412-15299_sent_8c1aff8f": [
+      "2412-15299_subsubsection_33bd1792"
+    ],
+    "2412-15299_sent_2477dbec": [
+      "2412-15299_subsubsection_33bd1792"
+    ],
+    "2412-15299_sent_e0359000": [
+      "2412-15299_subsubsection_33bd1792"
+    ],
+    "2412-15299_sent_4b2c6bf7": [
+      "2412-15299_subsubsection_33bd1792"
+    ],
+    "2412-15299_subsubsection_2969d9ad": [
+      "2412-15299_subsection_028fa47e"
+    ],
+    "2412-15299_sent_09934e76": [
+      "2412-15299_subsubsection_2969d9ad"
+    ],
+    "2412-15299_sent_1119b7bc": [
+      "2412-15299_subsubsection_2969d9ad"
+    ],
+    "2412-15299_sent_67545fee": [
+      "2412-15299_subsubsection_2969d9ad"
+    ],
+    "2412-15299_sent_714e9789": [
+      "2412-15299_subsubsection_2969d9ad"
+    ],
+    "2412-15299_subsection_931baffe": [
+      "2412-15299_section_fd69c5cf"
+    ],
+    "2412-15299_sent_07317449": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_sent_f23cc91b": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_sent_6b5608f3": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_sent_0b420743": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_sent_c6310a1a": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_sent_2a9eafe6": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_sent_16c8ec7a": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_sent_ec19b39d": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_sent_b62d5b89": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_fig_3aedb8e0": [
+      "2412-15299_subsection_931baffe"
+    ],
+    "2412-15299_subsection_ae249621": [
+      "2412-15299_section_fd69c5cf"
+    ],
+    "2412-15299_subsubsection_0743a277": [
+      "2412-15299_subsection_ae249621"
+    ],
+    "2412-15299_sent_c0e758a9": [
+      "2412-15299_subsubsection_0743a277"
+    ],
+    "2412-15299_sent_c071bf24": [
+      "2412-15299_subsubsection_0743a277"
+    ],
+    "2412-15299_sent_12599aaf": [
+      "2412-15299_subsubsection_0743a277"
+    ],
+    "2412-15299_sent_0a14c32a": [
+      "2412-15299_subsubsection_0743a277"
+    ],
+    "2412-15299_sent_4307a441": [
+      "2412-15299_subsubsection_0743a277"
+    ],
+    "2412-15299_sent_71b38201": [
+      "2412-15299_subsubsection_0743a277"
+    ],
+    "2412-15299_sent_f7f52f5f": [
+      "2412-15299_subsubsection_0743a277"
+    ],
+    "2412-15299_subsubsection_7d51c297": [
+      "2412-15299_subsection_ae249621"
+    ],
+    "2412-15299_sent_6ef05a92": [
+      "2412-15299_subsubsection_7d51c297"
+    ],
+    "2412-15299_sent_060f2368": [
+      "2412-15299_subsubsection_7d51c297"
+    ],
+    "2412-15299_sent_61bad212": [
+      "2412-15299_subsubsection_7d51c297"
+    ],
+    "2412-15299_sent_ba60dc85": [
+      "2412-15299_subsubsection_7d51c297"
+    ],
+    "2412-15299_subsection_feb8fbab": [
+      "2412-15299_section_fd69c5cf"
+    ],
+    "2412-15299_sent_411464e3": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_33bf119a": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_2b3800f2": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_68208473": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_sent_4eaf0595": [
+      "2412-15299_subsubsection_a52f1680"
+    ],
+    "2412-15299_subsubsection_088246dc": [
+      "2412-15299_subsection_feb8fbab"
+    ],
+    "2412-15299_sent_67908a61": [
+      "2412-15299_subsubsection_088246dc"
+    ],
+    "2412-15299_sent_968e65b6": [
+      "2412-15299_subsubsection_088246dc"
+    ],
+    "2412-15299_sent_2df1b96a": [
+      "2412-15299_subsubsection_088246dc"
+    ],
+    "2412-15299_sent_f82d6f8f": [
+      "2412-15299_subsubsection_088246dc"
+    ],
+    "2412-15299_sent_3203a1d8": [
+      "2412-15299_subsubsection_088246dc"
+    ],
+    "2412-15299_sent_5e489c42": [
+      "2412-15299_subsubsection_088246dc"
+    ],
+    "2412-15299_section_6f8b794f": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_63c0c1ab": [
+      "2412-15299_section_6f8b794f"
+    ],
+    "2412-15299_sent_fa42f5ae": [
+      "2412-15299_section_6f8b794f"
+    ],
+    "2412-15299_sent_705b81d9": [
+      "2412-15299_section_6f8b794f"
+    ],
+    "2412-15299_sent_240b49ab": [
+      "2412-15299_section_6f8b794f"
+    ],
+    "2412-15299_sent_43df99cc": [
+      "2412-15299_section_6f8b794f"
+    ],
+    "2412-15299_sent_080c663b": [
+      "2412-15299_section_6f8b794f"
+    ],
+    "2412-15299_sent_2c4b0f7d": [
+      "2412-15299_section_6f8b794f"
+    ],
+    "2412-15299_sent_052e9a25": [
+      "2412-15299_doc_root",
+      "2412-15299_section_6f8b794f"
+    ],
+    "2412-15299_sent_641b066e": [
+      "2412-15299_sent_052e9a25"
+    ],
+    "2412-15299_sent_f67d956f": [
+      "2412-15299_sent_052e9a25"
+    ],
+    "2412-15299_sent_76a6d1cc": [
+      "2412-15299_sent_052e9a25"
+    ],
+    "2412-15299_sent_6c1dcb96": [
+      "2412-15299_sent_052e9a25"
+    ],
+    "2412-15299_sent_b25b9691": [
+      "2412-15299_sent_052e9a25"
+    ],
+    "2412-15299_section_e473d231": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_273fb02c": [
+      "2412-15299_section_e473d231"
+    ],
+    "2412-15299_sent_0c968ace": [
+      "2412-15299_section_e473d231"
+    ],
+    "2412-15299_sent_a140810c": [
+      "2412-15299_section_e473d231"
+    ],
+    "2412-15299_sent_7d60c3b0": [
+      "2412-15299_section_e473d231"
+    ],
+    "2412-15299_sent_57ffb78f": [
+      "2412-15299_section_e473d231"
+    ],
+    "2412-15299_section_857398f0": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_c9c4ef1f": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_ebd8fa31": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_b357dd06": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_e1666cb0": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_dcfbb4cc": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_492f353a": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_d465a455": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_b0bd7472": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_9e6249da": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_5388bc07": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_ec6aca3a": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_sent_62139a1a": [
+      "2412-15299_section_857398f0"
+    ],
+    "2412-15299_section_d6607e2d": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_09b13964": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_92d18388": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_cdf119d7": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_b5488310": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_1a2d8e42": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_8ac8c2e5": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_048ca8e8": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_fa8a4403": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_1591e81b": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_sent_4cdee045": [
+      "2412-15299_section_d6607e2d"
+    ],
+    "2412-15299_section_bf9f4449": [
+      "2412-15299_doc_root"
+    ],
+    "2412-15299_sent_b4b45060": [
+      "2412-15299_section_bf9f4449"
+    ],
+    "2412-15299_sent_3a3257dc": [
+      "2412-15299_section_bf9f4449"
+    ],
+    "2412-15299_sent_83c9e5b8": [
+      "2412-15299_section_bf9f4449"
+    ],
+    "2412-15299_sent_efee6e82": [
+      "2412-15299_section_bf9f4449"
+    ],
+    "2412-15299_sent_d283c5a4": [
+      "2412-15299_section_bf9f4449"
+    ],
+    "2412-15299_sent_2e960412": [
+      "2412-15299_section_bf9f4449"
+    ],
+    "2412-15299_sent_5b4227c0": [
+      "2412-15299_section_0b79795d"
+    ],
+    "2412-15299_fig_5663f0a4": [
+      "2412-15299_subsubsection_234495b0"
+    ],
+    "2412-15299_sent_5480582c": [
+      "2412-15299_subsubsection_33bd1792"
+    ],
+    "2412-15299_sent_b44cccee": [
+      "2412-15299_subsubsection_33bd1792"
+    ],
+    "2412-15299_sent_4f1808e6": [
+      "2412-15299_subsubsection_2969d9ad"
+    ]
+  }
+}

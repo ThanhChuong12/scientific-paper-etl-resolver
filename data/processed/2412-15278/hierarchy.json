@@ -1,0 +1,1325 @@
+{
+  "elements": {
+    "2412-15278_doc_root": "DOCUMENT_ROOT",
+    "2412-15278_sent_676977e1": "\\maketitle",
+    "2412-15278_abstract_ce28071e": "abstract",
+    "2412-15278_sent_a1bb91ff": "Recent advancements in text-to-3D generation can generate neural radiance fields (NeRFs) with score distillation sampling, enabling 3D asset creation without real-world data capture.",
+    "2412-15278_sent_b7fefbd1": "With the rapid advancement in NeRF generation quality, protecting the copyright of the generated NeRF has become increasingly important.",
+    "2412-15278_sent_c744f94a": "While prior works can watermark NeRFs in a post-generation way, they suffer from two vulnerabilities.",
+    "2412-15278_sent_4ac84478": "First, a delay lies between NeRF generation and watermarking because the secret message is embedded into the NeRF model post-generation through fine-tuning.",
+    "2412-15278_sent_b7e3a20c": "Second, generating a non-watermarked NeRF as an intermediate creates a potential vulnerability for theft.",
+    "2412-15278_sent_8dd12a40": "To address both issues, we propose \\tool to embed a secret message by backdooring the NeRF during NeRF generation.",
+    "2412-15278_sent_3ecb56d7": "In detail, we first pre-train a watermark decoder.",
+    "2412-15278_sent_8276f19b": "Then, \\tool generates backdoored NeRFs in a way that the target secret message can be verified by the pre-trained watermark decoder on an arbitrary trigger viewport.",
+    "2412-15278_sent_a7a080c5": "We evaluate the generation quality and watermark robustness against image- and model-level attacks.",
+    "2412-15278_sent_04d07da4": "Extensive experiments show that the watermarking process will not degrade the generation quality, and the watermark achieves 90+\\% accuracy among both image-level attacks (\\eg, Gaussian noise) and model-level attacks (\\eg, pruning attack).",
+    "2412-15278_section_0b79795d": "Introduction",
+    "2412-15278_sent_6d8fdd77": "Digital 3D content has become indispensable in Metaverse and virtual and augmented reality, enabling visualization, comprehension, and interaction with complex scenes that represent our real lives.",
+    "2412-15278_sent_d5f6c96c": "Recent progress in 3D content generation \\cite{poole2022dreamfusion,lin2023magic3d,wang2024prolificdreamer,liang2024luciddreamer} can generate high-quality 3D assets that need a lot of time, computational resources, and skilled expertise.",
+    "2412-15278_sent_426f5968": "Therefore, protecting the ownership of generated 3D content has become more critical. We focus on Text-to-3D generation \\cite{poole2022dreamfusion,lin2023magic3d,wang2024prolificdreamer,liang2024luciddreamer} and the neural radiance field (NeRF) \\cite{mildenhall2021nerf,muller2022instant}, which have emerged into the spotlight in 3D content modeling.",
+    "2412-15278_sent_538b22e7": "Current trending 3D generation algorithms generate 3D representations such as meshes and NeRFs.",
+    "2412-15278_sent_3386a2dc": "This paper focuses on NeRF generation since NeRF can represent 3D models more compactly.",
+    "2412-15278_sent_2c6c5520": "Given a textual description, recent text-to-3D methods generate NeRFs by distilling pre-trained diffusion models, such as Stable Diffusion \\cite{rombach2022high}.",
+    "2412-15278_sent_08b68236": "This remarkable progress is grounded in the use of Score Distillation Sampling (SDS).",
+    "2412-15278_sent_f0ccc811": "With SDS, NeRF training can be conducted without realistic images.",
+    "2412-15278_sent_3f063b80": "Thus, the research question we address in this paper is: how to protect the score distillation sampling generated neural radiance fields?",
+    "2412-15278_fig_19d6d080": "\\begin{figure}\n\n \\includegraphics[width=\\linewidth]{figures/motivation_egs.pdf}\n \\caption{Attack scenario. If company-generated content is considered company property, internal staff could steal non-watermarked intermediates in the post-generation pipeline (top row). However, such intermediates do not exist in the during-generation pipeline (bottom row).}\n\n\\end{figure}",
+    "2412-15278_sent_47e83284": "One way to protect the generated NeRF is to apply post-generation watermarking methods, such as CopyRNeRF \\cite{luo2023copyrnerf} and WateNeRF \\cite{jang2024waterf}, to watermark NeRF after it is generated. However, these methods exhibit two problems.",
+    "2412-15278_sent_c4d75ed9": "First, post-generation methods pose a risk of data leakage.",
+    "2412-15278_sent_30df34cd": "As shown in Figure \\ref{fig:motivation_egs}, since non-watermarked intermediates are generated in the post-generation pipeline, a malicious user could leak the non-watermarked version of the generated content.",
+    "2412-15278_sent_5c2faf71": "Second, CopyRNeRF increases the watermarking expense since it requires an additional message feature field in the NeRF structure.",
+    "2412-15278_sent_15f1f7ab": "Integrating CopyRNeRF with an arbitrary text-to-NeRF pipeline requires additional modifications to the NeRF structure.",
+    "2412-15278_sent_8d14c5d0": "Recognizing these limitations of previous work, can we conduct a during-generation watermarking without modifying the NeRF structure?",
+    "2412-15278_sent_4f91ef24": "We propose \\tool, the first during-generation text-to-3D watermarking method, which is gracefully combined with score distillation sampling to generate high-quality and watermarked NeRF.",
+    "2412-15278_sent_66aaddc7": "Different from post-generation NeRF watermarking method, \\tool directly generates watermarked NeRF without changing NeRF architecture, increasing the flexibility for future development on 3D generation.",
+    "2412-15278_sent_a35b17e3": "Our method is inspired by black-box model watermarking methods \\cite{adi2018turning,zhang2018protecting,jia2021entangled,le2020adversarial,chen2019blackmarks,szyller2021dawn} which watermark a deep neural network by injecting backdoors.",
+    "2412-15278_sent_b4784324": "To inject backdoors in NeRF during generation, we first generate a trigger view set dependent only on the given secret message.",
+    "2412-15278_sent_bea4f7bc": "Then, we conduct score distillation sampling in a way that the secret message can be extracted from images rendered from arbitrary trigger viewports.",
+    "2412-15278_sent_e5f0d12c": "To extract the secret message from the rendered image, we use a pre-trained watermark decoder from HiDDeN \\cite{zhu2018hidden}.",
+    "2412-15278_sent_c40e32a7": "All NeRF generated by \\tool can be verified as watermarked by such a unique decoder.",
+    "2412-15278_sent_9bacea4e": "Two critical evaluation metrics for watermarking algorithms are invisibility and robustness.",
+    "2412-15278_sent_20dcb215": "For robustness, we evaluate bit accuracy under multiple image transformations, such as Gaussian noise, before images rendered from trigger viewports are fed into the watermark decoder.",
+    "2412-15278_sent_2d6ce85d": "For invisibility, there is no such the ``original NeRF\" since we root watermarks during a generation task, so \\tool cannot be evaluated by Peak Signal-to-Noise Ratio (PSNR) as is done in post-generation methods.",
+    "2412-15278_sent_7d0e6885": "However, we can still evaluate the invisibility by evaluating the generation quality as previous 2D watermarking tasks \\cite{wen2024tree,yang2024gaussian}, where they use CLIP Score \\cite{radford2021clip} to show the generation quality.",
+    "2412-15278_sent_1c094441": "Extensive experiments show that \\tool successfully embeds the watermark in a during-generation way and maintains robustness under multiple image transformations without degrading the generation quality.",
+    "2412-15278_sent_c19d1263": "In summary, our contributions are as follows:",
+    "2412-15278_itemize_b7fabb46": "itemize",
+    "2412-15278_item_a256fb16": "item",
+    "2412-15278_sent_1e11348b": "To the best of our knowledge, we propose \\tool, the first during-generation 3D watermarking method, which eliminates the delay between NeRF generation and watermarking, ensuring that no non-watermarked version of the NeRF is ever produced, thereby preventing NeRF theft.",
+    "2412-15278_sent_e65e58f5": "The key novelty of our \\tool is that it watermarks NeRF by injecting backdoors during score distillation sampling, such that the secret message can be extracted from images rendered from arbitrary trigger viewport.",
+    "2412-15278_sent_292399a9": "Extensive experiments show that the embedded watermark achieves 90+\\% bit accuracy against multiple image transformations, and the watermarking process does not degrade the generation quality.",
+    "2412-15278_section_aed402c3": "Related Work",
+    "2412-15278_subsection_ffa9372a": "Text-to-3D Content Generation",
+    "2412-15278_sent_d33c1363": "One category of text-to-3D generation starts from DreamField \\cite{jain2022zero}, which trains NeRF with CLIP \\cite{radford2021clip} guidance to achieve text-to-3D distillation.",
+    "2412-15278_sent_2b297ecb": "However, the generated content is unsatisfactory due to the weak supervision from CLIP loss.",
+    "2412-15278_sent_126bfcef": "Hence, our work will not consider watermarking CLIP-guided 3D content generation.",
+    "2412-15278_sent_05d51d3f": "Another category starts from Dreamfusion \\cite{poole2022dreamfusion}, which pioneerly introduces Score Distillation Sampling (SDS) to optimize NeRF by distilling a pre-trained text-to-image diffusion model.",
+    "2412-15278_sent_0ebdbd67": "This motivates a great number of following works to propose critical incremental. These works improve the quality of generation in various ways.",
+    "2412-15278_sent_04b8b938": "For example, Fantasia3D \\cite{chen2023fantasia3d}, Magic3D \\cite{lin2023magic3d}, Latent-nerf \\cite{metzer2023latent}, DreamGaussian \\cite{tang2023dreamgaussian} and GaussianDreamer \\cite{yi2023gaussiandreamer} improve the visual quality of generated content by changing 3D representations or improving NeRF structure.",
+    "2412-15278_sent_40a956e3": "MVDream \\cite{shi2023mvdream} focuses on addressing Janus problems by fine-tuning the pre-trained diffusion model to make it 3D aware.",
+    "2412-15278_sent_541e1683": "However, SDS guidance still suffers from over-saturation problems, as is shown in Magic3D \\cite{lin2023magic3d}, Dreamfusion \\cite{poole2022dreamfusion}, and AvatarVerse \\cite{zhang2024avatarverse}.",
+    "2412-15278_sent_841f99a2": "The other, like ProlificDreamer \\cite{wang2024prolificdreamer} and LucidDreamer \\cite{liang2024luciddreamer}, focus on improving SDS itself.",
+    "2412-15278_sent_5ad5e215": "For example, LucidDreamer uncovers the reason for the overly-smoothed problem that SDS guides the generation process towards an averaged pseudo-ground-truth and proposes ISM to relieve such a problem.",
+    "2412-15278_sent_17c23fed": "ProlificDreamer proposes VSD guidance instead of SDS guidance and shows that SDS is just a special case of VSD.",
+    "2412-15278_sent_28bff7e8": "Although extensive research has been proposed to improve text-to-3D generation, these works still require a much longer training stage, which makes it necessary to protect the copyright of generated content.",
+    "2412-15278_subsection_4c1c2224": "Digital Watermarking",
+    "2412-15278_sent_06687a03": "Digital watermarking hides watermarks into multimedia for copyright protection or leakage source tracing.",
+    "2412-15278_sent_7b5da5fa": "Various research works have been proposed to protect traditional multimedia content like 2D images and 3D meshes.",
+    "2412-15278_sent_dd3eeca7": "Early works watermark images and meshes by embedding a secret message in either the least significant bits \\cite{van1994digital} or the most significant bits \\cite{tsai2020separable,jiang2017reversible,tsai2022integrating,peng2022semi,peng2021general} of image pixels and vertex coordinates.",
+    "2412-15278_sent_94107da1": "HiDDeN \\cite{zhu2018hidden} and Deep3DMark \\cite{zhu2024rethinking} have made substantial improvements using deep learning networks.",
+    "2412-15278_sent_80c65878": "Recently, several watermarking methods have emerged in the NeRF domain.",
+    "2412-15278_sent_8632190d": "StegaNeRF \\cite{li2023steganerf} designed a steganography algorithm that hides natural images in 3D scene representation.",
+    "2412-15278_sent_7439ded9": "CopyRNeRF \\cite{luo2023copyrnerf} protects the copyright of NeRF by verifying the secret message extracted from images rendered from the protected NeRF.",
+    "2412-15278_sent_cd427114": "WateNeRF \\cite{jang2024waterf} further improves NeRF watermarking by hiding secret messages into the frequency domain of rendered images, increasing the robustness of the watermark.",
+    "2412-15278_sent_a98233b6": "However, CopyRNeRF and WateNeRF are two post-generation watermarking methods, \\ie they watermark by fine-tuning a pre-trained NeRF.",
+    "2412-15278_sent_a44c8fe4": "This poses a delay between the NeRF generation and watermarking.",
+    "2412-15278_sent_237e5c1e": "A malicious user could obtain the pre-trained NeRF before it is watermarked. Besides, CopyRNeRF requires additional changes in NeRF architecture.",
+    "2412-15278_sent_1f3b2934": "We would like the watermarking method to be architecture agnostic due to the fact that some text-to-3D generation methods, like Magic3D, Fantasia3D, and Latent-nerf, require specific NeRF architecture for visual quality improvement.",
+    "2412-15278_sent_7b1889e2": "To address these issues, we design an architecture-agnostic method that watermarks NeRF during generation.",
+    "2412-15278_section_7ad03400": "Preliminaries",
+    "2412-15278_sent_78af7460": "NeRF.",
+    "2412-15278_sent_0120ec0c": "NeRF \\cite{mildenhall2021nerf} uses multilayer perceptrons (MLPs) $f_{\\sigma}$ and $f_{\\mathbf{c}}$ to map the 3D location $\\mathbf{x}\\in \\mathbb{R}^3$ and viewing direction $\\mathbf{d}\\in\\mathbb{R}^2$ to a color value $\\mathbf{c}\\in\\mathbb{R}^3$ and a geometric value $\\sigma \\in \\mathbb{R}^+$:",
+    "2412-15278_eq_85332f72": "\\begin{equation}\n \\sigma, \\mathbf{z} = f_\\sigma(\\gamma_\\mathbf{x}(\\mathbf{x})),\n\n\\end{equation}",
+    "2412-15278_eq_f6e19349": "\\begin{equation}\n \\mathbf{c}=f_\\mathbf{c}(\\mathbf{z}, \\gamma_\\mathbf{d}(\\mathbf{d})),\n\n\\end{equation}",
+    "2412-15278_sent_a3bb5e56": "where $\\gamma_{\\mathbf{x}}, \\gamma_{\\mathbf{d}}$ are fixed encoding functions for location and viewing direction, respectively.",
+    "2412-15278_sent_6a589461": "The intermediate variable $\\mathbf{z}$ is a feature output by the first MLP $f_\\sigma$.",
+    "2412-15278_sent_4a627115": "To render a $H\\times W$ image with the given viewport $\\mathbf{p}$, the rendering process casts rays $\\{r_i\\}_{i=1}^{H\\times W}$ from pixels and computes the weighted sum of the color $\\mathbf{c}_j$ of the sampling points along each ray to composite the color of each pixel:",
+    "2412-15278_eq_8d7297b4": "\\begin{equation}\n \\hat{\\mathbf{C}}(r_i)=\\sum_j T_j(1-\\exp(-\\sigma_j \\delta_j))\\mathbf{c}_j,\n\n\\end{equation}",
+    "2412-15278_sent_d47c81be": "where $T_j=\\prod_k^{j-1} \\exp (-\\sigma_k\\delta_k)$, and $\\delta_k$ is the distance between adjacent sample points.",
+    "2412-15278_sent_0a3fe5af": "In later chapters, we use $\\mathbf{g}(\\theta, \\mathbf{p})\\in [0,1]^{H\\times W\\times 3}$ to represent the above rendering process, where $\\theta$ represents parameters of a NeRF, and $\\mathbf{g}$ takes viewport $\\mathbf{p}$ as input and outputs a normalized image.",
+    "2412-15278_sent_ad1f35d0": "Diffusion models.",
+    "2412-15278_sent_bc5665db": "A diffusion model \\cite{song2020score,ho2020denoising,song2020denoising} involves a forward process $\\{q_t\\}_{t\\in [0,1]}$ to gradually add noise to a data point $\\mathbf{x}_0\\sim q_0(\\mathbf{x}_0)$ and a reverse process $\\{p_t\\}_{t\\in[0,1]}$ to denoise/generate data.",
+    "2412-15278_sent_5a768ad7": "The forward process is defined by $q_t(\\mathbf{x}_t|\\mathbf{x}_0):=\\mathcal{N}(\\alpha_t\\mathbf{x}_0,\\sigma^2_t\\mathbf{I})$ and $q_t(\\mathbf{x}_t):=\\int q_t(\\mathbf{x}_t|\\mathbf{x}_0)q_0(\\mathbf{x}_0)d\\mathbf{x}_0$, where $\\alpha_t,\\sigma_t>0$ are hyperparamaters; and the reverse process is defined by denoising from $p_1(\\mathbf{x}_1):=\\mathcal{N}(\\mathbf{0}, \\mathbf{I})$ with a parameterized noise prediction network $\\mathbf{\\epsilon}_\\phi(\\mathbf{x}_t, t)$ to predict the noise added to a clean data $\\mathbf{x}_0$, which is trained by minimizing:",
+    "2412-15278_eq_4dc8b53f": "\\begin{equation}\n\n \\mathcal{L}_{\\text{Diff}}(\\phi)=\\mathbb{E}_{\\mathbf{x}_0,t,\\epsilon}\\left[w(t)\\lVert \\epsilon_\\phi(\\alpha_t \\mathbf{x}_0+\\sigma_t\\mathbf{\\epsilon})-\\epsilon\\rVert _2^2\\right],\n\n\\end{equation}",
+    "2412-15278_sent_2e028538": "where $w(t)$ is a time-dependent weighting function.",
+    "2412-15278_sent_e40cc5e6": "After training, we have $p_t \\approx q_t$; thus, we can draw samples from $p_0\\approx q_0$.",
+    "2412-15278_sent_fa6a5c0d": "One of the most important applications is text-to-image generation \\cite{rombach2022high,ramesh2022hierarchical}, where the noise prediction model $\\epsilon_\\phi(\\mathbf{x}_t,t,y)$ is conditioned on a text prompt $y$.",
+    "2412-15278_sent_26249d60": "Text-to-3D generation by score distillation sampling (SDS) \\cite{poole2022dreamfusion}.",
+    "2412-15278_sent_5e68eab8": "SDS is widely used in text-to-3D generation \\cite{lin2023magic3d,wang2024prolificdreamer,liang2024luciddreamer}, which lift 2D information upto 3D NeRF by distilling pre-trained diffusion models.",
+    "2412-15278_sent_f5e12dd1": "Given a pre-trained text-to-image diffusion model $p_t(\\mathbf{x}_t|y)$ with the noise prediction network $\\epsilon_\\phi(\\mathbf{x}_t,t,y)$, SDS optimizes a single NeRF with parameter $\\theta$.",
+    "2412-15278_sent_0c3691a4": "Given a camera viewport $\\mathbf{p}$, a prompt $y$ and a differentiable rendering mapping $\\mathbf{g}(\\theta,\\mathbf{p})$, SDS optimize the NeRF $\\theta$ by minimizing:",
+    "2412-15278_eq_e4ffa8d8": "\\begin{equation}\n \\begin{aligned}\n \\mathcal{L}_{\\text{SDS}}(\\theta)=\\mathbb{E}_{t, \\mathbf{p}}\\left[\\frac{\\sigma_t}{\\alpha_t}w(t)D_{\\text{KL}}(q_t^\\theta(\\mathbf{x}_t|c)\\lVert p_t(\\mathbf{x}_t|y^c))\\right],\n \\end{aligned}\n\n\\end{equation}",
+    "2412-15278_sent_310a6871": "where $\\mathbf{x}_t=\\alpha_t\\mathbf{g}(\\theta,\\mathbf{p})+\\sigma_t\\epsilon$.",
+    "2412-15278_sent_63fa9096": "Its gradients are approximated by:",
+    "2412-15278_eq_a29396c7": "\\begin{equation}\n \\begin{aligned}\n \\nabla_\\theta \\mathcal{L}_{\\text{SDS}}=\\mathbb{E}_{t,\\mathbf{p}}\\left[w(t)\\left(\\epsilon_\\phi(\\mathbf{x}_t,t,y)-\\epsilon\\right)\\frac{\\partial \\mathbf{g}(\\theta, \\mathbf{p})}{\\partial \\theta}\\right].\n \\end{aligned}\n\\end{equation}",
+    "2412-15278_section_a5ecd91e": "Proposed Method",
+    "2412-15278_fig_b71837c1": "\\begin{figure*}",
+    "2412-15278_sent_6615ed5c": "\\includegraphics[width=\\linewidth]{figures/pipeline.pdf} \\caption{Overview.",
+    "2412-15278_sent_737109b9": "(a) We first pre-train a watermark encoder $W_E$ to embed a watermark into images and a watermark decoder $W_D$ to decode a watermark from images.",
+    "2412-15278_sent_a2eb0a1a": "(b) We generate trigger viewports $\\{\\mathbf{p}_T^i\\}$ from the given secret message $m$ and optimize a NeRF such that the secret message can be decoded from images rendered from arbitrary trigger viewport $\\mathbf{p}_T^i$.} \\end{figure*} \\tool watermarks generation process of neural radiance fields (NeRF) by injecting backdoors during score distillation sampling (SDS).",
+    "2412-15278_sent_cab4cd38": "The message can be extracted from the rendered image of trigger viewports through a fixed watermark decoder.",
+    "2412-15278_sent_bcc1da86": "Our method is conducted in two phases.",
+    "2412-15278_sent_bfdf984a": "First, we pre-train the watermark decoder $W_D$.",
+    "2412-15278_sent_84eec92c": "Then, we inject backdoors into a high-resolution NeRF during SDS optimization, such that images rendered from the trigger viewports yield a secret message.",
+    "2412-15278_subsection_2aa1b906": "Pre-train the watermark decoder",
+    "2412-15278_sent_dc1ed705": "Different from CopyRNeRF \\cite{luo2023copyrnerf}, which trains a separate watermark decoder for each watermarked NeRF, \\tool employs a unique watermark decoder.",
+    "2412-15278_sent_213fe7ec": "This allows the NeRFs generated by our method to be verified using this unique decoder.",
+    "2412-15278_sent_a6927721": "Building watermark decoder training pipeline.",
+    "2412-15278_sent_6d4d3b26": "For simplicity, we use HiDDeN \\cite{zhu2018hidden} as our $W_D$ architecture, a well-established image watermarking pipeline.",
+    "2412-15278_sent_6ab434a7": "It optimizes watermark encoder $W_E$ and watermark decoder $W_D$ for signature embedding and extraction.",
+    "2412-15278_sent_e0944faa": "The encoder $W_E$ takes a cover image $x_o\\in \\mathbb{R}^{H\\times W \\times 3}$ and a $k$-bit message $m\\in \\{0,1\\}^k$ as input and outputs a watermarked image $x_w\\in \\mathbb{R}^{H\\times W \\times 3}$.",
+    "2412-15278_sent_54944897": "The decoder takes watermarked image $x_w$ as input and outputs a predicted secret message $m'$.",
+    "2412-15278_sent_014c624c": "The extracted message $m'$ is restricted to $[0,1]$ by utilizing a sigmoid function.",
+    "2412-15278_sent_150acf20": "The message loss is calculated with Binary Cross Entropy (BCE) between $m$ and sigmoid $sg(m')$:",
+    "2412-15278_eq_2c5148e5": "\\begin{equation}\n \\mathcal{L}_{msg}=-\\sum_{i=0}^{L-1}m_i\\cdot \\log sg(m'_i)+(1-m_i)\\cdot \\log (1-sg(m'_i)).\n\\end{equation}",
+    "2412-15278_sent_6bb078bf": "The $W_E$ is discarded in the later phase since only $W_D$ serves our purpose.",
+    "2412-15278_sent_7977dd7d": "Original HiDDeN architecture combines message loss and perceptual loss to optimize both $W_E$ and $W_D$.",
+    "2412-15278_sent_8b12073b": "However, since $W_E$ is discarded and the perceptual loss is not needed, we follow the tradition \\cite{fernandez2023stable,jang2024waterf} to optimize $W_E$ and $W_D$ by message loss only.",
+    "2412-15278_sent_062c6be1": "We find that when the decoder receives a vanilla-rendered image, there is a bias between the extracted message bits.",
+    "2412-15278_sent_c1c83208": "Thus, after training the decoder, we conduct PCA whitening to a linear decoder layer to remove the bias without reducing the extraction ability.",
+    "2412-15278_sent_ba56d3ba": "Transformation layers.",
+    "2412-15278_sent_b0117a15": "For robustness consideration, a transformation layer is added between $W_E$ and $W_D$, which applies additional distortions to $x_w$, such as Gaussian blur, to make the decoder $W_D$ robust to multiple attacks.",
+    "2412-15278_sent_69495286": "During training, it takes in a watermarked image $x_w$ produced by image encoder $W_E$ and outputs a noised version of the watermarked image, which will be further fed to the decoder $W_D$.",
+    "2412-15278_sent_1621de02": "This transformation layer is made of cropping, resizing, rotation and identity.",
+    "2412-15278_sent_33eca6ad": "Within each iteration, one type of transformation is chosen randomly for image editing.",
+    "2412-15278_sent_2b8673d8": "In detail, we add random cropping with parameters 0.3 and 0.7, resizing with parameters 0.3 and 0.7 and rotation with a degree range from $-\\pi/6$ to $\\pi/6$.",
+    "2412-15278_subsection_f08bf4ce": "Dreamark",
+    "2412-15278_sent_f0e4bfc9": "Inspired from existing black-box model watermarking \\cite{adi2018turning,zhang2018protecting,jia2021entangled,le2020adversarial,chen2019blackmarks,szyller2021dawn}, where they root backdoors in a deep neural network to achieve DNN watermarking, we watermark NeRF by rooting backdoors during SDS optimization.",
+    "2412-15278_sent_82a06eba": "Formally, given a NeRF with parameter $\\theta$, a prompt $y$, a secret message $m$, we aim to optimize the NeRF such that the message $m$ can be decoded by $W_D$ from the image $\\mathbf{g}(\\theta, \\mathbf{p}_T)$ rendered from arbitrary trigger viewport $\\mathbf{p}_T$.",
+    "2412-15278_sent_4edbcf68": "Generate Trigger Viewports.",
+    "2412-15278_sent_3a634654": "We wish to generate a set of trigger viewports $\\{\\mathbf{p}_T^i\\}_{i=1}^N$ from the secret message $m$ such that the watermark verifier does not need to keep a replica of the trigger viewport set.",
+    "2412-15278_sent_2f1ed3a9": "Besides, different messages should generate different viewports because a constant trigger viewport set is easy to predict, leading to potential vulnerability.",
+    "2412-15278_sent_8d6236aa": "We use a pseudo-random number generator (PRNG) to generate the $m$-dependent trigger viewport set $\\{\\mathbf{p}_T^i\\}_{i=1}^N$ as shown in Algorithm \\ref{alg:trigger-viewport-generation}.",
+    "2412-15278_fig_731d7a5a": "\\begin{algorithm}\n\\caption{Trigger Viewport Generation}\n\n Input: Secret message $m$\\\\\n Output: $m$-dependent Trigger viewport $\\{\\mathbf{p}_T^i\\}_{i=1}^N$\n\\begin{algorithmic}[1]\n\\State $seed \\gets \\text{SHA256}(m)$ \\Comment{SHA-256 hash of the message}\n\\State $\\text{Initialize random generator with } seed$\n\\State $\\{\\mathbf{p}_T^i\\}_{i=1}^N \\gets \\text{Generate $N$ viewports with initialized generator}$\n\\State \\Return $\\{\\mathbf{p}_T^i\\}_{i=1}^N$\n\\end{algorithmic}\n\\end{algorithm}",
+    "2412-15278_sent_a84e7a3f": "Choosing Trigger Embedding Media.",
+    "2412-15278_sent_fd6a900d": "After generating $m$-dependent trigger viewport set $\\{\\mathbf{p}_T^i\\}_{i=1}^N$, the question is how to choose suitable cover media to hide secret message $m$, such that $m$ can be decoded from the image rendered from arbitrary trigger viewport $\\mathbf{p}_T^i$.",
+    "2412-15278_sent_c6b78e36": "In the text-to-NeRF generation \\cite{wang2024prolificdreamer,liang2024luciddreamer,lin2023magic3d}, NeRF sample a set of points and obtains their colors $\\mathbf{c}$ and geometry values $\\sigma$ through two $\\mathrm{MLP}$s: $f_\\sigma, f_\\mathbf{c}$ (Eq. \\eqref{eq:sigma}, \\eqref{eq:color}).",
+    "2412-15278_sent_871e57e4": "For brevity, we can view the way NeRF computes point colors as $\\mathbf{c}=\\mathrm{MLP}(x,d)$.",
+    "2412-15278_sent_2d9e57a8": "However, CopyRNeRF must learn a separate message feature field to get the point color $\\mathbf{c}=\\mathrm{MLP}(x,d,m)$.",
+    "2412-15278_sent_53467538": "When integrating CopyRNeRF with an arbitrary text-to-NeRF pipeline, modifications to the NeRF structure are necessary to accommodate CopyRNeRF.",
+    "2412-15278_sent_ed724d78": "If we expect no additional changes to the NeRF structure, there are two options to hide triggers in the geometric mapping $f_\\sigma$ or the color mapping $f_\\mathbf{c}$.",
+    "2412-15278_sent_8b658717": "In practice, we find that the generated NeRF has low rendering quality once we incorporate geometric mapping $f_\\sigma$ into backdooring.",
+    "2412-15278_sent_f78e7745": "This may be because changing the geometric density of a sampled point will affect its color rendered from all viewing directions (Eq.(\\ref{eq:color})).",
+    "2412-15278_sent_8c61f855": "Therefore, we decide to backdoor in color mapping $f_\\mathbf{c}$.",
+    "2412-15278_sent_120e3677": "Two-stage Trigger Embedding.",
+    "2412-15278_sent_70731c1c": "To backdoor in color mapping $f_\\mathbf{c}$ only, we divide SDS optimization into two stages.",
+    "2412-15278_sent_14cf45e7": "In the first stage, we optimize a high-resolution NeRF (\\eg, 512) by SDS (Eq.(\\ref{eq:sds})) with joint optimization of both $f_\\mathbf{c}$ and $f_\\sigma$.",
+    "2412-15278_sent_ba5d509c": "The aim of the first stage is to generate scenes with complex geometry.",
+    "2412-15278_sent_96b549a5": "In the second stage, we freeze $f_\\sigma$ to fine-tune $f_\\mathbf{c}$ by the following combined loss to conceal watermarks in trigger viewports $p_T$:",
+    "2412-15278_eq_809c44f0": "\\begin{equation}\n \\begin{aligned}\n \\mathcal{L}_{\\text{comb}}(\\theta)=\\mathcal{L}_{\\text{sds}}+\\mathbb{E}_{\\mathbf{p}_T^i}\\left[\\mathrm{BCE}(W_D(\\mathbf{g}(\\theta, \\mathbf{p}_T^i)), m)\\right].\n \\end{aligned}\n\n\\end{equation}",
+    "2412-15278_sent_d4374b1a": "Note that equation \\ref{eq:comb} optimizes $\\theta$ by SDS across arbitrary viewports $\\mathbf{p}$, and $\\mathrm{BCE}$ across trigger viewports $\\mathbf{p}_T^i$.",
+    "2412-15278_sent_1c20c997": "Watermark Extraction.",
+    "2412-15278_sent_d3c92b4d": "Given a suspicious NeRF $\\mathbf{g}(\\theta, \\mathbf{p})$, the NeRF creator can first generate the trigger viewport set $\\{\\mathbf{p}_T^i\\}_{i=1}^N$ following Algorithm \\ref{alg:trigger-viewport-generation} based on his secret message $m$.",
+    "2412-15278_sent_c8a8af79": "Then the decoded message $m'$ can be extracted from the image rendered from arbitrary trigger viewport $\\mathbf{p}_T\\in \\{\\mathbf{p}_T^i\\}_{i=1}^N$.",
+    "2412-15278_sent_77344f4e": "The ownership can be verified by evaluating the bitwise accuracy between $m'$ and $m$.",
+    "2412-15278_subsection_c2b2b81b": "Implementation Details",
+    "2412-15278_sent_81a4c429": "\\includegraphics[width=\\linewidth]{figures/visual_results.pdf} \\caption{Images rendered from trigger viewports.",
+    "2412-15278_sent_873ed351": "Top: generated non-watermarked NeRF.",
+    "2412-15278_sent_f0c9aceb": "Bottom: Watermarked NeRF generated by \\tool.",
+    "2412-15278_sent_b0549c15": "We aim to show that generated NeRF has the same visual quality as the non-watermarked NeRF instead of showing they are perceptually the same since there is no such the ``original NeRF\" in the generation context.} \\end{figure*} Pretrained Watermark Extractor.",
+    "2412-15278_sent_81301d80": "We pretrain the watermark encoder $W_E$ and extractor $W_D$ using COCO \\cite{lin2014microsoftcoco} dataset.",
+    "2412-15278_sent_9abd4451": "We build $W_E$ with four-layer MLPs and $W_D$ with eight-layer MLPs, with all intermediate channels set to 64.",
+    "2412-15278_sent_7ddf6158": "During pretraining, the input image resolution is set to $256\\times 256$, and the output message length is set to 48 to satisfy the capacity requirements of downstream watermarking tasks.",
+    "2412-15278_sent_ac172961": "We use Lamb \\cite{you2019lamb} and CosineLRScheduler to schedule the learning rate, which decays to $1\\times 10^{-6}$.",
+    "2412-15278_sent_212465f3": "This process is done in 500 epochs.",
+    "2412-15278_sent_a2156531": "We choose Instant NGP \\cite{muller2022instant} for efficient high-resolution (\\eg, up to 512) rendering.",
+    "2412-15278_sent_6399f99a": "Given input coordinate $\\mathbf{x}$, we use a 16-level progressive grid for input encoding with the coarsest and finest grid resolution set to 16 and 2048, respectively.",
+    "2412-15278_sent_e7206679": "The encoded input is further fed into $f_\\mathbf{c}$ and $f_\\sigma$, which are both built with one-layer MLPs with 64 channels, to predict the color $c_j$ and density $\\sigma_j$ of input $\\mathbf{x}$.",
+    "2412-15278_sent_5758d82e": "We follow the object-centric initialization used in Magic3D \\cite{lin2023magic3d} to initialze density for NeRF as $\\sigma_{\\text{init}}(\\mathbf{x})=\\lambda_\\sigma(1-\\frac{\\lVert \\mathbf{x}\\rVert_2}{r})$, where $\\lambda_\\sigma=10$ is the density strength, $r=0.5$ is the density radius and $\\mathbf{x}$ is the coordinate.",
+    "2412-15278_sent_b2d3436c": "We use Adam optimizer with learning rate $10^{-3}$ to optimize NeRF in both stages.",
+    "2412-15278_sent_7ba63212": "The guidance model is Stable Diffusion \\cite{rombach2022high} with the guidance scale set to 100.",
+    "2412-15278_sent_73df2965": "During SDS optimization, we sample time $t\\sim \\mathcal{U}(0.02, 0.98)$ in each iteration.",
+    "2412-15278_sent_f04c2d30": "We jointly optimize $f_\\mathbf{c}$ and $f_\\sigma$ for 40000 iterations in stage one and fine-tune $f_\\mathbf{c}$ only for 30000 iterations in stage two.",
+    "2412-15278_section_05aeba47": "Experiment",
+    "2412-15278_subsection_f41a60b6": "Experiment Setup",
+    "2412-15278_fig_2fc84d44": "\\begin{figure}\n\n \\includegraphics[width=\\linewidth]{figures/trigger_size.pdf}\n \\caption{Effect under varied trigger size. Bit accuracy is not significantly affected by trigger size.}\n\n\\end{figure}",
+    "2412-15278_sent_dea12bf3": "We select 16-bit secret messages and $N=1000$ trigger viewports in our experiment unless explicitly mentioned. To evaluate \\tool, we use 100 different prompts to generate 100 watermarked scenes.",
+    "2412-15278_sent_5b297919": "Note that the scale of our experiment far exceeds that of prior works where they only evaluate Blender \\cite{mildenhall2021nerf} and LLFF \\cite{mildenhall2019local} dataset, with each dataset only containing eight scenes.",
+    "2412-15278_sent_7d3d83b2": "All our experiments are conducted on Ubuntu 22.04 with an Intel Xeon Gold 5318Y CPU and an NVIDIA A100.",
+    "2412-15278_sent_06e5766e": "Evaluation Metrics.",
+    "2412-15278_sent_c9b9e047": "Two key evaluations for watermarking algorithms are invisibility and robustness.",
+    "2412-15278_sent_430bd18d": "We evaluate robustness using bit accuracy under various image distortions such as Gaussian Noise, Rotation, Scaling, Gaussian Blur, Crop, and Brightness.",
+    "2412-15278_sent_e91e15c5": "For invisibility evaluation, different from the previous post-generation watermarking algorithm, there is no such the ``original NeRF\".",
+    "2412-15278_sent_1fdef0ec": "Hence, the typical evaluation metric, the Peak-Signal-to-Noise Ratio (PSNR), is not applicable to evaluate our method.",
+    "2412-15278_sent_69549246": "We follow prior 2D during-generation watermarking algorithm \\cite{yang2024gaussian,wen2024tree} where they use CLIP-Score \\cite{radford2021clip} to evaluate the bias introduced by the watermarking algorithm.",
+    "2412-15278_sent_1968f8e5": "Baselines.",
+    "2412-15278_sent_81b75636": "Since \\tool is the first during-generation watermarking method to watermark the generated NeRF, and existing NeRF watermarking CopyRNeRF \\cite{luo2023copyrnerf} and WateNeRF \\cite{jang2024waterf} can only embed watermark after NeRF generation.",
+    "2412-15278_sent_77a5a7f9": "We select CopyRNeRF and WateNeRF as two post-generation baselines, \\ie we first generate NeRF with SDS only, then watermark the generated NeRF with CopyRNeRF and WateNeRF.",
+    "2412-15278_fig_0ba064fa": "\\begin{table}\n\n \\begin{tabular}{l|cccc}\n\n \\multirow{2}{*}{Method} & \\multicolumn{4}{c}{Bit Accuracy (\\%)}\\\\\n & 8 bits & 16 bits & 32 bits & 48 bits\\\\\n\n Post Generation & & & & \\\\\n SDS+CopyRNeRF & 100\\% & 91.16\\% & 78.08\\% & 60.06\\%\\\\\n SDS+WateRF & 100\\% & 94.24\\% & 86.81\\% & 70.43\\%\\\\\n\n During Generation & & & & \\\\\n \\tool & 100\\% & 98.93\\% & 82.59\\% & 71.91\\%\\\\\n\n \\end{tabular}\n \\caption{Bit accuracy under different bit length settings.}\n\n\\end{table}",
+    "2412-15278_fig_66b28879": "\\begin{table}\n\n \\begin{tabular}{l|ccc}\n\n Method & Bit Accuracy & CLIP/16 & CLIP/32\\\\\n\n None & N/A & 0.3156 & 0.2859\\\\\n\n Post Generation & & & \\\\\n SDS+CopyRNeRF & 91.16\\% & 0.3152 & 0.2831\\\\\n SDS+WateRF & 94.24\\% & 0.3164 & 0.2823\\\\\n\n During Generation & & & \\\\\n \\tool & 98.93\\% & 0.3218 & 0.2943\\\\\n\n \\end{tabular}\n \\caption{Bit accuracy and CLIP Score comparison with post-generation methods. ``None\" reports the performance when no watermark is applied, so bit accuracy is not applicable.}\n\n\\end{table}",
+    "2412-15278_fig_f20ed8d1": "\\begin{table}\n\n \\begin{tabular}{lcccc}\n\n & GN. & Rot. & Sca. & Crop\\\\\n\n Without $T$ & 0.64 & 0.57 & 0.56 & 0.89\\\\\n With $T$ & 0.93 & 0.84 & 0.92 & 0.91\\\\\n\n \\end{tabular}\n \\caption{Bit accuracy by removing transformation layer $T$.}\n\n\\end{table}",
+    "2412-15278_fig_69f25219": "\\begin{table}\n\n \\begin{tabular}{cccc}\n\n & CLIP/16 & CLIP/32 & Bit Acc\\\\\n\n Both $f_\\mathbf{c}$ and $f_\\sigma$ & 0.2308 & 0.2241 & 60.43\\%\\\\\n $f_\\mathbf{c}$ only & 0.3218 & 0.2943 & 98.93\\%\\\\\n\n \\end{tabular}\n \\caption{Watermark by optimizing both $f_\\mathbf{c}$ and $f_\\sigma$ or $f_\\mathbf{c}$ only.}\n\n\\end{table}",
+    "2412-15278_subsection_904f0cb1": "Performance of Dreamark",
+    "2412-15278_sent_da3d220e": "Capacity.",
+    "2412-15278_sent_042dc720": "We evaluate bit accuracy across 8, 16, 32, and 48-bit secret messages.",
+    "2412-15278_sent_c4ae306e": "Table \\ref{tab:capacity} shows that all watermarking methods have a trade-off between bit accuracy and capacity.",
+    "2412-15278_sent_510bab26": "As a during-generation watermarking method, \\tool shows relatively high accuracy on 8, 16, and 48-bit settings compared to post-generation watermarking methods, such as SDS+CopyRNeRF and SDS+WateRF.",
+    "2412-15278_sent_87860d81": "For example, in 16-bit settings \\tool achieves 98.93\\% accuracy while SDS+CopyRNeRF and SDS+WateRF achieve 91.16\\% and 94.24\\% accuracy, respectively.",
+    "2412-15278_sent_7447fc96": "Generation quality.",
+    "2412-15278_sent_c3544e20": "We report CLIP/16 evaluated by clip-ViT-B-16 and CLIP/32 evaluated by clip-ViT-B-32 to indicate the generation quality of the watermarked images.",
+    "2412-15278_sent_17f53f86": "For each scene, its CLIP-Score is averaged among all viewports $\\mathbf{p}$, and bit accuracy is averaged among all $N$ trigger viewport $\\{\\mathbf{p}_T^i\\}_{i=1}^N$.",
+    "2412-15278_sent_5176fcea": "All prior watermarking works \\cite{jang2024waterf,luo2023copyrnerf,zhu2024rethinking,zhu2018hidden} show a trade-off between bit accuracy and watermarked content quality.",
+    "2412-15278_sent_134e3bdc": "However, Table \\ref{tab:acc} shows \\tool achieves superior performance in both bit accuracy and generation quality when compared to post-generation methods.",
+    "2412-15278_sent_e2718e02": "Notably, the CLIP Score is 0.3156/0.2859 when no watermark is applied, while \\tool achieves 0.3218/0.2943 CLIP Score.",
+    "2412-15278_sent_0998f29d": "This indicates that during-generation watermark embedding of \\tool does not harm the generation quality.",
+    "2412-15278_sent_fb3b8b89": "We also provide visual results of generated NeRF in Figure \\ref{fig:visual-results}.",
+    "2412-15278_fig_eae39696": "\\begin{figure}\n\n \\includegraphics[width=\\linewidth]{figures/pruning.pdf}\n \\caption{Robustness against model-level attacks. $x_w,x_a$ are images rendered from watermarked and attacked NeRF.}\n\n\\end{figure}",
+    "2412-15278_sent_fecabb98": "Size of trigger viewports.",
+    "2412-15278_sent_7c515444": "We evaluate bit accuracy under different numbers of trigger sizes $N$.",
+    "2412-15278_sent_b603aaf8": "As is shown in Figure \\ref{fig:trigger-size}, we surprisingly find that bit accuracy is not significantly affected by trigger size.",
+    "2412-15278_sent_16399afb": "For example, bit accuracy reaches 99.88\\% when $N=50$ and only drops to 96.27\\% when $N$ increases to $20000$.",
+    "2412-15278_subsection_feb8fbab": "Ablation Study",
+    "2412-15278_sent_be1e774d": "Can we remove the transformation layer $T$ during watermark decoder $W_D$ pre-training?",
+    "2412-15278_sent_37e08aec": "Table \\ref{tab:transform_layer} shows that the robustness significantly drops when the transformation layer is removed. Can we hide watermarks by jointly optimizing color mapping $f_\\mathbf{c}$ and geometric mapping $f_\\sigma$?",
+    "2412-15278_sent_fc3feee2": "Table \\ref{tab:geometric_color} shows that watermark, by optimizing both color mapping and geometric mapping, has lower performance on both bit accuracy and CLIP Score.",
+    "2412-15278_sent_760dc0c6": "This may be because, within one iteration, only one single direction of point color is supervised, while changing its point density will affect its color in all directions, significantly increasing the difficulty of convergence.",
+    "2412-15278_section_2ff00e1e": "Attacks on Dreamark's Watermarks",
+    "2412-15278_sent_54e1b389": "\\begin{tabular}{l|ccccccc} \\multirow{2}{*}{} & \\multicolumn{7}{c}{Bit Accuracy (\\%)}\\\\ & No Distortion & \\makecell{Gaussian Noise\\\\(v=0.1)} & \\makecell{Rotation\\\\($\\pm \\pi/6$)} & \\makecell{Scaling\\\\(25\\%)} & \\makecell{Gaussian Blur\\\\(deviation=0.1)} & \\makecell{Crop\\\\(40\\%)} & \\makecell{Brightness\\\\(2.0)}\\\\ Post Generation & & & & & & & \\\\ SDS+CopyRNeRF & 91.16\\% & 90.04\\% & 88.13\\% & 89.33\\% & 90.06\\% & N/A & N/A\\\\ SDS+WateRF & 94.24\\% & 94.06\\% & 85.02\\% & 91.35\\% & 94.12\\% & 95.40\\% & 90.91\\%\\\\ During Generation & & & & & & & \\\\ \\tool & 98.93\\% & 93.75\\% & 84.51\\% & 92.40\\% & 98.93\\% & 91.49\\% & 91.23\\%\\\\ \\end{tabular} \\caption{Robustness under multiple image transformations compared with post-generation-based methods.} \\end{table*} This section aims to examine the robustness of the watermark against various attacks.",
+    "2412-15278_sent_7a445953": "We first consider image-level attack, which performs arbitrary image transformations and is typical for many NeRF watermarking methods \\cite{luo2023copyrnerf,jang2024waterf}.",
+    "2412-15278_sent_6ae2d524": "We then consider model-level attacks such as fine-tuning and pruning since the generated NeRF could be made public; in this case, the attacker will have white-box access to the generated NeRF.",
+    "2412-15278_sent_61d842da": "Besides, model-level attacks are commonly evaluated in model watermarking methods \\cite{adi2018turning,zhang2018protecting,jia2021entangled,le2020adversarial,chen2019blackmarks,szyller2021dawn}.",
+    "2412-15278_subsection_3d4d38ed": "Robustness against image-level attacks",
+    "2412-15278_sent_0f2019ce": "We evaluate the robustness of the watermark against different image transformations before rendered images are fed into the watermark decoder.",
+    "2412-15278_sent_1ae75a21": "We consider Gaussian Noise (v=0.1), rotation ($\\pm \\pi/6$), Scaling ($25\\%$), Gaussian Blur (deviation=0.1), Crop (40\\%) and Brightness (2.0).",
+    "2412-15278_sent_2cdb6d7b": "Bit accuracy is averaged on all transformed images rendered from trigger viewports.",
+    "2412-15278_sent_aae72607": "Table \\ref{tab:rob} shows \\tool is robust against previously mentioned image-level attacks.",
+    "2412-15278_sent_34bd8c27": "The bit accuracy is always above 90\\% except for rotation.",
+    "2412-15278_sent_c0c57d1c": "Note that the robustness is achieved without the need for transformations during the \\tool optimization phase: it is attributed to the watermark decoder.",
+    "2412-15278_sent_e2283a32": "If the watermark decoder is trained to withstand arbitrary transformation, the generated NeRF subsequently learns to contain watermarks that maintain robustness throughout the \\tool optimization.",
+    "2412-15278_subsection_82aadd11": "Robustness against model-level attacks",
+    "2412-15278_sent_0134fc3a": "This subsection considers the scenario when an attacker gets full access to the generated NeRF model and aims to remove the embedded watermark without degrading its visual quality.",
+    "2412-15278_sent_3ef9d40d": "We denote $x_w$ as images rendered from watermarked NeRF and $x_a$ as images rendered from attacked NeRF.",
+    "2412-15278_sent_6947cf5a": "We use $\\mathrm{PSNR}(x_w,x_a)=-10\\cdot\\log_{10}(\\mathrm{MSE}(x_w,x_a))$, for $x_a,x_w\\in [0,1]^{c\\times h\\times w}$ to evaluate distortion made by attacks.",
+    "2412-15278_sent_5f8909a6": "Model Fine-tuning.",
+    "2412-15278_sent_69c00709": "Since our method uses a unified watermark decoder $W_D$ to decode the secret message, we consider two scenarios of fine-tuning attack.",
+    "2412-15278_sent_9c92fd3b": "One assumes that the attacker has full access to the watermark decoder $W_D$, and the other assumes that the attacker has no access to $W_D$.",
+    "2412-15278_sent_89d1e2a0": "Besides, we assume the attacker has no prior knowledge of the secret message $m$.",
+    "2412-15278_sent_54b14a21": "In this case, the attacker cannot reproduce trigger viewports since trigger viewports are only related to $m$.",
+    "2412-15278_sent_59398cc7": "For the first scenario, when the attacker has full access to $W_D$, the attacker can use an adversarial attack to partially remove the watermark by minimizing the $\\mathrm{BCE}$ loss between the extracted message and a random binary message sampled beforehand:",
+    "2412-15278_eq_2bf24356": "\\begin{equation}\n \\begin{aligned}\n &\\mathcal{L}_{\\text{fine-tune}}(\\theta')=\\\\\n &\\mathbb{E}_{\\mathbf{p}}[\\rVert\\mathbf{g}(\\theta',\\mathbf{p})-\\mathbf{g}(\\theta, \\mathbf{p})\\lVert_2^2\n +\\mathrm{BCE}(W_D(\\mathbf{g}(\\theta',\\mathbf{p})),m')],\n \\end{aligned}\n\\end{equation}",
+    "2412-15278_sent_ee104d9e": "where $\\theta$ is the fixed parameter of watermarked NeRF, $\\theta'$ is the parameter of NeRF to be fine-tuned, $m'$ is a random binary message different from $m$.",
+    "2412-15278_sent_871185dc": "As shown in Fig. \\ref{fig:model-level-attack}, even if PSNR drops below 26dB, bit accuracy is still above 90\\%.",
+    "2412-15278_sent_c8b8316d": "For the second scenario, when the attacker has no access to $W_D$, the attacker cannot produce the adversarial attack to remove the watermark.",
+    "2412-15278_sent_468c44ba": "Model Pruning.",
+    "2412-15278_sent_0bd9e02f": "Model pruning is widely used in model compression since it can reduce the storage and computation cost of DNNs.",
+    "2412-15278_sent_fe6dd031": "However, pruning will affect not only the size and operation speed of the model but also the accuracy of the watermark and the visual quality of NeRF.",
+    "2412-15278_sent_5d15be43": "A higher pruning rate gives lower watermark accuracy and lower visual quality.",
+    "2412-15278_sent_e6754d11": "In practice, we vary the pruning rate and, at the same time, evaluate $\\mathrm{PSNR}(x_a, x_w)$ and bit accuracy on $x_a$.",
+    "2412-15278_sent_11222792": "The pruning attack with pruning rate $a$\\% means setting the smallest $a$\\% of network parameters to zero, where the size of the network parameter is evaluated by its $\\ell_1$ norm.",
+    "2412-15278_sent_7a5bd9ef": "Fig. \\ref{fig:model-level-attack} shows that our method is robust against pruning attack since we still have $\\sim$88\\% accuracy when PSNR is below 27dB, while 27dB PSNR means relatively high distortion has been made in image watermarking context \\cite{zhu2018hidden}.",
+    "2412-15278_section_6f8b794f": "Conclusion",
+    "2412-15278_sent_2b080076": "In this work, we propose a during-generation text-to-3D watermarking method, \\tool, which eliminates the delay between the generation phase and the watermarking phase: the watermark can be verified on the generated NeRF once the generation is finished. Inspired by the black-box model watermarking method, \\tool watermarks NeRF by injecting backdoors into NeRF such that a secret message can be extracted from images rendered from arbitrary trigger viewport.",
+    "2412-15278_sent_29e41a1e": "Extensive experiments show that our method will not degrade generation quality and maintain robustness against image-level and model-level attacks.",
+    "2412-15278_section_84ffd62e": "Acknowledgments",
+    "2412-15278_sent_000c00b5": "This work was supported in part by National Key R\\&D Program of China under Grant 2021YFF0900300, in part by Guangdong Key Program under Grant 2021QN02X166, and in part by Research Institute of Trustworthy Autonomous Systems under Grant C211153201.",
+    "2412-15278_sent_769e1f2c": "Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the funding parties."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15278_sent_676977e1": "2412-15278_doc_root",
+      "2412-15278_abstract_ce28071e": "2412-15278_doc_root",
+      "2412-15278_sent_a1bb91ff": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_b7fefbd1": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_c744f94a": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_4ac84478": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_b7e3a20c": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_8dd12a40": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_3ecb56d7": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_8276f19b": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_a7a080c5": "2412-15278_abstract_ce28071e",
+      "2412-15278_sent_04d07da4": "2412-15278_abstract_ce28071e",
+      "2412-15278_section_0b79795d": "2412-15278_doc_root",
+      "2412-15278_sent_6d8fdd77": "2412-15278_section_0b79795d",
+      "2412-15278_sent_d5f6c96c": "2412-15278_section_0b79795d",
+      "2412-15278_sent_426f5968": "2412-15278_section_0b79795d",
+      "2412-15278_sent_538b22e7": "2412-15278_section_0b79795d",
+      "2412-15278_sent_3386a2dc": "2412-15278_section_0b79795d",
+      "2412-15278_sent_2c6c5520": "2412-15278_section_0b79795d",
+      "2412-15278_sent_08b68236": "2412-15278_section_0b79795d",
+      "2412-15278_sent_f0ccc811": "2412-15278_section_0b79795d",
+      "2412-15278_sent_3f063b80": "2412-15278_section_0b79795d",
+      "2412-15278_fig_19d6d080": "2412-15278_section_0b79795d",
+      "2412-15278_sent_47e83284": "2412-15278_section_0b79795d",
+      "2412-15278_sent_c4d75ed9": "2412-15278_section_0b79795d",
+      "2412-15278_sent_30df34cd": "2412-15278_section_0b79795d",
+      "2412-15278_sent_5c2faf71": "2412-15278_section_0b79795d",
+      "2412-15278_sent_15f1f7ab": "2412-15278_section_0b79795d",
+      "2412-15278_sent_8d14c5d0": "2412-15278_section_0b79795d",
+      "2412-15278_sent_4f91ef24": "2412-15278_section_0b79795d",
+      "2412-15278_sent_66aaddc7": "2412-15278_section_0b79795d",
+      "2412-15278_sent_a35b17e3": "2412-15278_section_0b79795d",
+      "2412-15278_sent_b4784324": "2412-15278_section_0b79795d",
+      "2412-15278_sent_bea4f7bc": "2412-15278_section_0b79795d",
+      "2412-15278_sent_e5f0d12c": "2412-15278_section_0b79795d",
+      "2412-15278_sent_c40e32a7": "2412-15278_section_0b79795d",
+      "2412-15278_sent_9bacea4e": "2412-15278_section_0b79795d",
+      "2412-15278_sent_20dcb215": "2412-15278_section_0b79795d",
+      "2412-15278_sent_2d6ce85d": "2412-15278_section_0b79795d",
+      "2412-15278_sent_7d0e6885": "2412-15278_section_0b79795d",
+      "2412-15278_sent_1c094441": "2412-15278_section_0b79795d",
+      "2412-15278_sent_c19d1263": "2412-15278_section_0b79795d",
+      "2412-15278_itemize_b7fabb46": "2412-15278_section_0b79795d",
+      "2412-15278_item_a256fb16": "2412-15278_itemize_b7fabb46",
+      "2412-15278_sent_1e11348b": "2412-15278_item_a256fb16",
+      "2412-15278_sent_e65e58f5": "2412-15278_item_a256fb16",
+      "2412-15278_sent_292399a9": "2412-15278_item_a256fb16",
+      "2412-15278_section_aed402c3": "2412-15278_doc_root",
+      "2412-15278_subsection_ffa9372a": "2412-15278_section_aed402c3",
+      "2412-15278_sent_d33c1363": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_2b297ecb": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_126bfcef": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_05d51d3f": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_0ebdbd67": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_04b8b938": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_40a956e3": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_541e1683": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_841f99a2": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_5ad5e215": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_17c23fed": "2412-15278_subsection_ffa9372a",
+      "2412-15278_sent_28bff7e8": "2412-15278_subsection_ffa9372a",
+      "2412-15278_subsection_4c1c2224": "2412-15278_section_aed402c3",
+      "2412-15278_sent_06687a03": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_7b5da5fa": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_dd3eeca7": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_94107da1": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_80c65878": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_8632190d": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_7439ded9": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_cd427114": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_a98233b6": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_a44c8fe4": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_237e5c1e": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_1f3b2934": "2412-15278_subsection_4c1c2224",
+      "2412-15278_sent_7b1889e2": "2412-15278_subsection_4c1c2224",
+      "2412-15278_section_7ad03400": "2412-15278_doc_root",
+      "2412-15278_sent_78af7460": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_0120ec0c": "2412-15278_section_7ad03400",
+      "2412-15278_eq_85332f72": "2412-15278_section_7ad03400",
+      "2412-15278_eq_f6e19349": "2412-15278_section_7ad03400",
+      "2412-15278_sent_a3bb5e56": "2412-15278_section_7ad03400",
+      "2412-15278_sent_6a589461": "2412-15278_section_7ad03400",
+      "2412-15278_sent_4a627115": "2412-15278_section_7ad03400",
+      "2412-15278_eq_8d7297b4": "2412-15278_section_7ad03400",
+      "2412-15278_sent_d47c81be": "2412-15278_section_7ad03400",
+      "2412-15278_sent_0a3fe5af": "2412-15278_section_7ad03400",
+      "2412-15278_sent_ad1f35d0": "2412-15278_section_7ad03400",
+      "2412-15278_sent_bc5665db": "2412-15278_section_7ad03400",
+      "2412-15278_sent_5a768ad7": "2412-15278_section_7ad03400",
+      "2412-15278_eq_4dc8b53f": "2412-15278_section_7ad03400",
+      "2412-15278_sent_2e028538": "2412-15278_section_7ad03400",
+      "2412-15278_sent_e40cc5e6": "2412-15278_section_7ad03400",
+      "2412-15278_sent_fa6a5c0d": "2412-15278_section_7ad03400",
+      "2412-15278_sent_26249d60": "2412-15278_section_7ad03400",
+      "2412-15278_sent_5e68eab8": "2412-15278_section_7ad03400",
+      "2412-15278_sent_f5e12dd1": "2412-15278_section_7ad03400",
+      "2412-15278_sent_0c3691a4": "2412-15278_section_7ad03400",
+      "2412-15278_eq_e4ffa8d8": "2412-15278_section_7ad03400",
+      "2412-15278_sent_310a6871": "2412-15278_section_7ad03400",
+      "2412-15278_sent_63fa9096": "2412-15278_section_7ad03400",
+      "2412-15278_eq_a29396c7": "2412-15278_section_7ad03400",
+      "2412-15278_section_a5ecd91e": "2412-15278_doc_root",
+      "2412-15278_fig_b71837c1": "2412-15278_section_84ffd62e",
+      "2412-15278_sent_6615ed5c": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_737109b9": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_a2eb0a1a": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_cab4cd38": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_bcc1da86": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_bfdf984a": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_84eec92c": "2412-15278_section_a5ecd91e",
+      "2412-15278_subsection_2aa1b906": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_dc1ed705": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_213fe7ec": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_a6927721": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_6d4d3b26": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_6ab434a7": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_e0944faa": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_54944897": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_014c624c": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_150acf20": "2412-15278_subsection_2aa1b906",
+      "2412-15278_eq_2c5148e5": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_6bb078bf": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_7977dd7d": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_8b12073b": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_062c6be1": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_c1c83208": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_ba56d3ba": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_b0117a15": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_69495286": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_1621de02": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_33eca6ad": "2412-15278_subsection_2aa1b906",
+      "2412-15278_sent_2b8673d8": "2412-15278_subsection_2aa1b906",
+      "2412-15278_subsection_f08bf4ce": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_f0e4bfc9": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_82a06eba": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_4edbcf68": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_3a634654": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_2f1ed3a9": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_8d6236aa": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_fig_731d7a5a": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_a84e7a3f": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_fd6a900d": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_c6b78e36": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_871e57e4": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_2d9e57a8": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_53467538": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_ed724d78": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_8b658717": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_f78e7745": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_8c61f855": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_120e3677": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_70731c1c": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_14cf45e7": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_ba5d509c": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_96b549a5": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_eq_809c44f0": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_d4374b1a": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_1c20c997": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_d3c92b4d": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_c8a8af79": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_sent_77344f4e": "2412-15278_subsection_f08bf4ce",
+      "2412-15278_subsection_c2b2b81b": "2412-15278_section_a5ecd91e",
+      "2412-15278_sent_81a4c429": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_873ed351": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_f0c9aceb": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_b0549c15": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_81301d80": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_9abd4451": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_7ddf6158": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_ac172961": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_212465f3": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_a2156531": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_6399f99a": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_e7206679": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_5758d82e": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_b2d3436c": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_7ba63212": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_73df2965": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_sent_f04c2d30": "2412-15278_subsection_c2b2b81b",
+      "2412-15278_section_05aeba47": "2412-15278_doc_root",
+      "2412-15278_subsection_f41a60b6": "2412-15278_section_05aeba47",
+      "2412-15278_fig_2fc84d44": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_dea12bf3": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_5b297919": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_7d3d83b2": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_06e5766e": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_c9b9e047": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_430bd18d": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_e91e15c5": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_1fdef0ec": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_69549246": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_1968f8e5": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_81b75636": "2412-15278_subsection_f41a60b6",
+      "2412-15278_sent_77a5a7f9": "2412-15278_subsection_f41a60b6",
+      "2412-15278_fig_0ba064fa": "2412-15278_subsection_f41a60b6",
+      "2412-15278_fig_66b28879": "2412-15278_subsection_f41a60b6",
+      "2412-15278_fig_f20ed8d1": "2412-15278_subsection_f41a60b6",
+      "2412-15278_fig_69f25219": "2412-15278_subsection_f41a60b6",
+      "2412-15278_subsection_904f0cb1": "2412-15278_section_05aeba47",
+      "2412-15278_sent_da3d220e": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_042dc720": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_c4ae306e": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_510bab26": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_87860d81": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_7447fc96": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_c3544e20": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_17f53f86": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_5176fcea": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_134e3bdc": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_e2718e02": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_0998f29d": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_fb3b8b89": "2412-15278_subsection_904f0cb1",
+      "2412-15278_fig_eae39696": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_fecabb98": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_7c515444": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_b603aaf8": "2412-15278_subsection_904f0cb1",
+      "2412-15278_sent_16399afb": "2412-15278_subsection_904f0cb1",
+      "2412-15278_subsection_feb8fbab": "2412-15278_section_05aeba47",
+      "2412-15278_sent_be1e774d": "2412-15278_subsection_feb8fbab",
+      "2412-15278_sent_37e08aec": "2412-15278_subsection_feb8fbab",
+      "2412-15278_sent_fc3feee2": "2412-15278_subsection_feb8fbab",
+      "2412-15278_sent_760dc0c6": "2412-15278_subsection_feb8fbab",
+      "2412-15278_section_2ff00e1e": "2412-15278_doc_root",
+      "2412-15278_sent_54e1b389": "2412-15278_section_2ff00e1e",
+      "2412-15278_sent_7a445953": "2412-15278_section_2ff00e1e",
+      "2412-15278_sent_6ae2d524": "2412-15278_section_2ff00e1e",
+      "2412-15278_sent_61d842da": "2412-15278_section_2ff00e1e",
+      "2412-15278_subsection_3d4d38ed": "2412-15278_section_2ff00e1e",
+      "2412-15278_sent_0f2019ce": "2412-15278_subsection_3d4d38ed",
+      "2412-15278_sent_1ae75a21": "2412-15278_subsection_3d4d38ed",
+      "2412-15278_sent_2cdb6d7b": "2412-15278_subsection_3d4d38ed",
+      "2412-15278_sent_aae72607": "2412-15278_subsection_3d4d38ed",
+      "2412-15278_sent_34bd8c27": "2412-15278_subsection_3d4d38ed",
+      "2412-15278_sent_c0c57d1c": "2412-15278_subsection_3d4d38ed",
+      "2412-15278_sent_e2283a32": "2412-15278_subsection_3d4d38ed",
+      "2412-15278_subsection_82aadd11": "2412-15278_section_2ff00e1e",
+      "2412-15278_sent_0134fc3a": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_3ef9d40d": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_6947cf5a": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_5f8909a6": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_69c00709": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_9c92fd3b": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_89d1e2a0": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_54b14a21": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_59398cc7": "2412-15278_subsection_82aadd11",
+      "2412-15278_eq_2bf24356": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_ee104d9e": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_871185dc": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_c8b8316d": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_468c44ba": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_0bd9e02f": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_fe6dd031": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_5d15be43": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_e6754d11": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_11222792": "2412-15278_subsection_82aadd11",
+      "2412-15278_sent_7a5bd9ef": "2412-15278_subsection_82aadd11",
+      "2412-15278_section_6f8b794f": "2412-15278_doc_root",
+      "2412-15278_sent_2b080076": "2412-15278_section_6f8b794f",
+      "2412-15278_sent_29e41a1e": "2412-15278_section_6f8b794f",
+      "2412-15278_section_84ffd62e": "2412-15278_doc_root",
+      "2412-15278_sent_000c00b5": "2412-15278_section_84ffd62e",
+      "2412-15278_sent_769e1f2c": "2412-15278_section_84ffd62e"
+    }
+  },
+  "merged_parents": {
+    "2412-15278_sent_676977e1": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_abstract_ce28071e": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_sent_a1bb91ff": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_b7fefbd1": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_c744f94a": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_4ac84478": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_b7e3a20c": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_8dd12a40": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_3ecb56d7": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_8276f19b": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_a7a080c5": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_sent_04d07da4": [
+      "2412-15278_abstract_ce28071e"
+    ],
+    "2412-15278_section_0b79795d": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_sent_6d8fdd77": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_d5f6c96c": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_426f5968": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_538b22e7": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_3386a2dc": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_2c6c5520": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_08b68236": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_f0ccc811": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_3f063b80": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_fig_19d6d080": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_47e83284": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_c4d75ed9": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_30df34cd": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_5c2faf71": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_15f1f7ab": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_8d14c5d0": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_4f91ef24": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_66aaddc7": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_a35b17e3": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_b4784324": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_bea4f7bc": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_e5f0d12c": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_c40e32a7": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_9bacea4e": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_20dcb215": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_2d6ce85d": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_7d0e6885": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_1c094441": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_sent_c19d1263": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_itemize_b7fabb46": [
+      "2412-15278_section_0b79795d"
+    ],
+    "2412-15278_item_a256fb16": [
+      "2412-15278_itemize_b7fabb46"
+    ],
+    "2412-15278_sent_1e11348b": [
+      "2412-15278_item_a256fb16"
+    ],
+    "2412-15278_sent_e65e58f5": [
+      "2412-15278_item_a256fb16"
+    ],
+    "2412-15278_sent_292399a9": [
+      "2412-15278_item_a256fb16"
+    ],
+    "2412-15278_section_aed402c3": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_subsection_ffa9372a": [
+      "2412-15278_section_aed402c3"
+    ],
+    "2412-15278_sent_d33c1363": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_2b297ecb": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_126bfcef": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_05d51d3f": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_0ebdbd67": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_04b8b938": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_40a956e3": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_541e1683": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_841f99a2": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_5ad5e215": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_17c23fed": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_sent_28bff7e8": [
+      "2412-15278_subsection_ffa9372a"
+    ],
+    "2412-15278_subsection_4c1c2224": [
+      "2412-15278_section_aed402c3"
+    ],
+    "2412-15278_sent_06687a03": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_7b5da5fa": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_dd3eeca7": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_94107da1": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_80c65878": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_8632190d": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_7439ded9": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_cd427114": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_a98233b6": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_a44c8fe4": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_237e5c1e": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_1f3b2934": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_sent_7b1889e2": [
+      "2412-15278_subsection_4c1c2224"
+    ],
+    "2412-15278_section_7ad03400": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_sent_78af7460": [
+      "2412-15278_section_7ad03400",
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_0120ec0c": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_eq_85332f72": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_eq_f6e19349": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_a3bb5e56": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_6a589461": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_4a627115": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_eq_8d7297b4": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_d47c81be": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_0a3fe5af": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_ad1f35d0": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_bc5665db": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_5a768ad7": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_eq_4dc8b53f": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_2e028538": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_e40cc5e6": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_fa6a5c0d": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_26249d60": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_5e68eab8": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_f5e12dd1": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_0c3691a4": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_eq_e4ffa8d8": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_310a6871": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_sent_63fa9096": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_eq_a29396c7": [
+      "2412-15278_section_7ad03400"
+    ],
+    "2412-15278_section_a5ecd91e": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_fig_b71837c1": [
+      "2412-15278_section_2ff00e1e",
+      "2412-15278_section_84ffd62e",
+      "2412-15278_section_a5ecd91e",
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_6615ed5c": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_737109b9": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_a2eb0a1a": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_cab4cd38": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_bcc1da86": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_bfdf984a": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_84eec92c": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_subsection_2aa1b906": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_dc1ed705": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_213fe7ec": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_a6927721": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_6d4d3b26": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_6ab434a7": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_e0944faa": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_54944897": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_014c624c": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_150acf20": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_eq_2c5148e5": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_6bb078bf": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_7977dd7d": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_8b12073b": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_062c6be1": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_c1c83208": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_ba56d3ba": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_b0117a15": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_69495286": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_1621de02": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_33eca6ad": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_sent_2b8673d8": [
+      "2412-15278_subsection_2aa1b906"
+    ],
+    "2412-15278_subsection_f08bf4ce": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_f0e4bfc9": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_82a06eba": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_4edbcf68": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_3a634654": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_2f1ed3a9": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_8d6236aa": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_fig_731d7a5a": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_a84e7a3f": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_fd6a900d": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_c6b78e36": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_871e57e4": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_2d9e57a8": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_53467538": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_ed724d78": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_8b658717": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_f78e7745": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_8c61f855": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_120e3677": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_70731c1c": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_14cf45e7": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_ba5d509c": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_96b549a5": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_eq_809c44f0": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_d4374b1a": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_1c20c997": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_d3c92b4d": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_c8a8af79": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_sent_77344f4e": [
+      "2412-15278_subsection_f08bf4ce"
+    ],
+    "2412-15278_subsection_c2b2b81b": [
+      "2412-15278_section_a5ecd91e"
+    ],
+    "2412-15278_sent_81a4c429": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_873ed351": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_f0c9aceb": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_b0549c15": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_81301d80": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_9abd4451": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_7ddf6158": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_ac172961": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_212465f3": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_a2156531": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_6399f99a": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_e7206679": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_5758d82e": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_b2d3436c": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_7ba63212": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_73df2965": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_sent_f04c2d30": [
+      "2412-15278_subsection_c2b2b81b"
+    ],
+    "2412-15278_section_05aeba47": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_subsection_f41a60b6": [
+      "2412-15278_section_05aeba47"
+    ],
+    "2412-15278_fig_2fc84d44": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_dea12bf3": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_5b297919": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_7d3d83b2": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_06e5766e": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_c9b9e047": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_430bd18d": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_e91e15c5": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_1fdef0ec": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_69549246": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_1968f8e5": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_81b75636": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_sent_77a5a7f9": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_fig_0ba064fa": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_fig_66b28879": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_fig_f20ed8d1": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_fig_69f25219": [
+      "2412-15278_subsection_f41a60b6"
+    ],
+    "2412-15278_subsection_904f0cb1": [
+      "2412-15278_section_05aeba47"
+    ],
+    "2412-15278_sent_da3d220e": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_042dc720": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_c4ae306e": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_510bab26": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_87860d81": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_7447fc96": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_c3544e20": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_17f53f86": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_5176fcea": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_134e3bdc": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_e2718e02": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_0998f29d": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_fb3b8b89": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_fig_eae39696": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_fecabb98": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_7c515444": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_b603aaf8": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_sent_16399afb": [
+      "2412-15278_subsection_904f0cb1"
+    ],
+    "2412-15278_subsection_feb8fbab": [
+      "2412-15278_section_05aeba47"
+    ],
+    "2412-15278_sent_be1e774d": [
+      "2412-15278_subsection_feb8fbab"
+    ],
+    "2412-15278_sent_37e08aec": [
+      "2412-15278_subsection_feb8fbab"
+    ],
+    "2412-15278_sent_fc3feee2": [
+      "2412-15278_subsection_feb8fbab"
+    ],
+    "2412-15278_sent_760dc0c6": [
+      "2412-15278_subsection_feb8fbab"
+    ],
+    "2412-15278_section_2ff00e1e": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_sent_54e1b389": [
+      "2412-15278_section_2ff00e1e"
+    ],
+    "2412-15278_sent_7a445953": [
+      "2412-15278_section_2ff00e1e"
+    ],
+    "2412-15278_sent_6ae2d524": [
+      "2412-15278_section_2ff00e1e"
+    ],
+    "2412-15278_sent_61d842da": [
+      "2412-15278_section_2ff00e1e"
+    ],
+    "2412-15278_subsection_3d4d38ed": [
+      "2412-15278_section_2ff00e1e"
+    ],
+    "2412-15278_sent_0f2019ce": [
+      "2412-15278_subsection_3d4d38ed"
+    ],
+    "2412-15278_sent_1ae75a21": [
+      "2412-15278_subsection_3d4d38ed"
+    ],
+    "2412-15278_sent_2cdb6d7b": [
+      "2412-15278_subsection_3d4d38ed"
+    ],
+    "2412-15278_sent_aae72607": [
+      "2412-15278_subsection_3d4d38ed"
+    ],
+    "2412-15278_sent_34bd8c27": [
+      "2412-15278_subsection_3d4d38ed"
+    ],
+    "2412-15278_sent_c0c57d1c": [
+      "2412-15278_subsection_3d4d38ed"
+    ],
+    "2412-15278_sent_e2283a32": [
+      "2412-15278_subsection_3d4d38ed"
+    ],
+    "2412-15278_subsection_82aadd11": [
+      "2412-15278_section_2ff00e1e"
+    ],
+    "2412-15278_sent_0134fc3a": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_3ef9d40d": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_6947cf5a": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_5f8909a6": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_69c00709": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_9c92fd3b": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_89d1e2a0": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_54b14a21": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_59398cc7": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_eq_2bf24356": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_ee104d9e": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_871185dc": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_c8b8316d": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_468c44ba": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_0bd9e02f": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_fe6dd031": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_5d15be43": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_e6754d11": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_11222792": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_sent_7a5bd9ef": [
+      "2412-15278_subsection_82aadd11"
+    ],
+    "2412-15278_section_6f8b794f": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_sent_2b080076": [
+      "2412-15278_section_6f8b794f"
+    ],
+    "2412-15278_sent_29e41a1e": [
+      "2412-15278_section_6f8b794f"
+    ],
+    "2412-15278_section_84ffd62e": [
+      "2412-15278_doc_root"
+    ],
+    "2412-15278_sent_000c00b5": [
+      "2412-15278_section_84ffd62e"
+    ],
+    "2412-15278_sent_769e1f2c": [
+      "2412-15278_section_84ffd62e"
+    ]
+  }
+}

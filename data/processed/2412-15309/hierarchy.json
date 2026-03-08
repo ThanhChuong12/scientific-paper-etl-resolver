@@ -1,0 +1,1325 @@
+{
+  "elements": {
+    "2412-15309_doc_root": "DOCUMENT_ROOT",
+    "2412-15309_sent_b252c703": "\\title{Conceptual In-Context Learning and Chain of Concepts: Solving Complex Conceptual Problems Using Large Language Models \\author{\\IEEEauthorblockN{ Nishtha N.",
+    "2412-15309_sent_04c5153b": "Vaidya\\textsuperscript{1,2}, Thomas A.",
+    "2412-15309_sent_d97a7256": "Runkler\\textsuperscript{1,2}, Thomas Hubauer\\textsuperscript{1}, Veronika Haderlein-Hoegberg\\textsuperscript{1}, Maja Milicic Brandt\\textsuperscript{1}} \\IEEEauthorblockA{\\textsuperscript{1} Siemens AG, Munich, Germany \\textsuperscript{2} Technical University of Munich, Germany \\\\ Corresponding author - nishtha.vaidya@siemens.com}} \\IEEEoverridecommandlockouts \\IEEEpubid{\\makebox[\\columnwidth]{978-1-5386-5541-2/18/\\$31.00~\\copyright2024 IEEE } \\makebox[\\columnwidth]{ }} \\maketitle \\IEEEpubidadjcol",
+    "2412-15309_abstract_ce28071e": "abstract",
+    "2412-15309_sent_d9da2995": "Science and engineering problems fall in the category of complex conceptual problems that require specific conceptual information (CI) like math/logic-related know-how, process information, or engineering guidelines to solve them.",
+    "2412-15309_sent_598d7296": "Large Language Models (LLMs) are promising agents to solve such complex conceptual problems due to their implications in advancing engineering and science tasks like assisted problem solving.",
+    "2412-15309_sent_98b4e9bf": "But vanilla LLMs, trained on open-world data, lack the necessary CI.",
+    "2412-15309_sent_e9fdd8ae": "In this work, we specifically explore shallow customization methods (SCMs) of LLMs for solving complex conceptual problems.",
+    "2412-15309_sent_3ff794b5": "We propose two novel SCM algorithms for LLMs, to augment LLMs with CI and enable LLMs to solve complex conceptual problems: Conceptual In-Context Learning (C-ICL) and Chain of Concepts (CoC).",
+    "2412-15309_sent_c90be314": "The problem tackled in this paper is the generation of proprietary data models in the engineering/industry domain based on conceptual information in data modelling guidelines.",
+    "2412-15309_sent_861e79df": "We evaluate our algorithms on varied sizes of the OpenAI LLMs against four evaluation metrics related to syntactic and semantic correctness, time and cost incurred. The proposed algorithms perform better than currently popular LLM SCMs like In-context Learning (ICL) and Chain of Thoughts (CoT).",
+    "2412-15309_sent_ea613d02": "It was observed that as compared to CoT, response correctness increased by 30.6\\% and 29.88\\% for the new SCMs C-ICL and CoC, respectively.",
+    "2412-15309_sent_3ee7726b": "Qualitative analysis suggests that the proposed new SCMs activate emergent capabilities in LLMs, previously unobserved in the existing SCMs. They make the problem solving processes more transparent and reduce hallucinations and the tendency of model responses to copy examples from prompts (parroting).",
+    "2412-15309_sent_93077199": "\\begin{IEEEkeywords} LLM Fine Tuning, LLM Applications For Domain Tasks, Chain Of Thoughts, Conceptual Problem Solving, Data Model Generation, Data Structure Generation.",
+    "2412-15309_sent_285e4bca": "\\end{IEEEkeywords}",
+    "2412-15309_section_0b79795d": "Introduction",
+    "2412-15309_sent_40c0a364": "Large Language Models (LLMs) have revolutionized solving everyday problems like text summarising, copy-writing and knowledge acquisition~\\cite{openai2024gpt4technicalreport,lin2023usinglanguagemodelsknowledge}.",
+    "2412-15309_sent_af9565c0": "LLMs can solve these general problems through the model's base knowledge, captured by its large representation power trained on amounts of open-world data.",
+    "2412-15309_sent_484bf94d": "Many problems that LLMs can solve are never introduced to the LLM during training.",
+    "2412-15309_sent_89034ca6": "These emergent capabilities of LLMs are enabled through specialized natural language (NL) prompting techniques like In-Context Learning (ICL)~\\cite{lu2024emergentabilitieslargelanguage,hahn2023theoryemergentincontextlearning,chen2023understanding} and Chain of Thoughts (CoT)~\\cite{wei2023chainofthoughtpromptingelicitsreasoning} referred to as shallow customization methods (SCM) of LLMs as they do not alter model embeddings.",
+    "2412-15309_sent_dc6bdce0": "Therefore LLMs, with or without such SCM, are good at general problem-solving or formal linguistic abilities.",
+    "2412-15309_sent_f3e49ece": "Formal linguistic competency tasks are based on syntactic rules and statistical patterns that characterize a language.",
+    "2412-15309_sent_3f702b4f": "On the flip side, open-world data often lack specialized information like math/logic related know-how, process information or engineering guidelines and hence, LLMs lack such knowledge too.",
+    "2412-15309_sent_55d3a36c": "It has been shown that LLMs often fail to solve even simple math problems~\\cite{nezhurina2024alicewonderlandsimpletasks} and have inconsistencies in their knowledge when reasoning~\\cite{ucedasosa2024reasoningconceptsllmsinconsistencies}.",
+    "2412-15309_sent_d5c15f87": "Problem solving is a complex process that humans excel through the interplay of several aspects of their cognitive abilities~\\cite{Pizlo2022-PIZPSC,WUSTENBERG20121}.",
+    "2412-15309_sent_907d0223": "It is an acquired skill for humans, often requiring reasoning~\\cite{sternberg1980reasoning}.",
+    "2412-15309_sent_a6c0a067": "It is both logical and creative in nature, hence challenging for LLMs. While LLMs do well on formal linguistic competency tasks, LLM's base knowledge lacks essential problem solving mechanisms that humans possess~\\cite{WANG201081}, and cannot solve functional linguistic competency problems~\\cite{mahowald2024dissociatinglanguagethoughtlarge} well.",
+    "2412-15309_sent_62369a58": "LLMs struggle at even problems with single correct answers~\\cite{cheng2024inductivedeductiverethinkingfundamental}.",
+    "2412-15309_sent_06cd6fe0": "Cognitive science theories prove concepts are key to problem solving~\\cite{gardenfors2023reasoning}.",
+    "2412-15309_sent_75db492c": "The term concept used is as in cognitive science literature~\\cite{Laurence1999-LAUCAC-3} meaning ‘building blocks of thought'.",
+    "2412-15309_sent_d495ddfc": "Various problem solving mechanisms like deductive, abductive, and inductive reasoning rely on conceptual information (CI).",
+    "2412-15309_sent_0b1cbc23": "We call such problems that can be solved with CI as complex conceptual problems (CP).",
+    "2412-15309_sent_64a635e9": "Many science and engineering problems fall in this category of complex CP with often multiple correct answers.",
+    "2412-15309_sent_c99481c6": "LLMs as agents to solve such CPs~\\cite{shen2024tagllmrepurposinggeneralpurposellms,collins2022structuredflexiblerobustbenchmarking} are crucial due to its implications in advancing engineering and science problems~\\cite{hardy2023large}.",
+    "2412-15309_sent_8036067c": "It has been proven that LLMs solve such complex CP through spurious correlations from training data and often generate false positives (hallucinate)~\\cite{williams2024easyproblemsllmswrong,Tang_2023,nezhurina2024alicewonderlandsimpletasks}.",
+    "2412-15309_sent_c7c5dcba": "Hence (plain) LLMs are not well suited for solving complex CPs~\\cite{frieder2023mathematicalcapabilitieschatgpt,kalyanpur2024llmarcenhancingllmsautomated,davoodi2024llmsintelligentthinkersintroducing}.",
+    "2412-15309_sent_423ee4ba": "In this paper we specifically explore SCMs of LLMs for solving complex CPs.",
+    "2412-15309_sent_47e8066a": "For this problem, the deep customisation of LLMs (like fine-tuning~\\cite{zhang2024scalingmeetsllmfinetuning,ha2024fusiondomainadaptedvisionlanguage} and LoRA~\\cite{DBLP:journals/corr/abs-2106-09685}) is not feasible due to data sparsity and over-fitting risks.",
+    "2412-15309_sent_1c06469d": "We show that currently popular SCM for LLMs are unsuccessful in solving complex CPs.",
+    "2412-15309_sent_0f764c24": "The models were observed to hallucinate or parrot (copy examples from SCM prompts), indicating missing CI.",
+    "2412-15309_sent_518d1a08": "In cases where SCM-based LLMs succeeds, LLMs are not robust as they generates correct responses through incorrect problem solving mechanisms.",
+    "2412-15309_sent_8c838cf9": "In the second part, we provide two novel SCMs for augmenting LLMs with CI.",
+    "2412-15309_sent_e7146d51": "We show the success of our methods on a simple logical reasoning CP with a single correct answer and a complex engineering CP with multiple correct answers.",
+    "2412-15309_sent_196c909f": "The main paper contributions are 1.",
+    "2412-15309_sent_b186ae70": "We demonstrate the ineffectiveness of current SCMs for complex CP solving and provide a hypothesis of why they are ineffective, 2.",
+    "2412-15309_sent_4378c716": "We propose two new SCM algorithms to augment LLMs with CI (C-ICL and CoC) leading to successful complex CP solving, 3.",
+    "2412-15309_sent_67cfedb1": "We apply the proposed SCMs to a real-world industrial problem of generating proprietary data models (PDM), 4.",
+    "2412-15309_sent_35467eea": "We provide an evaluation study of the SCMs and provide a method to evaluate multiple aspects of response correctness to highlight problem solving skills gained by LLMs and their receptiveness to SCM.",
+    "2412-15309_section_0dba43d0": "Existing Methodology",
+    "2412-15309_sent_0940f555": "For intuitive understanding of the different SCMs and to demonstrate the need for more sophisticated approaches to solve CPs using LLMs we use the following example \\begin{example} If Alice has X sisters and Y brothers.",
+    "2412-15309_sent_77c0c712": "How many sisters does Alice's brother have?",
+    "2412-15309_sent_39d4364f": "\\end{example} The answer to this problem is $X$ + 1, as Alice herself needs to be counted when calculating the total number of sisters for a male sibling of Alice.",
+    "2412-15309_sent_12fac3d0": "But as \\cite{nezhurina2024alicewonderlandsimpletasks} showcases LLMs perform poorly on this CP called as Alice in Wonderland (AIW).\\\\ For e.g., for $X = 3$ and $Y = 7$, the correct response is $4$.",
+    "2412-15309_subsection_c38ca156": "Simple Prompt",
+    "2412-15309_sent_926b251b": "When normally prompted (no customisation to LLM) as in Fig.~\\ref{fig:AIW}.1 ($X = 4$ and $Y = 11$), the response is incorrect: $4$.\\\\ The model fails to add 1 and this clearly shows the poor capabilities of LLM as reasoners for such a simple problem.",
+    "2412-15309_sent_bb4a49f3": "\\centerline{\\includegraphics[scale = 0.3]{method-Page-2.drawio.pdf}} \\caption{The LLM response is customised through 5 different SCMs using GPT-3.5-turbo-16k.",
+    "2412-15309_sent_cdc3e0c0": "Figure markings - right-aligned box are model input, left-aligned are model response, SCM prompts are marked in yellow, CP in blue, and for model's response: correct are marked in green and incorrect in red. } \\end{figure*}",
+    "2412-15309_subsubsection_9dc5ea6e": "General Framework",
+    "2412-15309_sent_8adfaa63": "Consider a CP $\\mathcal{C}$ that can be solved with CI and an LLM $\\mathcal{M}$ which takes as input an NL query and returns an NL response.",
+    "2412-15309_sent_fc8cfdda": "In general interaction, a user with a CP $q$ pertaining to $\\mathcal{C}$ and obtains a model response $r$.",
+    "2412-15309_sent_f3e95059": "The function approximator to model $\\mathcal{M}$ is $m$, such that",
+    "2412-15309_eq_28cf6c06": " \\begin{equation}\n r = m_{\\mathcal{M}}(q)\n \\end{equation}",
+    "2412-15309_sent_a55276bc": "The interaction can be qualified by following metrics",
+    "2412-15309_paragraph_2b30079c": "Response Correctness $\\theta_{correct}$",
+    "2412-15309_sent_b2a234d1": "We define response as correct when it matches the ground truth/ correct response",
+    "2412-15309_eq_f0ba16fe": " \\begin{equation}\n \\theta_{C} = \\sum_{i=1}^{N} \\frac{k_i}{N}\n \\end{equation}",
+    "2412-15309_sent_29d8aba2": "for $N$ response samples and the correctness of the $i^{th}$ sample",
+    "2412-15309_eq_c9c73a8b": " \\begin{equation}\n k_{i}= \\begin{cases}\n 1, & \\text{if $r_i=r^*$}.\\\\\n 0, & \\text{otherwise}.\n \\end{cases}\n\n \\end{equation}",
+    "2412-15309_sent_eba27507": "where $r_i$ is $i^{th}$ model response and $r^*$ is the correct response.",
+    "2412-15309_sent_2f9deeb6": "A complex CP can have different aspects of correctness like syntactic and semantic correctness $\\{\\theta_{C_{i}}\\}$ (e.g., in Section~\\ref{sec:exp}).",
+    "2412-15309_paragraph_beded5a7": "Response Cost $\\theta_{cost}$",
+    "2412-15309_sent_c436548f": "Response cost is the cost of generating an LLM response to the CP.",
+    "2412-15309_sent_737ebbf6": "It is a parameter of the LLM and the token size (function of total characters in the query and response).",
+    "2412-15309_sent_fdb49a46": "Higher token size corresponds to higher response cost.",
+    "2412-15309_sent_d9319296": "Let $f_\\mathcal{M}$ be the model's characteristic function to calculate the token size then",
+    "2412-15309_eq_b13f7406": " \\begin{equation}\n \\theta_{cost} = f_{\\mathcal{M}}(q+r)\n\n \\end{equation}",
+    "2412-15309_paragraph_d9648e37": "Time Consumption $\\theta_{time}$",
+    "2412-15309_eq_08ff642a": " \\begin{equation}\n \\theta_{time} = t \\text{ (wall-clock seconds)}\n\n \\end{equation} ",
+    "2412-15309_paragraph_fc20ced1": "Model Confidence $\\theta_{P}$",
+    "2412-15309_sent_5130bead": "If we utilise an SCM $\\lambda$ (like Simple Prompt), then model confidence is",
+    "2412-15309_eq_db11c453": " \\begin{equation}\n \\theta_{P} = \\alpha^{\\lambda}_{\\mathcal{M},r}\n\n \\end{equation}",
+    "2412-15309_sent_f180cac5": "where $\\alpha$ is the model's characteristic function (average of probabilities obtained from model for all response tokens) to determine the confidence for the generated response $r$.",
+    "2412-15309_subsection_525b35d1": "In-context learning",
+    "2412-15309_sent_74872178": "ICL is a one-shot prompting method.",
+    "2412-15309_sent_960cfefe": "The query consists of the CP and an example $\\epsilon$: $q+\\epsilon$.",
+    "2412-15309_sent_e4247d27": "For e.g., on giving an example of Alice with CP for Rabbit (Fig.~\\ref{fig:AIW}.2) the response is incorrect: $4$.",
+    "2412-15309_subsection_90e3fd59": "Chain of Thoughts",
+    "2412-15309_sent_101a51ae": "Introduced by \\cite{wei2023chainofthoughtpromptingelicitsreasoning}, CoT is a few-shot prompting method in which the problem is broken down into a series of steps that lead to the correct answer.",
+    "2412-15309_sent_8b7fadd5": "In some works, CoT is also implemented with a simple addition of \"let's think step-by-step\" to the end of the ICL prompt~\\cite{NEURIPS2022_8bb0d291}.",
+    "2412-15309_sent_0074ec1a": "In other works, CoT is implemented by adding an explanation of reasoning and using examples, followed by CP.",
+    "2412-15309_sent_e773068d": "We apply CoT consisting of an explanation of the solution through the example method to AIW as in Fig.~\\ref{fig:AIW}.3, LLM again gives an incorrect answer.",
+    "2412-15309_sent_50e00bcf": "Formalising, let set $\\{(q_i, r_i)\\}$ represent an $i^{th}$ query-response pair in the few shot CoT, then model input is",
+    "2412-15309_eq_877b08ac": " \\begin{equation}\n q_{n} = q \\| (\\|_{n=0}^{N-1}(q_i,r_i)), (\\|\\text{ : concatenation operation})\n \\end{equation}",
+    "2412-15309_sent_7ae32a56": "for $N$ number of query-response pair and, response is",
+    "2412-15309_eq_b50d6daf": " \\begin{equation}\n r = m_{\\mathcal{M}}(q_{n})\n \\end{equation}",
+    "2412-15309_sent_00b64193": "Then response cost and time taken become",
+    "2412-15309_eq_51ccfbdb": " \\begin{equation}\n \\theta_{cost} = f_{\\mathcal{M}}(q_n + r_n)\n \\end{equation}",
+    "2412-15309_eq_f2bade40": " \\begin{equation}\n \\theta_{time} = \\sum_{i=1}^{N+1}(t_i)\n \\end{equation}",
+    "2412-15309_sent_07a08a5b": "The $\\theta_{P}$ are same as in (\\ref{eqn:confidence}).",
+    "2412-15309_sent_fd786ab9": "The LLM cannot solve the AIW variation CP of number of sisters of a sister of Alice instead of brother.",
+    "2412-15309_sent_6aba8877": "For example, following up the CoT conversation chain (Fig.~\\ref{fig:AIW}.3) with \\begin{example} 'How many sisters does Rabbit's sister have?' \\end{example} The response is incorrect and non-numerical - \"If Rabbit has X sisters and Y brothers, and one of those sisters is Rabbit's sister, then Rabbit's sister would have X - 1 sisters.",
+    "2412-15309_sent_d0591796": "This is because Rabbit herself is also counted as one of the sisters.\"",
+    "2412-15309_section_00fad282": "Chain of Concepts And Conceptual ICL",
+    "2412-15309_sent_b4491375": "The poor performance of LLMs on AIW demonstrates that the LLM lacks correct problem solving mechanisms.",
+    "2412-15309_sent_d9e74fe7": "These mechanisms are the CI important to solve the CP.",
+    "2412-15309_sent_d673bd84": "CI is missing in CoT or ICL where instead the steps to obtain the solution or examples are provided to the LLM.",
+    "2412-15309_sent_d27a5faa": "We hypothesise LLMs augmented with CI can solve CP and provide two new methods",
+    "2412-15309_subsection_18902ee9": "Conceptual In-context Learning",
+    "2412-15309_sent_00044055": "Consider we have a CI (we present a method to construct CI in Section~\\ref{sec:CI}).",
+    "2412-15309_sent_ef04f6fc": "A naive approach will be to construct a single prompt consisting of the CI and CP and provide it to LLM as a zero-shot prompt.",
+    "2412-15309_sent_71dca494": "Applying this to AIW as in Fig.~\\ref{fig:AIW}.4 we get the correct answer.",
+    "2412-15309_sent_8e4f2fb4": "The response also consists of the reasoning mechanism explanation.",
+    "2412-15309_sent_f5ff90d5": "The metrics of this C-ICL method are calculated similar to that of plain ICL.",
+    "2412-15309_sent_67755c4d": "\\\\ Example Of Conceptual Information for AIW: The input prompt in Fig.~\\ref{fig:AIW}.4 shows the CI for AIW.",
+    "2412-15309_sent_92a72200": "This CI consists of introduction of calculation of the total number of siblings and explanation of addition of $1$ to $X + Y$, and an example.",
+    "2412-15309_sent_7949e8df": "Next, the concept of role of the gender of a sibling is introduced by an explanation of calculating the sister of a male or female sibling, followed by examples and the CP.",
+    "2412-15309_subsection_8e7c37f5": "Chain of Concepts",
+    "2412-15309_sent_dfe82dcc": "For CPs that require multiple concepts, instead of a single input prompt as in C-ICL, concepts can instead be incrementally introduced to the model in multiple inter-related prompts.",
+    "2412-15309_sent_785da524": "This method CoC when applied to LLMs for AIW (Fig.~\\ref{fig:AIW}.5), leads to correct response and a more granular explanation of LLM's problem solving mechanisms.",
+    "2412-15309_sent_c3b0eb66": "We calculate the metrics for CoC in the same way as CoT.",
+    "2412-15309_sent_1dc41293": "Further on querying the LLM with AIW variation (Example~\\ref{ex:1}) we get correct responses for both C-ICL and CoC.",
+    "2412-15309_sent_c1f7cb1a": "As compared to AIW which has a single correct answer, the complex CPs often have multiple correct responses (e.g., storytelling~\\cite{see2019massivelypretrainedlanguagemodels}) making evaluation a challenge and requiring human reviewers.",
+    "2412-15309_sent_75bd340f": "In Section~\\ref{sec:exp} we apply SCMs and evaluated SCMs on a more complex CP.",
+    "2412-15309_sent_35c2cd54": "The algorithm to construct CoC and C-ICL is formalised as",
+    "2412-15309_subsubsection_346a7339": "Extending General Framework",
+    "2412-15309_paragraph_56fe2ee3": "Conceptual Information As A Directed-Acyclic Graph",
+    "2412-15309_fig_dd1e56e5": " \\begin{figure}\n\n \\subfigure{1.}{\\includegraphics[width=0.25\\textwidth]{method-Page-5.drawio.pdf}}\n \\subfigure{2.}{\\includegraphics[width=0.2\\textwidth]{pdm-cp.drawio-2.pdf}}\n \\caption{Proposed SCM CoC based formulation of CI as a DAG: 1. General DAG of CI 2. CI DAG Example for proprietary data model generation CP.}\n\n \\end{figure}",
+    "2412-15309_sent_c89e9458": "Let's think of CI $\\mathcal{A}$ (the information required to solve the CP $\\mathcal{C}$) as a unidirectional flow of information starting from the general knowledge, called low-level concepts that are more fundamental pieces of information, to the topic which we define as a high-level concept that is a more abstract piece of information.",
+    "2412-15309_sent_8c35f124": "The levels of abstraction represent different models of the same idea but with varying amounts of details~\\cite{Floridi2004-FLOLAT}.",
+    "2412-15309_sent_b1fa3d2d": "We characterize $\\mathcal{A}$ as a directed-acyclic graph (DAG) (Fig.~\\ref{fig:topic}.1), where each node $A$ represents a concept.",
+    "2412-15309_sent_675c2b4b": "Each concept can be represented by lower-level concepts or sub-concepts.",
+    "2412-15309_sent_118167a9": "The edges $E$ of the DAG link the sub-concepts to the concepts.",
+    "2412-15309_sent_375a8007": "The direction of the edge shows the increasing abstractness of the concept.",
+    "2412-15309_sent_e5cd0ea8": "Therefore, traversing along the DAG, the nodes that do not have any incoming edges are general knowledge and the final node from which no edge originates is the topic to which the CP belongs.",
+    "2412-15309_sent_dff2ec57": "A topic is the most abstract information of the CI while general knowledge is the least abstract.",
+    "2412-15309_sent_1cf159fa": "Therefore, $\\mathcal{A}$ is a set of all nodes and edges $a \\in A$ and $e \\in E$",
+    "2412-15309_eq_dcb66abd": " \\begin{equation}\n \\mathcal{A} = \\{A, E\\}\n \\end{equation}",
+    "2412-15309_paragraph_6f90658e": "LLM's Knowledge",
+    "2412-15309_sent_c69a6c1d": "Several research works~\\cite{radford2018improving,DBLP:journals/corr/abs-2005-14165} have shed light on the fact that LLMs possess general knowledge and low-level concepts which we refer as base knowledge.",
+    "2412-15309_sent_6e58ce2d": "They have shown that the LLMs can solve impressive arrays of problems with base knowledge~\\cite{lu2024emergentabilitieslargelanguage}.",
+    "2412-15309_sent_d3b9ad24": "These categories of problems are formal linguistic competence.",
+    "2412-15309_sent_d3d37a40": "While for the complementary problem of functional linguistic competence like reasoning, LLMs do not perform well~\\cite{mahowald2024dissociatinglanguagethoughtlarge,nezhurina2024alicewonderlandsimpletasks} (e.g., AIW).",
+    "2412-15309_sent_bdaf4f63": "These problems require LLMs to possess knowledge of complex CI that is often not encountered in the open-world data.",
+    "2412-15309_sent_98bb36d5": "The base knowledge is specific to the LLM, its size and the training data used to it.",
+    "2412-15309_sent_2fbe84ca": "The training data of an LLM might include some functional linguistic competency problems.",
+    "2412-15309_sent_cf7501d8": "However, many of the higher-level concepts essential for problem solving do not occur in the training data~\\cite{mahowald2024dissociatinglanguagethoughtlarge}.",
+    "2412-15309_sent_5b4ed27f": "Thus, LLMs lack the complete CI and cannot solve CPs, as seen in failure for AIW.",
+    "2412-15309_sent_6a89a2dd": "However, LLM's knowledge of low-level concepts is an essential building-block to understand high-level concepts, making LLMs a powerful tool for solving CPs.",
+    "2412-15309_subsubsection_85518245": "Algorithm To Construct Chain Of Concepts",
+    "2412-15309_paragraph_07fc96db": "Formulating The CI For CoC",
+    "2412-15309_sent_033b0c03": "The DAG $\\mathcal{A}$ has to be constructed by the domain expert/user for each CP.",
+    "2412-15309_sent_76d4f7a2": "For a more complex CP the $\\mathcal{A}$ required for any agent to solve the $\\mathcal{C}$ gets bigger.",
+    "2412-15309_sent_7b360f6e": "This means the nodes, i.e. concepts, required can be more in number and more abstract, and/or the edges, i.e. relations among sub-concepts, are higher in number.",
+    "2412-15309_sent_4b3f15f0": "A naive way to formulate $\\mathcal{A}$ would be to provide all concepts and their relations to the model.",
+    "2412-15309_sent_352da745": "However, this is not a feasible task as the low-level concepts are often large in number and models have limited token size.",
+    "2412-15309_sent_adb04b19": "But as discussed in Section~\\ref{sec:llmkg}, as LLMs possess base knowledge we omit low-level concepts and only reference them in relation to high-level concepts (edges of DAG).",
+    "2412-15309_sent_133dc773": "The knowledge of LLM is then a DAG $\\mathcal{A}^* \\subset \\mathcal{A}$",
+    "2412-15309_eq_e0bd2f0b": " \\begin{equation}\n \\mathcal{A}^* = \\{A^*, E^*\\}\n \\end{equation} ",
+    "2412-15309_sent_5a7e69eb": "$\\mathcal{A}^*$ of LLM is determined heuristically after $\\mathcal{A}$ is constructed. The method to do this is to query the LLM for low-level concepts and identify the consistently correct responses.",
+    "2412-15309_sent_8c8a3eff": "$\\mathcal{A}_c$ is the difference between $ \\mathcal{A}^*$ and $ \\mathcal{A}$, and therefore consists of fewer nodes (concepts).",
+    "2412-15309_sent_a25b764f": "Thus, we obtain LLM's missing CI $\\mathcal{A}_c$.",
+    "2412-15309_sent_220d81be": "More optimised methods to formulate $\\mathcal{A}_c$ can be adopted, but this is beyond the scope of current work.\\\\ For an example of a CI for a proprietary data model generation (PDM) the CP (Example~\\ref{ex:3}) is given in Fig.~\\ref{fig:topic}.2: the LLM base knowledge (gray nodes) includes information like standard data models and high-level concepts (white nodes) include information like the PDM schema (unavailable openly).",
+    "2412-15309_sent_cb8485ad": "\\begin{example} \"Can you generate a $<$PDM name$>$ for $<$domain$>$?\" \\end{example}",
+    "2412-15309_paragraph_b1215491": "Constructing CoC",
+    "2412-15309_fig_1b85de0e": " \\begin{algorithm}\n \\caption{Algorithm for Chain of Concepts}\n\n \\begin{algorithmic}\n \\Require $\\mathcal{A}, \\mathcal{M}, \\mathcal{A}^*, P $\\Comment{$P$ denotes generating NL prompt} \n \\State $ \\mathcal{A}_c \\gets \\mathcal{A} \\setminus \\mathcal{A}^*$\n \\State CoC = []\n \\While{${A}_c \\neq \\emptyset$}\n \\State $(a, e) \\gets {\\text{BFS}({A}_c )}$ \\Comment{BFS: breadth first search, $a$: child node}\n \\State $q \\gets P((a,e))$ \n \\State $r \\gets m_\\mathcal{M}(q+\\epsilon)$ \n \\State $\\mathcal{A}^* \\cup (a,e)$ \n \\State ${A}_c \\gets \\mathcal{A} \\setminus \\mathcal{A}^*$\n \\State $\\text{CoC} \\gets \\text{CoC}\\text{.append}((q, r))$\n \\EndWhile\n \\State \\Return CoC\n \\end{algorithmic}\n \\end{algorithm}",
+    "2412-15309_sent_75e03331": "The naive method to augment LLMs with the CI is converting the $\\mathcal{A}_c$ to a single NL prompt and provide it to the LLM before the CP (C-ICL method).",
+    "2412-15309_sent_8631caeb": "Alternatively $\\mathcal{A}_c$ is split into multiple prompts based of different concept nodes, which is CoC.",
+    "2412-15309_sent_b1f18d32": "The splitting is started from the low-level concept and relations, and sequentially relating them and introducing high-level concepts while providing the examples wherever possible (inspired from the success of few-shot prompting~\\cite{li2024chain,madaan2022text}).",
+    "2412-15309_sent_5dcfb0f7": "This incremental way of prompting the concepts is equivalent to traversing the DAG $\\mathcal{A}_c$ in breadth-first search manner.",
+    "2412-15309_sent_622b41cb": "The algorithm is explained in Algorithm~\\ref{alg:CoC} and an example of the DAG of the CP constructed using it is shown in Fig.~\\ref{fig:topic}.2 for the CP in Example~\\ref{ex:3}.",
+    "2412-15309_sent_f2e55680": "This many-shot prompting method CoC builds CI incrementally, reducing the ambiguity in LLM's problem solving mechanisms.",
+    "2412-15309_section_4a96364f": "Application To Data Model Engineering",
+    "2412-15309_sent_9c910fd7": "Data Models are machine-readable structured data representations that relate entities and their relationships according to syntactic rules based on schemata and semantic rules given by the domain.",
+    "2412-15309_sent_66e049bc": "The process of operating on various types of data models is called Data Modeling (DM).",
+    "2412-15309_sent_0ced5cd1": "DM has widespread applications in industries like defining assets and creating digital twins.",
+    "2412-15309_sent_cfc5af90": "In open-world data, many standard formalisms for DM (e.g., AAS~\\cite{bader2019semantic}, OWL~\\cite{antoniou2009web}) exist.",
+    "2412-15309_sent_ddb9bfd7": "Many companies build PDMs tailored to a specific industry and application, and these are unavailable openly.",
+    "2412-15309_sent_56caa997": "The domain and DM experts are tasked with the challenge of PDM generation.",
+    "2412-15309_sent_a028e003": "These challenges are",
+    "2412-15309_enumerate_ff964a1a": "enumerate",
+    "2412-15309_item_6e6bfc86": "item",
+    "2412-15309_sent_6a59fb08": "Current SoTA of PDM generation is manual drafting by DM experts.",
+    "2412-15309_sent_7c29af06": "It incurs high cognitive burden requiring knowledge acquisition of the domain, expertise of DM and PDM modelling paradigms, and learning DM tools.",
+    "2412-15309_sent_32d3791a": "It is time consuming and requires multiple iterations.",
+    "2412-15309_sent_e5e18e46": "Unavailability of tools for new PDMs makes accessibility and adoption of PDM a challenge.",
+    "2412-15309_sent_f591c9cb": "LLMs with the base knowledge of the standard data models and DM, formal linguistic competence and NL user interface have potential to solve PDM CPs.",
+    "2412-15309_sent_0d7b055f": "However, as LLMs do not possess CI of PDMs, LLMs without any customisation cannot do PDM generation.",
+    "2412-15309_sent_f89b5f67": "We comparatively evaluate different SCMs for this task in the next section.",
+    "2412-15309_section_4829262c": "Experiments",
+    "2412-15309_subsection_d575842d": "Experimental Setup",
+    "2412-15309_sent_cd85754a": "The experimental parameters are detailed in Table~\\ref{tab1}.",
+    "2412-15309_sent_0808f2c5": "The customised LLMs are queried with the CP in Example~\\ref{ex:3} for $\\beta$ randomly chosen domains.",
+    "2412-15309_sent_e9bb2546": "The target PDM* (based on a company data model) has a JSON serialisation.",
+    "2412-15309_sent_c391734c": "$\\gamma$ samples of $\\beta$ domains for each of the $3$ models of varied sizes and for $5$ different SCMs are generated to create a dataset of $495$ PDM*s.",
+    "2412-15309_sent_052c7277": "Fig.~\\ref{fig:topic}.2 shows the CI constructed using CoC algorithm.",
+    "2412-15309_sent_1b2b098b": "In Fig.~\\ref{fig:PDM} a sample that is representative of the dataset for industrial motor domain for the SCMs is shown.",
+    "2412-15309_sent_587b8750": "The PDM CP is chosen to demonstrate the complexity of real-world CPs that are unavailable openly, require manual evaluation, and have multiple correct answers.",
+    "2412-15309_sent_919ca8a9": "As we evaluate the data manually the dataset size is chosen to optimise effort and produce meaningful results.",
+    "2412-15309_sent_62d399a3": "The evaluation metrics are as defined previously and $\\theta_{correct}$ comprises of 4 aspects",
+    "2412-15309_itemize_7c51800a": "itemize",
+    "2412-15309_sent_50ff7935": "Valid JSON check $\\theta_{C_1}$: the model generates a PDM* that can be parsed to a valid JSON file.",
+    "2412-15309_sent_26a5afa4": "Syntactic check $\\theta_{C_2}$: the valid JSON is passing all syntactic rules of the PDM* schema.",
+    "2412-15309_sent_935cf3fe": "Parroting check $\\theta_{C_3}$: indicates lack of \"creative\" or \"original\" generations which is a essential for PDM.",
+    "2412-15309_sent_a745c828": "Quasi-semantic check $\\theta_{C_4}$: evaluation becomes challenging for this complex CP with multiple correct responses, hence in the current scope we do a quasi-semantic check, defined as average of the 8 KPIs (correctly defined entity 1.",
+    "2412-15309_sent_38147875": "names, 2.",
+    "2412-15309_sent_d51e9c27": "base, 3.",
+    "2412-15309_sent_85d62948": "identifiers, 4.",
+    "2412-15309_sent_4225733f": "constraints, 5.",
+    "2412-15309_sent_29dd5819": "composition, 6.",
+    "2412-15309_sent_0cf88e52": "units, 7.",
+    "2412-15309_sent_d8d1bcbd": "datatypes, and 8.",
+    "2412-15309_sent_b61423a9": "relationships, defined with help of an DM expert.",
+    "2412-15309_sent_df6c08e0": "The quasi-semantic check is the most crucial correctness aspect for the PDM CP as if it is not semantically meaningful then it is invalid, irrespective of its syntactic correctness.",
+    "2412-15309_fig_31dbecf5": " \\begin{table}\n \\caption{Experimental Parameters}\n \\begin{center}\n \\begin{tabular}{p{0.2\\linewidth}p{0.6\\linewidth}}\n\n Parameters&Values\\\\\n\n SCM & Simple Prompt, ICL, CoT, C-ICL and CoC \\\\ \n\n Models & GPT-3.5-turbo-16k, GPT-4-16k, GPT-4-turbo-128K-1106\\\\ \n Hyperparameters & default except maximum overall tokens $= 16000$, maximum response tokens $ = 4096$\\\\ \n No. of CP ($\\beta$), Samples ($\\gamma$) & $\\beta = 3$ (domains - coffee making, industrial motors, real estate buildings), $\\gamma = 11$\\\\\n\n \\end{tabular}\n\n \\end{center}\n \\end{table}",
+    "2412-15309_sent_381b084d": "\\centerline{\\includegraphics[scale = 0.3]{method-Page-6.drawio-3.pdf}} \\caption{Sample response using GPT-3.5-turbo-16k for PDM* generation using five SCMs. The left aligned boxes are LLM's response and right ones are input prompts.",
+    "2412-15309_sent_bb519fd4": "Colour markings mean: SCM - yellow, CP - blue, errors in the generated PDM - red and correct features - green, JSON generated - grey.",
+    "2412-15309_sent_6ed92093": "\\subfigure{\\includegraphics[width=0.22\\textwidth]{valid_json.pdf}} \\subfigure{\\includegraphics[width=0.22\\textwidth]{syntactic_check.pdf}} \\subfigure{\\includegraphics[width=0.22\\textwidth]{parroting_check.pdf}} \\subfigure{\\includegraphics[width=0.22\\textwidth]{quasi_check2.pdf}} \\subfigure{\\includegraphics[width=0.22\\textwidth]{time.pdf}} \\subfigure{\\includegraphics[width=0.22\\textwidth]{token.pdf}} \\subfigure{\\includegraphics[width=0.33\\textwidth]{confidence.pdf}} \\caption{ For the experiment matrix (Table~\\ref{tab1}) the metrics are plotted (from left to right and top to bottom) - $\\theta_{C_1}$, $\\theta_{C_2}$, $\\theta_{C_3}$, $\\theta_{C_4}$, $\\theta_{time}$, $\\theta_{cost}$, $\\theta_{P}$}.",
+    "2412-15309_subsection_34410ea3": "Experimental Results, Discussion And Related Works",
+    "2412-15309_subsubsection_fc30c1de": "Quantitative evaluation",
+    "2412-15309_sent_ad14af80": "In Fig.~\\ref{fig:metrics} each bar represents a metric averaged over $\\gamma \\times \\beta $ samples for a model and a SCM.",
+    "2412-15309_sent_adb64212": "The trends are - $\\theta_{C_1}$: CoC and CoT performed best for all model sizes, C-ICL showed steep decrease in performance for mid-size model, ICL performed comparatively very poor, and Simple Prompt performed the worst with $\\approx 0$ valid JSONs.",
+    "2412-15309_sent_99555204": "$\\theta_{C_2}$: C-ICL and ICL performed the best with comparable results, followed by CoC and CoT with comparable results and both perform significantly poorly for larger models, Simple Prompt performed worst.",
+    "2412-15309_sent_0777bfcb": "$\\theta_{C_3}$: ICL suffered from parroting significantly, rendering it invalid for this particular CP, minor parroting was observed for lower size model with CoT/C-ICL/CoC, C-ICL and CoC are highly robust to parroting with none observed for larger models, Simple Prompt was not evaluated as it did not generate any valid PDM*.",
+    "2412-15309_sent_12d9a27e": "$\\theta_{C_4}$: CoC performs best with low variance and consistently across all models, comparatively C-ICL suffers heavy variance and also inconsistent across model sizes, CoT performs consistently but poorer than C-ICL and CoC, ICL is not evaluated due to parroting.",
+    "2412-15309_sent_e1cbb10a": "$\\theta_{time}$ and $\\theta_{cost}$: CoC and C-ICL took highest time and incurred highest costs, increasing proportionately with model size.",
+    "2412-15309_sent_4f44cd84": "$\\theta_{P}$: methods that performed poor in correctness showed high confidence indicating hallucination, like for Simple Prompt $\\theta_{C1}$ is close to $0$ but $\\theta_{P}$ is $0.7$.",
+    "2412-15309_subsubsection_d6847267": "Qualitative evaluation",
+    "2412-15309_sent_3e355632": "2.",
+    "2412-15309_sent_f65b5972": "ICL - high parroting, most responses are same as example PDM* with only attribute names changed as per the query domain (Fig.~\\ref{fig:PDM}.2).",
+    "2412-15309_sent_d9cb7414": "3.",
+    "2412-15309_sent_0adde641": "CoT - higher parroting (Fig.~\\ref{fig:PDM}.3) as compared to CoC/C-ICL, suffers from hallucinations like adding new entities to PDM* schema.",
+    "2412-15309_sent_ee2468a7": "4.",
+    "2412-15309_sent_986c6bb2": "C-ICL - more conservative model confidence vs. correctness which can be interpreted as low hallucination, low in robustness compared to CoC as variance is high in $\\theta_C$, some responses contain comprehensive attribute definition (Fig.~\\ref{fig:PDM}.4) unobserved in ICL/CoT.",
+    "2412-15309_sent_a85803f1": "5.",
+    "2412-15309_sent_d8580acd": "CoC - more consistent explanation of generated PDM in response, defines relationships, and better in comprehensive attributes definition (Fig.~\\ref{fig:PDM}.5) as compared to C-ICL.",
+    "2412-15309_subsubsection_eed9474f": "Discussion",
+    "2412-15309_sent_32ebfbf7": "CoC vs. C-ICL: CoC gives the best quality.",
+    "2412-15309_sent_dd78b32c": "In time/cost constrained scenarios C-ICL with human validation can be a viable alternative.",
+    "2412-15309_sent_19e04bc0": "The choice also depends on CI size and correctness aspect.",
+    "2412-15309_sent_3426758d": "For simple CPs with few concepts like AIW, C-ICL works well.",
+    "2412-15309_sent_48ccee69": "In cases where the CP has multiple correct answers and concepts like PDM, incrementally introducing concepts through CoC has shown advantages, similar to pedagogical teaching of concepts to humans.",
+    "2412-15309_sent_2b7a29fd": "Model choice: Large model is essential when CI is large, or cost is high.",
+    "2412-15309_sent_054cba38": "For CoC, smaller model is also a good choice as it shows comparable performance to the best performing larger model and reduces energy consumption.",
+    "2412-15309_sent_a4f03713": "The large non-turbo GPT models performed poorly in CP solving as compared to any sized turbo (improved training).",
+    "2412-15309_sent_4d130f26": "CI: Keeping the CI concise showed better performance with lower cost.",
+    "2412-15309_sent_024cd9dc": "Prompt engineering: As a learning from the experiments when converting the CI to NL prompts, the best responses are generated when the prompts are explicit and pedagogical. Transparency benefits: The proposed SCMs generated responses with elaboration of problem solving mechanisms, which can enable auto-validation of responses.",
+    "2412-15309_subsubsection_a7f20481": "Related Works",
+    "2412-15309_sent_db87df26": "Works like~\\cite{bao2024llmschainofthoughtnoncausalreasoners} show that CoT is poor at solving CPs.",
+    "2412-15309_sent_f55a3d70": "Similar to~\\cite{NEURIPS2023_271db992,Besta_2024} our methods improve over CoT where instead of left-to-right token based decision making our methods enable LLM to base it on a collection of related prompts.",
+    "2412-15309_sent_d31b07d4": "The difference is between their exploratory curation of collection of thoughts which are more suitable for serial decision-making problems like solving puzzles vs. our structured CI and fixed curation of concepts to solve complex CPs effectively.",
+    "2412-15309_sent_428784a2": "Most works for LLMs for problem solving are limited to math reasoning CPs~\\cite{davoodi2024llmsintelligentthinkersintroducing,li2024chain} as opposed to closed-domain complex CPs that are practically more relevant.",
+    "2412-15309_sent_72232718": "Domain knowledge injection with CoT is explored in~\\cite{jiang2024llmsmathematicalreasoningmistakes} as an alternative to RAG~\\cite{lewis2021retrievalaugmentedgenerationknowledgeintensivenlp} but have not shown to augment LLMs with problem solving skills nor target complex CPs.",
+    "2412-15309_sent_2aa99b55": "Similarly, ~\\cite{wang2024retaskrevisitingllmtasks} provides a theoretical model using CoT applied to sentence prediction task.",
+    "2412-15309_sent_e16f31d5": "But they do not focus on complex CP or problem-solving skills, nor do extensive evaluation (like for hallucinations).",
+    "2412-15309_sent_1a59bc7b": "The distinguishing factor of our work is that we provide a systematic algorithm enabling LLM to solve complex CP and a comprehensive evaluation strategy.",
+    "2412-15309_section_7386eb2d": "Conclusion and Future Direction",
+    "2412-15309_sent_0479f437": "To the best of the knowledge of the authors this is the first paper providing model-agnostic SCM of LLMs for solving complex CPs.",
+    "2412-15309_sent_bf68f5c4": "We demonstrated that our proposed SCMs (C-ICL and CoC) solved a real-world complex data engineering CP successfully.",
+    "2412-15309_sent_46248f5f": "The proposed SCMs show a significant improvement over existing SCMs reducing hallucination and parroting issues.",
+    "2412-15309_sent_7d7675c7": "They bring forth emergent problem solving capabilities that have never been explicitly included in CI.",
+    "2412-15309_sent_dff33a55": "The introduced SCM CoC performed the best, with potential to generate meaningful first-cut solutions for complex engineering and science tasks.",
+    "2412-15309_sent_bef398bb": "Directions for future work include improving syntactic correctness of CoC, applying CoC to other complex CPs and to multimodal LLMs with multimodal CI."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15309_sent_b252c703": "2412-15309_doc_root",
+      "2412-15309_sent_04c5153b": "2412-15309_doc_root",
+      "2412-15309_sent_d97a7256": "2412-15309_doc_root",
+      "2412-15309_abstract_ce28071e": "2412-15309_doc_root",
+      "2412-15309_sent_d9da2995": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_598d7296": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_98b4e9bf": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_e9fdd8ae": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_3ff794b5": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_c90be314": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_861e79df": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_ea613d02": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_3ee7726b": "2412-15309_abstract_ce28071e",
+      "2412-15309_sent_93077199": "2412-15309_doc_root",
+      "2412-15309_sent_285e4bca": "2412-15309_section_7386eb2d",
+      "2412-15309_section_0b79795d": "2412-15309_doc_root",
+      "2412-15309_sent_40c0a364": "2412-15309_section_0b79795d",
+      "2412-15309_sent_af9565c0": "2412-15309_section_0b79795d",
+      "2412-15309_sent_484bf94d": "2412-15309_section_0b79795d",
+      "2412-15309_sent_89034ca6": "2412-15309_section_0b79795d",
+      "2412-15309_sent_dc6bdce0": "2412-15309_section_0b79795d",
+      "2412-15309_sent_f3e49ece": "2412-15309_section_0b79795d",
+      "2412-15309_sent_3f702b4f": "2412-15309_section_0b79795d",
+      "2412-15309_sent_55d3a36c": "2412-15309_section_0b79795d",
+      "2412-15309_sent_d5c15f87": "2412-15309_section_0b79795d",
+      "2412-15309_sent_907d0223": "2412-15309_section_0b79795d",
+      "2412-15309_sent_a6c0a067": "2412-15309_section_0b79795d",
+      "2412-15309_sent_62369a58": "2412-15309_section_0b79795d",
+      "2412-15309_sent_06cd6fe0": "2412-15309_section_0b79795d",
+      "2412-15309_sent_75db492c": "2412-15309_section_0b79795d",
+      "2412-15309_sent_d495ddfc": "2412-15309_section_0b79795d",
+      "2412-15309_sent_0b1cbc23": "2412-15309_section_0b79795d",
+      "2412-15309_sent_64a635e9": "2412-15309_section_0b79795d",
+      "2412-15309_sent_c99481c6": "2412-15309_section_0b79795d",
+      "2412-15309_sent_8036067c": "2412-15309_section_0b79795d",
+      "2412-15309_sent_c7c5dcba": "2412-15309_section_0b79795d",
+      "2412-15309_sent_423ee4ba": "2412-15309_section_0b79795d",
+      "2412-15309_sent_47e8066a": "2412-15309_section_0b79795d",
+      "2412-15309_sent_1c06469d": "2412-15309_section_0b79795d",
+      "2412-15309_sent_0f764c24": "2412-15309_section_0b79795d",
+      "2412-15309_sent_518d1a08": "2412-15309_section_0b79795d",
+      "2412-15309_sent_8c838cf9": "2412-15309_section_0b79795d",
+      "2412-15309_sent_e7146d51": "2412-15309_section_0b79795d",
+      "2412-15309_sent_196c909f": "2412-15309_section_0b79795d",
+      "2412-15309_sent_b186ae70": "2412-15309_section_0b79795d",
+      "2412-15309_sent_4378c716": "2412-15309_section_0b79795d",
+      "2412-15309_sent_67cfedb1": "2412-15309_section_0b79795d",
+      "2412-15309_sent_35467eea": "2412-15309_section_0b79795d",
+      "2412-15309_section_0dba43d0": "2412-15309_doc_root",
+      "2412-15309_sent_0940f555": "2412-15309_section_0dba43d0",
+      "2412-15309_sent_77c0c712": "2412-15309_section_0dba43d0",
+      "2412-15309_sent_39d4364f": "2412-15309_section_0dba43d0",
+      "2412-15309_sent_12fac3d0": "2412-15309_section_0dba43d0",
+      "2412-15309_subsection_c38ca156": "2412-15309_section_0dba43d0",
+      "2412-15309_sent_926b251b": "2412-15309_subsection_c38ca156",
+      "2412-15309_sent_bb4a49f3": "2412-15309_subsection_c38ca156",
+      "2412-15309_sent_cdc3e0c0": "2412-15309_subsection_c38ca156",
+      "2412-15309_subsubsection_9dc5ea6e": "2412-15309_subsection_c38ca156",
+      "2412-15309_sent_8adfaa63": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_sent_fc8cfdda": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_sent_f3e95059": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_eq_28cf6c06": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_sent_a55276bc": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_paragraph_2b30079c": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_sent_b2a234d1": "2412-15309_paragraph_2b30079c",
+      "2412-15309_eq_f0ba16fe": "2412-15309_paragraph_2b30079c",
+      "2412-15309_sent_29d8aba2": "2412-15309_paragraph_2b30079c",
+      "2412-15309_eq_c9c73a8b": "2412-15309_paragraph_2b30079c",
+      "2412-15309_sent_eba27507": "2412-15309_paragraph_2b30079c",
+      "2412-15309_sent_2f9deeb6": "2412-15309_paragraph_2b30079c",
+      "2412-15309_paragraph_beded5a7": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_sent_c436548f": "2412-15309_paragraph_beded5a7",
+      "2412-15309_sent_737ebbf6": "2412-15309_paragraph_beded5a7",
+      "2412-15309_sent_fdb49a46": "2412-15309_paragraph_beded5a7",
+      "2412-15309_sent_d9319296": "2412-15309_paragraph_beded5a7",
+      "2412-15309_eq_b13f7406": "2412-15309_paragraph_beded5a7",
+      "2412-15309_paragraph_d9648e37": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_eq_08ff642a": "2412-15309_paragraph_d9648e37",
+      "2412-15309_paragraph_fc20ced1": "2412-15309_subsubsection_9dc5ea6e",
+      "2412-15309_sent_5130bead": "2412-15309_paragraph_fc20ced1",
+      "2412-15309_eq_db11c453": "2412-15309_paragraph_fc20ced1",
+      "2412-15309_sent_f180cac5": "2412-15309_paragraph_fc20ced1",
+      "2412-15309_subsection_525b35d1": "2412-15309_section_0dba43d0",
+      "2412-15309_sent_74872178": "2412-15309_subsection_525b35d1",
+      "2412-15309_sent_960cfefe": "2412-15309_subsection_525b35d1",
+      "2412-15309_sent_e4247d27": "2412-15309_subsection_525b35d1",
+      "2412-15309_subsection_90e3fd59": "2412-15309_section_0dba43d0",
+      "2412-15309_sent_101a51ae": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_8b7fadd5": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_0074ec1a": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_e773068d": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_50e00bcf": "2412-15309_subsection_90e3fd59",
+      "2412-15309_eq_877b08ac": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_7ae32a56": "2412-15309_subsection_90e3fd59",
+      "2412-15309_eq_b50d6daf": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_00b64193": "2412-15309_subsection_90e3fd59",
+      "2412-15309_eq_51ccfbdb": "2412-15309_subsection_90e3fd59",
+      "2412-15309_eq_f2bade40": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_07a08a5b": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_fd786ab9": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_6aba8877": "2412-15309_subsection_90e3fd59",
+      "2412-15309_sent_d0591796": "2412-15309_subsection_90e3fd59",
+      "2412-15309_section_00fad282": "2412-15309_doc_root",
+      "2412-15309_sent_b4491375": "2412-15309_section_00fad282",
+      "2412-15309_sent_d9e74fe7": "2412-15309_section_00fad282",
+      "2412-15309_sent_d673bd84": "2412-15309_section_00fad282",
+      "2412-15309_sent_d27a5faa": "2412-15309_section_00fad282",
+      "2412-15309_subsection_18902ee9": "2412-15309_section_00fad282",
+      "2412-15309_sent_00044055": "2412-15309_subsection_18902ee9",
+      "2412-15309_sent_ef04f6fc": "2412-15309_subsection_18902ee9",
+      "2412-15309_sent_71dca494": "2412-15309_subsection_18902ee9",
+      "2412-15309_sent_8e4f2fb4": "2412-15309_subsection_18902ee9",
+      "2412-15309_sent_f5ff90d5": "2412-15309_subsection_18902ee9",
+      "2412-15309_sent_67755c4d": "2412-15309_subsection_18902ee9",
+      "2412-15309_sent_92a72200": "2412-15309_subsection_18902ee9",
+      "2412-15309_sent_7949e8df": "2412-15309_subsection_18902ee9",
+      "2412-15309_subsection_8e7c37f5": "2412-15309_section_00fad282",
+      "2412-15309_sent_dfe82dcc": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_sent_785da524": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_sent_c3b0eb66": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_sent_1dc41293": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_sent_c1f7cb1a": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_sent_75bd340f": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_sent_35c2cd54": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_subsubsection_346a7339": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_paragraph_56fe2ee3": "2412-15309_subsubsection_346a7339",
+      "2412-15309_fig_dd1e56e5": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_c89e9458": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_8c35f124": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_b1fa3d2d": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_675c2b4b": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_118167a9": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_375a8007": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_e5cd0ea8": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_dff2ec57": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_sent_1cf159fa": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_eq_dcb66abd": "2412-15309_paragraph_56fe2ee3",
+      "2412-15309_paragraph_6f90658e": "2412-15309_subsubsection_346a7339",
+      "2412-15309_sent_c69a6c1d": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_6e58ce2d": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_d3b9ad24": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_d3d37a40": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_bdaf4f63": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_98bb36d5": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_2fbe84ca": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_cf7501d8": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_5b4ed27f": "2412-15309_paragraph_6f90658e",
+      "2412-15309_sent_6a89a2dd": "2412-15309_paragraph_6f90658e",
+      "2412-15309_subsubsection_85518245": "2412-15309_subsection_8e7c37f5",
+      "2412-15309_paragraph_07fc96db": "2412-15309_subsubsection_85518245",
+      "2412-15309_sent_033b0c03": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_76d4f7a2": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_7b360f6e": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_4b3f15f0": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_352da745": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_adb04b19": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_133dc773": "2412-15309_paragraph_07fc96db",
+      "2412-15309_eq_e0bd2f0b": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_5a7e69eb": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_8c8a3eff": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_a25b764f": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_220d81be": "2412-15309_paragraph_07fc96db",
+      "2412-15309_sent_cb8485ad": "2412-15309_paragraph_07fc96db",
+      "2412-15309_paragraph_b1215491": "2412-15309_subsubsection_85518245",
+      "2412-15309_fig_1b85de0e": "2412-15309_paragraph_b1215491",
+      "2412-15309_sent_75e03331": "2412-15309_paragraph_b1215491",
+      "2412-15309_sent_8631caeb": "2412-15309_paragraph_b1215491",
+      "2412-15309_sent_b1f18d32": "2412-15309_paragraph_b1215491",
+      "2412-15309_sent_5dcfb0f7": "2412-15309_paragraph_b1215491",
+      "2412-15309_sent_622b41cb": "2412-15309_paragraph_b1215491",
+      "2412-15309_sent_f2e55680": "2412-15309_paragraph_b1215491",
+      "2412-15309_section_4a96364f": "2412-15309_doc_root",
+      "2412-15309_sent_9c910fd7": "2412-15309_section_4a96364f",
+      "2412-15309_sent_66e049bc": "2412-15309_section_4a96364f",
+      "2412-15309_sent_0ced5cd1": "2412-15309_section_4a96364f",
+      "2412-15309_sent_cfc5af90": "2412-15309_section_4a96364f",
+      "2412-15309_sent_ddb9bfd7": "2412-15309_section_4a96364f",
+      "2412-15309_sent_56caa997": "2412-15309_section_4a96364f",
+      "2412-15309_sent_a028e003": "2412-15309_section_4a96364f",
+      "2412-15309_enumerate_ff964a1a": "2412-15309_section_4a96364f",
+      "2412-15309_item_6e6bfc86": "2412-15309_itemize_7c51800a",
+      "2412-15309_sent_6a59fb08": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_7c29af06": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_32d3791a": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_e5e18e46": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_f591c9cb": "2412-15309_section_4a96364f",
+      "2412-15309_sent_0d7b055f": "2412-15309_section_4a96364f",
+      "2412-15309_sent_f89b5f67": "2412-15309_section_4a96364f",
+      "2412-15309_section_4829262c": "2412-15309_doc_root",
+      "2412-15309_subsection_d575842d": "2412-15309_section_4829262c",
+      "2412-15309_sent_cd85754a": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_0808f2c5": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_e9bb2546": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_c391734c": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_052c7277": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_1b2b098b": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_587b8750": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_919ca8a9": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_62d399a3": "2412-15309_subsection_d575842d",
+      "2412-15309_itemize_7c51800a": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_50ff7935": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_26a5afa4": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_935cf3fe": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_a745c828": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_38147875": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_d51e9c27": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_85d62948": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_4225733f": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_29dd5819": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_0cf88e52": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_d8d1bcbd": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_b61423a9": "2412-15309_item_6e6bfc86",
+      "2412-15309_sent_df6c08e0": "2412-15309_subsection_d575842d",
+      "2412-15309_fig_31dbecf5": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_381b084d": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_bb519fd4": "2412-15309_subsection_d575842d",
+      "2412-15309_sent_6ed92093": "2412-15309_subsection_d575842d",
+      "2412-15309_subsection_34410ea3": "2412-15309_section_4829262c",
+      "2412-15309_subsubsection_fc30c1de": "2412-15309_subsection_34410ea3",
+      "2412-15309_sent_ad14af80": "2412-15309_subsubsection_fc30c1de",
+      "2412-15309_sent_adb64212": "2412-15309_subsubsection_fc30c1de",
+      "2412-15309_sent_99555204": "2412-15309_subsubsection_fc30c1de",
+      "2412-15309_sent_0777bfcb": "2412-15309_subsubsection_fc30c1de",
+      "2412-15309_sent_12d9a27e": "2412-15309_subsubsection_fc30c1de",
+      "2412-15309_sent_e1cbb10a": "2412-15309_subsubsection_fc30c1de",
+      "2412-15309_sent_4f44cd84": "2412-15309_subsubsection_fc30c1de",
+      "2412-15309_subsubsection_d6847267": "2412-15309_subsection_34410ea3",
+      "2412-15309_sent_3e355632": "2412-15309_subsubsection_d6847267",
+      "2412-15309_sent_f65b5972": "2412-15309_subsubsection_d6847267",
+      "2412-15309_sent_d9cb7414": "2412-15309_subsubsection_d6847267",
+      "2412-15309_sent_0adde641": "2412-15309_subsubsection_d6847267",
+      "2412-15309_sent_ee2468a7": "2412-15309_subsubsection_d6847267",
+      "2412-15309_sent_986c6bb2": "2412-15309_subsubsection_d6847267",
+      "2412-15309_sent_a85803f1": "2412-15309_subsubsection_d6847267",
+      "2412-15309_sent_d8580acd": "2412-15309_subsubsection_d6847267",
+      "2412-15309_subsubsection_eed9474f": "2412-15309_subsection_34410ea3",
+      "2412-15309_sent_32ebfbf7": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_dd78b32c": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_19e04bc0": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_3426758d": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_48ccee69": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_2b7a29fd": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_054cba38": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_a4f03713": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_4d130f26": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_sent_024cd9dc": "2412-15309_subsubsection_eed9474f",
+      "2412-15309_subsubsection_a7f20481": "2412-15309_subsection_34410ea3",
+      "2412-15309_sent_db87df26": "2412-15309_subsubsection_a7f20481",
+      "2412-15309_sent_f55a3d70": "2412-15309_subsubsection_a7f20481",
+      "2412-15309_sent_d31b07d4": "2412-15309_subsubsection_a7f20481",
+      "2412-15309_sent_428784a2": "2412-15309_subsubsection_a7f20481",
+      "2412-15309_sent_72232718": "2412-15309_subsubsection_a7f20481",
+      "2412-15309_sent_2aa99b55": "2412-15309_subsubsection_a7f20481",
+      "2412-15309_sent_e16f31d5": "2412-15309_subsubsection_a7f20481",
+      "2412-15309_sent_1a59bc7b": "2412-15309_subsubsection_a7f20481",
+      "2412-15309_section_7386eb2d": "2412-15309_doc_root",
+      "2412-15309_sent_0479f437": "2412-15309_section_7386eb2d",
+      "2412-15309_sent_bf68f5c4": "2412-15309_section_7386eb2d",
+      "2412-15309_sent_46248f5f": "2412-15309_section_7386eb2d",
+      "2412-15309_sent_7d7675c7": "2412-15309_section_7386eb2d",
+      "2412-15309_sent_dff33a55": "2412-15309_section_7386eb2d",
+      "2412-15309_sent_bef398bb": "2412-15309_section_7386eb2d"
+    }
+  },
+  "merged_parents": {
+    "2412-15309_sent_b252c703": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_04c5153b": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_d97a7256": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_abstract_ce28071e": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_d9da2995": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_598d7296": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_98b4e9bf": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_e9fdd8ae": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_3ff794b5": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_c90be314": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_861e79df": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_ea613d02": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_3ee7726b": [
+      "2412-15309_abstract_ce28071e"
+    ],
+    "2412-15309_sent_93077199": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_285e4bca": [
+      "2412-15309_doc_root",
+      "2412-15309_section_7386eb2d",
+      "2412-15309_subsection_c38ca156",
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_section_0b79795d": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_40c0a364": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_af9565c0": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_484bf94d": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_89034ca6": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_dc6bdce0": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_f3e49ece": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_3f702b4f": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_55d3a36c": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_d5c15f87": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_907d0223": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_a6c0a067": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_62369a58": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_06cd6fe0": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_75db492c": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_d495ddfc": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_0b1cbc23": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_64a635e9": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_c99481c6": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_8036067c": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_c7c5dcba": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_423ee4ba": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_47e8066a": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_1c06469d": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_0f764c24": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_518d1a08": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_8c838cf9": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_e7146d51": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_196c909f": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_b186ae70": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_4378c716": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_67cfedb1": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_sent_35467eea": [
+      "2412-15309_section_0b79795d"
+    ],
+    "2412-15309_section_0dba43d0": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_0940f555": [
+      "2412-15309_section_0dba43d0"
+    ],
+    "2412-15309_sent_77c0c712": [
+      "2412-15309_section_0dba43d0"
+    ],
+    "2412-15309_sent_39d4364f": [
+      "2412-15309_section_0dba43d0"
+    ],
+    "2412-15309_sent_12fac3d0": [
+      "2412-15309_section_0dba43d0"
+    ],
+    "2412-15309_subsection_c38ca156": [
+      "2412-15309_section_0dba43d0"
+    ],
+    "2412-15309_sent_926b251b": [
+      "2412-15309_subsection_c38ca156"
+    ],
+    "2412-15309_sent_bb4a49f3": [
+      "2412-15309_subsection_c38ca156"
+    ],
+    "2412-15309_sent_cdc3e0c0": [
+      "2412-15309_subsection_c38ca156"
+    ],
+    "2412-15309_subsubsection_9dc5ea6e": [
+      "2412-15309_subsection_c38ca156"
+    ],
+    "2412-15309_sent_8adfaa63": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_sent_fc8cfdda": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_sent_f3e95059": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_eq_28cf6c06": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_sent_a55276bc": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_paragraph_2b30079c": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_sent_b2a234d1": [
+      "2412-15309_paragraph_2b30079c"
+    ],
+    "2412-15309_eq_f0ba16fe": [
+      "2412-15309_paragraph_2b30079c"
+    ],
+    "2412-15309_sent_29d8aba2": [
+      "2412-15309_paragraph_2b30079c"
+    ],
+    "2412-15309_eq_c9c73a8b": [
+      "2412-15309_paragraph_2b30079c"
+    ],
+    "2412-15309_sent_eba27507": [
+      "2412-15309_paragraph_2b30079c"
+    ],
+    "2412-15309_sent_2f9deeb6": [
+      "2412-15309_paragraph_2b30079c"
+    ],
+    "2412-15309_paragraph_beded5a7": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_sent_c436548f": [
+      "2412-15309_paragraph_beded5a7"
+    ],
+    "2412-15309_sent_737ebbf6": [
+      "2412-15309_paragraph_beded5a7"
+    ],
+    "2412-15309_sent_fdb49a46": [
+      "2412-15309_paragraph_beded5a7"
+    ],
+    "2412-15309_sent_d9319296": [
+      "2412-15309_paragraph_beded5a7"
+    ],
+    "2412-15309_eq_b13f7406": [
+      "2412-15309_paragraph_beded5a7"
+    ],
+    "2412-15309_paragraph_d9648e37": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_eq_08ff642a": [
+      "2412-15309_paragraph_d9648e37"
+    ],
+    "2412-15309_paragraph_fc20ced1": [
+      "2412-15309_subsubsection_9dc5ea6e"
+    ],
+    "2412-15309_sent_5130bead": [
+      "2412-15309_paragraph_fc20ced1"
+    ],
+    "2412-15309_eq_db11c453": [
+      "2412-15309_paragraph_fc20ced1"
+    ],
+    "2412-15309_sent_f180cac5": [
+      "2412-15309_paragraph_fc20ced1"
+    ],
+    "2412-15309_subsection_525b35d1": [
+      "2412-15309_section_0dba43d0"
+    ],
+    "2412-15309_sent_74872178": [
+      "2412-15309_subsection_525b35d1"
+    ],
+    "2412-15309_sent_960cfefe": [
+      "2412-15309_subsection_525b35d1"
+    ],
+    "2412-15309_sent_e4247d27": [
+      "2412-15309_subsection_525b35d1"
+    ],
+    "2412-15309_subsection_90e3fd59": [
+      "2412-15309_section_0dba43d0"
+    ],
+    "2412-15309_sent_101a51ae": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_8b7fadd5": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_0074ec1a": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_e773068d": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_50e00bcf": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_eq_877b08ac": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_7ae32a56": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_eq_b50d6daf": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_00b64193": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_eq_51ccfbdb": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_eq_f2bade40": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_07a08a5b": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_fd786ab9": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_6aba8877": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_sent_d0591796": [
+      "2412-15309_subsection_90e3fd59"
+    ],
+    "2412-15309_section_00fad282": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_b4491375": [
+      "2412-15309_section_00fad282"
+    ],
+    "2412-15309_sent_d9e74fe7": [
+      "2412-15309_section_00fad282"
+    ],
+    "2412-15309_sent_d673bd84": [
+      "2412-15309_section_00fad282"
+    ],
+    "2412-15309_sent_d27a5faa": [
+      "2412-15309_section_00fad282"
+    ],
+    "2412-15309_subsection_18902ee9": [
+      "2412-15309_section_00fad282"
+    ],
+    "2412-15309_sent_00044055": [
+      "2412-15309_subsection_18902ee9"
+    ],
+    "2412-15309_sent_ef04f6fc": [
+      "2412-15309_subsection_18902ee9"
+    ],
+    "2412-15309_sent_71dca494": [
+      "2412-15309_subsection_18902ee9"
+    ],
+    "2412-15309_sent_8e4f2fb4": [
+      "2412-15309_subsection_18902ee9"
+    ],
+    "2412-15309_sent_f5ff90d5": [
+      "2412-15309_subsection_18902ee9"
+    ],
+    "2412-15309_sent_67755c4d": [
+      "2412-15309_subsection_18902ee9"
+    ],
+    "2412-15309_sent_92a72200": [
+      "2412-15309_subsection_18902ee9"
+    ],
+    "2412-15309_sent_7949e8df": [
+      "2412-15309_subsection_18902ee9"
+    ],
+    "2412-15309_subsection_8e7c37f5": [
+      "2412-15309_section_00fad282"
+    ],
+    "2412-15309_sent_dfe82dcc": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_sent_785da524": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_sent_c3b0eb66": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_sent_1dc41293": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_sent_c1f7cb1a": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_sent_75bd340f": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_sent_35c2cd54": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_subsubsection_346a7339": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_paragraph_56fe2ee3": [
+      "2412-15309_subsubsection_346a7339"
+    ],
+    "2412-15309_fig_dd1e56e5": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_c89e9458": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_8c35f124": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_b1fa3d2d": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_675c2b4b": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_118167a9": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_375a8007": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_e5cd0ea8": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_dff2ec57": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_sent_1cf159fa": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_eq_dcb66abd": [
+      "2412-15309_paragraph_56fe2ee3"
+    ],
+    "2412-15309_paragraph_6f90658e": [
+      "2412-15309_subsubsection_346a7339"
+    ],
+    "2412-15309_sent_c69a6c1d": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_6e58ce2d": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_d3b9ad24": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_d3d37a40": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_bdaf4f63": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_98bb36d5": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_2fbe84ca": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_cf7501d8": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_5b4ed27f": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_sent_6a89a2dd": [
+      "2412-15309_paragraph_6f90658e"
+    ],
+    "2412-15309_subsubsection_85518245": [
+      "2412-15309_subsection_8e7c37f5"
+    ],
+    "2412-15309_paragraph_07fc96db": [
+      "2412-15309_subsubsection_85518245"
+    ],
+    "2412-15309_sent_033b0c03": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_76d4f7a2": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_7b360f6e": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_4b3f15f0": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_352da745": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_adb04b19": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_133dc773": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_eq_e0bd2f0b": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_5a7e69eb": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_8c8a3eff": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_a25b764f": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_220d81be": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_sent_cb8485ad": [
+      "2412-15309_paragraph_07fc96db"
+    ],
+    "2412-15309_paragraph_b1215491": [
+      "2412-15309_subsubsection_85518245"
+    ],
+    "2412-15309_fig_1b85de0e": [
+      "2412-15309_paragraph_b1215491"
+    ],
+    "2412-15309_sent_75e03331": [
+      "2412-15309_paragraph_b1215491"
+    ],
+    "2412-15309_sent_8631caeb": [
+      "2412-15309_paragraph_b1215491"
+    ],
+    "2412-15309_sent_b1f18d32": [
+      "2412-15309_paragraph_b1215491"
+    ],
+    "2412-15309_sent_5dcfb0f7": [
+      "2412-15309_paragraph_b1215491"
+    ],
+    "2412-15309_sent_622b41cb": [
+      "2412-15309_paragraph_b1215491"
+    ],
+    "2412-15309_sent_f2e55680": [
+      "2412-15309_paragraph_b1215491"
+    ],
+    "2412-15309_section_4a96364f": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_9c910fd7": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_sent_66e049bc": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_sent_0ced5cd1": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_sent_cfc5af90": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_sent_ddb9bfd7": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_sent_56caa997": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_sent_a028e003": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_enumerate_ff964a1a": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_item_6e6bfc86": [
+      "2412-15309_enumerate_ff964a1a",
+      "2412-15309_itemize_7c51800a"
+    ],
+    "2412-15309_sent_6a59fb08": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_7c29af06": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_32d3791a": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_e5e18e46": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_f591c9cb": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_sent_0d7b055f": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_sent_f89b5f67": [
+      "2412-15309_section_4a96364f"
+    ],
+    "2412-15309_section_4829262c": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_subsection_d575842d": [
+      "2412-15309_section_4829262c"
+    ],
+    "2412-15309_sent_cd85754a": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_0808f2c5": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_e9bb2546": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_c391734c": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_052c7277": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_1b2b098b": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_587b8750": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_919ca8a9": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_62d399a3": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_itemize_7c51800a": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_50ff7935": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_26a5afa4": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_935cf3fe": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_a745c828": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_38147875": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_d51e9c27": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_85d62948": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_4225733f": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_29dd5819": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_0cf88e52": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_d8d1bcbd": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_b61423a9": [
+      "2412-15309_item_6e6bfc86"
+    ],
+    "2412-15309_sent_df6c08e0": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_fig_31dbecf5": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_381b084d": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_bb519fd4": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_sent_6ed92093": [
+      "2412-15309_subsection_d575842d"
+    ],
+    "2412-15309_subsection_34410ea3": [
+      "2412-15309_section_4829262c"
+    ],
+    "2412-15309_subsubsection_fc30c1de": [
+      "2412-15309_subsection_34410ea3"
+    ],
+    "2412-15309_sent_ad14af80": [
+      "2412-15309_subsubsection_fc30c1de"
+    ],
+    "2412-15309_sent_adb64212": [
+      "2412-15309_subsubsection_fc30c1de"
+    ],
+    "2412-15309_sent_99555204": [
+      "2412-15309_subsubsection_fc30c1de"
+    ],
+    "2412-15309_sent_0777bfcb": [
+      "2412-15309_subsubsection_fc30c1de"
+    ],
+    "2412-15309_sent_12d9a27e": [
+      "2412-15309_subsubsection_fc30c1de"
+    ],
+    "2412-15309_sent_e1cbb10a": [
+      "2412-15309_subsubsection_fc30c1de"
+    ],
+    "2412-15309_sent_4f44cd84": [
+      "2412-15309_subsubsection_fc30c1de"
+    ],
+    "2412-15309_subsubsection_d6847267": [
+      "2412-15309_subsection_34410ea3"
+    ],
+    "2412-15309_sent_3e355632": [
+      "2412-15309_subsubsection_d6847267"
+    ],
+    "2412-15309_sent_f65b5972": [
+      "2412-15309_subsubsection_d6847267"
+    ],
+    "2412-15309_sent_d9cb7414": [
+      "2412-15309_subsubsection_d6847267"
+    ],
+    "2412-15309_sent_0adde641": [
+      "2412-15309_subsubsection_d6847267"
+    ],
+    "2412-15309_sent_ee2468a7": [
+      "2412-15309_subsubsection_d6847267"
+    ],
+    "2412-15309_sent_986c6bb2": [
+      "2412-15309_subsubsection_d6847267"
+    ],
+    "2412-15309_sent_a85803f1": [
+      "2412-15309_subsubsection_d6847267"
+    ],
+    "2412-15309_sent_d8580acd": [
+      "2412-15309_subsubsection_d6847267"
+    ],
+    "2412-15309_subsubsection_eed9474f": [
+      "2412-15309_subsection_34410ea3"
+    ],
+    "2412-15309_sent_32ebfbf7": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_dd78b32c": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_19e04bc0": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_3426758d": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_48ccee69": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_2b7a29fd": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_054cba38": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_a4f03713": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_4d130f26": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_sent_024cd9dc": [
+      "2412-15309_subsubsection_eed9474f"
+    ],
+    "2412-15309_subsubsection_a7f20481": [
+      "2412-15309_subsection_34410ea3"
+    ],
+    "2412-15309_sent_db87df26": [
+      "2412-15309_subsubsection_a7f20481"
+    ],
+    "2412-15309_sent_f55a3d70": [
+      "2412-15309_subsubsection_a7f20481"
+    ],
+    "2412-15309_sent_d31b07d4": [
+      "2412-15309_subsubsection_a7f20481"
+    ],
+    "2412-15309_sent_428784a2": [
+      "2412-15309_subsubsection_a7f20481"
+    ],
+    "2412-15309_sent_72232718": [
+      "2412-15309_subsubsection_a7f20481"
+    ],
+    "2412-15309_sent_2aa99b55": [
+      "2412-15309_subsubsection_a7f20481"
+    ],
+    "2412-15309_sent_e16f31d5": [
+      "2412-15309_subsubsection_a7f20481"
+    ],
+    "2412-15309_sent_1a59bc7b": [
+      "2412-15309_subsubsection_a7f20481"
+    ],
+    "2412-15309_section_7386eb2d": [
+      "2412-15309_doc_root"
+    ],
+    "2412-15309_sent_0479f437": [
+      "2412-15309_section_7386eb2d"
+    ],
+    "2412-15309_sent_bf68f5c4": [
+      "2412-15309_section_7386eb2d"
+    ],
+    "2412-15309_sent_46248f5f": [
+      "2412-15309_section_7386eb2d"
+    ],
+    "2412-15309_sent_7d7675c7": [
+      "2412-15309_section_7386eb2d"
+    ],
+    "2412-15309_sent_dff33a55": [
+      "2412-15309_section_7386eb2d"
+    ],
+    "2412-15309_sent_bef398bb": [
+      "2412-15309_section_7386eb2d"
+    ]
+  }
+}

@@ -1,0 +1,1546 @@
+{
+  "elements": {
+    "2412-15283_doc_root": "DOCUMENT_ROOT",
+    "2412-15283_sent_676977e1": "\\maketitle",
+    "2412-15283_abstract_ce28071e": "abstract",
+    "2412-15283_sent_ffde9c0f": "Lately, the practice of utilizing task-specific fine-tuning has been implemented to improve the performance of large language models (LLM) in subsequent tasks.",
+    "2412-15283_sent_9ee11197": "Through the integration of diverse LLMs, the overall competency of LLMs is significantly boosted. Nevertheless, traditional ensemble methods are notably memory-intensive, necessitating the simultaneous loading of all specialized models into GPU memory.",
+    "2412-15283_sent_ace60326": "To address the inefficiency, model merging strategies have emerged, merging all LLMs into one model to reduce the memory footprint during inference.",
+    "2412-15283_sent_37e13ae1": "Despite these advances, model merging often leads to parameter conflicts and performance decline as the number of experts increases.",
+    "2412-15283_sent_ae9a0cb8": "Previous methods to mitigate these conflicts include post-pruning and partial merging.",
+    "2412-15283_sent_290c9a78": "However, both approaches have limitations, particularly in terms of performance and storage efficiency when merged experts increase.",
+    "2412-15283_sent_aec0a132": "To address these challenges, we introduce Channel Merging, a novel strategy designed to minimize parameter conflicts while enhancing storage efficiency.",
+    "2412-15283_sent_628e0026": "This method clusters and merges channel parameters based on their similarity to form several groups offline.",
+    "2412-15283_sent_afeb50c5": "By ensuring that only highly similar parameters are merged within each group, it significantly reduces parameter conflicts.",
+    "2412-15283_sent_90d1514d": "During inference, we can instantly look up the expert parameters from the merged groups, preserving specialized knowledge.",
+    "2412-15283_sent_bbbff8b7": "Our experiments demonstrate that Channel Merging consistently delivers high performance, matching unmerged models in tasks like English and Chinese reasoning, mathematical reasoning, and code generation.",
+    "2412-15283_sent_1204d739": "Moreover, it obtains results comparable to model ensemble with just 53\\% parameters when used with a task-specific router.",
+    "2412-15283_fig_b71837c1": "\\begin{figure*}",
+    "2412-15283_sent_60ab3bfc": "\\includegraphics[width=1\\linewidth]{imgs/overview.pdf} \\caption{ This diagram contrasts various methods of handling multiple experts in LLMs. Panel (a) illustrates the conventional model ensemble approach, which requires loading all expert models into memory, leading to significant storage inefficiency.",
+    "2412-15283_sent_4080cbd3": "Panel (b) depicts the model merging strategy that simplifies the memory load but results in performance degradation due to parameter conflicts.",
+    "2412-15283_sent_ccf96c06": "Panel (c) presents our proposed Channel Merging method, which clusters and merges channel parameters, retaining each expert's unique features and ensuring efficient and effective performance.} \\end{figure*}",
+    "2412-15283_section_0b79795d": "Introduction",
+    "2412-15283_sent_b9d3b1d0": "Recent advancements in large language models (LLMs) such as LLaMA \\cite{touvron2023llama} and Mistral \\cite{jiang2023mistral} have significantly pushed the boundaries of artificial intelligence, achieving near-human performance across various general tasks.",
+    "2412-15283_sent_b8a7fc3b": "Despite these achievements, a notable performance gap remains in specialized domains such as coding and mathematics.",
+    "2412-15283_sent_dbb6088b": "Addressing this gap, many LLMs undergo task-specific fine-tuning to enhance their capabilities within these targeted areas \\cite{Chinese-Mistral,yu2023metamath,wu2023pmc}.",
+    "2412-15283_sent_cd9d032e": "In multi-task scenarios, it is common to ensemble LLMs specialized in different tasks to optimize performance.",
+    "2412-15283_sent_4aabaafd": "However, as shown in Figure \\ref{fig:overview} (a), traditional ensembling methods \\cite{tang2024merging,lu2023routing} require loading all specialized models into GPU memory, which is highly storage-intensive.",
+    "2412-15283_fig_119b0e08": "\\begin{table}\n\n \\scalebox{0.85}{\n \\begin{tabular}{c|c|c}\n\n Method& Performance & Efficiency \\\\\n\n One-size-fit-all \\cite{yu2023language}&$\\times$&$\\checkmark$\\\\ \n Partial Merging \\cite{jiang2023effective}&$\\checkmark$&$\\times$\\\\\n Channel Merging (Ours)&$\\checkmark$&$\\checkmark$\\\\\n\n \\end{tabular}\n\n \\caption{This table compares the scalability of different merging approaches in terms of maintaining performance and efficiency as the number of experts increases.}\n\n\\end{table}",
+    "2412-15283_sent_2c245439": "To combat the inefficiency of the model ensemble, model merging strategies \\cite{yadav2024ties,yang2023adamerging} have been introduced, where delta parameters \\cite{ilharco2022editing} from each expert are merged into the pre-trained parameters, allowing the system to load weights equivalent to a single expert during inference.",
+    "2412-15283_sent_87572499": "Nevertheless, as shown in Figure \\ref{fig:overview} (b), this one-size-fits-all merging can exacerbate parameter conflicts as the number of experts increases, often leading to a decline in downstream performance.",
+    "2412-15283_sent_85d0da18": "To mitigate parameter conflicts, previous approaches can be divided into two main strategies: (1) Post pruning, which prunes delta parameters—the alteration of the model parameters before and after fine-tuning \\cite{yu2023language,yadav2024ties}.",
+    "2412-15283_sent_ceb8816e": "However, performance degradation still occurs as the number of merged experts increases.",
+    "2412-15283_sent_03b23dcf": "(2) Implementing partial merging \\cite{jiang2023effective}, which merges task-agnostic parameters and maintains task-specific ones.",
+    "2412-15283_sent_03756809": "Nonetheless, this strategy becomes less storage-efficient with the escalation in the number of experts, as it necessitates the retention of more separate parameters.",
+    "2412-15283_sent_227cde29": "To effectively mitigate parameter conflicts while enhancing storage efficiency, we specifically analyze the layer-by-layer channel similarities between several experts and highlight that merging with finer granularity can further reduce parameter conflicts.",
+    "2412-15283_sent_6647becc": "Based on our analysis, we introduce a novel strategy called Channel Merging.",
+    "2412-15283_sent_a89fc296": "As illustrated in Figure \\ref{fig:overview}(c), this approach first clusters channel parameters that are across various experts into several groups based on their similarities, merging only those within identical groups to minimize conflicts.",
+    "2412-15283_sent_ce303547": "Subsequently, during inference, Channel Merging adaptively looks up the task-specific parameters required for each expert.",
+    "2412-15283_sent_1e996ec3": "Compared with model merging and model ensemble methods, Channel Merging mitigates performance degradation by retaining the unique knowledge of each expert model while reducing the total parameters loaded to GPU memory.",
+    "2412-15283_sent_52df30fc": "\\includegraphics[scale=0.35]{imgs/similarity.pdf} \\caption{ Layer-wise proportion of channel similarity between Instruction expert and other experts in (a) Mistral-7B model and (b) CodeLLaMA-7B families.",
+    "2412-15283_sent_d1f90f3f": "The blue portions represent the proportion of channels in the Instruction expert that are more similar to the Code expert, while the red portions indicate the proportion of channels more similar to the Math expert.",
+    "2412-15283_sent_5f73cd1a": "\\end{figure*} Our experiments, including specialized tasks like English reasoning, mathematic reasoning, code generation, and Chinese reasoning demonstrate that Channel Merging achieves performance on par with unmerged models.",
+    "2412-15283_sent_ea713194": "Additionally, we utilize a task-specific router to optimize expert selection for each query, enhancing the model's overall effectiveness.",
+    "2412-15283_sent_4d2fc551": "Our findings from general tasks show that Channel Merging, combined with the router, not only outperforms the Chinese-Mistral-7B-Instruct-v0.1 by 1.26\\% on the AGIEval benchmark and achieves a 2.13\\% improvement on the combined MMLU+CMMLU benchmarks but also requires only 53\\% of the parameter load compared to traditional ensemble methods, clearly demonstrating its efficacy and versatility in various applications.",
+    "2412-15283_sent_0ecae46e": "Our contributions are mainly three-fold:",
+    "2412-15283_itemize_6149acf3": "itemize",
+    "2412-15283_item_3744af9b": "item",
+    "2412-15283_sent_e4aa6750": "Through a detailed analysis of layer-by-layer channel similarities between different experts, we highlight the limitations of traditional model-level merging methods and demonstrate the necessity of finer-grained merging.",
+    "2412-15283_sent_61aa25ec": "Based on our analysis, we introduce Channel Merging, a novel strategy that merges parameters at the channel level.",
+    "2412-15283_sent_89707999": "This method mitigates parameter interference and maintains parameter efficiency as the number of experts increases.",
+    "2412-15283_sent_3e765271": "The effectiveness of Channel Merging is demonstrated through extensive experimental results.",
+    "2412-15283_sent_ecaeead7": "For example, it shows minimal performance loss compared to one-size-fits-all and partial merging methods across various downstream tasks, such as English reasoning, mathematical reasoning, code generation, and Chinese reasoning.",
+    "2412-15283_sent_a97cad6d": "Additionally, when combined with a task-specific router, it achieves performance comparable to the model ensemble method on general tasks while requiring only 53\\% of the parameters.",
+    "2412-15283_section_aed402c3": "Related Work",
+    "2412-15283_sent_5876faed": "Model merging.",
+    "2412-15283_sent_f6b361e2": "As large pre-trained models are a repository of extensive knowledge, fine-tuning them for new tasks has become a prevalent method \\cite{dodge2020fine}.",
+    "2412-15283_sent_70a1239c": "Model merging, involving merging task-specific models fine-tuned from the same pre-trained model, has been increasingly recognized as an effective strategy to enhance generalization and multi-task capabilities in LLMs \\cite{yadav2024ties,yang2023adamerging,yu2023language,matena2022merging,ilharco2022editing,ainsworth2022git,entezari2021role}.",
+    "2412-15283_sent_fea4e852": "Although model merging provides enhanced flexibility and utility \\cite{daheim2023model,matena2022merging}, straightforward techniques like model averaging \\cite{wortsman2022model} often lead to substantial performance degradation across multiple tasks due to parameter conflicts.",
+    "2412-15283_sent_1e11a3c6": "To address these conflicts, strategies such as TIES Merging \\cite{yadav2024ties} and DARE \\cite{yu2023language} have been proposed, which involve pruning some delta parameters before the merging process.",
+    "2412-15283_sent_80952e84": "Nonetheless, parameter conflicts can still be stringent as the number of merged models increases.",
+    "2412-15283_sent_7ac4774c": "Another mitigation strategy is partial merging \\cite{stoica2023zipit,kim2023solar,jiang2023effective}, which involves merging only a part of the parameters while preserving others independently.",
+    "2412-15283_sent_e302fa6a": "For example, ZipIT \\cite{stoica2023zipit} selectively unmerges certain layers, effectively creating a multi-head model.",
+    "2412-15283_sent_c5cb11f0": "Passthrough \\cite{kim2023solar} concatenates layers from different LLMs, producing a deeper model.",
+    "2412-15283_sent_d3ecdbd4": "BYOM \\cite{jiang2023effective} preserves some task-specific parameters according to magnitude.",
+    "2412-15283_sent_33a1f365": "However, these partial merging methods become storage-inefficient as the number of merged experts increases.",
+    "2412-15283_sent_18c837a5": "In contrast, our Channel Merging approach merges experts into fixed groups, thereby retaining storage efficiency even as the number of merged experts grows.",
+    "2412-15283_sent_1e19480b": "To mitigate parameter conflicts, Channel Merging operates at the channel level and considers the similarity between channels of different experts.",
+    "2412-15283_sent_3c21af23": "As shown in Table \\ref{table:comparison_pd_ed}, Channel Merging preserves both performance and efficiency as the number of merged experts increases.",
+    "2412-15283_sent_4338e337": "Large language model ensemble.",
+    "2412-15283_sent_8184191c": "LLM ensembling aims to combine off-the-shelf large language models (LLMs) to consistently improve performance across a variety of downstream tasks.",
+    "2412-15283_sent_f65fb301": "LLM-BLENDER \\cite{jiang2023llm} infers outputs from all candidate models and then ranks them using a reward function, which introduces significant computational overhead.",
+    "2412-15283_sent_931f75a7": "To mitigate this, FrugalGPT \\cite{chen2023frugalgpt} adopts a sequential inference process that stops as soon as it generates a response of sufficient quality, thereby reducing the need to infer from all models.",
+    "2412-15283_sent_f32fbcb3": "Additionally, to cut down on computation further, several router-based methods \\cite{tang2024merging,lu2023routing,shnitzer2023large} have been developed, which employs a trained routing function that accurately directs each query to the LLM best suited for it.",
+    "2412-15283_sent_c740d305": "Consequently, only one expert LLM is activated during each inference cycle.",
+    "2412-15283_sent_cb97d5a8": "For instance, \\citep{shnitzer2023large} shows the utility and limitations of learning model routers from various benchmark datasets.",
+    "2412-15283_sent_d4794c4d": "Zooter \\citep{lu2023routing} distills a reward model to a task-specific router, assigning queries to experts more accurately.",
+    "2412-15283_sent_912560e8": "However, these methods often require preserving all expert models' weights in GPU memory, which can lead to memory inefficiencies.",
+    "2412-15283_sent_dbe87901": "In contrast, our approach leverages the channel similarities between experts by merging multiple expert parameters into a few clusters, significantly reducing the parameter storage requirements during inference.",
+    "2412-15283_sent_131e7ed0": "Moreover, our method dynamically activates and reconstructs different experts based on the incoming query, maintaining expert diversity while minimizing the total parameters.",
+    "2412-15283_section_7ad03400": "Preliminaries",
+    "2412-15283_sent_7793f929": "Formulation of model merging.",
+    "2412-15283_sent_0c721aa4": "Assuming a pretrained model, let $\\boldsymbol{P} \\in \\mathbb{R}^{O\\times I}$ represent the parameters of a specific layer, where $O$ and $I$ correspond to the output and input channel number, respectively.",
+    "2412-15283_sent_0d8c17b2": "From this model, we derive a set of $N$ task-specific models with parameters $\\boldsymbol{\\theta} = \\{\\boldsymbol{\\theta}^{t_1}, \\boldsymbol{\\theta}^{t_2}, ..., \\boldsymbol{\\theta}^{t_N}\\} \\in \\mathbb{R}^{N\\times O\\times I}$, each fine-tuned for a distinct task.",
+    "2412-15283_sent_e8f52cc0": "Model merging is the process of integrating the modifications of all task-specific models back into a single model.",
+    "2412-15283_sent_5a6471b0": "This is achieved by first calculating the delta parameters for each task-specific model, which represent the changes made during the fine-tuning process relative to the pretrained model.",
+    "2412-15283_sent_917dc33d": "These delta parameters are defined as $\\boldsymbol{\\delta}^{t_n} = \\boldsymbol{\\theta}^{t_n} - \\boldsymbol{P}$ for each task $n$.",
+    "2412-15283_sent_3fbf3bc7": "Using the task arithmetic method \\cite{ilharco2022editing}, the merged parameters, $\\boldsymbol{\\theta^{*}} \\in \\mathbb{R}^{O\\times I}$, are computed as follows:",
+    "2412-15283_eq_78a5f533": "\\begin{equation}\n \\boldsymbol{\\theta^{*}} = \\boldsymbol{P} + \\lambda \\sum_{t_n} \\boldsymbol{\\delta}^{t_n},\n\\end{equation}",
+    "2412-15283_sent_33d13983": "where $\\lambda$ is a scaling factor that adjusts the influence of the delta parameters on the merged model.",
+    "2412-15283_sent_f3bc394e": "Task-specific routing.",
+    "2412-15283_sent_63489aad": "To address computational efficiency concerns within LLM ensembles, task-specific routing is employed. This technique strategically selects a single LLM expert, denoted as $m^{*}$, that is best suited to respond to a given query $q$.",
+    "2412-15283_sent_27e9f8d9": "This selection is determined through a scoring function that evaluates the appropriateness of each expert for the query, formalized as follows:",
+    "2412-15283_eq_67495541": "\\begin{equation}\n m^{*} = \\underset{m\\in M}{\\mathrm{argmax}} \\ \\mathcal{Z}(q, m),\n\\end{equation}",
+    "2412-15283_sent_d93f8719": "where $M$ represents the set of all available LLM experts, and $\\mathcal{Z}(\\cdot)$ is a function that scores each expert $m$ based on its predicted effectiveness in responding to query $q$.",
+    "2412-15283_sent_5de3c88b": "The expert with the highest score is chosen for the task, optimizing the ensemble’s computational resources by activating only the most relevant model.",
+    "2412-15283_sent_f919f3cd": "\\includegraphics[width=1\\linewidth]{imgs/method_detail.pdf} \\caption{An illustration of our Channel Merging method.",
+    "2412-15283_sent_60157a3e": "The process involves two core parts: Channel-wise Merging and Instant Lookup.",
+    "2412-15283_sent_0578e53b": "In the channel-wise Merging stage, for each channel, delta parameters from each expert $\\mathbf{\\delta}_{i}^{t_n}$ are clustered into different groups, and parameters within the same group are merged into $\\mathbf{\\Theta}_{i}^{k}$.",
+    "2412-15283_sent_af1eb62e": "$S^{t_n}$ records the group index that each expert’s parameters have been merged into (shown in ForestGreen).",
+    "2412-15283_sent_31613d2c": "During inference, the activated expert can instantly look up its parameters from the groups based on $S^{t_n}$.} \\end{figure*}",
+    "2412-15283_section_4c3880bb": "Method",
+    "2412-15283_sent_23326c8a": "In this section, we begin by analyzing the inconsistency in channel similarity across different expert models, illustrating how simplistic merging strategies—such as merging models at the model level—can be sub-optimal. Subsequently, we introduce Channel Merging, a channel-wise merging strategy tailored to optimize both parameter compression and model performance.",
+    "2412-15283_sent_eafa6e4a": "As illustrated in Figure \\ref{fig:overview} (c), Channel Merging groups parameters from different experts in the model family according to their channel similarities.",
+    "2412-15283_sent_202e1d95": "During the inference, the parameters of the activated expert are instantly looked up from these offline merged groups, ensuring efficient and effective performance.",
+    "2412-15283_subsection_0210b87a": "Similarity Inconsistency",
+    "2412-15283_sent_68f62b30": "Before we delve into Channel Merging, it’s essential to address a fundamental question: Why merge at the channel level instead of the model level, as was common in previous methods?",
+    "2412-15283_sent_5a6b938c": "To answer this, we specifically analyze the layer-by-layer channel similarities between the Instruction expert and the other two experts—Code and Math.",
+    "2412-15283_sent_90b8cc99": "This analysis involves quantifying how many channels in the Instruction expert are more similar to the Code expert compared to the Math expert based on their cosine similarities.",
+    "2412-15283_sent_87b89052": "We employ cosine similarity to measure the similarity between parameters since high cosine similarity between neural network parameters correlates with similar activations produced by the layers \\cite{mason2024makes,klabunde2023towards}.",
+    "2412-15283_sent_1950f68f": "The details of LLM candidates used for comparison can be found in Appendix.",
+    "2412-15283_sent_d4d70390": "In the Mistral-7B model family (Figure \\ref{fig:similarity}(a)), overall, the Instruction expert channels show closer similarity to the Code expert channels, with the proportion of more similar channels typically being higher.",
+    "2412-15283_sent_22cb80ba": "However, even in the layers where the similarity proportion peaks, more than 20\\% of Instruction channels are closer to the Math expert, highlighting significant similarity inconsistency between those experts.",
+    "2412-15283_sent_10a80af6": "Moreover, the CodeLLaMA-7B model family (Figure \\ref{fig:similarity}(b)) exhibits more random variations in similarity.",
+    "2412-15283_sent_25cb68bd": "Approximately half of the channels in all layers show greater similarity to the Code expert, while the other half are more aligned with the Math expert.",
+    "2412-15283_sent_29d9afe4": "These experiments highlight a crucial insight: Finer granularity, such as channel-level merging, can further reduce parameter conflicts arising from insufficiently similar parameters.",
+    "2412-15283_subsection_b582a1bf": "Merging with Channel Similarity",
+    "2412-15283_sent_a2482b6b": "To effectively merge multiple expert LLMs while accommodating significant variations in channel similarities, we introduce a novel method termed Channel Merging.",
+    "2412-15283_sent_fa385809": "As illustrated in Figure \\ref{fig:method}, our method unfolds in two parts: Channel-wise Merging and Instant Lookup.",
+    "2412-15283_sent_9fe7f6b1": "\\renewcommand{\\arraystretch}{1.3} \\caption{Comparison on downstream tasks.",
+    "2412-15283_sent_ce6f1b2a": "`Baseline' refers to the performance metrics of experts when unmerged. TIES-CM and DARE-CM represent TIES and DARE methods combined with Channel Merging, respectively.} \\scalebox{0.75} { \\begin{tabular}{c|ccc|ccc|ccc|cccc} \\multirow{2}{*}{Method} & \\multicolumn{3}{c}{Instruction Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Math Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Code Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Chinese Expert (\\%) $\\uparrow$} \\\\ \\cmidrule(l){2-4} \\cmidrule(l){5-7} \\cmidrule(l){8-10} \\cmidrule(l){11-13} & CommonSenseQA & TriviaQA & Avg.",
+    "2412-15283_sent_e2048dad": "& GSM8K & Math & Avg.",
+    "2412-15283_sent_d4bb67c7": "& HumanEval & MBPP & Avg.& CMMLU & CEVAL & Avg.",
+    "2412-15283_sent_228d4d69": "\\\\ Baseline& 75.86& 58.39 & 67.12&73.92&20.62&47.27&45.36&43.20&44.28&47.52&47.50&47.51 \\\\ BYOM&75.67&63.86&69.77&65.08&16.95&41.02&43.62&40.23&41.93&48.15&47.83&48.00\\\\ TIES &70.62&50.06&60.34&63.51&10.84&37.17&30.26&35.80&33.03&43.05&45.80&44.42\\\\ DARE&73.85&51.93&62.89&63.02&10.38&36.70&31.58&36.26&33.92&44.32&45.96&45.14\\\\ TIES-CM (Ours) &73.61&60.85&67.23&68.14&18.26&43.2&43.28&41.81&42.55&47.93&47.38&47.66\\\\ DARE-CM (Ours)&75.27&64.49&69.88&70.05&19.89&44.95&45.13&43.00&44.06&48.41&47.69&48.05\\\\ DARE-CM + router (Ours)&75.27&64.49&69.88&70.01&19.85&44.93&45.12&43.00&44.06&48.41&47.69&48.05\\\\ \\end{tabular} \\end{table*} Channel-wise merging.",
+    "2412-15283_sent_df662c37": "In this stage, we cluster the delta parameters for each output channel from different experts based on cosine similarity.",
+    "2412-15283_sent_898157a4": "Specifically, for the $i$-th output channel, delta parameters across all experts $\\boldsymbol{\\delta}_{i} = \\{\\boldsymbol{\\delta}_{i}^{t_1}, \\boldsymbol{\\delta}_{i}^{t_2}, ..., \\boldsymbol{\\delta}_{i}^{t_N}\\} \\in \\mathbb{R}^{N \\times I}$ are grouped using the K-Means clustering algorithm into $K$ clusters $\\boldsymbol{C}_{i} = \\{\\boldsymbol{C}_{i}^{1}, \\boldsymbol{C}_{i}^{2}, ..., \\boldsymbol{C}_{i}^{K}\\}$ ($K < N$).",
+    "2412-15283_sent_84f1a2a9": "This clustering ensures that each group contains parameters with high similarity, thus reducing conflicts during merging.",
+    "2412-15283_sent_fbf84b0d": "These similar parameters within each cluster $k$ are then merged with the task arithmetic \\cite{ilharco2022editing}:",
+    "2412-15283_eq_18715071": "\\begin{equation}\n \\boldsymbol{\\Theta}_{i}^k = \\boldsymbol{P}_{i} + \\lambda \\sum_{\\boldsymbol{\\delta}_{i}^{t_n} \\in \\boldsymbol{C}_{i}^k} {\\boldsymbol{\\delta}_{i}^{t_n}}.\n\n\\end{equation}",
+    "2412-15283_sent_a91c0dfe": "Repeating the clustering and merging for all channels in the layer, we can obtain $K$ groups new parameters $\\mathbf{\\Theta} \\in \\mathbb{R}^{K\\times O\\times I}$, where the $k$-th group parameter $\\boldsymbol{\\Theta}^k$ can be represented as:",
+    "2412-15283_eq_ce062886": "\\begin{equation}\n \\boldsymbol{\\Theta}^k \\in \\mathbb{R}^{O\\times I} = \\{\\boldsymbol{\\Theta}_{1}^k, \\boldsymbol{\\Theta}_{2}^k,...,\\boldsymbol{\\Theta}_{O}^k\\}.\n\\end{equation}",
+    "2412-15283_sent_d9eab1df": "Additionally, an index set $S^{t_n}=\\{S_{1}^{t_n}, ...,S_{O}^{t_n}\\} \\in \\mathbb{R}^{1\\times O}$, where $S_{i}^{t_n} \\in \\{1, ..., K\\}$, is maintained for each expert $t_n$, indicating which group their channel parameters are merged into.",
+    "2412-15283_sent_ff182879": "It is worth noting that the Channel-wise Merging stage is executed offline, thus imposing no additional computational overhead during inference.",
+    "2412-15283_sent_de942eeb": "Instant lookup.",
+    "2412-15283_sent_d4deb6bd": "Channel Merging merges different channels from each expert into distinct groups, thereby preserving the unique characteristics of each expert compared to one-size-fits-all merging.",
+    "2412-15283_sent_e8c4311c": "During inference, we can selectively activate the expert that is the most suitable to respond to the input query.",
+    "2412-15283_sent_f52f756a": "Since the merged parameter groups and expert index are constructed offline in the Channel-wise Merging stage, the parameter of the activated expert can be instantly looked up and concatenated from the corresponding groups according to the index stored in $S^{t_n}$.",
+    "2412-15283_sent_de1aa0b0": "Specifically, the layer-level parameters of activated experts $\\boldsymbol{\\hat{\\theta}}^{t_n} \\in \\mathbb{R}^{O\\times I}$ can be formally written as:",
+    "2412-15283_eq_8d803ca6": "\\begin{equation}\n \\boldsymbol{\\hat{\\theta}}^{t_n} = \\underset{S_{i}^{t_n} \\in S^{t_n}}{\\bigoplus} \\boldsymbol{\\Theta}_{i}^{S_{i}^{t_n}},\n\\end{equation}",
+    "2412-15283_sent_b512cf68": "where $\\bigoplus$ denotes the concatenation operation, which aligns the channel parameters from selected groups to reconstruct the full parameter set for each layer of the $t_n$-th expert.",
+    "2412-15283_sent_49b8b75d": "This concatenation ensures that the structural and functional characteristics of each expert's layers are maintained, while only the parameters of the relevant expert are activated. Model size reduction analysis.",
+    "2412-15283_sent_a37157e2": "Assuming each expert in a model zoo has $\\Psi$ parameters, managing $N$ distinct experts would require storing $N\\Psi$ parameters separately.",
+    "2412-15283_sent_d4ab9e42": "In contrast, our Channel Merging method organizes each expert’s parameters by clustering them along the output channel dimension into $K$ distinct categories, each containing a full set of $\\Psi$ parameters.",
+    "2412-15283_sent_8cdaeb25": "Consequently, the total storage required for parameters is reduced to $K\\Psi$.",
+    "2412-15283_sent_f6fc7221": "Although each expert maintains an index $S^{t_n}$, the size of this index is considerably smaller than $\\Psi$—equivalent to the total number of channels—therefore, it can be considered negligible in the overall parameter count.",
+    "2412-15283_sent_7a0d4930": "With the implementation of Channel Merging, the total number of parameters necessary is effectively diminished to $\\frac{K\\Psi}{N\\Psi} = \\frac{K}{N}$ ($K < N$).",
+    "2412-15283_sent_8020e974": "Since $K$ is a constant, unlike partial merging, Channel Merging can maintain storage efficiency even as the number of merged experts increases.",
+    "2412-15283_subsection_dc75a032": "Task-specific Routing",
+    "2412-15283_sent_34b5bcfe": "As shown in Figure \\ref{fig:overview}(c), following the paradigm of previous LLM ensemble methods \\cite{liu2024meswitch}, we employ a task-specific router to determine which expert to activate and reconstruct for a given query.",
+    "2412-15283_sent_8dff00e2": "To train this router efficiently, we operate under the assumption that an expert will perform optimally on queries that originate from its fine-tuning dataset.",
+    "2412-15283_sent_b0ab6cb2": "To implement this, we sample a set of queries $Q$ from the datasets of various tasks, using the originating task classes (e.g., code, math, instruction, Chinese) as the label $Y$.",
+    "2412-15283_sent_b4318fde": "The optimization process for training the router is then defined as follows:",
+    "2412-15283_eq_0bc129a6": "\\begin{equation}\n \\mathcal{Z}^* = \\underset{\\mathcal{Z}}{\\mathrm{argmin}} \\sum_{(q, y)\\in (Q, Y)} -y\\cdot log(\\mathcal{Z}(q, m))\n\\end{equation}",
+    "2412-15283_sent_f7e00ce5": "In this equation, $\\mathcal{Z}(q,m)$ calculates the probability that expert $m$ is the most suitable for handling query $q$, based on the learned task-specific affinities.",
+    "2412-15283_sent_3fd32fb5": "Once this model is trained, the arrival of a new query triggers the task-specific router, which employs the optimized function $\\mathcal{Z}^{*}$ to determine which expert should be activated. This process ensures that each query is handled by the expert most likely to achieve the best performance, thereby enhancing overall efficiency and effectiveness.",
+    "2412-15283_section_4829262c": "Experiments",
+    "2412-15283_subsection_181c21ac": "Experimental Setting",
+    "2412-15283_sent_19656a04": "Test datasets.",
+    "2412-15283_sent_99b3b3c4": "To evaluate the performance of merging, we report accuracy on several benchmarks across different domains: CommonSenseQA \\cite{talmor2018commonsenseqa} and TriviaQA \\cite{joshi2017triviaqa} for the instruction, GSM8K \\cite{cobbe2021training} and MATH \\cite{hendrycks2021measuring} for the mathematics, HumanEval \\cite{chen2021evaluating} and MBPP \\cite{austin2021program} for the code, and CEval \\cite{huang2024c} and CMMLU \\cite{li2023cmmlu} for the Chinese.",
+    "2412-15283_sent_2a4af8bf": "Besides, we evaluate the merged model with the task-specific router on several general task benchmarks: MMLU \\cite{hendrycks2020measuring}, CMMLU, and AGIEval \\cite{zhong2023agieval}.",
+    "2412-15283_sent_19533369": "We use the OpenCompass toolbox \\cite{contributors2023opencompass} to evaluate all datasets.",
+    "2412-15283_sent_fb42c034": "\\renewcommand{\\arraystretch}{1.3} \\caption{Comparison of general tasks across multiple domains.",
+    "2412-15283_sent_eb4bf48e": "\"Total Param.\" and \"Activate Param.\" refer to the total number and the activated number of parameters, respectively.} \\scalebox{0.75} { \\begin{tabular}{ccc|cccc|cccccc} \\multirow{2}{*}{Model}& \\multirow{2}{*}{Total} & \\multirow{2}{*}{Activate} &\\multicolumn{4}{c}{AGIEval (\\%) $\\uparrow$} & \\multicolumn{5}{c}{MMLU+CMMLU (\\%) $\\uparrow$} \\\\ \\cmidrule(l){4-7} \\cmidrule(l){8-13} &Param.",
+    "2412-15283_sent_ec48006e": "(B)& Param.",
+    "2412-15283_sent_95e2294a": "(B)& Chinese & English & Gaokao & Avg.",
+    "2412-15283_sent_07915bf8": "& Humanities & Social & Stem&Other & Chinese & Avg.",
+    "2412-15283_sent_60b24a79": "\\\\ Dolphin-2.2.1-Mistral-7B& 6.7 & 6.7&32.30&39.21&34.84&35.45&56.26&59.61&44.63&57.76&41.80&52.01\\\\ MetaMath-Mistral-7B&6.7&6.7&31.65&37.63&34.53&34.60&54.91& 58.615& 43.675& 57.35& 40.3& 50.97\\\\ Speechless-Code-Mistral-7b-V1.0&6.7&6.7&32.53&39.16&35.89&35.86&55.67& 59.67& 44.36& 57.89& 40.30& 51.58\\\\ Chinese-Mistral-7B-Instruct-v0.1&6.7&6.7&36.10&37.09&37.30&36.75&56.30& 49.95& 51.65& 56.75& 46.80& 52.29\\\\ BYOM + router &14.7&6.7&35.51&37.93&39.41&37.62&57.86&61.83&50.03&55.97&46.08&54.35\\\\ Model Ensemble + router &26.8&6.7&36.10&39.21&39.44&38.25&58.30&60.32&51.72&57.04&44.80&54.43\\\\ DARE-CM + router (Ours) &14.3&6.7&35.99&38.49&39.57&38.01&58.29&62.51&46.14&59.49&45.69&54.42\\\\ \\end{tabular} \\end{table*}",
+    "2412-15283_sent_adcf8080": "\\renewcommand{\\arraystretch}{1.3} \\caption{Experimental results on different merging granularities.} \\scalebox{0.77} { \\begin{tabular}{c|ccc|ccc|ccc|cccc} \\multirow{2}{*}{Granularity} & \\multicolumn{3}{c}{Instruction Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Math Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Code Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Chinese Expert (\\%) $\\uparrow$} \\\\ \\cmidrule(l){2-4} \\cmidrule(l){5-7} \\cmidrule(l){8-10} \\cmidrule(l){11-13} & CommonSenseQA & TriviaQA & Avg.",
+    "2412-15283_sent_83b4e0dc": "\\\\ Channel&75.27&64.49&69.88&70.05&19.89&44.95&45.13&43.00&44.01&48.41&47.69&48.05 \\\\ Layer&74.85&63.80&69.33&67.70&18.26&42.98&43.28&41.33&42.31&48.45&47.53&47.99 \\\\ Model&75.61&61.20&68.41&66.20&15.20&40.7&40.25&40.20&40.23&47.38&47.20&47.29\\\\ \\end{tabular} \\end{table*} Implementation details.",
+    "2412-15283_sent_69e69ac9": "For model merging, we cluster the expert weights into several groups.",
+    "2412-15283_sent_ea1c46e4": "Subsequently, we use the commonly used model merging algorithms from MergeKit \\cite{goddard2024arcee} to merge the parameters in the same group: (1) DARE-CM, we randomly prune 30\\% of the delta parameters for each expert before merging.",
+    "2412-15283_sent_5225c432": "(2) TIES-CM, we prune 30\\% of the delta parameters based on their magnitude and sign for each expert before merging.",
+    "2412-15283_sent_b56699a2": "$\\lambda$ in Eq. (\\ref{eq:merge}) is set to 0.5.",
+    "2412-15283_sent_25b789e2": "Unless otherwise specified, we define the number of groups as two.",
+    "2412-15283_sent_b32ca6b4": "The detail of model candidates can be found in Appendix.",
+    "2412-15283_sent_2645b8b8": "The merging experiments can be done on only a single A100 GPU.",
+    "2412-15283_sent_4ff0a87b": "To fairly assess the performance loss due to model merging, we only activate the corresponding expert for each task during downstream task testing.",
+    "2412-15283_sent_5051e832": "For general tasks, we use a task-specific router to activate different experts based on the task requirements.",
+    "2412-15283_sent_ac43c265": "We show the detail of the task-specific router in Appendix.",
+    "2412-15283_sent_e80d8304": "Contenders.",
+    "2412-15283_sent_2d8be94a": "For the one-size-fit-all merging strategy, we compare with DARE \\cite{yu2023language} and TIES \\cite{yadav2024ties} which use the same post-pruning strategy as we mentioned in implementation details and merge all experts into one model.",
+    "2412-15283_sent_a71a5859": "For the partial merging strategy, we compare our method with BYOM \\cite{jiang2023effective}, which retains the top 30\\% of parameters by magnitude for each expert and merges the remaining parameters into one group.",
+    "2412-15283_sent_97400390": "\\renewcommand{\\arraystretch}{1.3} \\caption{Experimental results on different cluster methods.} \\scalebox{0.77} { \\begin{tabular}{c|ccc|ccc|ccc|cccc} \\multirow{2}{*}{Cluster Method} & \\multicolumn{3}{c}{Instruction Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Math Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Code Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Chinese Expert (\\%) $\\uparrow$} \\\\ \\cmidrule(l){2-4} \\cmidrule(l){5-7} \\cmidrule(l){8-10} \\cmidrule(l){11-13} & CommonSenseQA & TriviaQA & Avg.",
+    "2412-15283_sent_7b3a6f5b": "\\\\ KMeans&75.27&64.49&69.88&70.05&19.89&44.95&45.13&43.00&44.01&48.41&47.69&48.05 \\\\ Random&75.01&63.45&69.23&68.84&19.07&43.96&44.21&41.00&42.61&47.82&46.05&46.94 \\\\ Sign&75.93&64.96&70.45&68.69&19.73&44.21&45.01&42.1&43.56&48.09&47.93&48.01\\\\ \\end{tabular} \\end{table*}",
+    "2412-15283_sent_7ce7773c": "\\includegraphics[scale=0.35]{imgs/number_experts.pdf} \\caption{ Experimental results on four different task categories as the number of experts varies from one to six.",
+    "2412-15283_sent_6534014c": "'Channel' and 'Model' represent the accuracy achieved with channel-level and model-level merging, respectively.} \\end{figure*}",
+    "2412-15283_subsection_9d6c55ce": "Main Results",
+    "2412-15283_sent_55ba2669": "Downstream tasks.",
+    "2412-15283_sent_79914c4a": "To assess the necessity of channel-level merging, we conduct experiments across various downstream tasks to compare different merging methods, with and without the incorporation of channel merging.",
+    "2412-15283_sent_5dd6815e": "We use unmerged-downstream models as our baseline to establish a clear performance benchmark.",
+    "2412-15283_sent_7b2cbbb8": "The results, as shown in Table \\ref{table:results_downstream_tasks}, highlight the effectiveness of channel-level merging.",
+    "2412-15283_sent_cf99f3a9": "For example, in the Instruction Expert tasks, DARE-CM improves performance significantly, achieving an average score of 69.88\\%, compared to 62.89\\% with the model-level DARE.",
+    "2412-15283_sent_a3e6adf2": "This represents a substantial 6.99\\% increase in performance, underscoring the reduced performance degradation offered by our channel-level approach.",
+    "2412-15283_sent_4dd36355": "Similarly, in the Code Expert tasks, DARE-CM scored 44.01\\% on average, outperforming DARE by 7.31\\%.",
+    "2412-15283_sent_19a1099a": "When comparing DARE-CM to BYOM, we observe that DARE-CM consistently outperforms BYOM across various metrics.",
+    "2412-15283_sent_ff849a38": "For instance, in the Math Expert tasks, DARE-CM achieves an average score of 44.95\\%, compared to BYOM's 41.02\\%.",
+    "2412-15283_sent_5fc49ef7": "Notably, our DARE-CM yields the most optimal results, maintaining performance levels close to or even surpassing the baseline in specialized tasks such as Instruction and Chinese tasks.",
+    "2412-15283_sent_7755bf46": "These findings demonstrate that our method not only mitigates the performance loss but can also enhance the model’s effectiveness in handling domain-specific queries.",
+    "2412-15283_sent_e14a45e7": "We also compare the performance metrics with and without the use of the trained router on DARE-CM.",
+    "2412-15283_sent_ad301e6c": "The results in Table \\ref{table:results_downstream_tasks} clearly demonstrate that the router's deployment maintains the effectiveness of our model.",
+    "2412-15283_sent_92dffffe": "General tasks.",
+    "2412-15283_sent_e41409d8": "Given that the goal of model merging is to achieve a more versatile model, we integrate our merged models DARE-CM with a task-specific router and compare their performance on general tasks against the unmerged baseline models.",
+    "2412-15283_sent_077e594e": "As indicated in Table \\ref{table:results_general_tasks}, these benchmarks encompass a variety of tasks including those in Chinese, English, mathematics, and coding.",
+    "2412-15283_sent_28e5cd07": "Consequently, Channel Merging combined with the router consistently outperforms the separate unmerged models.",
+    "2412-15283_sent_4742da3c": "For example, Channel Merging exhibited a 1.26\\% higher average accuracy over the Chinese-Mistral-7B-Instruct-v0.1 in the AGIEval benchmark, and a 2.13\\% improvement in the combined MMLU+CMMLU benchmarks.",
+    "2412-15283_sent_0da2d287": "Moreover, we find that DARE-CM can surpass BYOM in several benchmarks.",
+    "2412-15283_sent_98391bf5": "For instance, in the AGIEval and MMLU+CMMLU benchmarks, DARE-CM + router achieves an average score of 38.01\\% and 54.42\\%, notably higher than the 37.62\\% and 37.62\\% of BYOM + router, respectively.",
+    "2412-15283_sent_f2d8c5d6": "When compared to the traditional model ensemble with the router, Channel Merging achieves comparable outcomes across all benchmarks, requiring only 53\\% of the parameter used by traditional methods.",
+    "2412-15283_subsection_54df8bcb": "Ablation Studies",
+    "2412-15283_sent_b1df5cc6": "Merging granularities.",
+    "2412-15283_sent_45a7d966": "A key distinction of our Channel Merging approach compared to other merging methods lies in the granularity at which the merge is executed—specifically, at the channel level.",
+    "2412-15283_sent_f659505a": "To assess the impact of different merging granularities on model performance, we conducted an ablation study.",
+    "2412-15283_sent_96200873": "This study involved merging operations at three different levels: Channel, Layer, and the entire Model, with subsequent performance evaluation on downstream tasks.",
+    "2412-15283_sent_7f662db3": "As shown in Table \\ref{table:ablation_granularities}, channel-level merging outperformed both layer-level and model-level merging across various tasks, achieving the highest average performance metrics.",
+    "2412-15283_sent_fd0b64c8": "This suggests that finer granularity in merging helps to reduce parameter conflicts, thereby preserving more of the downstream task performance.",
+    "2412-15283_sent_1b2aaef7": "The sensitivity to the merged experts number.",
+    "2412-15283_sent_9685c8c4": "To explore how the number of experts influences the effectiveness of Channel Merging, we carry out experiments that assessed the performance across various downstream tasks when integrating varying numbers of expert models.",
+    "2412-15283_sent_26c5b67e": "We expand our set of candidate models to include Hercules-2.5-Mistral-7B and CollectiveCognition-v1.1-Mistral-7B, allowing for the integration of up to six experts.",
+    "2412-15283_sent_4c3374b5": "Additionally, we compare channel-level merging with results from model-level merging.",
+    "2412-15283_sent_a9238eb0": "The experimental results, as depicted in the figures, show that, in contrast to model-level merging, channel-level merging exhibits a markedly slower rate of performance degradation as the number of merged experts increases, particularly in tasks involving mathematic reasoning and code generation.",
+    "2412-15283_sent_eb0a9be3": "The effect of clustering methods.",
+    "2412-15283_sent_6883086f": "To validate the appropriateness of using the KMeans method for clustering channel parameters, we compare its impact on experimental results with two alternative clustering strategies: (1) Random, where channels are grouped randomly, and (2) Sign \\cite{yadav2024ties}, where parameters are grouped based on having the same sign.",
+    "2412-15283_sent_ca5fd4f4": "The results, as shown in Table \\ref{table:ablation_cluster}, reveal that both KMeans and Sign clustering significantly outperform the random grouping method.",
+    "2412-15283_sent_b2998803": "This indicates that logically group parameters (either by minimizing intra-cluster variance in KMeans or aligning parameter signs) lead to better performance than arbitrary grouping.",
+    "2412-15283_section_6f8b794f": "Conclusion",
+    "2412-15283_sent_4e402629": "In this paper, we introduced Channel Merging, a novel strategy designed to enhance the efficiency and performance of merging LLMs specialized in various tasks.",
+    "2412-15283_sent_1df36c7f": "By clustering and merging channel parameters based on their similarities, Channel Merging mitigates the parameter conflicts associated with traditional one-size-fits-all merging methods.",
+    "2412-15283_sent_9dd7e24e": "Through extensive experiments, we have demonstrated that Channel Merging achieves comparable performance to unmerged experts in tasks such as English reasoning, mathematical reasoning, code generation, and Chinese reasoning.",
+    "2412-15283_sent_925e800f": "Additionally, when integrated with a task-specific router, Channel Merging outperforms traditional ensemble methods in general tasks while requiring only 53\\% of the parameters, showcasing significant improvements in both performance and storage efficiency.",
+    "2412-15283_sent_5485f371": "Limitation and future work.",
+    "2412-15283_sent_e28bbfa6": "Channel Merging requires that the experts to be merged are fine-tuned from the same pretrained model.",
+    "2412-15283_sent_42bee9a5": "Additionally, compared to one-size-fits-all approaches, Channel Merging may increase the parameters of the merged model.",
+    "2412-15283_sent_fd0e6e1c": "In future work, we plan to explore further compression of the merged model's parameter size by setting different groups for each layer.",
+    "2412-15283_enumerate_a74b978a": "enumerate",
+    "2412-15283_sent_a8266b47": "Includes a conceptual outline and/or pseudocode description of AI methods introduced: Yes",
+    "2412-15283_sent_6df91fa3": "Clearly delineates statements that are opinions, hypothesis, and speculation from objective facts and results: Yes",
+    "2412-15283_sent_e672df5f": "Provides well marked pedagogical references for less-familiare readers to gain background necessary to replicate the paper: Yes",
+    "2412-15283_sent_1403a7e4": "Does this paper make theoretical contributions?",
+    "2412-15283_sent_bafd7322": "No",
+    "2412-15283_sent_f3042b0a": "Does this paper rely on one or more datasets?",
+    "2412-15283_sent_93cba074": "Yes",
+    "2412-15283_sent_9afbf49c": "A motivation is given for why the experiments are conducted on the selected datasets: yes",
+    "2412-15283_sent_c78bdad3": "All novel datasets introduced in this paper are included in a data appendix.",
+    "2412-15283_sent_d4cd0dab": "NA",
+    "2412-15283_sent_aea50807": "All novel datasets introduced in this paper will be made publicly available upon publication of the paper with a license that allows free usage for research purposes.",
+    "2412-15283_sent_0191f626": "All datasets drawn from the existing literature (potentially including authors’ own previously published work) are accompanied by appropriate citations.",
+    "2412-15283_sent_aba3fd3b": "All datasets drawn from the existing literature (potentially including authors’ own previously published work) are publicly available.",
+    "2412-15283_sent_4c093d74": "All datasets that are not publicly available are described in detail, with explanation why publicly available alternatives are not scientifically satisficing.",
+    "2412-15283_sent_26d807ae": "Does this paper include computational experiments?",
+    "2412-15283_sent_aa758cbd": "Any code required for pre-processing data is included in the appendix.",
+    "2412-15283_sent_0c126239": "All source code required for conducting and analyzing the experiments will be made publicly available upon publication of the paper with a license that allows free usage for research purposes.",
+    "2412-15283_sent_f2bc4e78": "All source code implementing new methods have comments detailing the implementation, with references to the paper where each step comes from: Yes",
+    "2412-15283_sent_5339aad8": "If an algorithm depends on randomness, then the method used for setting seeds is described in a way sufficient to allow replication of results: Yes",
+    "2412-15283_sent_0a2300ce": "This paper specifies the computing infrastructure used for running experiments (hardware and software), including GPU/CPU models; amount of memory; operating system; names and versions of relevant software libraries and frameworks: Yes",
+    "2412-15283_sent_a692f28b": "This paper formally describes evaluation metrics used and explains the motivation for choosing these metrics: Yes",
+    "2412-15283_sent_e8aa1c7e": "This paper states the number of algorithm runs used to compute each reported result: Yes",
+    "2412-15283_sent_aac6f5c2": "Analysis of experiments goes beyond single-dimensional summaries of performance (e.g., average; median) to include measures of variation, confidence, or other distributional information: Yes",
+    "2412-15283_sent_f68b3d81": "The significance of any improvement or decrease in performance is judged using appropriate statistical tests (e.g., Wilcoxon signed-rank): No",
+    "2412-15283_sent_2bedae62": "This paper lists all final (hyper-)parameters used for each model/algorithm in the paper’s experiments: NA",
+    "2412-15283_sent_f298180f": "This paper states the number and range of values tried per (hyper-) parameter during development of the paper, along with the criterion used for selecting the final parameter setting: NA",
+    "2412-15283_sent_c9747544": "\\appendix \\begin{center} { {Appendix} \\end{center}",
+    "2412-15283_sent_50bfead6": "\\renewcommand{\\arraystretch}{1.3} \\caption{Experimental results on different merging groups.} \\scalebox{0.65} { \\begin{tabular}{c|c|ccc|ccc|ccc|cccc} \\multirow{2}{*}{Groups} & \\multirow{2}{*}{Param.",
+    "2412-15283_sent_f844e4ec": "(B)} &\\multicolumn{3}{c}{Instruction Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Math Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Code Expert (\\%) $\\uparrow$} & \\multicolumn{3}{c}{Chinese Expert (\\%) $\\uparrow$} \\\\ \\cmidrule(l){3-5} \\cmidrule(l){6-7} \\cmidrule(l){9-11} \\cmidrule(l){12-14} & &CommonSenseQA & TriviaQA & Avg.",
+    "2412-15283_sent_8fc3fc4a": "\\\\ 1&6.7&73.85&51.93&62.89&63.02&10.38&36.70&31.58&36.26&33.92&44.32&45.96&45.14\\\\ 2&14.3&75.27&64.49&69.88&70.05&19.89&44.95&45.13&43.00&44.01&48.41&47.69&48.05 \\\\ 3&21.9&75.36& 60.21 & 67.79&71.83&20.43&46.13&45.10&43.46&44.28&47.52&47.36&47.44 \\\\ 4&26.8& 75.86& 58.39 & 67.12&73.92&20.62&47.27&45.36&43.20&44.28&47.52&47.50&47.51 \\\\ \\end{tabular} \\end{table*}",
+    "2412-15283_sent_2336c9ea": "\\caption{Versions and correspondences with pre-trained backbones of fine-tuned LLMs.} \\scalebox{0.85} { \\begin{tabular}{@{}lll@{}} Tasks & Fine-tuned LLMs & Pre-Trained backbones \\\\ English Reasoning & Dolphin-2.2.1-Mistral-7B \\cite{dolphin-2.2.1-mistral-7b} & Mistral-7B-v0.1 \\cite{jiang2023mistral} \\\\ & Hercules-2.5-Mistral-7B \\cite{Hercules-2.5-Mistral-7B} & Mistral-7B-v0.1 \\cite{jiang2023mistral} \\\\ & CollectiveCognition-v1.1-Mistral-7B \\cite{CollectiveCognition-v1.1-Mistral-7B} & Mistral-7B-v0.1 \\cite{jiang2023mistral} \\\\ &CodeLlama-7b-Instruct \\cite{roziere2023code}& CodeLlama-7b \\cite{roziere2023code} \\\\ Mathematical Reasoning & MetaMath-Mistral-7B \\cite{MetaMath-Mistral-7B} & Mistral-7B-v0.1 \\cite{jiang2023mistral} \\\\ & OpenMath-CodeLlama-7b-Python \\cite{toshniwal2024openmath} & CodeLlama-7b \\cite{roziere2023code}\\\\ Code Generation & Speechless-Code-Mistral-7B \\cite{speechless-code-mistral-7b-v1.0} & Mistral-7B-v0.1 \\cite{jiang2023mistral} \\\\ & WizardCoder-Python-7B \\cite{luo2023wizardcoder}& CodeLlama-7b \\cite{roziere2023code}\\\\ Chinese Reasoning & Chinese-Mistral-7B-Instruct-v0.1 \\cite{Chinese-Mistral-7B-Instruct-v0.1}& Mistral-7B-v0.1 \\cite{jiang2023mistral} \\\\ \\end{tabular} \\end{table*}",
+    "2412-15283_section_8a95ea3e": "Detailed Experimental Setting",
+    "2412-15283_subsection_ffc3d3f4": "Candidate LLMs",
+    "2412-15283_sent_0f4bd27c": "To analyze the similarity relationship between different experts, we conduct experiments under Mistral-7B-v0.1 model family and CodeLLaMA model family.",
+    "2412-15283_sent_a49006ae": "In Mistral-7B-v0.1 model family experiments, we use Dolphin-2.2.1-Mistral-7B as the instruction expert, MetaMath-Mistral-7B as the math expert and Speechless-Code-Mistral-7B as the code expert.",
+    "2412-15283_sent_c204351c": "In CodeLLaMA model family experiments, we use CodeLlama-7b-Instruct as the instruction expert, OpenMath-CodeLlama-7b-Python as the math expert and WizardCoder-Python-7B as the code expert.",
+    "2412-15283_sent_ff1bedc9": "In our main experiments, we apply our method to the Mistral-7B-v0.1 model family, including several specialized LLMs: Dolphin-2.2.1-Mistral-7B as the instruction expert, Speechless-Code-Mistral-7B as the code expert, MetaMath-Mistral-7B as the math expert, and Chinese-Mistral-7B-Instruct-v0.1 as the Chinese expert.",
+    "2412-15283_sent_7d10a0e6": "These models are all fine-tuned derivatives of the foundational pretrained model Mistral-7B-v0.1.",
+    "2412-15283_sent_f854417c": "The details of each expert can be found in Table \\ref{table:llm_detail}.",
+    "2412-15283_subsection_933d72c8": "Training detail of task-specific router",
+    "2412-15283_sent_68f32617": "To efficiently assign queries to the optimal expert, We utilize the bert-base-multilingual-cased \\cite{bert-base-multilingual-cased} which is a tiny model with only 110M parameters as the task-specific router.",
+    "2412-15283_sent_c8dfe7ff": "To train the task-specific router, we collect 50k instruction samples from various open-source datasets and randomly select 50k samples to train the router, including Dolphin \\cite{Dolphin} for the instruction domain, MetaMathQA \\cite{MetaMath-Mistral-7B} for the mathematics domain, WizardLM-evol-instruct-V2-196k \\cite{WizardLM-evol-instruct-V2-196k} for the code domain, and Wizard-LM-Chinese-instruct-evol \\cite{Wizard-LM-Chinese-instruct-evol} for the Chinese domain.",
+    "2412-15283_sent_e99c23e0": "We use the AdamW optimizer with $\\beta_1 = 0.9$ and $\\beta_2=0.95$ to train 1 epoch on a single A100GPU, setting the learning rate to $1\\times10^{-4}$, the batchsize to 128, and applying a linear learning rate warmup.",
+    "2412-15283_fig_d020d379": "\\begin{figure}\n\n \\includegraphics[scale=0.5]{imgs/experts_similarity.pdf}\n \\caption{ Heatmap of channel similarities between different expert models. }\n\\end{figure}",
+    "2412-15283_section_7229ec10": "More Ablation Studies",
+    "2412-15283_sent_a1a6cc10": "The similarity between merged experts.",
+    "2412-15283_sent_ad9ba8ec": "We assess the channel similarities between different experts after merging.",
+    "2412-15283_sent_7fbf46ac": "The similarity between experts is calculated by counting the number of channels where $S^{t_n}$ values matched between two experts and then normalizing this count by the total number of channels.",
+    "2412-15283_sent_e6de5a5d": "The results, depicted in Figure \\ref{fig:experts_similarity}, show relatively low similarity scores across different experts.",
+    "2412-15283_sent_d437f1c0": "For instance, the Instruction and Math experts, despite having the highest similarity score in the matrix, still exhibit a moderate similarity of 0.77, suggesting that while there are shared characteristics, distinct features prevail.",
+    "2412-15283_sent_76665232": "On the other end, the Code and Chinese experts have the lowest similarity of 0.41, indicating significant differences in their channel characteristics.",
+    "2412-15283_sent_ef95db24": "These findings validate Channel Merging's ability to preserve expert uniqueness, effectively minimizing parameter conflicts and enhancing performance by ensuring each expert's specialized knowledge remains intact within the merged framework.",
+    "2412-15283_sent_d4b908b4": "Merging under different groups.",
+    "2412-15283_sent_8493f812": "In Channel Merging, we can categorize expert parameters into varying numbers of groups.",
+    "2412-15283_sent_fe1ec2e2": "We conduct experiments to explore the impact of the number of groups on the merged model's parameter count and performance.",
+    "2412-15283_sent_d582b27f": "The results, as shown in Table \\ref{table:merging_groups}, indicate that when the number of groups is set to one, Channel Merging functions similarly to DARE \\cite{jiang2023llm}.",
+    "2412-15283_sent_6a9b5ee0": "Although this setting minimizes the number of parameters required, it also yields the poorest performance.",
+    "2412-15283_sent_6fb6f181": "Conversely, when the number of groups is set to four, Channel Merging resembles a model ensemble, requiring the maximum number of parameters.",
+    "2412-15283_sent_cf079122": "Notably, setting the number of groups to two not only surpasses or closely matches the performance of having four groups across various downstream tasks but also significantly reduces the number of parameters needed. Latency analysis for Instant Lookup.",
+    "2412-15283_sent_2d435162": "To comprehensively analyze the cost associated with the lookup and concatenation processes during inference, we randomly selected 50 data points from the MMLU validation dataset to evaluate the time costs associated with the lookup and inference processes.",
+    "2412-15283_sent_b99ec8cc": "The final reported times for lookup and inference are the average values derived from these 50 data points.",
+    "2412-15283_sent_6c0d7da0": "The results given in Table \\ref{tab:inference_time} clearly show that the lookup and concatenation process accounts for a minimal portion of the total inference time.",
+    "2412-15283_fig_74c3007c": "\\begin{table}\n\n \\begin{tabular}{c|c}\n\n Lookup and concatenation&Total inference \\\\\n\n 0.06s& 0.831s\\\\\n\n \\end{tabular}\n \\caption{The inference time of the lookup and concatenation process.}\n\n\\end{table}",
+    "2412-15283_sent_3c53b588": "The effectiveness of the similarity metric.",
+    "2412-15283_sent_fb387293": "In response to inquiries about our choice of cosine similarity as the metric for assessing parameter similarities, we conducted comprehensive experiments comparing various similarity metrics, including cosine similarity, Euclidean distance, and Manhattan distance.",
+    "2412-15283_sent_fd177253": "The experimental results given in Table \\ref{tab:metric_eval} reveal that cosine similarity and Euclidean distance consistently outperformed Manhattan distance.",
+    "2412-15283_fig_a89b3dfe": "\\begin{table}\n\n \\scalebox{0.8}{\n \\begin{tabular}{c|c|c|c|c}\n\n Similarity metric & MBPP & CommonSenseQA & GSM8K & CMMLU \\\\\n\n Consine similarity & 43.00 & 75.27 & 70.05 & 48.41\\\\\n Euclidean Distance & 43.00 & 75.01 & 70.09 & 48.30 \\\\\n Manhattan Distance & 42.85 & 74.86 & 69.12 & 48.40 \\\\\n\n \\end{tabular}}\n \\caption{The comparison results between different similarity metrics.}\n\n\\end{table}",
+    "2412-15283_sent_31ed9813": "Pruning under different pruning ratios.",
+    "2412-15283_sent_492b149b": "As mentioned in Implementation, our approach enhances the existing channel merging methods.",
+    "2412-15283_sent_5175180a": "Previous implementations of channel merging, such as TIES and DARE, necessitate pruning the delta parameters before merging to reduce parameter conflicts.",
+    "2412-15283_sent_809bb5e5": "Accordingly, we adopt the same strategy of pruning delta parameters prior to merging.",
+    "2412-15283_sent_72a1ea52": "We conducted experiments with various pruning ratios to determine their impact on the final results.",
+    "2412-15283_sent_ebf50918": "Our findings indicate that a 30\\% pruning ratio yields the most effective outcome.",
+    "2412-15283_sent_babe575d": "The specific experimental results demonstrating this are presented in Table \\ref{tab:ratio_eval}.",
+    "2412-15283_fig_b694a713": "\\begin{table}\n\n \\scalebox{0.83}{\n \\begin{tabular}{c|c|c|c|c|c}\n\n Ratio & MBPP & HumanEval & MMLU & GSM8K & CMMLU \\\\\n\n 0\\% & 42.06 & 43.98 & 61.70 & 68.36 & 47.38\\\\\n 30\\% & 43.00 & 45.13 & 63.01 & 70.05 & 48.41 \\\\\n 50\\% & 43.00 & 45.01 & 62.80 & 70.09 & 48.40 \\\\\n 70\\% & 42.80 & 44.69 & 62.53 & 69.15 & 48.27 \\\\\n\n \\end{tabular}}\n \\caption{The comparison results between different pruning ratios.}\n\n\\end{table}"
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15283_sent_676977e1": "2412-15283_doc_root",
+      "2412-15283_abstract_ce28071e": "2412-15283_doc_root",
+      "2412-15283_sent_ffde9c0f": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_9ee11197": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_ace60326": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_37e13ae1": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_ae9a0cb8": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_290c9a78": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_aec0a132": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_628e0026": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_afeb50c5": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_90d1514d": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_bbbff8b7": "2412-15283_abstract_ce28071e",
+      "2412-15283_sent_1204d739": "2412-15283_abstract_ce28071e",
+      "2412-15283_fig_b71837c1": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_60ab3bfc": "2412-15283_doc_root",
+      "2412-15283_sent_4080cbd3": "2412-15283_doc_root",
+      "2412-15283_sent_ccf96c06": "2412-15283_doc_root",
+      "2412-15283_section_0b79795d": "2412-15283_doc_root",
+      "2412-15283_sent_b9d3b1d0": "2412-15283_section_0b79795d",
+      "2412-15283_sent_b8a7fc3b": "2412-15283_section_0b79795d",
+      "2412-15283_sent_dbb6088b": "2412-15283_section_0b79795d",
+      "2412-15283_sent_cd9d032e": "2412-15283_section_0b79795d",
+      "2412-15283_sent_4aabaafd": "2412-15283_section_0b79795d",
+      "2412-15283_fig_119b0e08": "2412-15283_section_0b79795d",
+      "2412-15283_sent_2c245439": "2412-15283_section_0b79795d",
+      "2412-15283_sent_87572499": "2412-15283_section_0b79795d",
+      "2412-15283_sent_85d0da18": "2412-15283_section_0b79795d",
+      "2412-15283_sent_ceb8816e": "2412-15283_section_0b79795d",
+      "2412-15283_sent_03b23dcf": "2412-15283_section_0b79795d",
+      "2412-15283_sent_03756809": "2412-15283_section_0b79795d",
+      "2412-15283_sent_227cde29": "2412-15283_section_0b79795d",
+      "2412-15283_sent_6647becc": "2412-15283_section_0b79795d",
+      "2412-15283_sent_a89fc296": "2412-15283_section_0b79795d",
+      "2412-15283_sent_ce303547": "2412-15283_section_0b79795d",
+      "2412-15283_sent_1e996ec3": "2412-15283_section_0b79795d",
+      "2412-15283_sent_52df30fc": "2412-15283_section_0b79795d",
+      "2412-15283_sent_d1f90f3f": "2412-15283_section_0b79795d",
+      "2412-15283_sent_5f73cd1a": "2412-15283_section_0b79795d",
+      "2412-15283_sent_ea713194": "2412-15283_section_0b79795d",
+      "2412-15283_sent_4d2fc551": "2412-15283_section_0b79795d",
+      "2412-15283_sent_0ecae46e": "2412-15283_section_0b79795d",
+      "2412-15283_itemize_6149acf3": "2412-15283_section_0b79795d",
+      "2412-15283_item_3744af9b": "2412-15283_enumerate_a74b978a",
+      "2412-15283_sent_e4aa6750": "2412-15283_item_3744af9b",
+      "2412-15283_sent_61aa25ec": "2412-15283_item_3744af9b",
+      "2412-15283_sent_89707999": "2412-15283_item_3744af9b",
+      "2412-15283_sent_3e765271": "2412-15283_item_3744af9b",
+      "2412-15283_sent_ecaeead7": "2412-15283_item_3744af9b",
+      "2412-15283_sent_a97cad6d": "2412-15283_item_3744af9b",
+      "2412-15283_section_aed402c3": "2412-15283_doc_root",
+      "2412-15283_sent_5876faed": "2412-15283_section_aed402c3",
+      "2412-15283_sent_f6b361e2": "2412-15283_section_aed402c3",
+      "2412-15283_sent_70a1239c": "2412-15283_section_aed402c3",
+      "2412-15283_sent_fea4e852": "2412-15283_section_aed402c3",
+      "2412-15283_sent_1e11a3c6": "2412-15283_section_aed402c3",
+      "2412-15283_sent_80952e84": "2412-15283_section_aed402c3",
+      "2412-15283_sent_7ac4774c": "2412-15283_section_aed402c3",
+      "2412-15283_sent_e302fa6a": "2412-15283_section_aed402c3",
+      "2412-15283_sent_c5cb11f0": "2412-15283_section_aed402c3",
+      "2412-15283_sent_d3ecdbd4": "2412-15283_section_aed402c3",
+      "2412-15283_sent_33a1f365": "2412-15283_section_aed402c3",
+      "2412-15283_sent_18c837a5": "2412-15283_section_aed402c3",
+      "2412-15283_sent_1e19480b": "2412-15283_section_aed402c3",
+      "2412-15283_sent_3c21af23": "2412-15283_section_aed402c3",
+      "2412-15283_sent_4338e337": "2412-15283_section_aed402c3",
+      "2412-15283_sent_8184191c": "2412-15283_section_aed402c3",
+      "2412-15283_sent_f65fb301": "2412-15283_section_aed402c3",
+      "2412-15283_sent_931f75a7": "2412-15283_section_aed402c3",
+      "2412-15283_sent_f32fbcb3": "2412-15283_section_aed402c3",
+      "2412-15283_sent_c740d305": "2412-15283_section_aed402c3",
+      "2412-15283_sent_cb97d5a8": "2412-15283_section_aed402c3",
+      "2412-15283_sent_d4794c4d": "2412-15283_section_aed402c3",
+      "2412-15283_sent_912560e8": "2412-15283_section_aed402c3",
+      "2412-15283_sent_dbe87901": "2412-15283_section_aed402c3",
+      "2412-15283_sent_131e7ed0": "2412-15283_section_aed402c3",
+      "2412-15283_section_7ad03400": "2412-15283_doc_root",
+      "2412-15283_sent_7793f929": "2412-15283_section_7ad03400",
+      "2412-15283_sent_0c721aa4": "2412-15283_section_7ad03400",
+      "2412-15283_sent_0d8c17b2": "2412-15283_section_7ad03400",
+      "2412-15283_sent_e8f52cc0": "2412-15283_section_7ad03400",
+      "2412-15283_sent_5a6471b0": "2412-15283_section_7ad03400",
+      "2412-15283_sent_917dc33d": "2412-15283_section_7ad03400",
+      "2412-15283_sent_3fbf3bc7": "2412-15283_section_7ad03400",
+      "2412-15283_eq_78a5f533": "2412-15283_section_7ad03400",
+      "2412-15283_sent_33d13983": "2412-15283_section_7ad03400",
+      "2412-15283_sent_f3bc394e": "2412-15283_section_7ad03400",
+      "2412-15283_sent_63489aad": "2412-15283_section_7ad03400",
+      "2412-15283_sent_27e9f8d9": "2412-15283_section_7ad03400",
+      "2412-15283_eq_67495541": "2412-15283_section_7ad03400",
+      "2412-15283_sent_d93f8719": "2412-15283_section_7ad03400",
+      "2412-15283_sent_5de3c88b": "2412-15283_section_7ad03400",
+      "2412-15283_sent_f919f3cd": "2412-15283_section_7ad03400",
+      "2412-15283_sent_60157a3e": "2412-15283_section_7ad03400",
+      "2412-15283_sent_0578e53b": "2412-15283_section_7ad03400",
+      "2412-15283_sent_af1eb62e": "2412-15283_section_7ad03400",
+      "2412-15283_sent_31613d2c": "2412-15283_section_7ad03400",
+      "2412-15283_section_4c3880bb": "2412-15283_doc_root",
+      "2412-15283_sent_23326c8a": "2412-15283_section_4c3880bb",
+      "2412-15283_sent_eafa6e4a": "2412-15283_section_4c3880bb",
+      "2412-15283_sent_202e1d95": "2412-15283_section_4c3880bb",
+      "2412-15283_subsection_0210b87a": "2412-15283_section_4c3880bb",
+      "2412-15283_sent_68f62b30": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_5a6b938c": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_90b8cc99": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_87b89052": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_1950f68f": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_d4d70390": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_22cb80ba": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_10a80af6": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_25cb68bd": "2412-15283_subsection_0210b87a",
+      "2412-15283_sent_29d9afe4": "2412-15283_subsection_0210b87a",
+      "2412-15283_subsection_b582a1bf": "2412-15283_section_4c3880bb",
+      "2412-15283_sent_a2482b6b": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_fa385809": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_9fe7f6b1": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_ce6f1b2a": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_e2048dad": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_d4bb67c7": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_228d4d69": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_df662c37": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_898157a4": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_84f1a2a9": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_fbf84b0d": "2412-15283_subsection_b582a1bf",
+      "2412-15283_eq_18715071": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_a91c0dfe": "2412-15283_subsection_b582a1bf",
+      "2412-15283_eq_ce062886": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_d9eab1df": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_ff182879": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_de942eeb": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_d4deb6bd": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_e8c4311c": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_f52f756a": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_de1aa0b0": "2412-15283_subsection_b582a1bf",
+      "2412-15283_eq_8d803ca6": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_b512cf68": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_49b8b75d": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_a37157e2": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_d4ab9e42": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_8cdaeb25": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_f6fc7221": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_7a0d4930": "2412-15283_subsection_b582a1bf",
+      "2412-15283_sent_8020e974": "2412-15283_subsection_b582a1bf",
+      "2412-15283_subsection_dc75a032": "2412-15283_section_4c3880bb",
+      "2412-15283_sent_34b5bcfe": "2412-15283_subsection_dc75a032",
+      "2412-15283_sent_8dff00e2": "2412-15283_subsection_dc75a032",
+      "2412-15283_sent_b0ab6cb2": "2412-15283_subsection_dc75a032",
+      "2412-15283_sent_b4318fde": "2412-15283_subsection_dc75a032",
+      "2412-15283_eq_0bc129a6": "2412-15283_subsection_dc75a032",
+      "2412-15283_sent_f7e00ce5": "2412-15283_subsection_dc75a032",
+      "2412-15283_sent_3fd32fb5": "2412-15283_subsection_dc75a032",
+      "2412-15283_section_4829262c": "2412-15283_doc_root",
+      "2412-15283_subsection_181c21ac": "2412-15283_section_4829262c",
+      "2412-15283_sent_19656a04": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_99b3b3c4": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_2a4af8bf": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_19533369": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_fb42c034": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_eb4bf48e": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_ec48006e": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_95e2294a": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_07915bf8": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_60b24a79": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_adcf8080": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_83b4e0dc": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_69e69ac9": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_ea1c46e4": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_5225c432": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_b56699a2": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_25b789e2": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_b32ca6b4": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_2645b8b8": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_4ff0a87b": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_5051e832": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_ac43c265": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_e80d8304": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_2d8be94a": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_a71a5859": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_97400390": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_7b3a6f5b": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_7ce7773c": "2412-15283_subsection_181c21ac",
+      "2412-15283_sent_6534014c": "2412-15283_subsection_181c21ac",
+      "2412-15283_subsection_9d6c55ce": "2412-15283_section_4829262c",
+      "2412-15283_sent_55ba2669": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_79914c4a": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_5dd6815e": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_7b2cbbb8": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_cf99f3a9": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_a3e6adf2": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_4dd36355": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_19a1099a": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_ff849a38": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_5fc49ef7": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_7755bf46": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_e14a45e7": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_ad301e6c": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_92dffffe": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_e41409d8": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_077e594e": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_28e5cd07": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_4742da3c": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_0da2d287": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_98391bf5": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_sent_f2d8c5d6": "2412-15283_subsection_9d6c55ce",
+      "2412-15283_subsection_54df8bcb": "2412-15283_section_4829262c",
+      "2412-15283_sent_b1df5cc6": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_45a7d966": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_f659505a": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_96200873": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_7f662db3": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_fd0b64c8": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_1b2aaef7": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_9685c8c4": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_26c5b67e": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_4c3374b5": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_a9238eb0": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_eb0a9be3": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_6883086f": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_ca5fd4f4": "2412-15283_subsection_54df8bcb",
+      "2412-15283_sent_b2998803": "2412-15283_subsection_54df8bcb",
+      "2412-15283_section_6f8b794f": "2412-15283_doc_root",
+      "2412-15283_sent_4e402629": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_1df36c7f": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_9dd7e24e": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_925e800f": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_5485f371": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_e28bbfa6": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_42bee9a5": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_fd0e6e1c": "2412-15283_section_6f8b794f",
+      "2412-15283_enumerate_a74b978a": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_a8266b47": "2412-15283_item_3744af9b",
+      "2412-15283_sent_6df91fa3": "2412-15283_item_3744af9b",
+      "2412-15283_sent_e672df5f": "2412-15283_item_3744af9b",
+      "2412-15283_sent_1403a7e4": "2412-15283_item_3744af9b",
+      "2412-15283_sent_bafd7322": "2412-15283_item_3744af9b",
+      "2412-15283_sent_f3042b0a": "2412-15283_item_3744af9b",
+      "2412-15283_sent_93cba074": "2412-15283_item_3744af9b",
+      "2412-15283_sent_9afbf49c": "2412-15283_item_3744af9b",
+      "2412-15283_sent_c78bdad3": "2412-15283_item_3744af9b",
+      "2412-15283_sent_d4cd0dab": "2412-15283_item_3744af9b",
+      "2412-15283_sent_aea50807": "2412-15283_item_3744af9b",
+      "2412-15283_sent_0191f626": "2412-15283_item_3744af9b",
+      "2412-15283_sent_aba3fd3b": "2412-15283_item_3744af9b",
+      "2412-15283_sent_4c093d74": "2412-15283_item_3744af9b",
+      "2412-15283_sent_26d807ae": "2412-15283_item_3744af9b",
+      "2412-15283_sent_aa758cbd": "2412-15283_item_3744af9b",
+      "2412-15283_sent_0c126239": "2412-15283_item_3744af9b",
+      "2412-15283_sent_f2bc4e78": "2412-15283_item_3744af9b",
+      "2412-15283_sent_5339aad8": "2412-15283_item_3744af9b",
+      "2412-15283_sent_0a2300ce": "2412-15283_item_3744af9b",
+      "2412-15283_sent_a692f28b": "2412-15283_item_3744af9b",
+      "2412-15283_sent_e8aa1c7e": "2412-15283_item_3744af9b",
+      "2412-15283_sent_aac6f5c2": "2412-15283_item_3744af9b",
+      "2412-15283_sent_f68b3d81": "2412-15283_item_3744af9b",
+      "2412-15283_sent_2bedae62": "2412-15283_item_3744af9b",
+      "2412-15283_sent_f298180f": "2412-15283_item_3744af9b",
+      "2412-15283_sent_c9747544": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_50bfead6": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_f844e4ec": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_8fc3fc4a": "2412-15283_section_6f8b794f",
+      "2412-15283_sent_2336c9ea": "2412-15283_section_6f8b794f",
+      "2412-15283_section_8a95ea3e": "2412-15283_doc_root",
+      "2412-15283_subsection_ffc3d3f4": "2412-15283_section_8a95ea3e",
+      "2412-15283_sent_0f4bd27c": "2412-15283_subsection_ffc3d3f4",
+      "2412-15283_sent_a49006ae": "2412-15283_subsection_ffc3d3f4",
+      "2412-15283_sent_c204351c": "2412-15283_subsection_ffc3d3f4",
+      "2412-15283_sent_ff1bedc9": "2412-15283_subsection_ffc3d3f4",
+      "2412-15283_sent_7d10a0e6": "2412-15283_subsection_ffc3d3f4",
+      "2412-15283_sent_f854417c": "2412-15283_subsection_ffc3d3f4",
+      "2412-15283_subsection_933d72c8": "2412-15283_section_8a95ea3e",
+      "2412-15283_sent_68f32617": "2412-15283_subsection_933d72c8",
+      "2412-15283_sent_c8dfe7ff": "2412-15283_subsection_933d72c8",
+      "2412-15283_sent_e99c23e0": "2412-15283_subsection_933d72c8",
+      "2412-15283_fig_d020d379": "2412-15283_subsection_933d72c8",
+      "2412-15283_section_7229ec10": "2412-15283_doc_root",
+      "2412-15283_sent_a1a6cc10": "2412-15283_section_7229ec10",
+      "2412-15283_sent_ad9ba8ec": "2412-15283_section_7229ec10",
+      "2412-15283_sent_7fbf46ac": "2412-15283_section_7229ec10",
+      "2412-15283_sent_e6de5a5d": "2412-15283_section_7229ec10",
+      "2412-15283_sent_d437f1c0": "2412-15283_section_7229ec10",
+      "2412-15283_sent_76665232": "2412-15283_section_7229ec10",
+      "2412-15283_sent_ef95db24": "2412-15283_section_7229ec10",
+      "2412-15283_sent_d4b908b4": "2412-15283_section_7229ec10",
+      "2412-15283_sent_8493f812": "2412-15283_section_7229ec10",
+      "2412-15283_sent_fe1ec2e2": "2412-15283_section_7229ec10",
+      "2412-15283_sent_d582b27f": "2412-15283_section_7229ec10",
+      "2412-15283_sent_6a9b5ee0": "2412-15283_section_7229ec10",
+      "2412-15283_sent_6fb6f181": "2412-15283_section_7229ec10",
+      "2412-15283_sent_cf079122": "2412-15283_section_7229ec10",
+      "2412-15283_sent_2d435162": "2412-15283_section_7229ec10",
+      "2412-15283_sent_b99ec8cc": "2412-15283_section_7229ec10",
+      "2412-15283_sent_6c0d7da0": "2412-15283_section_7229ec10",
+      "2412-15283_fig_74c3007c": "2412-15283_section_7229ec10",
+      "2412-15283_sent_3c53b588": "2412-15283_section_7229ec10",
+      "2412-15283_sent_fb387293": "2412-15283_section_7229ec10",
+      "2412-15283_sent_fd177253": "2412-15283_section_7229ec10",
+      "2412-15283_fig_a89b3dfe": "2412-15283_section_7229ec10",
+      "2412-15283_sent_31ed9813": "2412-15283_section_7229ec10",
+      "2412-15283_sent_492b149b": "2412-15283_section_7229ec10",
+      "2412-15283_sent_5175180a": "2412-15283_section_7229ec10",
+      "2412-15283_sent_809bb5e5": "2412-15283_section_7229ec10",
+      "2412-15283_sent_72a1ea52": "2412-15283_section_7229ec10",
+      "2412-15283_sent_ebf50918": "2412-15283_section_7229ec10",
+      "2412-15283_sent_babe575d": "2412-15283_section_7229ec10",
+      "2412-15283_fig_b694a713": "2412-15283_section_7229ec10"
+    }
+  },
+  "merged_parents": {
+    "2412-15283_sent_676977e1": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_abstract_ce28071e": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_ffde9c0f": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_9ee11197": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_ace60326": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_37e13ae1": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_ae9a0cb8": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_290c9a78": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_aec0a132": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_628e0026": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_afeb50c5": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_90d1514d": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_bbbff8b7": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_sent_1204d739": [
+      "2412-15283_abstract_ce28071e"
+    ],
+    "2412-15283_fig_b71837c1": [
+      "2412-15283_doc_root",
+      "2412-15283_section_0b79795d",
+      "2412-15283_section_6f8b794f",
+      "2412-15283_section_7ad03400",
+      "2412-15283_subsection_181c21ac",
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_60ab3bfc": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_4080cbd3": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_ccf96c06": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_section_0b79795d": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_b9d3b1d0": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_b8a7fc3b": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_dbb6088b": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_cd9d032e": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_4aabaafd": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_fig_119b0e08": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_2c245439": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_87572499": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_85d0da18": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_ceb8816e": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_03b23dcf": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_03756809": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_227cde29": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_6647becc": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_a89fc296": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_ce303547": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_1e996ec3": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_52df30fc": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_d1f90f3f": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_5f73cd1a": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_ea713194": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_4d2fc551": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_sent_0ecae46e": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_itemize_6149acf3": [
+      "2412-15283_section_0b79795d"
+    ],
+    "2412-15283_item_3744af9b": [
+      "2412-15283_enumerate_a74b978a",
+      "2412-15283_itemize_6149acf3"
+    ],
+    "2412-15283_sent_e4aa6750": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_61aa25ec": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_89707999": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_3e765271": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_ecaeead7": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_a97cad6d": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_section_aed402c3": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_5876faed": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_f6b361e2": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_70a1239c": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_fea4e852": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_1e11a3c6": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_80952e84": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_7ac4774c": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_e302fa6a": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_c5cb11f0": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_d3ecdbd4": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_33a1f365": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_18c837a5": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_1e19480b": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_3c21af23": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_4338e337": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_8184191c": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_f65fb301": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_931f75a7": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_f32fbcb3": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_c740d305": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_cb97d5a8": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_d4794c4d": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_912560e8": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_dbe87901": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_sent_131e7ed0": [
+      "2412-15283_section_aed402c3"
+    ],
+    "2412-15283_section_7ad03400": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_7793f929": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_0c721aa4": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_0d8c17b2": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_e8f52cc0": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_5a6471b0": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_917dc33d": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_3fbf3bc7": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_eq_78a5f533": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_33d13983": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_f3bc394e": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_63489aad": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_27e9f8d9": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_eq_67495541": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_d93f8719": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_5de3c88b": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_f919f3cd": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_60157a3e": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_0578e53b": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_af1eb62e": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_sent_31613d2c": [
+      "2412-15283_section_7ad03400"
+    ],
+    "2412-15283_section_4c3880bb": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_23326c8a": [
+      "2412-15283_section_4c3880bb"
+    ],
+    "2412-15283_sent_eafa6e4a": [
+      "2412-15283_section_4c3880bb"
+    ],
+    "2412-15283_sent_202e1d95": [
+      "2412-15283_section_4c3880bb"
+    ],
+    "2412-15283_subsection_0210b87a": [
+      "2412-15283_section_4c3880bb"
+    ],
+    "2412-15283_sent_68f62b30": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_5a6b938c": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_90b8cc99": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_87b89052": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_1950f68f": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_d4d70390": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_22cb80ba": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_10a80af6": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_25cb68bd": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_sent_29d9afe4": [
+      "2412-15283_subsection_0210b87a"
+    ],
+    "2412-15283_subsection_b582a1bf": [
+      "2412-15283_section_4c3880bb"
+    ],
+    "2412-15283_sent_a2482b6b": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_fa385809": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_9fe7f6b1": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_ce6f1b2a": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_e2048dad": [
+      "2412-15283_section_6f8b794f",
+      "2412-15283_subsection_181c21ac",
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_d4bb67c7": [
+      "2412-15283_section_6f8b794f",
+      "2412-15283_subsection_181c21ac",
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_228d4d69": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_df662c37": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_898157a4": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_84f1a2a9": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_fbf84b0d": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_eq_18715071": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_a91c0dfe": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_eq_ce062886": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_d9eab1df": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_ff182879": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_de942eeb": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_d4deb6bd": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_e8c4311c": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_f52f756a": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_de1aa0b0": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_eq_8d803ca6": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_b512cf68": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_49b8b75d": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_a37157e2": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_d4ab9e42": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_8cdaeb25": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_f6fc7221": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_7a0d4930": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_sent_8020e974": [
+      "2412-15283_subsection_b582a1bf"
+    ],
+    "2412-15283_subsection_dc75a032": [
+      "2412-15283_section_4c3880bb"
+    ],
+    "2412-15283_sent_34b5bcfe": [
+      "2412-15283_subsection_dc75a032"
+    ],
+    "2412-15283_sent_8dff00e2": [
+      "2412-15283_subsection_dc75a032"
+    ],
+    "2412-15283_sent_b0ab6cb2": [
+      "2412-15283_subsection_dc75a032"
+    ],
+    "2412-15283_sent_b4318fde": [
+      "2412-15283_subsection_dc75a032"
+    ],
+    "2412-15283_eq_0bc129a6": [
+      "2412-15283_subsection_dc75a032"
+    ],
+    "2412-15283_sent_f7e00ce5": [
+      "2412-15283_subsection_dc75a032"
+    ],
+    "2412-15283_sent_3fd32fb5": [
+      "2412-15283_subsection_dc75a032"
+    ],
+    "2412-15283_section_4829262c": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_subsection_181c21ac": [
+      "2412-15283_section_4829262c"
+    ],
+    "2412-15283_sent_19656a04": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_99b3b3c4": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_2a4af8bf": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_19533369": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_fb42c034": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_eb4bf48e": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_ec48006e": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_95e2294a": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_07915bf8": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_60b24a79": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_adcf8080": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_83b4e0dc": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_69e69ac9": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_ea1c46e4": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_5225c432": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_b56699a2": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_25b789e2": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_b32ca6b4": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_2645b8b8": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_4ff0a87b": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_5051e832": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_ac43c265": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_e80d8304": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_2d8be94a": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_a71a5859": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_97400390": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_7b3a6f5b": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_7ce7773c": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_sent_6534014c": [
+      "2412-15283_subsection_181c21ac"
+    ],
+    "2412-15283_subsection_9d6c55ce": [
+      "2412-15283_section_4829262c"
+    ],
+    "2412-15283_sent_55ba2669": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_79914c4a": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_5dd6815e": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_7b2cbbb8": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_cf99f3a9": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_a3e6adf2": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_4dd36355": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_19a1099a": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_ff849a38": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_5fc49ef7": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_7755bf46": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_e14a45e7": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_ad301e6c": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_92dffffe": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_e41409d8": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_077e594e": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_28e5cd07": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_4742da3c": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_0da2d287": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_98391bf5": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_sent_f2d8c5d6": [
+      "2412-15283_subsection_9d6c55ce"
+    ],
+    "2412-15283_subsection_54df8bcb": [
+      "2412-15283_section_4829262c"
+    ],
+    "2412-15283_sent_b1df5cc6": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_45a7d966": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_f659505a": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_96200873": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_7f662db3": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_fd0b64c8": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_1b2aaef7": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_9685c8c4": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_26c5b67e": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_4c3374b5": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_a9238eb0": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_eb0a9be3": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_6883086f": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_ca5fd4f4": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_sent_b2998803": [
+      "2412-15283_subsection_54df8bcb"
+    ],
+    "2412-15283_section_6f8b794f": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_4e402629": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_1df36c7f": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_9dd7e24e": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_925e800f": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_5485f371": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_e28bbfa6": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_42bee9a5": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_fd0e6e1c": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_enumerate_a74b978a": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_a8266b47": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_6df91fa3": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_e672df5f": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_1403a7e4": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_bafd7322": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_f3042b0a": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_93cba074": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_9afbf49c": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_c78bdad3": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_d4cd0dab": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_aea50807": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_0191f626": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_aba3fd3b": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_4c093d74": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_26d807ae": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_aa758cbd": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_0c126239": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_f2bc4e78": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_5339aad8": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_0a2300ce": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_a692f28b": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_e8aa1c7e": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_aac6f5c2": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_f68b3d81": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_2bedae62": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_f298180f": [
+      "2412-15283_item_3744af9b"
+    ],
+    "2412-15283_sent_c9747544": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_50bfead6": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_f844e4ec": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_8fc3fc4a": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_sent_2336c9ea": [
+      "2412-15283_section_6f8b794f"
+    ],
+    "2412-15283_section_8a95ea3e": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_subsection_ffc3d3f4": [
+      "2412-15283_section_8a95ea3e"
+    ],
+    "2412-15283_sent_0f4bd27c": [
+      "2412-15283_subsection_ffc3d3f4"
+    ],
+    "2412-15283_sent_a49006ae": [
+      "2412-15283_subsection_ffc3d3f4"
+    ],
+    "2412-15283_sent_c204351c": [
+      "2412-15283_subsection_ffc3d3f4"
+    ],
+    "2412-15283_sent_ff1bedc9": [
+      "2412-15283_subsection_ffc3d3f4"
+    ],
+    "2412-15283_sent_7d10a0e6": [
+      "2412-15283_subsection_ffc3d3f4"
+    ],
+    "2412-15283_sent_f854417c": [
+      "2412-15283_subsection_ffc3d3f4"
+    ],
+    "2412-15283_subsection_933d72c8": [
+      "2412-15283_section_8a95ea3e"
+    ],
+    "2412-15283_sent_68f32617": [
+      "2412-15283_subsection_933d72c8"
+    ],
+    "2412-15283_sent_c8dfe7ff": [
+      "2412-15283_subsection_933d72c8"
+    ],
+    "2412-15283_sent_e99c23e0": [
+      "2412-15283_subsection_933d72c8"
+    ],
+    "2412-15283_fig_d020d379": [
+      "2412-15283_subsection_933d72c8"
+    ],
+    "2412-15283_section_7229ec10": [
+      "2412-15283_doc_root"
+    ],
+    "2412-15283_sent_a1a6cc10": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_ad9ba8ec": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_7fbf46ac": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_e6de5a5d": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_d437f1c0": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_76665232": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_ef95db24": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_d4b908b4": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_8493f812": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_fe1ec2e2": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_d582b27f": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_6a9b5ee0": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_6fb6f181": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_cf079122": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_2d435162": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_b99ec8cc": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_6c0d7da0": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_fig_74c3007c": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_3c53b588": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_fb387293": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_fd177253": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_fig_a89b3dfe": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_31ed9813": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_492b149b": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_5175180a": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_809bb5e5": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_72a1ea52": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_ebf50918": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_sent_babe575d": [
+      "2412-15283_section_7229ec10"
+    ],
+    "2412-15283_fig_b694a713": [
+      "2412-15283_section_7229ec10"
+    ]
+  }
+}

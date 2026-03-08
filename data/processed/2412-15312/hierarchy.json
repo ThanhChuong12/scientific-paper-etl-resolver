@@ -1,0 +1,2158 @@
+{
+  "elements": {
+    "2412-15312_doc_root": "DOCUMENT_ROOT",
+    "2412-15312_sent_27333ac0": "\\title{PCA-Featured Transformer for Jamming Detection in 5G UAV Networks} \\author{\\IEEEauthorblockN{ Joseanne Viana\\IEEEauthorrefmark{1}\\IEEEauthorrefmark{2}\\textsuperscript{\\textsection},Hamed Farkhari\\IEEEauthorrefmark{3}\\textsuperscript{\\textsection}, Pedro Sebastião \\IEEEauthorrefmark{3}, Victor P Gil Jimenez \\IEEEauthorrefmark{2}, Lester Ho\\IEEEauthorrefmark{1}} \\IEEEauthorblockA{\\IEEEauthorrefmark{1} Tyndall National Institute, Dublin, Ireland;} \\IEEEauthorblockA{\\IEEEauthorrefmark{2} UC3M - Universidad Carlos III de Madrid, Madrid, Spain;} \\IEEEauthorblockA{\\IEEEauthorrefmark{3} ISCTE – Instituto Universitário de Lisboa, Av.",
+    "2412-15312_sent_22489c7e": "das Forças Armadas, 1649-026 Lisbon, Portugal} \\\\ Email: \\{joseanne.viana\\}@tyndall.ie \\maketitle \\begingroup\\renewcommand\\thefootnote{\\textsection} \\footnotetext{Collaborative authors with equal contribution.} \\endgroup",
+    "2412-15312_abstract_ce28071e": "abstract",
+    "2412-15312_sent_384fa503": "Jamming attacks pose a threat to Unmanned Aerial Vehicle (UAV) wireless communication systems, potentially disrupting essential services and compromising network reliability.",
+    "2412-15312_sent_fd6310af": "Current detection approaches struggle with sophisticated artificial intelligence (AI) jamming techniques that adapt their patterns dynamically, while existing machine learning solutions often require extensive feature engineering and fail to capture complex temporal dependencies in attack signatures.",
+    "2412-15312_sent_9fdda414": "Furthermore, 5G networks using either Time Division Duplex (TDD) or Frequency Division Duplex (FDD) methods can face service degradation from intentional interference sources.",
+    "2412-15312_sent_1999b1ef": "To address these challenges, we present a novel transformer-based deep learning framework for jamming detection with Principal Component Analysis (PCA) added features.",
+    "2412-15312_sent_9029f347": "Our architecture leverages the transformer's self-attention mechanism to capture complex temporal dependencies and spatial correlations in wireless signal characteristics, enabling more robust jamming detection techniques.",
+    "2412-15312_sent_204c5582": "The U-shaped model incorporates a modified transformer encoder that processes signal features including received signal strength indicator (RSSI) and signal-to-noise ratio (SINR) measurements, alongside a specialized positional encoding scheme that accounts for the periodic nature of wireless signals.",
+    "2412-15312_sent_e62edcdb": "In addition, we propose a batch size scheduler and implement chunking techniques to optimize training convergence for time series data.",
+    "2412-15312_sent_a9110f85": "These advancements contribute to achieving up to a ten times improvement in training speed within the advanced U-shaped encoder-decoder transformer model introduced in this study.",
+    "2412-15312_sent_72df2066": "Simulation results demonstrate that our approach achieves a detection accuracy of 90.33 \\% in Line-of-Sight (LoS) and 84.35 \\% in non-Line-of-Sight (NLoS) and outperforms machine learning methods and existing deep learning solutions such as the XGBoost (XGB) classifier in approximately 4\\%.",
+    "2412-15312_sent_279164cc": "\\begin{IEEEkeywords} UAVs, Security, Transformers, Deep Learning, Jamming Detection, Jamming Identification, UAV, Unmanned Aerial Vehicles, 5G, 6G.",
+    "2412-15312_sent_285e4bca": "\\end{IEEEkeywords}",
+    "2412-15312_section_0b79795d": "Introduction",
+    "2412-15312_sent_5ac1ce18": "The rapid proliferation of Unmanned Aerial Vehicles (UAVs) has revolutionized wireless communications, spawning two distinct research directions: enhancing networks using UAVs \\cite{Bekkouche2020} and adapting networks to support UAV operations \\cite{Azari2019}, \\cite{Wenbo2020},\\cite{Giovanni2022} .",
+    "2412-15312_sent_025579c6": "While UAV-mounted base stations offer promising solutions for disaster response, border surveillance, and temporary coverage enhancement \\cite{Ho24} \\cite{Galkin2023}, the integration of UAVs as network end-devices in UAV delivery use cases presents unique security challenges in 5G networks.",
+    "2412-15312_sent_68664e14": "Of particular concern is the vulnerability to sophisticated jamming attacks, which can exploit the characteristics of both Time Division Duplex (TDD) and Frequency Division Duplex (FDD) systems to achieve devastating effects - up to 99\\% disruption in TDD uplink and 82\\% in FDD downlink scenarios \\cite{Skokowski2024}, \\cite{Viana2024}.",
+    "2412-15312_sent_076a56b8": "Conventional jamming detection approaches, which rely on metrics like packet delivery ratio and received signal strength, face two significant limitations.",
+    "2412-15312_sent_a36a0d9f": "First, they often detect attacks only after substantial service degradation has occurred. Second, they struggle in ultra-dense network environments where local jammers can be obscured by legitimate network traffic, especially when dealing with narrowband selective jamming targeting specific OFDM subcarriers.\\cite{Lu2014}, \\cite{Shi2021}, \\cite{Skokowski2024}, \\cite{Viana2024}.",
+    "2412-15312_sent_1a2f7df8": "Machine learning approaches, particularly deep learning architectures, have emerged as promising solutions for early and accurate jamming detection in 5G networks \\cite{Hachimi2020}, \\cite{Krayani2022}.",
+    "2412-15312_sent_0a54d135": "While early research explored Convolutional Neural Networks (CNNs) for spatial feature extraction and Long Short-Term Memory (LSTM) networks for temporal modeling, these architectures struggle to capture the complex relationships between different jamming patterns, especially in scenarios involving both 5G New Radio (NR) \\cite{Viana2024} and Narrowband Internet of Things (NB-IoT) interfaces.",
+    "2412-15312_sent_a251dda3": "The introduction of transformer architectures represents a paradigm shift in jamming detection capabilities.",
+    "2412-15312_sent_60b3afb2": "Transformers' self-attention mechanisms excel at modeling sequential data and capturing long-range dependencies in wireless signals - crucial for detecting sophisticated jamming patterns that may span multiple time scales and frequency bands.",
+    "2412-15312_sent_7ac44e29": "The multi-head attention mechanism enables simultaneous analysis of different signal characteristics, from immediate jamming effects to subtle, persistent interference patterns, making it particularly well-suited for identifying energy-efficient selective jamming techniques.",
+    "2412-15312_sent_e1bbca8c": "\\cite{Elleuch2024}, As 5G networks continue to expand and potential security threats evolve, the development of efficient and reliable jamming detection methods remains crucial \\cite{Xue2023}.",
+    "2412-15312_sent_6a3dd223": "The integration of transformer architectures with other machine learning techniques offers promising directions for addressing these challenges, particularly in detecting jamming attacks that current methods may miss.",
+    "2412-15312_sent_14faf645": "This paper introduces a novel transformer-based architecture specifically designed to address these challenges in UAV-integrated 5G networks.",
+    "2412-15312_sent_eb80ea30": "Our approach leverages the power of multi-head attention mechanisms and the Principal Component Analysis (PCA) features \\cite{Greenacre2022} to simultaneously analyze Received Signal Strength Indicator (RSSI) and the Signal to Interference plus Noise Ratio (SINR) signals characteristics while maintaining computational efficiency for edge deployment.",
+    "2412-15312_sent_ac1836c3": "By focusing on the early detection of jamming attacks, our solution aims to protect critical UAV communications before significant service degradation occurs.",
+    "2412-15312_sent_476532e0": "The proposed architecture not only advances the state-of-the-art in jamming detection but also provides a framework for developing robust security solutions in dynamic 5G environments.",
+    "2412-15312_subsection_3fe3f322": "Contributions and Motivation",
+    "2412-15312_sent_07552d6b": "Recent advancements in cellular networks, particularly in UAV and 5G technologies, have revealed significant vulnerabilities to jamming attacks.",
+    "2412-15312_sent_bb897479": "While research exists on various detection methods, there remains a critical gap in leveraging transformer architectures for jamming detection.",
+    "2412-15312_sent_543bd9d9": "This paper presents the listed key contributions:",
+    "2412-15312_itemize_93fb53ae": "itemize",
+    "2412-15312_item_366402de": "item",
+    "2412-15312_sent_7f4b933a": "Developed an innovative transformer-based architecture for detecting jamming attacks in UAV-integrated 5G networks.",
+    "2412-15312_sent_9718d08d": "The system features a custom deep neural network that combines state-of-the-art CNNs with specialized activation functions in a U-Net architecture, optimized for analyzing jamming signatures across 5G NR interfaces.",
+    "2412-15312_sent_37d293ff": "Introduced time-series PCA-features and efficient tokenization method for detecting jamming patterns in UAV-integrated 5G networks.",
+    "2412-15312_sent_faa07ec6": "Optimized deep network training algorithm by introducing batch\\_size scheduler and chunking (grouping) in the training dataset.",
+    "2412-15312_sent_17c7e4e0": "Comprehensive experimental validation demonstrating superior detection capabilities compared to existing methods for jamming attacks.",
+    "2412-15312_section_a46060c1": "System Model",
+    "2412-15312_sent_ee46d26b": "The system model comprises an authenticated UAV operating within a small cell network environment designed to detect malicious jamming activities through power variation analysis.",
+    "2412-15312_sent_a0437d04": "In other to train our model, we generated a dataset that has two distinct communication scenarios: Line-of-Sight (LoS), Non-Line-of-Sight (NLoS).",
+    "2412-15312_sent_45cbf6e6": "Each scenario category contains four unique experimental configurations that vary key parameters including UAV mobility patterns, operational speeds, attack intensities, and network user density.",
+    "2412-15312_sent_3db41745": "The dataset architecture specifically accounts for urban environment dynamics, where building structures and other obstacles can significantly impact signal propagation.",
+    "2412-15312_sent_2e902e6a": "To ensure robust detection capabilities, we simulate various attack patterns using different numbers of hostile UAVs (ranging from 1 to 4 attackers) with varying transmission powers.",
+    "2412-15312_sent_5a504b8a": "The dataset inherently presents an unbalanced distribution between attack and non-attack scenarios, necessitating careful preprocessing to maintain classification accuracy.",
+    "2412-15312_sent_29774c4c": "Each simulation captures temporal sequences of received power measurements of RSSI and SINR.",
+    "2412-15312_sent_64fc3799": "More on the dataset is presented in \\cite{Viana2024}, \\cite{SyntheticJViana}.",
+    "2412-15312_subsection_cdba2331": "Dataset on Jamming Detection",
+    "2412-15312_sent_e92be7c0": "A sample from the dataset on the jamming effects is presented in Figure \\ref{fig:distributions}, which illustrates the distributions of RSSI and SINR.",
+    "2412-15312_sent_f92dbcfd": "These simulation results capture the predicted signal propagation characteristics under both LoS and NLoS conditions.",
+    "2412-15312_fig_8af9b22d": "\\begin{figure}\n\n \\includegraphics[width=0.40\\textwidth]{Figures/RSSI_SINR_.png}\n \\caption{Jamming distributions: (a) RSSI and (b) SINR}\n\n\\end{figure}",
+    "2412-15312_sent_796c5657": "The RSSI measurements exhibit a distinct bimodal distribution pattern between LoS and NLoS conditions.",
+    "2412-15312_sent_88373cf9": "The NLoS signals demonstrate a concentrated distribution with $\\mu=-95.7$ dBm, indicating substantial signal attenuation.",
+    "2412-15312_sent_fab8ebdf": "Conversely, the LoS signals present a more dispersed distribution centered at $\\mu=-84.0$ dBm, reflecting superior signal strength characteristics typical of direct path propagation.",
+    "2412-15312_sent_81934bea": "The NLoS distribution's pronounced, narrow peak suggests consistent attenuation patterns, while the broader LoS distribution indicates more diverse signal propagation paths despite maintaining direct visibility.",
+    "2412-15312_sent_f1eb63f2": "The SINR distributions effectively illustrate the jamming environment's impact on signal quality.",
+    "2412-15312_sent_a05c452a": "NLoS signals exhibit multiple distinct peaks in the range of -50 dB to -20 dB, with a mean value of $\\mu=-31.2$ dB, demonstrating severe interference effects.",
+    "2412-15312_sent_70e9d643": "The LoS signals display a more favorable distribution extending into positive values, characterized by $\\mu=-7.7$ dB.",
+    "2412-15312_sent_fa3f6136": "The broader, right-skewed distribution observed in LoS conditions indicates that despite direct visibility, jamming significantly degrades signal quality, albeit to a lesser extent compared to NLoS scenarios.",
+    "2412-15312_subsection_006db2cb": "Jamming Detection algorithm for UAVs",
+    "2412-15312_sent_202d6cb4": "The proposed approach combines PCA features with transformer architectures to create an efficient and robust detection system.",
+    "2412-15312_subsubsection_c57e018c": "Feature Engineering with PCA for Time Series Data",
+    "2412-15312_sent_7c1bac9b": "Using PCA for time series data often does not yield satisfactory results directly.",
+    "2412-15312_sent_984cf83b": "Initially, we trained our model using PCA components, but the results were suboptimal. To address this, we employed PCA to generate additional features and incorporated these features into the raw data.",
+    "2412-15312_sent_cd2da328": "This approach led to an improvement of up to 5\\% in accuracy for both LoS and NLoS datasets.",
+    "2412-15312_paragraph_c970a8d9": "Feature Creation Process.",
+    "2412-15312_sent_f914f62f": "To create new features, we first computed moving averages (MA) with window sizes of 2, 3, and 5 for each RSSI and SINR sample separately.",
+    "2412-15312_sent_c738cbdd": "Additionally, we created new signals by sub-sampling the original signals as follows: - Selecting every alternate feature (signal[:,::2] and signal[:,1::2]).",
+    "2412-15312_sent_b3d598bb": "- Selecting every third feature, starting at different offsets (signal[:,::3], signal[:,1::3], and signal[:,2::3]).",
+    "2412-15312_sent_3ae8aa6c": "As a result, for each original signal (RSSI or SINR), we generated the following derived signals:",
+    "2412-15312_sent_5ace19a0": "Moving averages: ma\\_2(signal), ma\\_3(signal), ma\\_5(signal).",
+    "2412-15312_sent_0734d238": "Sub-sampled signals: signal[:,::2], signal[:,1::2], signal[:,::3], signal[:,1::3], signal[:,2::3].",
+    "2412-15312_sent_65feb3e8": "In total, this process resulted in 8 additional signals derived from each original signal.",
+    "2412-15312_paragraph_8a5e6279": "PCA Application and Dimensionality Reduction",
+    "2412-15312_sent_705979ca": "For each of the 9 signals (the original signal and the 8 derived signals), we applied PCA and selected the first 5 principal components (PCs), resulting in 45 new features per signal. For RSSI and SINR combined, this approach yielded 90 new features.",
+    "2412-15312_sent_941c8996": "Before integrating these features with the raw data, we normalized each feature to the range defined by the minimum and maximum values of the corresponding original signal. This normalization ensured consistency in feature scaling and avoided the need to redefine token ranges during tokenization.",
+    "2412-15312_sent_06fbfa04": "For the LoS samples, all 90 new features were retained. However, for the NLoS samples, only 54 features were used because, for certain derived signals, PCA captured 99\\% of the signal variance in the first PC, making additional components unnecessary.",
+    "2412-15312_sent_90421f0b": "The detailed steps for the feature creation process are outlined in Algorithm \\ref{alg:feature_creation}.",
+    "2412-15312_fig_c173b87c": "\\begin{algorithm}\n\\caption{Feature Creation Process}\n\n\\begin{algorithmic}[1]\n\\State Input: RSSI and SINR signals\n\\State Output: Normalized PCA features\n\\For{each signal $S$ (RSSI, SINR)}\n \\State Compute moving averages: ma\\_2(S), ma\\_3(S), ma\\_5(S)\n \\State Generate sub-sampled signals: S[:,::2], S[:,1::2], S[:,::3], S[:,1::3], S[:,2::3]\n \\State Combine all signals (original and derived)\n \\For{each signal $S'$ in combined signals}\n \\State Apply PCA to $S'$\n \\State Retain first 5 PCs of $S'$\n \\EndFor\n \\State Normalize each PC to the range of the original signal $S$\n\\EndFor\n\\State Combine all normalized PCA features\n\\end{algorithmic}\n\\end{algorithm}",
+    "2412-15312_subsubsection_2d701050": "Deep Network Design",
+    "2412-15312_sent_97c48581": "Following the implementation of a multi-headed deep network with attention on the same dataset, as discussed in \\cite{Viana2024}, we propose a novel deep network architecture designed to achieve state-of-the-art results without requiring post-processing techniques.",
+    "2412-15312_sent_df01095c": "To enhance feature representation, we employed PCA to generate new features and applied flipping as a data augmentation strategy, building on the techniques outlined in \\cite{Viana2024}.",
+    "2412-15312_sent_501fae37": "The dataset signals, including new features, were divided into 50 bins based on percentiles to ensure uniform distribution of data across bins.",
+    "2412-15312_sent_841bc49d": "This method resulted in 100 bins for the complete dataset (RSSI/SINR and new features) by assigning tokens to each bin.",
+    "2412-15312_sent_24512811": "Additional tokens were included for special purposes, such as PAD, CLS, MASK, and two output tokens (ATTACKED/JAMMED or NO\\_ATTACK), culminating in a vocabulary size of 109 tokens.",
+    "2412-15312_sent_dafe2ca5": "The proposed model is inspired by a U-Net-like structure with modifications to incorporate attention mechanisms and hierarchical embedding dimensions.",
+    "2412-15312_sent_b5d9a05a": "The network comprises three encoder blocks and three decoder blocks, connected through skip connections to facilitate efficient gradient flow from the output to the initial layers.",
+    "2412-15312_sent_4c516200": "Skip connections ensure that gradients pass through with minimal degradation, reducing the error propagation to earlier layers.",
+    "2412-15312_paragraph_9a5031ab": "Network Architecture",
+    "2412-15312_sent_eb3a06d2": "Each encoder and decoder block operates at varying embedding dimensions:\\newline Encoder Dimensions: 256, 128, 64\\newline Decoder Dimensions: 64, 128, 256\\newline Each block consists of the following components:",
+    "2412-15312_sent_1bf098d3": "RMS normalization layer.",
+    "2412-15312_sent_59833410": "CNN layer with kernel size 3 and padding 1.",
+    "2412-15312_sent_f3fb7808": "Linear transformation with SiLU activation.",
+    "2412-15312_sent_19df540c": "Multi-headed attention (8 heads), including differential attention computation.",
+    "2412-15312_sent_852728d7": "Residual connections integrated with Multi-Layer Perceptron (MLP) blocks activated via SwiGLU.",
+    "2412-15312_sent_2077bcdd": "The embedding dimensions reduce hierarchically in the encoder blocks and are reversed in the decoder blocks, ensuring symmetry in the network structure.",
+    "2412-15312_paragraph_b5663092": "Attention Mechanism and Differentiation",
+    "2412-15312_sent_eb6a0699": "Each attention block processes input embeddings through various groups:\\newline",
+    "2412-15312_sent_59c47924": "Heads 0, 1 operate directly on normalized inputs.",
+    "2412-15312_sent_b50f7cee": "Heads 2, 3 process CNN-transformed embeddings via an MLP.",
+    "2412-15312_sent_d43f4f85": "Heads 4, 5 use CNN transformations exclusively.",
+    "2412-15312_sent_0bb42996": "Heads 6, 7 compute differences between normalized inputs and CNN-transformed outputs.",
+    "2412-15312_sent_ea22f676": "Differential computation is applied to attention outputs of specific heads to enhance representation.",
+    "2412-15312_sent_c6d1ce9c": "Skip connections between encoder and decoder blocks are inspired by U-Net and YOLO architectures, which have demonstrated efficacy in gradient flow preservation.",
+    "2412-15312_subsubsection_d67e199f": "Proposed Training Algorithm",
+    "2412-15312_sent_8124750e": "To efficiently train time series data and achieve faster convergence, we propose a training framework leveraging three key techniques: \\\\ Chunking, Batch Size Scheduling, and Weight Moving Average.",
+    "2412-15312_sent_f2bb653b": "Each of these techniques is described in detail below.",
+    "2412-15312_paragraph_993d9dd3": "Chunking",
+    "2412-15312_sent_b6dd4163": "To handle time series data effectively, we utilize a chunking strategy to reduce training time while maintaining diversity in the training samples.",
+    "2412-15312_sent_97bd4855": "The time series sequences are first segmented using a rolling window of size 300 with a stride of one.",
+    "2412-15312_sent_37ab4eeb": "After preprocessing and tokenization, the data is split into a user-defined number of chunks (e.g., 10).",
+    "2412-15312_sent_c3c417b1": "Rather than shuffling the entire dataset, chunks are randomly selected for training within each epoch, following the steps in the Algorithm \\ref{alg:chunking}.",
+    "2412-15312_fig_4431b335": "\\begin{algorithm}\n\\caption{Sample Chunking Algorithm}\n\n\\begin{algorithmic}[1]\n\\Require Number of chunks chunks, current epoch epoch, main samples dictionary samples\\_dict\\_main.\n\\State chunks $\\gets 10$ \\Comment{User-defined number of chunks}\n\\State start $\\gets$ epoch mod chunks\n\\If{start == 0}\n \\State start\\_list $\\gets$ permutation(range(chunks))\n\\Else\n \\State start $\\gets$ start\\_list[start]\n\\EndIf\n\\State samples\\_dict $\\gets$ copy(samples\\_dict\\_main)\n\\State samples\\_dict['train'] $\\gets$ samples\\_dict['train'][start::chunks,:]\n\\State Use samples\\_dict in the current epoch for the training loop.\n\\end{algorithmic}\n\\end{algorithm}",
+    "2412-15312_sent_cf3c41fe": "For each epoch, one chunk is selected, shuffled, and used for training.",
+    "2412-15312_sent_5a2e0c06": "After all chunks are utilized (e.g., in 10 epochs), they are reshuffled and reused in the subsequent cycles.",
+    "2412-15312_sent_5eec8547": "This method ensures reduced correlation between adjacent samples, as each sample in a chunk maintains a minimum distance (e.g., 10 time steps) from its neighbors.",
+    "2412-15312_sent_60b3cbfc": "Additionally, by iterating through all chunks, the diversity of training data increases, improving model generalization and reducing the risk of over-fitting.",
+    "2412-15312_sent_b3a0d9a0": "Our results demonstrate that this chunking strategy not only accelerates training but also enhances model accuracy.",
+    "2412-15312_paragraph_d863e6be": "Batch Size Scheduling",
+    "2412-15312_sent_75a83c3e": "To optimize training efficiency and model convergence, we employ a dynamic batch size scheduler alongside a learning rate scheduler.",
+    "2412-15312_sent_91be2c19": "Initially, the batch size scheduler is deactivated. However, if validation loss or accuracy fails to improve in a given epoch, the batch size scheduler activates and adjusts the batch size for the subsequent epoch.",
+    "2412-15312_sent_caee2a19": "This adjustment is simulated using the gradient accumulation technique in PyTorch, allowing larger batch sizes without memory overhead.",
+    "2412-15312_sent_bfe20efe": "Once validation metrics improve, the scheduler locks the batch size at its current value and deactivates.",
+    "2412-15312_sent_42d2b9e1": "This approach accelerates convergence, reduces training epochs, and enhances validation performance.",
+    "2412-15312_paragraph_68043fc2": "Weight Moving Average",
+    "2412-15312_sent_44d09833": "Inspired by reinforcement learning algorithms, we incorporate a weight moving average technique to stabilize training and prevent over-fitting.",
+    "2412-15312_sent_990e43b5": "When validation metrics improve, the current model weights are stored. Upon the next improvement, the moving average of the weights is computed and updated in the model:",
+    "2412-15312_eq_65b657d9": "\\begin{equation}\nW_{\\text{new}} = 0.001 \\cdot W_{\\text{prev}} + 0.999 \\cdot W_{\\text{current}},\n\\end{equation}",
+    "2412-15312_sent_71b2fa2f": "where $W_{\\text{prev}}$ and $W_{\\text{current}}$ denote the weights of the previous and current checkpoints, respectively.",
+    "2412-15312_sent_4aba5994": "This approach mitigates sudden changes in weights, stabilizing training and improving generalization, especially in early epochs.",
+    "2412-15312_sent_198941a6": "In summary, the combination of chunking, batch size scheduling, and weight moving average techniques provides a robust training framework, achieving faster convergence and better generalization in time series tasks.",
+    "2412-15312_sent_bf089b0a": "Experimental results demonstrate the efficacy of this approach in improving validation performance while reducing training time.",
+    "2412-15312_sent_179279df": "\\section {Results} This section presents the results and insights gained from our UAV jamming detection algorithms experiment using \\text{PCA-featured} (proposed), DNN, DNN+M1, DNN+M2 algorithms from \\cite{Viana2024} and XGB classifier algorithm along with details of the data used to train all the algorithms.",
+    "2412-15312_sent_6aad3cb2": "Unless explicitly stated, the general network and U-shaped transformer model parameters employed in the experiment are described in Tables \\ref{table:1} and \\ref{table:2}, respectively.",
+    "2412-15312_fig_e16d386a": "\\begin{table}\n\\begin{threeparttable}\n\n\\begin{tabular}{@{}ll@{}}\n\nScenario Parameters & Values \\\\ \nTerrestrial Users & 0, 5, 10 \\\\\nAuthenticated UAVs & 1 \\\\\nSmall Cells & 10 \\\\\nSmall cell height & 10 m \\\\\nAttackers & 0, 1, 2, 3, and 4 \\\\\nSpeeds & 10 m/s \\\\\nSmall cell power & 4 dBm \\\\\nAuthenticated UAV power & 2 dBm \\\\\nAttackers power & 0, 2, 5, 10, and 20 dBm \\\\\nAuthenticated UAV position & URD* \\\\\nAttackers position & URD* \\\\\nSmall cells position & URD* \\\\\nScenario & UMi \\\\\nDistance & 100, 200, 500, and 1000 m\\\\\n\n\\end{tabular}\n \\begin{tablenotes}\n\n \\item *URD - Uniformly Random Distributed.\n \\end{tablenotes}\n \\end{threeparttable}\n\\caption{Dataset Parameters. \\cite{Viana2024}}\n\n\\end{table}",
+    "2412-15312_fig_c263e277": "\\begin{table}\n\n\\begin{tabular}{lc} \n\nParameter & \\multicolumn{1}{c}{\\text{LoS} and \\text{NLoS}} \\\\ \n\nBlock size (LoS, NLoS) & \\multicolumn{1}{c}{(692, 656)} \\\\\nLayer number & \\multicolumn{1}{c}{6} \\\\\nLearning Rate & \\multicolumn{1}{c}{1e-4} \\\\\nHeads number & \\multicolumn{1}{c}{8} \\\\\nVocab size & \\multicolumn{1}{c}{110} \\\\\nEncoder Embedding & \\multicolumn{1}{c}{[256, 128, 64]} \\\\\nDecoder Embedding & \\multicolumn{1}{c}{[64, 128, 256]} \\\\\nDropout & \\multicolumn{1}{c}{0.4} \\\\\nBatch Size & \\multicolumn{1}{c}{64} \\\\\nNoise & \\multicolumn{1}{c}{0.03} \\\\\n(Mask Prob., Target Prob.) (training) & \\multicolumn{1}{c}{(0.25, 0.85)} \\\\\n(Mask Prob., Target Prob.) (prediction) & \\multicolumn{1}{c}{(0.0, 1.0)} \\\\\nModel Parameters & \\multicolumn{1}{c}{2.2 M} \\\\\n\n\\caption{U-shaped Transformer Model configuration}\n\n\\end{tabular}\n\\end{table}",
+    "2412-15312_subsection_13b84a8a": "Convergence Analysis",
+    "2412-15312_sent_6889c7c7": "Figure \\ref{fig:acc} illustrates the classification performance of our transformer-based approach under jamming conditions, evaluated across the LoS and NLoS scenarios.",
+    "2412-15312_sent_a41d190f": "The convergence analysis reveals distinctive learning patterns over 14 epochs of training.",
+    "2412-15312_sent_dd213279": "Initially, the model demonstrates remarkable learning efficiency, with both LoS and NLoS scenarios showing rapid accuracy improvements, achieving approximately 70\\% accuracy within the first epoch.",
+    "2412-15312_sent_c5377cca": "As training progresses, the LoS scenario achieves a superior classification performance, converging to approximately 90\\% accuracy, while the NLoS scenario stabilizes at 84\\%.",
+    "2412-15312_sent_a92b68a7": "This performance differential can be attributed to the inherent complexity of signal propagation in NLoS environments, where multipath effects and signal degradation present additional classification challenges.",
+    "2412-15312_fig_5310d3e1": "\\begin{figure}\n\n \\includegraphics[width=0.40\\textwidth]{Figures/acc.png}\n \\caption{Classification accuracy convergence analysis using test data under LoS and NLoS conditions.}\n\n\\end{figure}",
+    "2412-15312_subsection_d82d98f4": "Loss Convergence",
+    "2412-15312_sent_c2c51b0d": "The loss convergence analysis, presented in Figure \\ref{fig:loss}, provides deeper insights into the model's learning dynamics.",
+    "2412-15312_sent_2a128eb6": "Starting from an initial loss value of approximately 5.5, both scenarios demonstrate rapid optimization during the first two epochs, indicating efficient parameter adaptation.",
+    "2412-15312_sent_718a2661": "The subsequent training phases reveal gradual but consistent improvement, with the LoS scenario maintaining marginally lower loss values throughout the training process.",
+    "2412-15312_sent_f66191d2": "By epoch 14, both scenarios achieve robust convergence with loss values of 0.23 and 0.58 for LoS and NLoS respectively.",
+    "2412-15312_sent_975d5c1e": "The LoS scenario exhibiting slightly superior stability.",
+    "2412-15312_sent_c9f757ee": "The U-shaped transformer architecture demonstrates remarkable adaptation capabilities in both propagation scenarios.",
+    "2412-15312_sent_ecb2eaa4": "The consistent performance, characterized by rapid initial convergence and stable final states, underscores the model's robustness in challenging jamming environments.",
+    "2412-15312_fig_d6b64300": "\\begin{figure}\n\n \\includegraphics[width=0.40\\textwidth]{Figures/Loss.png}\n \\caption{Loss convergence analysis using test data under LoS and NLoS conditions.}\n\n\\end{figure}",
+    "2412-15312_subsection_5ff0027e": "Alternative Methods and Validation",
+    "2412-15312_sent_dc0a5c0c": "We also experimented with alternative methods for creating derived signals, such as first and second differentiation.",
+    "2412-15312_sent_23974e54": "However, PCA applied to these signals resulted in a large number of PCs, with the leading components capturing only a small proportion of the signal variance.",
+    "2412-15312_sent_214dec0b": "Consequently, these methods were not included in our final approach.",
+    "2412-15312_sent_6f4da650": "The methods we adopted ensured that the new PCs captured over 70\\% of the signal variance, indicating that the derived features were both informative and valuable.",
+    "2412-15312_sent_f6468916": "This dimensionality reduction approach enhanced the training efficiency of our model while preserving the most critical information from the original data, ultimately improving model accuracy.",
+    "2412-15312_subsection_4933646c": "Classification Comparison with Other Algorithms",
+    "2412-15312_sent_77661ec2": "The simulation results presented in Table~\\ref{tab:accuracy_comparison} provide a comprehensive comparison of classification accuracies across different approaches using the dataset with a window size of 300.",
+    "2412-15312_sent_11818c65": "In LoS scenarios, our proposed method demonstrates robust performance with an accuracy of 90.33\\%, nearly matching the highest performance achieved by DNN+Method 2 at 90.80\\%.",
+    "2412-15312_sent_1d95ff8a": "The conventional DNN approach and its variant with Method 1 show competitive performance at 89.59\\% and 89.98\\% respectively, indicating that the additional complexity of Method 1 offers only marginal improvements in LoS conditions.",
+    "2412-15312_sent_4212aaae": "The XGB classifier, despite its general effectiveness in many machine learning tasks, shows the lowest LoS accuracy at 86.33\\%, suggesting that deep learning approaches are more suitable for this specific classification task.",
+    "2412-15312_sent_da04c629": "Note: DNN, DNN+M1, DNN+M2 algorithms design are available in \\cite{Viana2024}.",
+    "2412-15312_fig_4be75b82": "\\begin{table}\n\n\\begin{tabular}{lccccc}\n\nCategory & Proposed & DNN & DNN+M1 & DNN+M2 & XGB \\\\\n\nLoS & 90.33 & 89.59 & 89.98 & 90.80 & 86.33 \\\\\nNLoS & 84.35 & 75.60 & 83.07 & 79.00 & 80.58 \\\\\n\n\\end{tabular}\n\\caption{Classification accuracy (\\%) comparison on dataset with window size 300. Best results are in bold.}\n\n\\end{table}",
+    "2412-15312_sent_fbc31690": "The performance differences become more pronounced in NLoS conditions, which present greater classification challenges due to signal propagation complexities and environmental factors.",
+    "2412-15312_sent_493768be": "Our proposed method significantly outperforms all other approaches with an accuracy of 84.35\\%, demonstrating its robustness in challenging scenarios.",
+    "2412-15312_sent_b752ed12": "The basic DNN shows a substantial performance drop to 75.60\\% in NLoS conditions, highlighting the limitations of conventional deep learning approaches.",
+    "2412-15312_sent_f8bdab7d": "While the integration of Method 1 with DNN improves performance considerably to 83.07\\%, it still falls short of our proposed method.",
+    "2412-15312_sent_7d064a56": "Interestingly, DNN+Method 2, despite its superior LoS performance, achieves only 79.00\\% accuracy in NLoS conditions, suggesting that its optimization may be biased towards LoS scenarios.",
+    "2412-15312_sent_606feefc": "The XGB classifier maintains relatively consistent performance at 80.58\\%, but this is still significantly lower than our proposed method.",
+    "2412-15312_sent_ce37b79d": "These results empirically validate the effectiveness of our approach, particularly in handling the more challenging NLoS scenarios while maintaining strong performance in LoS conditions.",
+    "2412-15312_section_b651e8a9": "Conclusions",
+    "2412-15312_sent_b280b874": "This research presents a novel approach to jamming attack detection in UAV-integrated 5G networks through the development of a U-shaped transformer-based architecture enhanced with Principal Component Analysis (PCA) features.",
+    "2412-15312_sent_182ec535": "The experimental results demonstrate significant detection capabilities, achieving 90.33\\% accuracy in Line-of-Sight conditions and 84.35\\% in non-Line-of-Sight scenarios.",
+    "2412-15312_sent_fe6aa9e1": "This represents an approximate 4\\% improvement over conventional machine learning methods such as XGBoost (XGB).",
+    "2412-15312_sent_0936a664": "The architecture's success can be attributed to its effective processing of signal features, including RSSI and SINR measurements, while leveraging self-attention mechanisms to capture complex temporal dependencies in wireless signal patterns.",
+    "2412-15312_sent_99aeb2df": "The demonstrated performance improvements over existing solutions highlight the potential of transformer-based architectures in wireless security applications.",
+    "2412-15312_sent_d77d954b": "Several promising directions emerge for future research in this domain.",
+    "2412-15312_sent_07fe6073": "Primary considerations include optimizing the computational efficiency for real-time deployment, advancing the framework's ability to adapt to emerging jamming techniques, and exploring applications in next-generation wireless technologies.",
+    "2412-15312_sent_d6bb3d82": "The increasing integration of Unmanned Aerial Vehicles (UAVs) in wireless networks underscores the growing importance of sophisticated jamming detection systems.",
+    "2412-15312_sent_8cf0d3e1": "While our transformer-based architecture represents a significant advancement in wireless security, further research will be crucial to address evolving challenges in this dynamic field.",
+    "2412-15312_sent_72683745": "Future developments should prioritize enhancing the system's resilience against novel attack patterns while ensuring efficient implementation across diverse deployment scenarios.",
+    "2412-15312_sent_7ab32efe": "\\history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.} \\doi{10.1109/ACCESS.2023.0322000} \\title{PCA-Featured Transformer for Jamming Detection in 5G UAV Networks} \\author{ {Joseanne Viana}\\authorrefmark{1, 3}\\textsuperscript{\\textsection} \\orcid{0000-0002-4191-3127} \\and \\IEEEmembership{IEEE Member}, {Hamed Farkhari}\\authorrefmark{2}\\textsuperscript{\\textsection} \\orcid{0000-0002-2620-260X} \\and \\IEEEmembership{IEEE Member}, {Pedro Sebastião} \\authorrefmark{2,4}\\orcid{0000-0001-7729-4033} \\and\\IEEEmembership{IEEE Member}, {Victor P Gil Jimenez}\\authorrefmark{1} \\orcid{0000-0001-7029-1710} \\and \\IEEEmembership{IEEE Senior Member}} \\address[1]{UC3M - Universidad Carlos III de Madrid, Madrid, Spain;} \\address[2]{ISCTE – Instituto Universitário de Lisboa, Av.",
+    "2412-15312_sent_c83323be": "das Forças Armadas, 1649-026 Lisbon, Portugal;} \\address[3]{Tyndall National Institute, Ireland; } \\address[4]{IT – Instituto de Telecomunicações, Av.",
+    "2412-15312_sent_812d0bed": "Rovisco Pais, 1, Torre Norte, Piso 10, 1049-001 Lisboa, Portugal;} \\corresp{Corresponding author: Joseanne Viana (joseanne.viana@tyndall.ie)}",
+    "2412-15312_sent_58f7f199": "Unmanned Aerial Vehicles (UAVs) face significant security risks from jamming attacks, which can compromise network functionality.",
+    "2412-15312_sent_932b35e6": "Traditional detection methods often fall short when confronting AI-powered jamming that dynamically modifies its behavior, while contemporary machine learning approaches frequently demand substantial feature engineering and struggle with temporal patterns in attack signatures.",
+    "2412-15312_sent_715fb15d": "The vulnerability extends to 5G networks employing Time Division Duplex (TDD) or Frequency Division Duplex (FDD), where service quality may deteriorate due to deliberate interference.",
+    "2412-15312_sent_657d9a8c": "We introduce a novel U-shaped transformer architecture that leverages Principal Component Analysis (PCA) to refine feature representations for improved wireless security.",
+    "2412-15312_sent_3e0ad673": "The training process is regularized by incorporating the output entropy uncertainty into the loss function, a mechanism inspired by the Soft Actor-Critic (SAC) algorithm in Reinforcement Learning (RL) to enable robust jamming detection techniques.",
+    "2412-15312_sent_67478cfc": "The architecture features a modified transformer encoder specially designed to process critical wireless signal features, including Received Signal Strength Indicator (RSSI) and Signal-to-Interference-plus-Noise Ratio (SINR) measurements.",
+    "2412-15312_sent_5e7ea511": "We complement this with a custom positional encoding mechanism that specifically accounts for the inherent periodicity of wireless signals, enabling a more accurate representation of temporal signal patterns.",
+    "2412-15312_sent_27fcfae2": "Experimental evaluations demonstrate the effectiveness of our entropy-based approach, achieving detection rates of 89.46\\% under Line-of-Sight (LoS) conditions and 85.06\\% in non-Line-of-Sight (NLoS) scenarios.",
+    "2412-15312_sent_f09b59fe": "Our method significantly outperforms existing solutions, surpassing XGBoost (XGB) classifiers by approximately 4.5\\% and other deep learning approach by more than 2\\%.",
+    "2412-15312_sent_5ecdf925": "\\begin{IEEEkeywords} UAVs, Security, Transformers, Deep Learning, Jamming Detection, Jamming Identification, Unmanned Aerial Vehicles, 5G, 6G.",
+    "2412-15312_sent_0fe392e3": "\\end{IEEEkeywords} \\maketitle \\begingroup\\renewcommand\\thefootnote{\\textsection} \\footnotetext{Collaborative authors with equal contribution} \\endgroup \\IEEEoverridecommandlockouts \\begin{keywords} 5G Recovery, Deep Reinforcement Learning, Jamming Detection, Jamming Identification, UAV, Unmanned Aerial Vehicles, 4G, 5G, Adaptive Methods; \\end{keywords} \\IEEEpeerreviewmaketitle",
+    "2412-15312_sent_63b9fe0f": "The intersection of Unmanned Aerial Vehicles (UAVs) and wireless communication systems represents a rapidly evolving research domain with significant technological and security implications.",
+    "2412-15312_sent_2c5429c2": "As UAVs transition from specialized military applications to widespread commercial deployment, their integration into communication networks introduces novel challenges and opportunities \\cite{Bekkouche2020}, \\cite{Naqvi2018}, \\cite{Azari2019}, \\cite{Wenbo2020}, \\cite{Geraci2022}, \\cite{Qi2019}.",
+    "2412-15312_sent_b812830f": "Base stations mounted on UAVs demonstrate potential for applications including emergency response, surveillance of borders, and providing temporary network coverage \\cite{Ho24}, \\cite{Galkin2023}, \\cite{Kaleem2018}, \\cite{Wenbo2020}.",
+    "2412-15312_sent_ba7ad0f2": "However, when UAVs function as end-devices in services such as package delivery, they introduce distinct security vulnerabilities within 5G networks \\cite{Xiao2018}, \\cite{Lee2018}.",
+    "2412-15312_sent_2210a7f5": "A critical concern is the vulnerability of UAV communication systems to sophisticated jamming attacks, which can manipulate Time Division Duplex (TDD) and Frequency Division Duplex (FDD) systems, resulting in severe service disruptions with impacts reaching up to 99\\% in TDD uplink and 82\\% in FDD downlink scenarios \\cite{Skokowski2024}, \\cite{Viana2024}, \\cite{Darsena2022}.",
+    "2412-15312_sent_ec8b40c0": "Jamming can affect private networks, compromising the integrity and availability of mission critical communications in industrial, corporate, and specialized operational environments where UAVs are increasingly deployed. Machine learning, particularly deep learning approaches, offers promising avenues for developing more effective and proactive jamming detection systems \\cite{Xin2018}, \\cite{Berman2019}, \\cite{Mao2018}.",
+    "2412-15312_sent_a29c2268": "Convolutional Neural Networks (CNNs) have shown effectiveness in extracting spatial features from signal data \\cite{Naseer2018}, \\cite{Krizhevsky2012}, \\cite{Fran2016}, while Long Short-Term Memory (LSTM) networks excel at modeling temporal patterns in wireless communications \\cite{Zhao2017}, \\cite{Ismail2019}, \\cite{VianaConv2022}, \\cite{Farkhari2024}.",
+    "2412-15312_sent_ac955a7c": "Several studies have advanced this field.",
+    "2412-15312_sent_5c99e8e1": "\\cite{Ju2019} developed a branched deep neural network architecture for simultaneous jamming detection and link scheduling in dense wireless networks.",
+    "2412-15312_sent_fb50ef82": "Their system employs two specialized subnetworks: one leverages geographical information and signal power measurements to detect and locate jammers, while the other optimizes link scheduling based on jamming detection results to maximize network throughput under adverse conditions.",
+    "2412-15312_sent_4ea8e7fc": "\\cite{RuoRan2016} proposed neural networks for compound jamming signal recognition, while \\cite{Li2021} introduced a singular value decomposition approach for jamming identification in Global Navigation Satellite System (GNSS)-based systems.",
+    "2412-15312_sent_dac06642": "For radar systems specifically, \\cite{Lv2022} introduced a deep learning method to counter interrupted sampling deceptive jamming.",
+    "2412-15312_sent_b56de9e2": "Their four-stage approach begins by generating time-frequency representations of radar echoes using short-time Fourier transform, which feed into a You Only Look Once (YOLO) object detection model that identifies jammed signals while implementing position correction to preserve legitimate target information.",
+    "2412-15312_sent_5df125b7": "\\cite{Gao2021} further expanded this domain by proposing deep neural networks for digital radio frequency memory (DRFM) jamming mode identification.",
+    "2412-15312_sent_32393319": "Addressing cognitive radio vulnerabilities, \\cite{Aygul2020} created a one-dimensional convolutional neural network operating directly on raw signal data to detect primary user emulation and jamming attacks.",
+    "2412-15312_sent_1aef6f7d": "This approach eliminates the manual feature engineering required by traditional methods, as noted by \\cite{Arjoune2020}.",
+    "2412-15312_sent_57407305": "Their architecture incorporates three convolutional layers with rectified linear unit (ReLU) activation functions, followed by dense and softmax output layers.",
+    "2412-15312_sent_145e8bf8": "More recently, \\cite{Amini2025} developed a deep learning system using ensemble techniques for detecting jamming attacks in 5G networks, combining RF domain and physical layer features with a Temporal Epistemic Decision Aggregator to enhance detection reliability despite signal impairments and carrier frequency offset.",
+    "2412-15312_sent_fb926cfa": "Similarly, \\cite{Li2022} proposed a feature- and spectrogram-tailored machine learning approach for jamming detection in OFDM-based UAVs.",
+    "2412-15312_sent_c5f74632": "Despite these advances, these architectures often struggle to capture the complex interdependencies and multifaceted patterns characteristic of modern jamming attacks, particularly in heterogeneous environments that incorporate both 5G New Radio (NR) and Narrowband Internet of Things (NB-IoT) interfaces \\cite{Hachimi2020}, \\cite{Krayani2022}, \\cite{Viana2024}, \\cite{Sahu2021}.",
+    "2412-15312_sent_c6245806": "Transformer architectures, with their self-attention mechanisms \\cite{Vaswani2019}, have improved sequential data analysis and offer significant potential for jamming detection \\cite{KaiJui2022}.",
+    "2412-15312_sent_b468254e": "These models are particularly well-suited for identifying long-range dependencies in wireless signal data, enabling the detection of sophisticated jamming patterns across various time scales and frequency bands \\cite{10654316}.",
+    "2412-15312_sent_21af9804": "The multi-head attention mechanism further enhances this capability by simultaneously analyzing diverse signal attributes, from immediate interference to subtle, persistent disruptions, making transformers especially effective against energy-efficient selective jamming techniques \\cite{Elleuch2024}.",
+    "2412-15312_sent_2fd777d4": "With the accelerating deployment of 5G networks and increasingly complex security threats \\cite{liyanage2018comprehensive}, \\cite{Schneider2015}, there is a need for advanced jamming detection methods that can preemptively identify and counteract these attacks \\cite{Xue2023}, \\cite{Lin2022}.",
+    "2412-15312_sent_2863f14a": "Integrating transformers with other machine learning techniques offers promising new approaches for addressing these challenges, establishing foundations for more resilient network security frameworks \\cite{Mowla2020}, \\cite{Sun2018}.",
+    "2412-15312_sent_224ed6c8": "This paper introduces an innovative transformer-based architecture specifically designed for UAV-integrated 5G networks, focusing on early detection of jamming attacks \\cite{VianaConv2022}, \\cite{Viana2024}.",
+    "2412-15312_sent_d033c14c": "By incorporating Principal Component Analysis (PCA)-derived features \\cite{Greenacre2022}, \\cite{Farkhari2022}, our approach enables efficient analysis of critical signal metrics, including Received Signal Strength Indicator (RSSI) and Signal to Interference plus Noise Ratio (SINR) \\cite{Li2019}, \\cite{Geraci2022}.",
+    "2412-15312_sent_aa096c4d": "Multi-head attention mechanisms allow the model to identify and classify complex jamming patterns, while computational optimizations make the framework suitable for edge device deployment \\cite{Gao2020}, \\cite{JVianaAcu2022}.",
+    "2412-15312_sent_8be928a4": "This work not only advances the current state of jamming detection but also proposes techniques to improve training time in machine learning integrated wireless communications \\cite{Liu2020}, \\cite{Su2020}.",
+    "2412-15312_sent_8095287d": "Furthermore, our proposed solution addresses gaps in existing research by prioritizing real-time detection capabilities \\cite{Nguyen2008}, \\cite{Sperotto2010} through a transformers models.",
+    "2412-15312_sent_d0aab28d": "The architecture's adaptability allows it to function effectively across various deployment scenarios, ensuring broad applicability for diverse UAV applications in both civilian and defense contexts \\cite{SKOKOWSKI2022}, \\cite{Bastos2021}, \\cite{Harvey2019}.",
+    "2412-15312_sent_e9ba5fd7": "As UAV technology continues to expand \\cite{Kang2022}, \\cite{Wang2022}, ensuring communication system security and reliability remains essential. Our work makes a meaningful contribution toward this goal, providing a robust and scalable solution to one of the most pressing challenges in modern wireless communication.",
+    "2412-15312_sent_eb6a02b7": "Proposed incorporating the output entropy uncertainty into the loss function.",
+    "2412-15312_sent_a38364bc": "In other to train our model, we generated a dataset that has two distinct communication scenarios: Line-of-Sight (LoS) and Non-Line-of-Sight (NLoS).",
+    "2412-15312_sent_73c7409b": "More comprehensive information regarding the dataset, the quantity of jamming UAVs, and signal parameters can be found in \\cite{Viana2024} and \\cite{SyntheticJViana}.",
+    "2412-15312_fig_e5927a97": "\\begin{figure}\n\n \\includegraphics[width=0.50\\textwidth]{Figures/RSSI_SINR_.png}\n \\caption{RSSI and SINR with jamming experienced by the UAV receiver.}\n\n\\end{figure}",
+    "2412-15312_sent_e966abf3": "Direct application of PCA to time series data often fails to capture temporal dependencies effectively, resulting in suboptimal performance.",
+    "2412-15312_sent_3e7a294b": "In our initial experiments, training the model solely with PCA components did not yield satisfactory results.",
+    "2412-15312_sent_a4c1ae19": "To overcome this limitation, we utilized PCA to generate additional features, which were then integrated with the raw data.",
+    "2412-15312_sent_e8db4f67": "This approach improved classification accuracy by up to 5\\% for both LoS and NLoS datasets.",
+    "2412-15312_paragraph_51662629": "Sample Creation",
+    "2412-15312_sent_54b24c87": "For each time series signal $S$ (either RSSI or SINR), we transformed the 1D signal into a 2D sample matrix.",
+    "2412-15312_sent_6e548e81": "Using a rolling window of size 300, a signal $S$ of length $N$ was converted into a matrix $X$ of shape $(N - 299, 300)$, where each row represents a sample of 300 consecutive time steps.",
+    "2412-15312_paragraph_575ea38f": "Transformations for Feature Enhancement",
+    "2412-15312_sent_c844d6d3": "To capture diverse temporal patterns in the 2D sample matrix $X$, we applied a series of transformations.",
+    "2412-15312_sent_0abb7dd2": "These include:",
+    "2412-15312_sent_b20f9639": "The original samples $X$,",
+    "2412-15312_sent_bcacaeb6": "Moving averages with window sizes of 2, 3, and 5, adjusted via slicing to align output dimensions,",
+    "2412-15312_sent_8f6b8a53": "Sub-sampled versions of $X$ by selecting every 2nd or 3rd feature, with varying starting indices to account for phase shifts.",
+    "2412-15312_sent_68725a7f": "In total, nine distinct transformations per signal were generated. For the precise definitions and implementation details of each transformation, refer to Algorithm \\ref{alg:feature_creation} (Feature Creation Algorithm).",
+    "2412-15312_sent_f02cc66c": "These transformations enhance the temporal representation of the data, preparing it for the subsequent PCA-based feature extraction step.",
+    "2412-15312_paragraph_603fff43": "PCA Application and Feature Extraction",
+    "2412-15312_sent_cf8c7e3d": "For each of the nine transformed matrices:",
+    "2412-15312_enumerate_54c53964": "enumerate",
+    "2412-15312_sent_4c3f874d": "A PCA model was fitted to the data, retaining the principal components (PCs) that collectively explain 99\\% of the total variance.",
+    "2412-15312_sent_4a96b44b": "For further process, the first five principal components were selected to reducing the feature dimensionality while retaining a significant portion of the data's variability.",
+    "2412-15312_sent_8db959f7": "This process generated up to five PCA features for each transformation applied to the RSSI and SINR signals.",
+    "2412-15312_sent_2897ee94": "Given that a total of nine transformations were applied to each signal, this resulted in a maximum of 45 features for each original signal (RSSI or SINR).",
+    "2412-15312_sent_90ea385c": "Consequently, for both RSSI and SINR combined, a total of 90 features were obtained for LoS scenarios, whereas for NLoS scenarios, a total of 54 features were derived. This discrepancy arises because, in some transformed signals, only a single PC captured the entire variance of the transformation.",
+    "2412-15312_paragraph_683df2a3": "Feature Scaling and Integration",
+    "2412-15312_sent_af414c78": "Each of the 45 PCA feature columns per signal was normalized to the range of the original sample matrix $X$ using the MinMaxScaler, with the feature range set to $(\\min(X), \\max(X))$.",
+    "2412-15312_sent_6a8226f1": "The scaled PCA features were then concatenated with the original samples $X$ along the feature axis, creating an enhanced feature set.",
+    "2412-15312_sent_728b0a6b": "This integration preserved the original data structure and avoided modifications to the tokenization process.",
+    "2412-15312_fig_c747b9ec": "\\begin{algorithm}\n\\caption{PCA-Based Feature Creation for Time Series Signals}\n\n\\begin{algorithmic}[1]\n\\State Input: Time series signals $S_{\\text{RSSI}}$ and $S_{\\text{SINR}}$\n\\State Output: Enhanced feature sets for RSSI and SINR\n\\For{each signal $S$ in $\\{S_{\\text{RSSI}}, S_{\\text{SINR}}\\}$}\n \\State $X \\gets \\text{rolling\\_window}(S, \\text{size}=300)$ \\Comment{Create samples, shape: $(|S|-299, 300)$}\n \\State Define transformation set $\\mathcal{T}$:\n \\State \\quad $T_1(X) = X$ \\Comment{Original samples}\n \\State \\quad $T_2(X) = \\text{moving\\_average}(X, n=2)[:,2:]$ \\Comment{Window 2, columns 2 to end}\n \\State \\quad $T_3(X) = \\text{moving\\_average}(X, n=3)[:,3:]$ \\Comment{Window 3, columns 3 to end}\n \\State \\quad $T_4(X) = \\text{moving\\_average}(X, n=5)[:,5:]$ \\Comment{Window 5, columns 5 to end}\n \\State \\quad $T_5(X) = X[:,::2]$ \\Comment{Every 2nd point, start at 0}\n \\State \\quad $T_6(X) = X[:,1::2]$ \\Comment{Every 2nd point, start at 1}\n \\State \\quad $T_7(X) = X[:,::3]$ \\Comment{Every 3rd point, start at 0}\n \\State \\quad $T_8(X) = X[:,1::3]$ \\Comment{Every 3rd point, start at 1}\n \\State \\quad $T_9(X) = X[:,2::3]$ \\Comment{Every 3rd point, start at 2}\n \\For{each transformation $T_i$ in $\\mathcal{T}$}\n \\State Fit $\\text{PCA}_i$ on $T_i(X)$ with $n_{\\text{components}}$ retaining 99\\% variance\n \\EndFor\n \\State $X_{\\text{pca}} \\gets \\text{concatenate}([\\text{PCA}_i.\\text{transform}(T_i(X))[:,:5] \\text{ for } i = 1 \\text{ to } 9], \\text{axis}=1)$\n \\State $\\text{min}_X, \\text{max}_X \\gets \\min(X), \\max(X)$ \\Comment{Global min and max of $X$}\n \\State $X_{\\text{pca}} \\gets \\text{scale}(X_{\\text{pca}}, \\text{range}=[\\text{min}_X, \\text{max}_X])$ \\Comment{Scale each column}\n \\State $X_{\\text{enhanced}} \\gets \\text{concatenate}([X, X_{\\text{pca}}], \\text{axis}=1)$\n\\EndFor\n\\State \\Return $X_{\\text{enhanced}}$ for each signal\n\\end{algorithmic}\n\\end{algorithm}",
+    "2412-15312_paragraph_4d619861": "Tokenization",
+    "2412-15312_sent_bab44814": "The data processing pipeline of the proposed transformer model begins with the collection of enhanced variants of RSSI and SINR derived via Algorithm \\ref{alg:feature_creation}.",
+    "2412-15312_sent_6c915b1d": "Each enhanced signal is discretized into 50 equal-sized bins using percentile-based discretization, ensuring a uniform distribution across the data range.",
+    "2412-15312_sent_36b22421": "This process assigns a unique integer value to each bin, yielding 50 tokens per signal type.",
+    "2412-15312_sent_450a0e15": "Consequently, two sets of 50 bins are produced—one for RSSI and one for SINR—resulting in a total of 100 distinct tokens representing the wireless signal characteristics.",
+    "2412-15312_sent_bb6b93d3": "To construct the token vocabulary, additional utility tokens are incorporated: CLS (assigned index 1), MASK (index 4), and binary classification tokens NO\\_ATTACK (index 5) and ATTACKED/JAMMED (index 6).",
+    "2412-15312_sent_1ca6d1f6": "Other indices until 9 are reserved for potential future use, while the RSSI and SINR tokens span indices 9 to 109.",
+    "2412-15312_sent_1e61733d": "This configuration results in a total vocabulary size of 110 tokens, with the maximum index capped at 110 for consistency across both LoS and NLoS scenarios.",
+    "2412-15312_sent_7f5c1c0a": "For training data, Time-Series Augmentation (TSA) techniques, inspired by \\cite{Viana2024}, are applied to the discretized RSSI and SINR signals to enhance robustness.",
+    "2412-15312_sent_9aaaf2f2": "The input sequence is then formed by concatenating the CLS token, the discretized enhanced RSSI, the discretized enhanced SINR, and the label token.",
+    "2412-15312_sent_014b88dc": "For LoS, this yields an input length of $1 + 345 + 345 + 1 = 692$ tokens, while for NLoS, the length is $1 + 345 + 309 + 1 = 656$ tokens, reflecting differences in signal characteristics between the two scenarios.",
+    "2412-15312_sent_56228f89": "\\includegraphics[width=1\\textwidth]{Figures/Architecture.png} \\caption{U\\_Shaped Architecture} \\end{figure*}",
+    "2412-15312_sent_bc6c5a47": "Building upon prior work on multi-headed deep networks with attention mechanisms \\cite{Viana2024}, we propose a U-shaped deep network architecture, illustrated in figure~\\ref{fig:architecture}, designed to deliver state-of-the-art performance in NLoS scenarios without reliance on post-processing techniques.",
+    "2412-15312_sent_9779e97b": "Inspired by the U-Net architecture \\cite{Ronneberger2015}, this model incorporates modifications to integrate multi-headed attention and variable embedding dimensions across layers, enhancing its capability for robust signal analysis.",
+    "2412-15312_sent_7f399a3e": "The architecture consists of an encoder pathway with three stages, a corresponding decoder pathway with three stages, and residual skip connections that link the two.",
+    "2412-15312_sent_b329d02e": "These skip connections enable direct gradient propagation from deeper to shallower layers, mitigating gradient degradation during backpropagation.",
+    "2412-15312_sent_b5abcbee": "The model processes input features and generates output tokens that encapsulate predictions, achieving competitive performance without additional refinement steps.",
+    "2412-15312_sent_fa769d1a": "Input processing begins with the integration of RSSI measurements, SINR values, and PCA-derived features.",
+    "2412-15312_sent_d4955e23": "These inputs are transformed into high-dimensional representations via a token embedding layer, preparing them for subsequent transformer-based processing.",
+    "2412-15312_sent_cdaf851e": "The encoder pathway, depicted in red in figure~\\ref{fig:architecture}, comprises sequential blocks that progressively refine input representations.",
+    "2412-15312_sent_2fdeb85a": "Each block integrates convolutional neural network (CNN) modules for local feature extraction, multi-headed attention mechanisms for selective signal focus, and root mean square normalization (RMSNorm) layers for training stability.",
+    "2412-15312_sent_daa88428": "These components are complemented by multi-layer perceptron (MLP) units featuring a Linear-SwiGLU-Linear activation sequence, forming a robust feature extraction pipeline.",
+    "2412-15312_sent_858e5920": "The decoder pathway, shown in blue, mirrors the encoder's structure while incorporating skip connections from the corresponding encoder layers to preserve critical information.",
+    "2412-15312_sent_d43e20ab": "Symmetry between the encoder and decoder is maintained, with the decoder leveraging similar components to reconstruct and interpret encoded features for classification.",
+    "2412-15312_sent_06fc09a5": "This U-shaped configuration enhances multi-scale feature analysis within the transformer framework.",
+    "2412-15312_sent_d145266a": "Within each block, parallel processing paths enhance feature extraction: direct Linear-SiLU-Linear transformations operate alongside CNN layers, while multiple query-key-value (QKV) attention mechanisms process distinct signal aspects concurrently.",
+    "2412-15312_sent_ccca49a7": "Inspired by the DIFF Transformer \\cite{ye2025differential}, differential computations are applied to the attention outputs of specific heads (e.g., heads 6 and 7) to enrich feature representations.",
+    "2412-15312_sent_6b4ed1a6": "A final MLP layer integrates these diverse features for comprehensive analysis.",
+    "2412-15312_sent_f18325ee": "RMSNorm is employed at multiple stages to ensure consistent normalization and training stability, enabling the model to focus on pertinent signal characteristics while suppressing noise.",
+    "2412-15312_sent_ca90743f": "Skip connections further preserve gradient flow, enhancing training efficiency.",
+    "2412-15312_sent_2834c571": "The architecture culminates in a classification layer that leverages these rich feature representations to accurately predict jamming threats, capturing both overt and subtle attack patterns.",
+    "2412-15312_sent_6e1eb100": "This design excels in processing multiple input feature types simultaneously while preserving their interrelationships.",
+    "2412-15312_sent_d3d9734e": "The U-shaped structure facilitates hierarchical feature extraction, and skip connections ensure information retention across processing stages, making the model well-suited for complex signal analysis tasks.",
+    "2412-15312_paragraph_f506b931": "Detailed Architecture Specification",
+    "2412-15312_sent_b7fe7836": "The encoder and decoder blocks operate at varying embedding dimensions, defined as follows:",
+    "2412-15312_sent_c055cc6a": "Encoder Dimensions: 256, 128, 64",
+    "2412-15312_sent_295f2bde": "Decoder Dimensions: 64, 128, 256",
+    "2412-15312_sent_6b0094e3": "Each block comprises:",
+    "2412-15312_sent_8ad2c9f6": "An RMSNorm layer for normalization.",
+    "2412-15312_sent_e0850884": "A CNN layer with kernel size 3 and padding 1 for local feature extraction.",
+    "2412-15312_sent_355406fa": "A Linear-SiLU-Linear transformation sequence.",
+    "2412-15312_sent_db8054c2": "An 8-headed attention mechanism with differential computations.",
+    "2412-15312_sent_c96ef212": "Residual connections paired with SwiGLU-activated MLP blocks.",
+    "2412-15312_sent_af0ec1f2": "The hierarchical reduction of embedding dimensions in the encoder is symmetrically reversed in the decoder, maintaining structural balance.",
+    "2412-15312_sent_b41a34df": "The multi-headed attention mechanism processes embeddings through distinct groups:",
+    "2412-15312_sent_6dd58fc8": "Heads 0 and 1 directly process normalized inputs.",
+    "2412-15312_sent_07424d16": "Heads 2 and 3 process CNN-transformed embeddings via an MLP.",
+    "2412-15312_sent_2293a2c9": "Heads 4 and 5 rely solely on CNN transformations.",
+    "2412-15312_sent_2f148e4c": "Heads 6 and 7 compute differences between normalized inputs and CNN-transformed outputs.",
+    "2412-15312_sent_f9e7a7ff": "This configuration, combined with differential attention inspired by \\cite{ye2025differential}, enhances the model's ability to capture nuanced signal variations, contributing to its effectiveness in identifying jamming patterns.",
+    "2412-15312_sent_672070d3": "In this work, we propose a robust training framework for time series data that accelerates convergence and improves generalization.",
+    "2412-15312_sent_d35cdd2e": "The framework integrates four key components: (i) a chunking strategy for data sampling, (ii) dynamic batch size scheduling combined with learning rate adjustment, (iii) an exponential moving average (EMA) for model weights with an integrated restoration mechanism, and (iv) mixed precision training with gradient clipping.",
+    "2412-15312_sent_47549795": "These components are detailed in the following sections.",
+    "2412-15312_paragraph_f74b7544": "Chunking Strategy",
+    "2412-15312_sent_77a98b9f": "To mitigate temporal correlations and reduce training time, we adopt a chunking strategy that partitions the training dataset into a fixed number of chunks (e.g., 10).",
+    "2412-15312_sent_b9c8a952": "In each epoch, a subset is selected from the dataset by choosing every $n$th sample with an offset determined by a randomized permutation.",
+    "2412-15312_sent_7696ef9a": "This ensures that samples used in a mini-batch maintain a minimum temporal gap, thereby promoting diversity and reducing overfitting.",
+    "2412-15312_sent_0778b768": "The pseudocode for the chunking algorithm is provided in Algorithm~\\ref{alg:chunking}.",
+    "2412-15312_fig_582cdf77": "\\begin{algorithm}\n\\caption{Chunking Strategy for Data Selection}\n\n\\begin{algorithmic}[1]\n\\Require Number of chunks $n$, current epoch $e$, training dataset $D_{\\text{train}}$\n\\State Set $n \\gets 10$ \\Comment{User-defined number of chunks}\n\\State Compute $s \\gets e \\mod n$\n\\If{$s = 0$}\n \\State Generate a new random permutation $P$ of $\\{0,1,\\dots,n-1\\}$\n \\State set $s \\gets 0$\n\\Else\n \\State Set $s \\gets P[s]$\n\\EndIf\n\\State Select subset: $D_{\\text{subset}} \\gets D_{\\text{train}}[s\\,:\\,:\\,n]$\n\\State \\Return $D_{\\text{subset}}$\n\\end{algorithmic}\n\\end{algorithm}",
+    "2412-15312_sent_c915312a": "In each epoch, the subset $D_{\\text{subset}}$ is used for training, ensuring that samples are minimally correlated (with a gap of at least 10 time steps) and that the overall data diversity is maintained.",
+    "2412-15312_paragraph_01009130": "Dynamic Batch Size Scheduling and Learning Rate Adjustment",
+    "2412-15312_sent_e058db90": "To optimize convergence, our framework employs a dynamic batch size scheduler that adjusts the effective batch size via gradient accumulation.",
+    "2412-15312_sent_32e11369": "Initially, the scheduler is deactivated. If validation loss and accuracy fail to improve over successive epochs, the scheduler increases the effective batch size by modifying the gradient accumulation steps.",
+    "2412-15312_sent_0a5b5970": "This approach enables the network to benefit from larger batch sizes without incurring additional memory overhead.",
+    "2412-15312_sent_44227d9a": "Concurrently, a learning rate scheduler with a warmup phase (e.g., 8 epochs) adjusts the learning rate dynamically.",
+    "2412-15312_sent_51e8b55b": "The combination of these schedulers accelerates convergence and enhances validation performance.",
+    "2412-15312_paragraph_d2c89a4d": "Weight Moving Average and Restoration Mechanism",
+    "2412-15312_sent_7637a7e0": "To stabilize training and improve generalization, an exponential moving average (EMA) of the model parameters is maintained. When validation performance improves, the current model state is saved as the best checkpoint.",
+    "2412-15312_sent_eebfccb0": "The EMA is then updated according to",
+    "2412-15312_eq_88319aeb": "\\begin{equation}\nW_{\\text{new}} = \\alpha \\cdot W_{\\text{prev}} + (1 - \\alpha) \\cdot W_{\\text{current}},\n\\end{equation}",
+    "2412-15312_sent_e4adfaf8": "where $\\alpha$ is a small factor (e.g., $\\alpha=0.001$), $W_{\\text{prev}}$ denotes the previously maintained weight vector, and $W_{\\text{current}}$ represents the current weights.",
+    "2412-15312_sent_9380f7e9": "In cases where validation metrics degrade for two consecutive epochs (tracked via a restoration counter), the model is restored to the best checkpoint and a modified weight update is applied (with, for instance, $\\alpha=0.005$) to prevent divergence.",
+    "2412-15312_sent_e2d34a56": "This restoration mechanism ensures that the training process remains stable despite fluctuations in performance.",
+    "2412-15312_paragraph_ba2fb009": "Mixed Precision Training and Gradient Clipping",
+    "2412-15312_sent_050f2b32": "To improve computational efficiency, the training process employs mixed precision training using PyTorch's automatic mixed precision (AMP) framework.",
+    "2412-15312_sent_77cb0167": "Computations are performed in bfloat16 precision on CUDA devices, and a gradient scaler is used to avoid numerical underflow.",
+    "2412-15312_sent_667f398e": "Furthermore, gradient clipping with a maximum norm of 1.0 is applied to prevent exploding gradients, thereby ensuring stable and robust model updates.",
+    "2412-15312_paragraph_73e14439": "Loss Function with Entropy Regularization",
+    "2412-15312_sent_44ce6453": "Inspired by the regularized entropy objective in the Soft Actor-Critic (SAC) algorithm~\\cite{sac2018}, the standard classification loss is augmented with an entropy regularizer.",
+    "2412-15312_sent_54f4333c": "The modified loss function is defined as",
+    "2412-15312_eq_de533db4": "\\begin{equation}\nL = \\frac{L_{\\text{base}} - \\lambda_{\\text{entropy}}\\, H(X)}{N_{\\text{accum}}},\n\\end{equation}",
+    "2412-15312_sent_e4dc8e3b": "where $L_{\\text{base}}$ is the standard cross-entropy loss,",
+    "2412-15312_eq_0b7b162d": "\\begin{equation}\nH(X) = -\\sum_{i=1}^{n} P(x_i) \\log P(x_i)\n\\end{equation}",
+    "2412-15312_sent_712ab48f": "denotes the entropy of the predicted probability distribution, $\\lambda_{\\text{entropy}}$ (e.g., 0.4) is a hyperparameter controlling the regularization strength, and $N_{\\text{accum}}$ is the number of gradient accumulation steps.",
+    "2412-15312_sent_4d913e1f": "This entropy regularization encourages the model to avoid overconfident predictions, thereby promoting better generalization.",
+    "2412-15312_sent_593eefb4": "In practice, if the computed loss is non-finite (i.e., NaN or infinity), the corresponding batch is skipped to ensure robustness.",
+    "2412-15312_paragraph_29061219": "Summary",
+    "2412-15312_sent_d9fe0704": "The integration of a data chunking strategy, dynamic batch size and learning rate scheduling, an EMA with a restoration mechanism, and mixed precision training with gradient clipping results in a comprehensive framework for training models on time series data.",
+    "2412-15312_sent_9f0c25a9": "Experimental results demonstrate that this approach not only accelerates convergence but also enhances generalization, yielding improved validation and test performance.",
+    "2412-15312_section_fd69c5cf": "Results",
+    "2412-15312_sent_a3c8364e": "This section presents the results and insights gained from our UAV jamming detection algorithms experiment using \\text{PCA-featured} (proposed), DNN, DNN+M1, DNN+M2, and XGB classifier algorithms from \\cite{Viana2024}, CNN Architecture from \\cite{9920202} along with details of the data used to train all the algorithms.",
+    "2412-15312_fig_52bf2a84": "\\begin{table}\n\n\\begin{tabular}{lc} \n\nParameter & \\multicolumn{1}{c}{LoS and NLoS} \\\\ \n\nBlock size (LoS, NLoS) & \\multicolumn{1}{c}{(692, 656)} \\\\\nLayer number & \\multicolumn{1}{c}{6} \\\\\nLearning Rate & \\multicolumn{1}{c}{1e-4} \\\\\nHeads number & \\multicolumn{1}{c}{8} \\\\\nVocab size & \\multicolumn{1}{c}{110} \\\\\nEncoder Embedding & \\multicolumn{1}{c}{[256, 128, 64]} \\\\\nDecoder Embedding & \\multicolumn{1}{c}{[64, 128, 256]} \\\\\nDropout & \\multicolumn{1}{c}{0.4} \\\\\nBatch Size & \\multicolumn{1}{c}{64} \\\\\nNoise & \\multicolumn{1}{c}{0.03} \\\\\n(Rand. Mask Prob., Target Mask Prob.) (training) & \\multicolumn{1}{c}{(0.25, 0.85)} \\\\\n(Rand. Mask Prob., Target Mask Prob.) (prediction) & \\multicolumn{1}{c}{(0.0, 1.0)} \\\\\nModel Parameters & \\multicolumn{1}{c}{2.2 M} \\\\\n\n\\end{tabular}\n\\caption{ U-shaped Transformer Model configuration}\n\n\\end{table}",
+    "2412-15312_sent_611cf00d": "\\includegraphics[width=0.99\\textwidth]{Figures/nlos/barchart_test_acc_based_base_station_distance_DNN_m_1_2_cnn_ushape.jpg} \\caption{Comparison with Deep Learning Results Based UAV - BS Distance in NLoSConditions.",
+    "2412-15312_sent_ace51f99": "The proposed model is accentuated in green for emphasis} \\end{figure*} Table 3 presents the comparative performance of our proposed approaches against seven different baseline methods for classification accuracies in both NLoS and LoS scenarios.",
+    "2412-15312_sent_4c3e1743": "Our entropy-enhanced model (\"Proposed + entropy\") achieves the highest detection rate in NLoS conditions at 85.06\\%, significantly outperforming all competing methods.",
+    "2412-15312_sent_7b3480b4": "This performance underscores the effectiveness of our uncertainty-based regularization technique in challenging signal environments where direct paths are obstructed. In LoS conditions, our entropy-enhanced model achieves a competitive 89.46\\% detection rate, while the DNN+M2 approach from \\cite{Viana2024} shows marginally better performance at 90.80\\%.",
+    "2412-15312_sent_0f2f2501": "The results demonstrate that entropy-based regularization consistently improves detection capabilities, as evidenced by the performance gap between our basic and entropy-enhanced models (79.10\\% vs. 85.06\\% in NLoS, and 87.37\\% vs. 89.46\\% in LoS).",
+    "2412-15312_sent_726d7beb": "This pattern is also observed in CNN-based methods in \\cite{9920202}, where entropy integration shows mixed effects depending on the signal environment.",
+    "2412-15312_sent_e25c0d59": "Notably, our proposed method without entropy regularization (\"Proposed\") reaches 87.37\\% in LoS scenarios, outperforming both XGB (86.33\\%) and CNN-based approaches (81.86\\% and 79.89\\%), further validating the effectiveness of our U-shaped transformer architecture even without the additional entropy component.",
+    "2412-15312_sent_b76282a5": "When comparing our approach with DNN variants in \\cite{Viana2024}, we observe that our entropy-enhanced model provides more balanced performance across both LoS and NLoS conditions.",
+    "2412-15312_sent_54f1a357": "While DNN+M1 and DNN+M2 achieve strong results in LoS scenarios (89.98\\% and 90.80\\% respectively), they demonstrate more significant performance degradation in the challenging NLoS environment (83.07\\% and 79.00\\%).",
+    "2412-15312_sent_4aaccff4": "This highlights the robustness of our proposed U-shaped transformer architecture with entropy regularization, which maintains high detection rates even under adverse signal conditions, making it a reliable solution for real-world wireless security applications such as the UAV non-line-sight applications.",
+    "2412-15312_subsection_983e940d": "Distance Based Accuracy Comparison",
+    "2412-15312_sent_b768cef8": "The bar chart in figure \\ref{fig:DNNs_comparison} compares accuracy performance of seven neural network methods at four UAV distances from a base station: 100m, 200m, 500m, and 1000m.",
+    "2412-15312_sent_3da4f116": "The methods include three DNN variants (standard DNN, DNN Method 1, DNN Method 2) and four testing approaches (U-shape and CNN tests, each with and without an entropy regularizer).",
+    "2412-15312_sent_aff21128": "At 100m, all methods achieve between 65-80\\% accuracy, with DNN Method 1 and U-shape Test with entropy showing slightly better performance.",
+    "2412-15312_sent_e05ea2d3": "As distance increases to 200m, a performance gap emerges with U-shape Test with entropy reaching 88.2\\%, while CNN Test without entropy drops to about 66.9\\%.",
+    "2412-15312_sent_88ed0107": "The 500m distance marks the peak performance point for most methods, with U-shape Test with entropy exceeding 90.9\\% accuracy, closely followed by U-shape Test without entropy at around 87.1\\% and DNN Method 1 at approximately 85\\%.",
+    "2412-15312_sent_0a8cee95": "Both DNN Method 2 and standard DNN also perform well at this distance, while CNN tests remain significantly lower.",
+    "2412-15312_sent_d6b98641": "At the maximum tested distance of 1000m, DNN Method 1 achieves the highest accuracy at approximately 89.3\\%, followed by DNN Method 2 and U-shape Test with entropy at about 84\\%.",
+    "2412-15312_sent_cefb9324": "This suggests DNN Method 1 has superior performance at extreme distances, while CNN-based approaches consistently show the poorest results across all tested ranges.",
+    "2412-15312_sent_c70da479": "The consistent superiority of entropy-incorporated methods across all distances indicates that entropy provides valuable information for the neural network classification process in this UAV application context.",
+    "2412-15312_sent_b5a1bf46": "This research introduces an transformer-based architecture for detecting jamming attacks in UAV-integrated 5G networks, enhanced by PCA features and an entropy-based regularizer.",
+    "2412-15312_sent_60b8a89f": "The inclusion of a cross-entropy loss function with an entropy regularizer effectively penalizes overconfident predictions, leading to significant improvements in detection performance.",
+    "2412-15312_sent_3f178d65": "The model achieves the highest detection rate of 85.06\\% in Non-Line-of-Sight (NLoS) scenarios, with entropy-enhanced models outperforming conventional machine learning methods, such as XGBoost, by approximately 4.5\\%, and deep learning models by approximately 2\\%.",
+    "2412-15312_sent_716e3279": "The model’s success can be attributed to its efficient processing of multidimensional signal features, such as RSSI and SINR, combined with self-attention mechanisms that capture complex temporal dependencies in wireless signal patterns.",
+    "2412-15312_sent_30595002": "The comparative performance of our approach highlights its robustness across both LoS and NLoS conditions.",
+    "2412-15312_sent_a10ea37c": "In NLoS scenarios, our entropy-enhanced model significantly outperforms all competing methods, while in LoS conditions, it remains highly competitive, demonstrating the effectiveness of our entropy regularization technique in challenging environments.",
+    "2412-15312_sent_b05c5e7d": "These results underscore the potential of transformer-based architectures in advancing wireless security, particularly for UAV applications, where jamming threats are increasingly prevalent.",
+    "2412-15312_sent_e3ae77ba": "\\begin{IEEEbiography}[{\\includegraphics[width=1in, height=1.25in, clip, keepaspectratio] {bibliography/joseanne.jpg}}]{Joseanne Viana} is a Ph.D.",
+    "2412-15312_sent_1e99fd81": "researcher at UC3M - Charles III University of Madrid.",
+    "2412-15312_sent_2d099da2": "She received her bachelor’s degree in telecommunication engineering from the University of Campinas, Brazil.",
+    "2412-15312_sent_245bc9a2": "She is an Early-Stage Researcher in the project TeamUp5G, a European Training Network under the MSCA ITN of the European Commission’s Horizon 2020.",
+    "2412-15312_sent_161bfabd": "Her research interests include wireless communications applied to interconnected systems such as UAVs, aerial vehicles, and non-terrestrial devices.",
+    "2412-15312_sent_32558d51": "\\end{IEEEbiography} \\vskip -2\\baselineskip plus -1fil \\begin{IEEEbiography}[{\\includegraphics[width=1in, height=1.25in, clip, keepaspectratio]{bibliography/Hamed_photo.png}}]{Hamed Farkhari} is a Ph.D.",
+    "2412-15312_sent_c59c0743": "researcher at ISCTE - Lisbon University Institute.",
+    "2412-15312_sent_ff3c3d12": "He serves as an Early-Stage Researcher in the TeamUp5G group, a European Training Network under the Marie Skłodowska-Curie Actions (MSCA ITN) of the European Commission’s Horizon 2020 program.",
+    "2412-15312_sent_70a1b0fa": "His research interests and work focus on cybersecurity, machine learning, deep learning, data science, meta-heuristic techniques, and optimization algorithms.",
+    "2412-15312_sent_77f9f357": "\\end{IEEEbiography} \\vskip -2\\baselineskip plus -1fil \\begin{IEEEbiography}[{\\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{bibliography/Foto_Pedro_Sebastiao.png}}]{Pedro Sebastião} received the Ph.D.",
+    "2412-15312_sent_e6e28a14": "degree in electrical and computer engineering from IST.He is currently a Professor with ISCTE-IUL’s Information Science and Technology Department, He is also the Board Director of AUDAX-ISCTE - Entrepreneurship and Innovation Center, ISCTE, responsible for the LABS LISBOA Incubator and Researcher at the Institute of Telecommunications.",
+    "2412-15312_sent_a74d8b52": "He has oriented several master’s dissertations and doctoral theses.",
+    "2412-15312_sent_46313f28": "It has several scientific, engineering and pedagogical awards.",
+    "2412-15312_sent_3439d02f": "Also, he has organized or co-organized more than 55 national and international scientific conferences.",
+    "2412-15312_sent_735d10f1": "He planned and developed several postgraduate courses in technologies and management, entrepreneurship and innovation and transfer of technology and innovation.",
+    "2412-15312_sent_e4640de0": "He has supported several projects involving technology transfer and creation of start-ups and spinoffs of value to society and market.",
+    "2412-15312_sent_0b2c67ce": "He developed his professional activity in the National Defense Industries, initially in the Office of Studies and later as the Board Director of the Quality Department of the Production of New Products and Technologies.",
+    "2412-15312_sent_ae259149": "He was also responsible for systems of communications technology in the Nokia-Siemens business area.",
+    "2412-15312_sent_8abda46a": "His main researching interests are in monitoring, control and communications of drones, unmanned vehicles, planning tools, stochastic process (modeling and efficient simulations), the Internet of Things, and efficient communication systems.",
+    "2412-15312_sent_dafae1d5": "\\end{IEEEbiography} \\vskip -2\\baselineskip plus -1fil \\begin{IEEEbiography}[{\\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{bibliography/victor.jpg}}]{Víctor P.",
+    "2412-15312_sent_6c22bb58": "Gil Jiménez} (Senior Member, IEEE) received a B.S.",
+    "2412-15312_sent_5f669466": "degree (Hons.) in Telecommunications from the University of Alcalá in 1998 and an M.S.",
+    "2412-15312_sent_da4b9bfd": "degree (Hons.) in Telecommunications and a Ph.D.",
+    "2412-15312_sent_3dc55e24": "degree (Hons.) from Universidad Carlos III de Madrid in 2001 and 2005, respectively.",
+    "2412-15312_sent_dfdef12a": "In 1999, he was a Communications Staff member with the Spanish Antarctica Base.",
+    "2412-15312_sent_1ec567e2": "He visited the University of Leeds, U.K., in 2003, Chalmers Technical University, Sweden, in 2004, and the Instituto de Telecomunicações, Portugal, from 2008 to 2010.",
+    "2412-15312_sent_56614ec8": "He is an Associate Professor with the Department of Signal Theory and Communications, Universidad Carlos III de Madrid.",
+    "2412-15312_sent_447533d7": "He has led several private and national Spanish projects and participated in various European and international projects.",
+    "2412-15312_sent_7b52394d": "He holds one patent and has published over 80 journal articles/conference papers and nine book chapters.",
+    "2412-15312_sent_c09cd3f0": "His research interests include advanced multicarrier systems for wireless radio, satellite, and visible light communications.",
+    "2412-15312_sent_b9763241": "He was the IEEE Spanish Communications and Signal Processing Joint Chapter Chair from 2015 to 2023.",
+    "2412-15312_sent_32c35583": "He received the Master Thesis Award and the Ph.D.",
+    "2412-15312_sent_4ec828e4": "Thesis Award from the Professional Association of Telecommunication Engineers of Spain in 1998 and 2006, respectively.",
+    "2412-15312_sent_52733224": "\\end{IEEEbiography} \\EOD"
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15312_sent_27333ac0": "2412-15312_doc_root",
+      "2412-15312_sent_22489c7e": "2412-15312_doc_root",
+      "2412-15312_abstract_ce28071e": "2412-15312_doc_root",
+      "2412-15312_sent_384fa503": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_fd6310af": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_9fdda414": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_1999b1ef": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_9029f347": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_204c5582": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_e62edcdb": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_a9110f85": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_72df2066": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_279164cc": "2412-15312_doc_root",
+      "2412-15312_sent_285e4bca": "2412-15312_doc_root",
+      "2412-15312_section_0b79795d": "2412-15312_doc_root",
+      "2412-15312_sent_5ac1ce18": "2412-15312_section_0b79795d",
+      "2412-15312_sent_025579c6": "2412-15312_section_0b79795d",
+      "2412-15312_sent_68664e14": "2412-15312_section_0b79795d",
+      "2412-15312_sent_076a56b8": "2412-15312_section_0b79795d",
+      "2412-15312_sent_a36a0d9f": "2412-15312_section_0b79795d",
+      "2412-15312_sent_1a2f7df8": "2412-15312_section_0b79795d",
+      "2412-15312_sent_0a54d135": "2412-15312_section_0b79795d",
+      "2412-15312_sent_a251dda3": "2412-15312_section_0b79795d",
+      "2412-15312_sent_60b3afb2": "2412-15312_section_0b79795d",
+      "2412-15312_sent_7ac44e29": "2412-15312_section_0b79795d",
+      "2412-15312_sent_e1bbca8c": "2412-15312_section_0b79795d",
+      "2412-15312_sent_6a3dd223": "2412-15312_section_0b79795d",
+      "2412-15312_sent_14faf645": "2412-15312_section_0b79795d",
+      "2412-15312_sent_eb80ea30": "2412-15312_section_0b79795d",
+      "2412-15312_sent_ac1836c3": "2412-15312_section_0b79795d",
+      "2412-15312_sent_476532e0": "2412-15312_section_0b79795d",
+      "2412-15312_subsection_3fe3f322": "2412-15312_section_0b79795d",
+      "2412-15312_sent_07552d6b": "2412-15312_subsection_3fe3f322",
+      "2412-15312_sent_bb897479": "2412-15312_subsection_3fe3f322",
+      "2412-15312_sent_543bd9d9": "2412-15312_subsection_3fe3f322",
+      "2412-15312_itemize_93fb53ae": "2412-15312_paragraph_b5663092",
+      "2412-15312_item_366402de": "2412-15312_itemize_93fb53ae",
+      "2412-15312_sent_7f4b933a": "2412-15312_item_366402de",
+      "2412-15312_sent_9718d08d": "2412-15312_item_366402de",
+      "2412-15312_sent_37d293ff": "2412-15312_item_366402de",
+      "2412-15312_sent_faa07ec6": "2412-15312_item_366402de",
+      "2412-15312_sent_17c7e4e0": "2412-15312_item_366402de",
+      "2412-15312_section_a46060c1": "2412-15312_doc_root",
+      "2412-15312_sent_ee46d26b": "2412-15312_section_a46060c1",
+      "2412-15312_sent_a0437d04": "2412-15312_section_a46060c1",
+      "2412-15312_sent_45cbf6e6": "2412-15312_section_a46060c1",
+      "2412-15312_sent_3db41745": "2412-15312_section_a46060c1",
+      "2412-15312_sent_2e902e6a": "2412-15312_section_a46060c1",
+      "2412-15312_sent_5a504b8a": "2412-15312_section_a46060c1",
+      "2412-15312_sent_29774c4c": "2412-15312_section_a46060c1",
+      "2412-15312_sent_64fc3799": "2412-15312_section_a46060c1",
+      "2412-15312_subsection_cdba2331": "2412-15312_section_a46060c1",
+      "2412-15312_sent_e92be7c0": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_f92dbcfd": "2412-15312_subsection_cdba2331",
+      "2412-15312_fig_8af9b22d": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_796c5657": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_88373cf9": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_fab8ebdf": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_81934bea": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_f1eb63f2": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_a05c452a": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_70e9d643": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_fa3f6136": "2412-15312_subsection_cdba2331",
+      "2412-15312_subsection_006db2cb": "2412-15312_section_a46060c1",
+      "2412-15312_sent_202d6cb4": "2412-15312_subsection_006db2cb",
+      "2412-15312_subsubsection_c57e018c": "2412-15312_subsection_006db2cb",
+      "2412-15312_sent_7c1bac9b": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_984cf83b": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_cd2da328": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_paragraph_c970a8d9": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_f914f62f": "2412-15312_paragraph_c970a8d9",
+      "2412-15312_sent_c738cbdd": "2412-15312_paragraph_c970a8d9",
+      "2412-15312_sent_b3d598bb": "2412-15312_paragraph_c970a8d9",
+      "2412-15312_sent_3ae8aa6c": "2412-15312_paragraph_c970a8d9",
+      "2412-15312_sent_5ace19a0": "2412-15312_item_366402de",
+      "2412-15312_sent_0734d238": "2412-15312_item_366402de",
+      "2412-15312_sent_65feb3e8": "2412-15312_paragraph_c970a8d9",
+      "2412-15312_paragraph_8a5e6279": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_705979ca": "2412-15312_paragraph_8a5e6279",
+      "2412-15312_sent_941c8996": "2412-15312_paragraph_8a5e6279",
+      "2412-15312_sent_06fbfa04": "2412-15312_paragraph_8a5e6279",
+      "2412-15312_sent_90421f0b": "2412-15312_paragraph_8a5e6279",
+      "2412-15312_fig_c173b87c": "2412-15312_paragraph_8a5e6279",
+      "2412-15312_subsubsection_2d701050": "2412-15312_subsection_006db2cb",
+      "2412-15312_sent_97c48581": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_df01095c": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_501fae37": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_841bc49d": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_24512811": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_dafe2ca5": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_b5d9a05a": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_4c516200": "2412-15312_subsubsection_2d701050",
+      "2412-15312_paragraph_9a5031ab": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_eb3a06d2": "2412-15312_paragraph_9a5031ab",
+      "2412-15312_sent_1bf098d3": "2412-15312_item_366402de",
+      "2412-15312_sent_59833410": "2412-15312_item_366402de",
+      "2412-15312_sent_f3fb7808": "2412-15312_item_366402de",
+      "2412-15312_sent_19df540c": "2412-15312_item_366402de",
+      "2412-15312_sent_852728d7": "2412-15312_item_366402de",
+      "2412-15312_sent_2077bcdd": "2412-15312_paragraph_9a5031ab",
+      "2412-15312_paragraph_b5663092": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_eb6a0699": "2412-15312_paragraph_b5663092",
+      "2412-15312_sent_59c47924": "2412-15312_item_366402de",
+      "2412-15312_sent_b50f7cee": "2412-15312_item_366402de",
+      "2412-15312_sent_d43f4f85": "2412-15312_item_366402de",
+      "2412-15312_sent_0bb42996": "2412-15312_item_366402de",
+      "2412-15312_sent_ea22f676": "2412-15312_paragraph_b5663092",
+      "2412-15312_sent_c6d1ce9c": "2412-15312_paragraph_b5663092",
+      "2412-15312_subsubsection_d67e199f": "2412-15312_subsection_006db2cb",
+      "2412-15312_sent_8124750e": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_f2bb653b": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_paragraph_993d9dd3": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_b6dd4163": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_sent_97bd4855": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_sent_37ab4eeb": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_sent_c3c417b1": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_fig_4431b335": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_sent_cf3c41fe": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_sent_5a2e0c06": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_sent_5eec8547": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_sent_60b3cbfc": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_sent_b3a0d9a0": "2412-15312_paragraph_993d9dd3",
+      "2412-15312_paragraph_d863e6be": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_75a83c3e": "2412-15312_paragraph_d863e6be",
+      "2412-15312_sent_91be2c19": "2412-15312_paragraph_d863e6be",
+      "2412-15312_sent_caee2a19": "2412-15312_paragraph_d863e6be",
+      "2412-15312_sent_bfe20efe": "2412-15312_paragraph_d863e6be",
+      "2412-15312_sent_42d2b9e1": "2412-15312_paragraph_d863e6be",
+      "2412-15312_paragraph_68043fc2": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_44d09833": "2412-15312_paragraph_68043fc2",
+      "2412-15312_sent_990e43b5": "2412-15312_paragraph_68043fc2",
+      "2412-15312_eq_65b657d9": "2412-15312_paragraph_68043fc2",
+      "2412-15312_sent_71b2fa2f": "2412-15312_paragraph_68043fc2",
+      "2412-15312_sent_4aba5994": "2412-15312_paragraph_68043fc2",
+      "2412-15312_sent_198941a6": "2412-15312_paragraph_68043fc2",
+      "2412-15312_sent_bf089b0a": "2412-15312_paragraph_68043fc2",
+      "2412-15312_sent_179279df": "2412-15312_paragraph_68043fc2",
+      "2412-15312_sent_6aad3cb2": "2412-15312_paragraph_68043fc2",
+      "2412-15312_fig_e16d386a": "2412-15312_paragraph_68043fc2",
+      "2412-15312_fig_c263e277": "2412-15312_paragraph_68043fc2",
+      "2412-15312_subsection_13b84a8a": "2412-15312_section_a46060c1",
+      "2412-15312_sent_6889c7c7": "2412-15312_subsection_13b84a8a",
+      "2412-15312_sent_a41d190f": "2412-15312_subsection_13b84a8a",
+      "2412-15312_sent_dd213279": "2412-15312_subsection_13b84a8a",
+      "2412-15312_sent_c5377cca": "2412-15312_subsection_13b84a8a",
+      "2412-15312_sent_a92b68a7": "2412-15312_subsection_13b84a8a",
+      "2412-15312_fig_5310d3e1": "2412-15312_subsection_13b84a8a",
+      "2412-15312_subsection_d82d98f4": "2412-15312_section_a46060c1",
+      "2412-15312_sent_c2c51b0d": "2412-15312_subsection_d82d98f4",
+      "2412-15312_sent_2a128eb6": "2412-15312_subsection_d82d98f4",
+      "2412-15312_sent_718a2661": "2412-15312_subsection_d82d98f4",
+      "2412-15312_sent_f66191d2": "2412-15312_subsection_d82d98f4",
+      "2412-15312_sent_975d5c1e": "2412-15312_subsection_d82d98f4",
+      "2412-15312_sent_c9f757ee": "2412-15312_subsection_d82d98f4",
+      "2412-15312_sent_ecb2eaa4": "2412-15312_subsection_d82d98f4",
+      "2412-15312_fig_d6b64300": "2412-15312_subsection_d82d98f4",
+      "2412-15312_subsection_5ff0027e": "2412-15312_section_a46060c1",
+      "2412-15312_sent_dc0a5c0c": "2412-15312_subsection_5ff0027e",
+      "2412-15312_sent_23974e54": "2412-15312_subsection_5ff0027e",
+      "2412-15312_sent_214dec0b": "2412-15312_subsection_5ff0027e",
+      "2412-15312_sent_6f4da650": "2412-15312_subsection_5ff0027e",
+      "2412-15312_sent_f6468916": "2412-15312_subsection_5ff0027e",
+      "2412-15312_subsection_4933646c": "2412-15312_section_a46060c1",
+      "2412-15312_sent_77661ec2": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_11818c65": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_1d95ff8a": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_4212aaae": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_da04c629": "2412-15312_subsection_4933646c",
+      "2412-15312_fig_4be75b82": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_fbc31690": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_493768be": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_b752ed12": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_f8bdab7d": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_7d064a56": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_606feefc": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_ce37b79d": "2412-15312_subsection_4933646c",
+      "2412-15312_section_b651e8a9": "2412-15312_doc_root",
+      "2412-15312_sent_b280b874": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_182ec535": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_fe6aa9e1": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_0936a664": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_99aeb2df": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_d77d954b": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_07fe6073": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_d6bb3d82": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_8cf0d3e1": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_72683745": "2412-15312_section_b651e8a9"
+    },
+    "2": {
+      "2412-15312_sent_7ab32efe": "2412-15312_doc_root",
+      "2412-15312_sent_c83323be": "2412-15312_doc_root",
+      "2412-15312_sent_812d0bed": "2412-15312_doc_root",
+      "2412-15312_abstract_ce28071e": "2412-15312_doc_root",
+      "2412-15312_sent_58f7f199": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_932b35e6": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_715fb15d": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_657d9a8c": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_3e0ad673": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_67478cfc": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_5e7ea511": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_e62edcdb": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_a9110f85": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_27fcfae2": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_f09b59fe": "2412-15312_abstract_ce28071e",
+      "2412-15312_sent_5ecdf925": "2412-15312_doc_root",
+      "2412-15312_sent_0fe392e3": "2412-15312_doc_root",
+      "2412-15312_section_0b79795d": "2412-15312_doc_root",
+      "2412-15312_sent_63b9fe0f": "2412-15312_section_0b79795d",
+      "2412-15312_sent_2c5429c2": "2412-15312_section_0b79795d",
+      "2412-15312_sent_b812830f": "2412-15312_section_0b79795d",
+      "2412-15312_sent_ba7ad0f2": "2412-15312_section_0b79795d",
+      "2412-15312_sent_2210a7f5": "2412-15312_section_0b79795d",
+      "2412-15312_sent_ec8b40c0": "2412-15312_section_0b79795d",
+      "2412-15312_sent_a29c2268": "2412-15312_section_0b79795d",
+      "2412-15312_sent_ac955a7c": "2412-15312_section_0b79795d",
+      "2412-15312_sent_5c99e8e1": "2412-15312_section_0b79795d",
+      "2412-15312_sent_fb50ef82": "2412-15312_section_0b79795d",
+      "2412-15312_sent_4ea8e7fc": "2412-15312_section_0b79795d",
+      "2412-15312_sent_dac06642": "2412-15312_section_0b79795d",
+      "2412-15312_sent_b56de9e2": "2412-15312_section_0b79795d",
+      "2412-15312_sent_5df125b7": "2412-15312_section_0b79795d",
+      "2412-15312_sent_32393319": "2412-15312_section_0b79795d",
+      "2412-15312_sent_1aef6f7d": "2412-15312_section_0b79795d",
+      "2412-15312_sent_57407305": "2412-15312_section_0b79795d",
+      "2412-15312_sent_145e8bf8": "2412-15312_section_0b79795d",
+      "2412-15312_sent_fb926cfa": "2412-15312_section_0b79795d",
+      "2412-15312_sent_c5f74632": "2412-15312_section_0b79795d",
+      "2412-15312_sent_c6245806": "2412-15312_section_0b79795d",
+      "2412-15312_sent_b468254e": "2412-15312_section_0b79795d",
+      "2412-15312_sent_21af9804": "2412-15312_section_0b79795d",
+      "2412-15312_sent_2fd777d4": "2412-15312_section_0b79795d",
+      "2412-15312_sent_2863f14a": "2412-15312_section_0b79795d",
+      "2412-15312_sent_224ed6c8": "2412-15312_section_0b79795d",
+      "2412-15312_sent_d033c14c": "2412-15312_section_0b79795d",
+      "2412-15312_sent_aa096c4d": "2412-15312_section_0b79795d",
+      "2412-15312_sent_8be928a4": "2412-15312_section_0b79795d",
+      "2412-15312_sent_8095287d": "2412-15312_section_0b79795d",
+      "2412-15312_sent_d0aab28d": "2412-15312_section_0b79795d",
+      "2412-15312_sent_e9ba5fd7": "2412-15312_section_0b79795d",
+      "2412-15312_subsection_3fe3f322": "2412-15312_section_0b79795d",
+      "2412-15312_sent_07552d6b": "2412-15312_subsection_3fe3f322",
+      "2412-15312_sent_bb897479": "2412-15312_subsection_3fe3f322",
+      "2412-15312_sent_543bd9d9": "2412-15312_subsection_3fe3f322",
+      "2412-15312_itemize_93fb53ae": "2412-15312_paragraph_b5663092",
+      "2412-15312_item_366402de": "2412-15312_itemize_93fb53ae",
+      "2412-15312_sent_7f4b933a": "2412-15312_item_366402de",
+      "2412-15312_sent_9718d08d": "2412-15312_item_366402de",
+      "2412-15312_sent_37d293ff": "2412-15312_item_366402de",
+      "2412-15312_sent_eb6a02b7": "2412-15312_item_366402de",
+      "2412-15312_sent_faa07ec6": "2412-15312_item_366402de",
+      "2412-15312_sent_17c7e4e0": "2412-15312_item_366402de",
+      "2412-15312_section_a46060c1": "2412-15312_doc_root",
+      "2412-15312_sent_ee46d26b": "2412-15312_section_a46060c1",
+      "2412-15312_sent_a38364bc": "2412-15312_section_a46060c1",
+      "2412-15312_sent_45cbf6e6": "2412-15312_section_a46060c1",
+      "2412-15312_sent_3db41745": "2412-15312_section_a46060c1",
+      "2412-15312_sent_2e902e6a": "2412-15312_section_a46060c1",
+      "2412-15312_sent_5a504b8a": "2412-15312_section_a46060c1",
+      "2412-15312_sent_29774c4c": "2412-15312_section_a46060c1",
+      "2412-15312_sent_73c7409b": "2412-15312_section_a46060c1",
+      "2412-15312_subsection_cdba2331": "2412-15312_section_a46060c1",
+      "2412-15312_sent_e92be7c0": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_f92dbcfd": "2412-15312_subsection_cdba2331",
+      "2412-15312_fig_e5927a97": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_796c5657": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_88373cf9": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_fab8ebdf": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_81934bea": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_f1eb63f2": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_a05c452a": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_70e9d643": "2412-15312_subsection_cdba2331",
+      "2412-15312_sent_fa3f6136": "2412-15312_subsection_cdba2331",
+      "2412-15312_subsection_006db2cb": "2412-15312_section_a46060c1",
+      "2412-15312_sent_202d6cb4": "2412-15312_subsection_006db2cb",
+      "2412-15312_subsubsection_c57e018c": "2412-15312_subsection_006db2cb",
+      "2412-15312_sent_e966abf3": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_3e7a294b": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_a4c1ae19": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_e8db4f67": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_paragraph_51662629": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_54b24c87": "2412-15312_paragraph_51662629",
+      "2412-15312_sent_6e548e81": "2412-15312_paragraph_51662629",
+      "2412-15312_paragraph_575ea38f": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_c844d6d3": "2412-15312_paragraph_575ea38f",
+      "2412-15312_sent_0abb7dd2": "2412-15312_paragraph_575ea38f",
+      "2412-15312_sent_b20f9639": "2412-15312_item_366402de",
+      "2412-15312_sent_bcacaeb6": "2412-15312_item_366402de",
+      "2412-15312_sent_8f6b8a53": "2412-15312_item_366402de",
+      "2412-15312_sent_68725a7f": "2412-15312_paragraph_575ea38f",
+      "2412-15312_sent_f02cc66c": "2412-15312_paragraph_575ea38f",
+      "2412-15312_paragraph_603fff43": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_cf8c7e3d": "2412-15312_paragraph_603fff43",
+      "2412-15312_enumerate_54c53964": "2412-15312_paragraph_603fff43",
+      "2412-15312_sent_4c3f874d": "2412-15312_item_366402de",
+      "2412-15312_sent_4a96b44b": "2412-15312_item_366402de",
+      "2412-15312_sent_8db959f7": "2412-15312_paragraph_603fff43",
+      "2412-15312_sent_2897ee94": "2412-15312_paragraph_603fff43",
+      "2412-15312_sent_90ea385c": "2412-15312_paragraph_603fff43",
+      "2412-15312_paragraph_683df2a3": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_af414c78": "2412-15312_paragraph_683df2a3",
+      "2412-15312_sent_6a8226f1": "2412-15312_paragraph_683df2a3",
+      "2412-15312_sent_728b0a6b": "2412-15312_paragraph_683df2a3",
+      "2412-15312_fig_c747b9ec": "2412-15312_paragraph_683df2a3",
+      "2412-15312_paragraph_4d619861": "2412-15312_subsubsection_c57e018c",
+      "2412-15312_sent_bab44814": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_6c915b1d": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_36b22421": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_450a0e15": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_bb6b93d3": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_1ca6d1f6": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_1e61733d": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_7f5c1c0a": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_9aaaf2f2": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_014b88dc": "2412-15312_paragraph_4d619861",
+      "2412-15312_sent_285e4bca": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_56228f89": "2412-15312_paragraph_4d619861",
+      "2412-15312_subsubsection_2d701050": "2412-15312_subsection_006db2cb",
+      "2412-15312_sent_bc6c5a47": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_9779e97b": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_7f399a3e": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_b329d02e": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_b5abcbee": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_fa769d1a": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_d4955e23": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_cdaf851e": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_2fdeb85a": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_daa88428": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_858e5920": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_d43e20ab": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_06fc09a5": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_d145266a": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_ccca49a7": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_6b4ed1a6": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_f18325ee": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_ca90743f": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_2834c571": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_6e1eb100": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_d3d9734e": "2412-15312_subsubsection_2d701050",
+      "2412-15312_paragraph_f506b931": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_b7fe7836": "2412-15312_paragraph_f506b931",
+      "2412-15312_sent_c055cc6a": "2412-15312_item_366402de",
+      "2412-15312_sent_295f2bde": "2412-15312_item_366402de",
+      "2412-15312_sent_6b0094e3": "2412-15312_paragraph_f506b931",
+      "2412-15312_sent_8ad2c9f6": "2412-15312_item_366402de",
+      "2412-15312_sent_e0850884": "2412-15312_item_366402de",
+      "2412-15312_sent_355406fa": "2412-15312_item_366402de",
+      "2412-15312_sent_db8054c2": "2412-15312_item_366402de",
+      "2412-15312_sent_c96ef212": "2412-15312_item_366402de",
+      "2412-15312_sent_af0ec1f2": "2412-15312_paragraph_f506b931",
+      "2412-15312_paragraph_b5663092": "2412-15312_subsubsection_2d701050",
+      "2412-15312_sent_b41a34df": "2412-15312_paragraph_b5663092",
+      "2412-15312_sent_6dd58fc8": "2412-15312_item_366402de",
+      "2412-15312_sent_07424d16": "2412-15312_item_366402de",
+      "2412-15312_sent_2293a2c9": "2412-15312_item_366402de",
+      "2412-15312_sent_2f148e4c": "2412-15312_item_366402de",
+      "2412-15312_sent_f9e7a7ff": "2412-15312_paragraph_b5663092",
+      "2412-15312_subsubsection_d67e199f": "2412-15312_subsection_006db2cb",
+      "2412-15312_sent_672070d3": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_d35cdd2e": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_47549795": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_paragraph_f74b7544": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_77a98b9f": "2412-15312_paragraph_f74b7544",
+      "2412-15312_sent_b9c8a952": "2412-15312_paragraph_f74b7544",
+      "2412-15312_sent_7696ef9a": "2412-15312_paragraph_f74b7544",
+      "2412-15312_sent_0778b768": "2412-15312_paragraph_f74b7544",
+      "2412-15312_fig_582cdf77": "2412-15312_paragraph_f74b7544",
+      "2412-15312_sent_c915312a": "2412-15312_paragraph_f74b7544",
+      "2412-15312_paragraph_01009130": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_e058db90": "2412-15312_paragraph_01009130",
+      "2412-15312_sent_32e11369": "2412-15312_paragraph_01009130",
+      "2412-15312_sent_0a5b5970": "2412-15312_paragraph_01009130",
+      "2412-15312_sent_44227d9a": "2412-15312_paragraph_01009130",
+      "2412-15312_sent_51e8b55b": "2412-15312_paragraph_01009130",
+      "2412-15312_paragraph_d2c89a4d": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_7637a7e0": "2412-15312_paragraph_d2c89a4d",
+      "2412-15312_sent_eebfccb0": "2412-15312_paragraph_d2c89a4d",
+      "2412-15312_eq_88319aeb": "2412-15312_paragraph_d2c89a4d",
+      "2412-15312_sent_e4adfaf8": "2412-15312_paragraph_d2c89a4d",
+      "2412-15312_sent_9380f7e9": "2412-15312_paragraph_d2c89a4d",
+      "2412-15312_sent_e2d34a56": "2412-15312_paragraph_d2c89a4d",
+      "2412-15312_paragraph_ba2fb009": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_050f2b32": "2412-15312_paragraph_ba2fb009",
+      "2412-15312_sent_77cb0167": "2412-15312_paragraph_ba2fb009",
+      "2412-15312_sent_667f398e": "2412-15312_paragraph_ba2fb009",
+      "2412-15312_paragraph_73e14439": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_44ce6453": "2412-15312_paragraph_73e14439",
+      "2412-15312_sent_54f4333c": "2412-15312_paragraph_73e14439",
+      "2412-15312_eq_de533db4": "2412-15312_paragraph_73e14439",
+      "2412-15312_sent_e4dc8e3b": "2412-15312_paragraph_73e14439",
+      "2412-15312_eq_0b7b162d": "2412-15312_paragraph_73e14439",
+      "2412-15312_sent_712ab48f": "2412-15312_paragraph_73e14439",
+      "2412-15312_sent_4d913e1f": "2412-15312_paragraph_73e14439",
+      "2412-15312_sent_593eefb4": "2412-15312_paragraph_73e14439",
+      "2412-15312_paragraph_29061219": "2412-15312_subsubsection_d67e199f",
+      "2412-15312_sent_d9fe0704": "2412-15312_paragraph_29061219",
+      "2412-15312_sent_9f0c25a9": "2412-15312_paragraph_29061219",
+      "2412-15312_section_fd69c5cf": "2412-15312_doc_root",
+      "2412-15312_sent_a3c8364e": "2412-15312_section_fd69c5cf",
+      "2412-15312_sent_6aad3cb2": "2412-15312_section_fd69c5cf",
+      "2412-15312_fig_e16d386a": "2412-15312_section_fd69c5cf",
+      "2412-15312_fig_52bf2a84": "2412-15312_section_fd69c5cf",
+      "2412-15312_subsection_4933646c": "2412-15312_section_fd69c5cf",
+      "2412-15312_sent_611cf00d": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_ace51f99": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_4c3e1743": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_7b3480b4": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_0f2f2501": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_726d7beb": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_e25c0d59": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_b76282a5": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_54f1a357": "2412-15312_subsection_4933646c",
+      "2412-15312_sent_4aaccff4": "2412-15312_subsection_4933646c",
+      "2412-15312_subsection_983e940d": "2412-15312_section_fd69c5cf",
+      "2412-15312_sent_b768cef8": "2412-15312_subsection_983e940d",
+      "2412-15312_sent_3da4f116": "2412-15312_subsection_983e940d",
+      "2412-15312_sent_aff21128": "2412-15312_subsection_983e940d",
+      "2412-15312_sent_e05ea2d3": "2412-15312_subsection_983e940d",
+      "2412-15312_sent_88ed0107": "2412-15312_subsection_983e940d",
+      "2412-15312_sent_0a8cee95": "2412-15312_subsection_983e940d",
+      "2412-15312_sent_d6b98641": "2412-15312_subsection_983e940d",
+      "2412-15312_sent_cefb9324": "2412-15312_subsection_983e940d",
+      "2412-15312_sent_c70da479": "2412-15312_subsection_983e940d",
+      "2412-15312_section_b651e8a9": "2412-15312_doc_root",
+      "2412-15312_sent_b5a1bf46": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_60b8a89f": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_3f178d65": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_716e3279": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_30595002": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_a10ea37c": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_b05c5e7d": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_e3ae77ba": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_1e99fd81": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_2d099da2": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_245bc9a2": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_161bfabd": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_32558d51": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_c59c0743": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_ff3c3d12": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_70a1b0fa": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_77f9f357": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_e6e28a14": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_a74d8b52": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_46313f28": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_3439d02f": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_735d10f1": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_e4640de0": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_0b2c67ce": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_ae259149": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_8abda46a": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_dafae1d5": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_6c22bb58": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_5f669466": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_da4b9bfd": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_3dc55e24": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_dfdef12a": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_1ec567e2": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_56614ec8": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_447533d7": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_7b52394d": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_c09cd3f0": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_b9763241": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_32c35583": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_4ec828e4": "2412-15312_section_b651e8a9",
+      "2412-15312_sent_52733224": "2412-15312_section_b651e8a9"
+    }
+  },
+  "merged_parents": {
+    "2412-15312_sent_27333ac0": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_22489c7e": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_abstract_ce28071e": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_384fa503": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_fd6310af": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_9fdda414": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_1999b1ef": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_9029f347": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_204c5582": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_e62edcdb": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_a9110f85": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_72df2066": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_279164cc": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_285e4bca": [
+      "2412-15312_doc_root",
+      "2412-15312_paragraph_4d619861",
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_section_0b79795d": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_5ac1ce18": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_025579c6": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_68664e14": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_076a56b8": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_a36a0d9f": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_1a2f7df8": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_0a54d135": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_a251dda3": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_60b3afb2": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_7ac44e29": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_e1bbca8c": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_6a3dd223": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_14faf645": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_eb80ea30": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_ac1836c3": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_476532e0": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_subsection_3fe3f322": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_07552d6b": [
+      "2412-15312_subsection_3fe3f322"
+    ],
+    "2412-15312_sent_bb897479": [
+      "2412-15312_subsection_3fe3f322"
+    ],
+    "2412-15312_sent_543bd9d9": [
+      "2412-15312_subsection_3fe3f322"
+    ],
+    "2412-15312_itemize_93fb53ae": [
+      "2412-15312_paragraph_575ea38f",
+      "2412-15312_paragraph_9a5031ab",
+      "2412-15312_paragraph_b5663092",
+      "2412-15312_paragraph_c970a8d9",
+      "2412-15312_paragraph_f506b931",
+      "2412-15312_subsection_3fe3f322"
+    ],
+    "2412-15312_item_366402de": [
+      "2412-15312_enumerate_54c53964",
+      "2412-15312_itemize_93fb53ae"
+    ],
+    "2412-15312_sent_7f4b933a": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_9718d08d": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_37d293ff": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_faa07ec6": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_17c7e4e0": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_section_a46060c1": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_ee46d26b": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_a0437d04": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_45cbf6e6": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_3db41745": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_2e902e6a": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_5a504b8a": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_29774c4c": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_64fc3799": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_subsection_cdba2331": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_e92be7c0": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_f92dbcfd": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_fig_8af9b22d": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_796c5657": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_88373cf9": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_fab8ebdf": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_81934bea": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_f1eb63f2": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_a05c452a": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_70e9d643": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_fa3f6136": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_subsection_006db2cb": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_202d6cb4": [
+      "2412-15312_subsection_006db2cb"
+    ],
+    "2412-15312_subsubsection_c57e018c": [
+      "2412-15312_subsection_006db2cb"
+    ],
+    "2412-15312_sent_7c1bac9b": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_984cf83b": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_cd2da328": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_paragraph_c970a8d9": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_f914f62f": [
+      "2412-15312_paragraph_c970a8d9"
+    ],
+    "2412-15312_sent_c738cbdd": [
+      "2412-15312_paragraph_c970a8d9"
+    ],
+    "2412-15312_sent_b3d598bb": [
+      "2412-15312_paragraph_c970a8d9"
+    ],
+    "2412-15312_sent_3ae8aa6c": [
+      "2412-15312_paragraph_c970a8d9"
+    ],
+    "2412-15312_sent_5ace19a0": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_0734d238": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_65feb3e8": [
+      "2412-15312_paragraph_c970a8d9"
+    ],
+    "2412-15312_paragraph_8a5e6279": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_705979ca": [
+      "2412-15312_paragraph_8a5e6279"
+    ],
+    "2412-15312_sent_941c8996": [
+      "2412-15312_paragraph_8a5e6279"
+    ],
+    "2412-15312_sent_06fbfa04": [
+      "2412-15312_paragraph_8a5e6279"
+    ],
+    "2412-15312_sent_90421f0b": [
+      "2412-15312_paragraph_8a5e6279"
+    ],
+    "2412-15312_fig_c173b87c": [
+      "2412-15312_paragraph_8a5e6279"
+    ],
+    "2412-15312_subsubsection_2d701050": [
+      "2412-15312_subsection_006db2cb"
+    ],
+    "2412-15312_sent_97c48581": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_df01095c": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_501fae37": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_841bc49d": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_24512811": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_dafe2ca5": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_b5d9a05a": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_4c516200": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_paragraph_9a5031ab": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_eb3a06d2": [
+      "2412-15312_paragraph_9a5031ab"
+    ],
+    "2412-15312_sent_1bf098d3": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_59833410": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_f3fb7808": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_19df540c": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_852728d7": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_2077bcdd": [
+      "2412-15312_paragraph_9a5031ab"
+    ],
+    "2412-15312_paragraph_b5663092": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_eb6a0699": [
+      "2412-15312_paragraph_b5663092"
+    ],
+    "2412-15312_sent_59c47924": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_b50f7cee": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_d43f4f85": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_0bb42996": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_ea22f676": [
+      "2412-15312_paragraph_b5663092"
+    ],
+    "2412-15312_sent_c6d1ce9c": [
+      "2412-15312_paragraph_b5663092"
+    ],
+    "2412-15312_subsubsection_d67e199f": [
+      "2412-15312_subsection_006db2cb"
+    ],
+    "2412-15312_sent_8124750e": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_f2bb653b": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_paragraph_993d9dd3": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_b6dd4163": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_sent_97bd4855": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_sent_37ab4eeb": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_sent_c3c417b1": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_fig_4431b335": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_sent_cf3c41fe": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_sent_5a2e0c06": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_sent_5eec8547": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_sent_60b3cbfc": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_sent_b3a0d9a0": [
+      "2412-15312_paragraph_993d9dd3"
+    ],
+    "2412-15312_paragraph_d863e6be": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_75a83c3e": [
+      "2412-15312_paragraph_d863e6be"
+    ],
+    "2412-15312_sent_91be2c19": [
+      "2412-15312_paragraph_d863e6be"
+    ],
+    "2412-15312_sent_caee2a19": [
+      "2412-15312_paragraph_d863e6be"
+    ],
+    "2412-15312_sent_bfe20efe": [
+      "2412-15312_paragraph_d863e6be"
+    ],
+    "2412-15312_sent_42d2b9e1": [
+      "2412-15312_paragraph_d863e6be"
+    ],
+    "2412-15312_paragraph_68043fc2": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_44d09833": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_sent_990e43b5": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_eq_65b657d9": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_sent_71b2fa2f": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_sent_4aba5994": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_sent_198941a6": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_sent_bf089b0a": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_sent_179279df": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_sent_6aad3cb2": [
+      "2412-15312_paragraph_68043fc2",
+      "2412-15312_section_fd69c5cf"
+    ],
+    "2412-15312_fig_e16d386a": [
+      "2412-15312_paragraph_68043fc2",
+      "2412-15312_section_fd69c5cf"
+    ],
+    "2412-15312_fig_c263e277": [
+      "2412-15312_paragraph_68043fc2"
+    ],
+    "2412-15312_subsection_13b84a8a": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_6889c7c7": [
+      "2412-15312_subsection_13b84a8a"
+    ],
+    "2412-15312_sent_a41d190f": [
+      "2412-15312_subsection_13b84a8a"
+    ],
+    "2412-15312_sent_dd213279": [
+      "2412-15312_subsection_13b84a8a"
+    ],
+    "2412-15312_sent_c5377cca": [
+      "2412-15312_subsection_13b84a8a"
+    ],
+    "2412-15312_sent_a92b68a7": [
+      "2412-15312_subsection_13b84a8a"
+    ],
+    "2412-15312_fig_5310d3e1": [
+      "2412-15312_subsection_13b84a8a"
+    ],
+    "2412-15312_subsection_d82d98f4": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_c2c51b0d": [
+      "2412-15312_subsection_d82d98f4"
+    ],
+    "2412-15312_sent_2a128eb6": [
+      "2412-15312_subsection_d82d98f4"
+    ],
+    "2412-15312_sent_718a2661": [
+      "2412-15312_subsection_d82d98f4"
+    ],
+    "2412-15312_sent_f66191d2": [
+      "2412-15312_subsection_d82d98f4"
+    ],
+    "2412-15312_sent_975d5c1e": [
+      "2412-15312_subsection_d82d98f4"
+    ],
+    "2412-15312_sent_c9f757ee": [
+      "2412-15312_subsection_d82d98f4"
+    ],
+    "2412-15312_sent_ecb2eaa4": [
+      "2412-15312_subsection_d82d98f4"
+    ],
+    "2412-15312_fig_d6b64300": [
+      "2412-15312_subsection_d82d98f4"
+    ],
+    "2412-15312_subsection_5ff0027e": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_dc0a5c0c": [
+      "2412-15312_subsection_5ff0027e"
+    ],
+    "2412-15312_sent_23974e54": [
+      "2412-15312_subsection_5ff0027e"
+    ],
+    "2412-15312_sent_214dec0b": [
+      "2412-15312_subsection_5ff0027e"
+    ],
+    "2412-15312_sent_6f4da650": [
+      "2412-15312_subsection_5ff0027e"
+    ],
+    "2412-15312_sent_f6468916": [
+      "2412-15312_subsection_5ff0027e"
+    ],
+    "2412-15312_subsection_4933646c": [
+      "2412-15312_section_a46060c1",
+      "2412-15312_section_fd69c5cf"
+    ],
+    "2412-15312_sent_77661ec2": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_11818c65": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_1d95ff8a": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_4212aaae": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_da04c629": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_fig_4be75b82": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_fbc31690": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_493768be": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_b752ed12": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_f8bdab7d": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_7d064a56": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_606feefc": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_ce37b79d": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_section_b651e8a9": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_b280b874": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_182ec535": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_fe6aa9e1": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_0936a664": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_99aeb2df": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_d77d954b": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_07fe6073": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_d6bb3d82": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_8cf0d3e1": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_72683745": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_7ab32efe": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_c83323be": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_812d0bed": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_58f7f199": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_932b35e6": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_715fb15d": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_657d9a8c": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_3e0ad673": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_67478cfc": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_5e7ea511": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_27fcfae2": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_f09b59fe": [
+      "2412-15312_abstract_ce28071e"
+    ],
+    "2412-15312_sent_5ecdf925": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_0fe392e3": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_63b9fe0f": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_2c5429c2": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_b812830f": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_ba7ad0f2": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_2210a7f5": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_ec8b40c0": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_a29c2268": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_ac955a7c": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_5c99e8e1": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_fb50ef82": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_4ea8e7fc": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_dac06642": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_b56de9e2": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_5df125b7": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_32393319": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_1aef6f7d": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_57407305": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_145e8bf8": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_fb926cfa": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_c5f74632": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_c6245806": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_b468254e": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_21af9804": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_2fd777d4": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_2863f14a": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_224ed6c8": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_d033c14c": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_aa096c4d": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_8be928a4": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_8095287d": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_d0aab28d": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_e9ba5fd7": [
+      "2412-15312_section_0b79795d"
+    ],
+    "2412-15312_sent_eb6a02b7": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_a38364bc": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_sent_73c7409b": [
+      "2412-15312_section_a46060c1"
+    ],
+    "2412-15312_fig_e5927a97": [
+      "2412-15312_subsection_cdba2331"
+    ],
+    "2412-15312_sent_e966abf3": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_3e7a294b": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_a4c1ae19": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_e8db4f67": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_paragraph_51662629": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_54b24c87": [
+      "2412-15312_paragraph_51662629"
+    ],
+    "2412-15312_sent_6e548e81": [
+      "2412-15312_paragraph_51662629"
+    ],
+    "2412-15312_paragraph_575ea38f": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_c844d6d3": [
+      "2412-15312_paragraph_575ea38f"
+    ],
+    "2412-15312_sent_0abb7dd2": [
+      "2412-15312_paragraph_575ea38f"
+    ],
+    "2412-15312_sent_b20f9639": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_bcacaeb6": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_8f6b8a53": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_68725a7f": [
+      "2412-15312_paragraph_575ea38f"
+    ],
+    "2412-15312_sent_f02cc66c": [
+      "2412-15312_paragraph_575ea38f"
+    ],
+    "2412-15312_paragraph_603fff43": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_cf8c7e3d": [
+      "2412-15312_paragraph_603fff43"
+    ],
+    "2412-15312_enumerate_54c53964": [
+      "2412-15312_paragraph_603fff43"
+    ],
+    "2412-15312_sent_4c3f874d": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_4a96b44b": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_8db959f7": [
+      "2412-15312_paragraph_603fff43"
+    ],
+    "2412-15312_sent_2897ee94": [
+      "2412-15312_paragraph_603fff43"
+    ],
+    "2412-15312_sent_90ea385c": [
+      "2412-15312_paragraph_603fff43"
+    ],
+    "2412-15312_paragraph_683df2a3": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_af414c78": [
+      "2412-15312_paragraph_683df2a3"
+    ],
+    "2412-15312_sent_6a8226f1": [
+      "2412-15312_paragraph_683df2a3"
+    ],
+    "2412-15312_sent_728b0a6b": [
+      "2412-15312_paragraph_683df2a3"
+    ],
+    "2412-15312_fig_c747b9ec": [
+      "2412-15312_paragraph_683df2a3"
+    ],
+    "2412-15312_paragraph_4d619861": [
+      "2412-15312_subsubsection_c57e018c"
+    ],
+    "2412-15312_sent_bab44814": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_6c915b1d": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_36b22421": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_450a0e15": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_bb6b93d3": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_1ca6d1f6": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_1e61733d": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_7f5c1c0a": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_9aaaf2f2": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_014b88dc": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_56228f89": [
+      "2412-15312_paragraph_4d619861"
+    ],
+    "2412-15312_sent_bc6c5a47": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_9779e97b": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_7f399a3e": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_b329d02e": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_b5abcbee": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_fa769d1a": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_d4955e23": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_cdaf851e": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_2fdeb85a": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_daa88428": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_858e5920": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_d43e20ab": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_06fc09a5": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_d145266a": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_ccca49a7": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_6b4ed1a6": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_f18325ee": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_ca90743f": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_2834c571": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_6e1eb100": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_d3d9734e": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_paragraph_f506b931": [
+      "2412-15312_subsubsection_2d701050"
+    ],
+    "2412-15312_sent_b7fe7836": [
+      "2412-15312_paragraph_f506b931"
+    ],
+    "2412-15312_sent_c055cc6a": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_295f2bde": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_6b0094e3": [
+      "2412-15312_paragraph_f506b931"
+    ],
+    "2412-15312_sent_8ad2c9f6": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_e0850884": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_355406fa": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_db8054c2": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_c96ef212": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_af0ec1f2": [
+      "2412-15312_paragraph_f506b931"
+    ],
+    "2412-15312_sent_b41a34df": [
+      "2412-15312_paragraph_b5663092"
+    ],
+    "2412-15312_sent_6dd58fc8": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_07424d16": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_2293a2c9": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_2f148e4c": [
+      "2412-15312_item_366402de"
+    ],
+    "2412-15312_sent_f9e7a7ff": [
+      "2412-15312_paragraph_b5663092"
+    ],
+    "2412-15312_sent_672070d3": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_d35cdd2e": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_47549795": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_paragraph_f74b7544": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_77a98b9f": [
+      "2412-15312_paragraph_f74b7544"
+    ],
+    "2412-15312_sent_b9c8a952": [
+      "2412-15312_paragraph_f74b7544"
+    ],
+    "2412-15312_sent_7696ef9a": [
+      "2412-15312_paragraph_f74b7544"
+    ],
+    "2412-15312_sent_0778b768": [
+      "2412-15312_paragraph_f74b7544"
+    ],
+    "2412-15312_fig_582cdf77": [
+      "2412-15312_paragraph_f74b7544"
+    ],
+    "2412-15312_sent_c915312a": [
+      "2412-15312_paragraph_f74b7544"
+    ],
+    "2412-15312_paragraph_01009130": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_e058db90": [
+      "2412-15312_paragraph_01009130"
+    ],
+    "2412-15312_sent_32e11369": [
+      "2412-15312_paragraph_01009130"
+    ],
+    "2412-15312_sent_0a5b5970": [
+      "2412-15312_paragraph_01009130"
+    ],
+    "2412-15312_sent_44227d9a": [
+      "2412-15312_paragraph_01009130"
+    ],
+    "2412-15312_sent_51e8b55b": [
+      "2412-15312_paragraph_01009130"
+    ],
+    "2412-15312_paragraph_d2c89a4d": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_7637a7e0": [
+      "2412-15312_paragraph_d2c89a4d"
+    ],
+    "2412-15312_sent_eebfccb0": [
+      "2412-15312_paragraph_d2c89a4d"
+    ],
+    "2412-15312_eq_88319aeb": [
+      "2412-15312_paragraph_d2c89a4d"
+    ],
+    "2412-15312_sent_e4adfaf8": [
+      "2412-15312_paragraph_d2c89a4d"
+    ],
+    "2412-15312_sent_9380f7e9": [
+      "2412-15312_paragraph_d2c89a4d"
+    ],
+    "2412-15312_sent_e2d34a56": [
+      "2412-15312_paragraph_d2c89a4d"
+    ],
+    "2412-15312_paragraph_ba2fb009": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_050f2b32": [
+      "2412-15312_paragraph_ba2fb009"
+    ],
+    "2412-15312_sent_77cb0167": [
+      "2412-15312_paragraph_ba2fb009"
+    ],
+    "2412-15312_sent_667f398e": [
+      "2412-15312_paragraph_ba2fb009"
+    ],
+    "2412-15312_paragraph_73e14439": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_44ce6453": [
+      "2412-15312_paragraph_73e14439"
+    ],
+    "2412-15312_sent_54f4333c": [
+      "2412-15312_paragraph_73e14439"
+    ],
+    "2412-15312_eq_de533db4": [
+      "2412-15312_paragraph_73e14439"
+    ],
+    "2412-15312_sent_e4dc8e3b": [
+      "2412-15312_paragraph_73e14439"
+    ],
+    "2412-15312_eq_0b7b162d": [
+      "2412-15312_paragraph_73e14439"
+    ],
+    "2412-15312_sent_712ab48f": [
+      "2412-15312_paragraph_73e14439"
+    ],
+    "2412-15312_sent_4d913e1f": [
+      "2412-15312_paragraph_73e14439"
+    ],
+    "2412-15312_sent_593eefb4": [
+      "2412-15312_paragraph_73e14439"
+    ],
+    "2412-15312_paragraph_29061219": [
+      "2412-15312_subsubsection_d67e199f"
+    ],
+    "2412-15312_sent_d9fe0704": [
+      "2412-15312_paragraph_29061219"
+    ],
+    "2412-15312_sent_9f0c25a9": [
+      "2412-15312_paragraph_29061219"
+    ],
+    "2412-15312_section_fd69c5cf": [
+      "2412-15312_doc_root"
+    ],
+    "2412-15312_sent_a3c8364e": [
+      "2412-15312_section_fd69c5cf"
+    ],
+    "2412-15312_fig_52bf2a84": [
+      "2412-15312_section_fd69c5cf"
+    ],
+    "2412-15312_sent_611cf00d": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_ace51f99": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_4c3e1743": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_7b3480b4": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_0f2f2501": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_726d7beb": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_e25c0d59": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_b76282a5": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_54f1a357": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_sent_4aaccff4": [
+      "2412-15312_subsection_4933646c"
+    ],
+    "2412-15312_subsection_983e940d": [
+      "2412-15312_section_fd69c5cf"
+    ],
+    "2412-15312_sent_b768cef8": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_3da4f116": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_aff21128": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_e05ea2d3": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_88ed0107": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_0a8cee95": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_d6b98641": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_cefb9324": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_c70da479": [
+      "2412-15312_subsection_983e940d"
+    ],
+    "2412-15312_sent_b5a1bf46": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_60b8a89f": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_3f178d65": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_716e3279": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_30595002": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_a10ea37c": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_b05c5e7d": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_e3ae77ba": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_1e99fd81": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_2d099da2": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_245bc9a2": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_161bfabd": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_32558d51": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_c59c0743": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_ff3c3d12": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_70a1b0fa": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_77f9f357": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_e6e28a14": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_a74d8b52": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_46313f28": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_3439d02f": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_735d10f1": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_e4640de0": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_0b2c67ce": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_ae259149": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_8abda46a": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_dafae1d5": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_6c22bb58": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_5f669466": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_da4b9bfd": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_3dc55e24": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_dfdef12a": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_1ec567e2": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_56614ec8": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_447533d7": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_7b52394d": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_c09cd3f0": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_b9763241": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_32c35583": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_4ec828e4": [
+      "2412-15312_section_b651e8a9"
+    ],
+    "2412-15312_sent_52733224": [
+      "2412-15312_section_b651e8a9"
+    ]
+  }
+}

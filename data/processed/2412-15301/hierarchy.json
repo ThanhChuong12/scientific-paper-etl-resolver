@@ -1,0 +1,1478 @@
+{
+  "elements": {
+    "2412-15301_doc_root": "DOCUMENT_ROOT",
+    "2412-15301_sent_676977e1": "\\maketitle",
+    "2412-15301_abstract_ce28071e": "abstract",
+    "2412-15301_sent_a3096fd5": "Output uncertainty indicates whether the probabilistic properties reflect objective characteristics of the model output.",
+    "2412-15301_sent_44122902": "Unlike most loss functions and metrics in machine learning, uncertainty pertains to individual samples, but validating it on individual samples is unfeasible.",
+    "2412-15301_sent_5528b0c8": "When validated collectively, it cannot fully represent individual sample properties, posing a challenge in calibrating model confidence in a limited data set.",
+    "2412-15301_sent_362eb0fb": "Hence, it is crucial to consider confidence calibration characteristics.",
+    "2412-15301_sent_8d063d21": "To counter the adverse effects of the gradual amplification of the classifier output amplitude in supervised learning, we introduce a post-processing parametric calibration method, $\\rho$-Norm Scaling, which expands the calibrator expression and mitigates overconfidence due to excessive amplitude while preserving accuracy.",
+    "2412-15301_sent_ee37cf2a": "Moreover, bin-level objective-based calibrator optimization often results in the loss of significant instance-level information.",
+    "2412-15301_sent_f32dc1ba": "Therefore, we include probability distribution regularization, which incorporates specific priori information that the instance-level uncertainty distribution after calibration should resemble the distribution before calibration.",
+    "2412-15301_sent_4f2eb8ab": "Experimental results demonstrate the substantial enhancement in the post-processing calibrator for uncertainty calibration with our proposed method.",
+    "2412-15301_section_0b79795d": "Introduction",
+    "2412-15301_sent_ecd09b17": "Model confidence calibration involves refining uncertainty estimates of the model outputs, enabling more accurate probability predictions that align closely with the objective characteristics of the output uncertainty.",
+    "2412-15301_sent_1688dc79": "With the progressive expansion of model capacity, the modern models often demonstrate inadequately probability distributions.",
+    "2412-15301_sent_19ff4ef6": "Specifically, these probability outputs display unwarranted over-confidence in comparison to the objective accuracy \\cite{moderncalibration}.",
+    "2412-15301_sent_c60bd2ba": "Furthermore, researchers have identified that achieving high accuracy in classifiers and calibrating the model confidence in baseline are distinct objectives \\cite{distinctobjective}.",
+    "2412-15301_sent_c0d9b4b1": "This scenario emphasizes the pressing necessity to rectify the calibration of model output uncertainties in deep learning.",
+    "2412-15301_fig_b71837c1": "\\begin{figure*}",
+    "2412-15301_sent_1e4102c9": "\\includegraphics[width=400pt]{paper_map2.jpg} \\caption{Overview of our proposed post-hoc calibrator structure and optimization objective after pipeline of classifier optimization: (1) Addressing the issue of output magnitude amplification during supervised learning, we introduce a $\\rho$-Norm Scaling calibration within the post-calibration framework.",
+    "2412-15301_sent_46a91fc4": "(2) Uncertainty represents the entire dataset statistically, making its optimization prone to losing sample-level information.",
+    "2412-15301_sent_68a21915": "To address this, we incorporate probabilistic similarity between pre-calibration and post-calibration as a instance-level loss, combined with bin-level loss.} \\end{figure*} As one of the effective calibration methods, post-calibration methods have recently gained popularity, which operate independently of the model internal optimization, reconstructing and optimizing the output-probability mapping \\cite{HB}.",
+    "2412-15301_sent_0d6fc958": "In contrast to other calibration techniques, post-processing calibration methods do not necessitate altering the original baseline, thereby preserving the model generalization ability for classification \\cite{intraorder}.",
+    "2412-15301_sent_2edb2648": "Among post-processing calibration methods, parametric techniques like Platt Scaling \\cite{platt1999probabilistic}, Temperature Scaling \\cite{TSexpressive}, and Beta Calibration \\cite{kull2017beta} necessitate parameter optimization using a validation set.",
+    "2412-15301_sent_8debdd13": "The commonly used metric for assessing model confidence, known as Expected Calibration Error (ECE), computing the expected difference between confidence and accuracy within each bin \\cite{ECE}.",
+    "2412-15301_sent_fb4e0032": "Confidence estimation captures individual sample characteristics, yet it cannot be validated on a per-sample basis.",
+    "2412-15301_sent_f6afa72d": "Meanwhile, validating bin-level uncertainty fails to capture the nuances of individual samples.",
+    "2412-15301_sent_ccda9197": "This challenge distinguishes the assessment of model uncertainty and the design and optimization of parametric output-probability mapping.",
+    "2412-15301_sent_41255fc0": "Specifically, the bin-level loss function, such as ECE, is more prone to converge to zero during optimization compared to an instance-level loss function like cross-entropy \\cite{AVUO}.",
+    "2412-15301_sent_f6bb0935": "This characteristic makes calibrator optimization susceptible to overfitting, impeding generalization.",
+    "2412-15301_sent_0980e872": "To ensure calibrators learn output-probability mappings effectively, it is essential to incorporate specific priori knowledge to limit the optimization hypothesis space and to design instructive mapping and multi-level optimization objectives.",
+    "2412-15301_sent_cdb6ee95": "Inspired by the aforementioned research and questions, we meticulously considered the internal order-preserving property \\cite{intraorder} to conserve the inherent uncertainty distribution.",
+    "2412-15301_sent_d0540eab": "Additionally, we assessed the impact of amplitude on the classifier output, supported by prior evidence suggesting that excessive output amplitude might lead to unwarranted calibration error.",
+    "2412-15301_sent_4a037fe6": "Building upon this insight, we proposed parametric $\\rho$-Norm Scaling calibration, addressing the expressivity limitation in TS \\cite{TSexpressive} and mitigating the negative effects by the output amplitudes.",
+    "2412-15301_sent_00d1453f": "Besides, concerning the parameter optimization of the output-probability mapping, we proposed a multi-level loss by introducing a probability distribution similarity regularization into Square Calibration Error.",
+    "2412-15301_sent_bbdd9370": "This regularization enhances the correlation between the original probability distribution and the calibrated distribution, aiming to prevent significant deviations from the original probability distribution and retain key properties of the original distribution.",
+    "2412-15301_sent_a6ba8ec0": "Our main contributions in this work can be summarized as follows: (1) We propose a new family of parametric $\\rho$-Norm Scaling calibration model for post-hoc calibration and the corresponding optimization strategy.",
+    "2412-15301_sent_f6daedaa": "(2) We provide a new multi-level objective for post-hoc parameter optimization by adding an instance-level regularization between original probability distribution and calibrated probability distribution into bin-level Square Calibration Error.",
+    "2412-15301_sent_234e0565": "(3) We perform extensive evaluations on multiple datasets and models, and our proposed method achieves state-of-the-art calibration performance.",
+    "2412-15301_section_92e1f394": "Related work",
+    "2412-15301_sent_5e5f082e": "Strategies aimed at calibrating model uncertainty can be classified into the following approaches: Bayesian neural networks, training-based calibration, and post-processing calibration.",
+    "2412-15301_sent_4ea17dc6": "The ability of neural network to quantify prediction uncertainty is limited, prompting the consideration of replacing a section of the model structure with a Bayesian inference process \\cite{milios2018dirichlet,wen2019batchensemble}.",
+    "2412-15301_sent_adc830ce": "Bayesian neural networks offer several advantages, including ease of implementation, parallelization feasibility, minimized hyperparameter adjustments, and the ability to offer precise estimates of predictive uncertainty \\cite{gal2016dropout,calandra2016manifold,ECE,distinctobjective,bayesian3}.",
+    "2412-15301_sent_c9a74c35": "Besides, training-based calibration methods have been explored to mitigate miscalibration risks in supervised learning.",
+    "2412-15301_sent_dd741049": "These approaches may involve techniques such as pre-training \\cite{hendrycks2019using}, data augmentation \\cite{thulasidasan2019mixup}, label smoothing \\cite{menon2020distillation}, weight decay \\cite{moderncalibration}, and more.",
+    "2412-15301_sent_26ffc31b": "Furthermore, Tao investigated the limitations of early stopping and devised solutions to overfitting within specific network blocks concerning calibration metrics \\cite{tao2023calibrating}.",
+    "2412-15301_sent_0c379a44": "The connection between model structure sparsity and model calibration was examined in \\cite{lei2022calibrating}.",
+    "2412-15301_sent_a9a3d987": "Additionally, researchers have proposed some innovative loss functions, such as MMCE \\cite{kumar2018trainable}, Correctness Ranking Loss \\cite{moon2020confidence}, CALS \\cite{liu2023class}, Focal loss \\cite{lin2017focal,Dualfocal,Calibratingfocal}, and FLSD \\cite{ghosh2022adafocal}, which simultaneously consider classification accuracy and confidence calibration.",
+    "2412-15301_sent_ef037d71": "However, an excessive focus on model calibration during training might detrimentally affect overall model accuracy improvement.",
+    "2412-15301_sent_d024e33e": "Furthermore, the calibration during training may compromise the efficacy of post-processing calibration methods \\cite{compromiseacc}.",
+    "2412-15301_sent_e6d40234": "Post-processing calibration refers to reconstructing the output-probability mapping.",
+    "2412-15301_sent_831a94d5": "One of its key advantages lies in decoupling classifier accuracy from calibration, thereby maintaining the original generalization without necessitating alterations to its training strategy.",
+    "2412-15301_sent_a3f37102": "In the era preceding the ascendancy of deep learning, non-parametric post-processing calibration methods such as Histogram Binning (HB) \\cite{HB}, Isotonic Regression (IR) \\cite{IR} and Bayesian processes \\cite{gal2016dropout} were prevalent.",
+    "2412-15301_sent_cc7ce2bb": "Unlike non-parametric methods, which calibrate a model confidence distribution using nonlinear logic, parametric calibration methods focus on establishing a parametric structure by learning from finite samples.",
+    "2412-15301_sent_42deb364": "Some commonly utilized parametric calibration structures include Platt Scaling \\cite{platt1999probabilistic}, Temperature Scaling \\cite{MultidomainTS,TSexpressive}, Beta Calibration \\cite{kull2017beta}.",
+    "2412-15301_sent_21c3150b": "Typically, parameters are learned through grid search or gradient-based optimization of Negative Log-Likelihood (NLL) \\cite{hastie2009elements}.",
+    "2412-15301_sent_756a9e12": "However, direct optimization of NLL often may compel the model output towards one-hot distribution, deviating from the intended calibration logic.",
+    "2412-15301_sent_e87d3eed": "To address this problem, Krishnan introduced the AvUC loss function \\cite{AVUO}.",
+    "2412-15301_sent_af187de2": "Subsequently, Karandikar proposed soft calibration objective for optimizing the calibrator parameters \\cite{Softcalibration}.",
+    "2412-15301_sent_12546c3e": "Additionally, in terms of mapping structure, Kull extended Beta Calibration and introduced Dirichlet calibration \\cite{kull2019beyond}.",
+    "2412-15301_sent_5e6e5bc4": "Considering the flexibility of calibration mapping, Wang introduced Shape-Restricted Polynomial Regression as a parametric calibration method \\cite{wang2019calibrating}.",
+    "2412-15301_sent_a5e8c3fa": "Furthermore, some studies propose a class of accuracy-preserving mappings \\cite{TSexpressive,intraorder}.",
+    "2412-15301_section_2ba0c1d2": "Methodology",
+    "2412-15301_subsection_d3ed9747": "Problem Formulation",
+    "2412-15301_sent_5707eaae": "Considering a dataset $\\left\\{ {({x^i},{y^i})} \\right\\}_{i = 1}^N \\subset {{\\bf{R}}^n} \\times {{\\bf{R}}^m}$ and classifier $f$ maps $x$ to the outputs ${z_j},j = 1, \\ldots ,m$ on $m$ classes and $k = \\arg {\\max _j}{z_j}$.",
+    "2412-15301_sent_11454eec": "The ground-truth $y$ and predicted labels $\\hat y$ are formulated in one-hot format where ${y_c} = 1$ and ${\\hat y_k} = 1$, where $c$ represents the truth class.",
+    "2412-15301_sent_11c1670a": "The confidence score of the predicted label in baseline is $\\hat p = \\max {s_j}(z),j = 1, \\ldots ,m$, where $s\\left( \\cdot \\right)$ represents Softmax mapping ${R^m} \\to {R^m}$.",
+    "2412-15301_sent_c01cb3be": "However, Softmax mapping probabilities are not accurately reflected in the properties of model output \\cite{moderncalibration}.",
+    "2412-15301_sent_1e855393": "To address this, the calibrator $g\\left( \\cdot \\right)$ is introduced as a new output-probability mapping $g:z \\to p$ for probability calibration.",
+    "2412-15301_sent_a2584cc4": "\\\\ Confidence Calibration: Perfect calibration of neural network can be realized when the confidence score reflects the real probability that the sample is classified correctly.",
+    "2412-15301_sent_e1225fa9": "Formally, the perfectly calibrated network satisfied ${\\rm P}\\left( {\\hat y = y|\\hat p = p} \\right) = p$ for all $p \\in \\left[ {0,1} \\right]$.",
+    "2412-15301_sent_61bab762": "However, in practical applications, the sample is divided into $M$ bins $\\left\\{ {{D_b}} \\right\\}_{b = 1}^M$.",
+    "2412-15301_sent_4d5e0e66": "The limited availability of data restricts our ability to accurately estimate the calibration error.",
+    "2412-15301_sent_61bcbcff": "According to their confidence scores and the calibration error, an approximation is calculated for each bins $\\left\\{ {{D_b}} \\right\\}_{b = 1}^M$.",
+    "2412-15301_sent_922b6141": "${D_b}$ contains all sample with $\\hat p \\in \\left[ {\\frac{b}{M},\\frac{{b + 1}}{M}} \\right)$.",
+    "2412-15301_sent_798b25d8": "Average confidence is computed as $conf\\left( {{D_b}} \\right) = \\frac{1}{{\\left| {{D_b}} \\right|}}\\sum\\nolimits_{i \\in {D_b}} {{{\\hat p}^i}} $ and the bin accuracy is computed as $acc\\left( {{D_b}} \\right) = \\frac{1}{{\\left| {{D_b}} \\right|}}\\sum\\nolimits_{i \\in D_b} {\\rm I} \\left( {y_c^i = \\hat y_c^i} \\right)$.",
+    "2412-15301_sent_4af6eae9": "ECE \\cite{ECE} is calculated as follows.",
+    "2412-15301_eq_c01fe0df": "\\begin{equation} \n ECE = \\sum\\limits_{b = 1}^M {\\frac{{\\left| {{D_b}} \\right|}}{N}} \\left| {acc\\left( {{D_b}} \\right) - conf\\left( {{D_b}} \\right)} \\right|\n\\end{equation}",
+    "2412-15301_sent_e7cd9800": "To develop an effective output-probability mapping, we design the calibrator based on the relationship between output amplitude and confidence level.",
+    "2412-15301_sent_600d9d9f": "Additionally, we formulate the multi-level objective for calibrators parameter based on the characteristics of calibration error.",
+    "2412-15301_sent_830bb123": "\\subfigure[Amplitude without weight decay]{\\includegraphics[width=125pt]{Amplitude_decay0.png}} \\subfigure[Amplitude with weight decay]{\\includegraphics[width=125pt]{Amplitude_decay.png}} \\subfigure[Confidence histogram]{\\includegraphics[width=100pt]{Res34_CIFAR100_original_1.jpg}} \\subfigure[Amplitude histogram]{\\includegraphics[width=125pt]{Amplitude.jpg}} \\caption{Amplitude changes in classifier optimization.",
+    "2412-15301_sent_3d9dca3b": "In these figures, the overall output magnitude of all samples is defined as $\\frac{1}{{Nm}}\\sum\\nolimits_{i = 1}^N {{{\\left\\| {{z^i}} \\right\\|}_2}} $.",
+    "2412-15301_sent_80cd2a7a": "During the supervised learning of the classifier, the output magnitude follows a specific pattern.",
+    "2412-15301_sent_d6ff1eae": "(a) illustrates that in the absence of weight decay, the output amplitude steadily increases throughout the optimization process.",
+    "2412-15301_sent_ac7993f4": "Although this trend is alleviated in the presence of weight decay, as depicted in (b), the final magnitudes exhibit a positive correlation with the overall confidence distribution, shown in (c) and (d).",
+    "2412-15301_sent_48b24a46": "} \\end{figure*} Output Magnitude: Our postulation suggests that overconfidence of modern deep model arises from the utilization of Softmax cross entropy optimization, particularly in high-capacity models, leading to an amplification of the output amplitude, as shown in Fig. \\ref{Norm}, where the amplitude of a single sample's output is defined as ${{\\left\\| {{z^i}} \\right\\|}_2}$.",
+    "2412-15301_sent_19a36c95": "The unsaturated regions of the original Softmax are present exclusively when the differences between the category outputs are relatively small.",
+    "2412-15301_sent_86264776": "Consequently, a significant portion of samples tends to have probabilities that fall within the saturation region of Softmax, resulting in probability outputs close to 1.",
+    "2412-15301_sent_eb9926bc": "The similar conclusion can be found in \\cite{DecouplingMaxLogit,mitigatinglogit}, where it is suggested that the magnitude of neural network output can be a culprit.",
+    "2412-15301_sent_e680d161": "\\\\ Calibration Characteristic: The optimization of the calibration error within the post-calibration structure appears to be challenging due to hard binning operation, as discussed in literature \\cite{Softcalibration}.",
+    "2412-15301_sent_3268c63c": "We believe that another practical obstacle arises from the nature of the uncertainty estimation, which serves as collective binning properties for multiple samples $\\sum\\nolimits_{i \\in {D_b}} {{{\\hat p}^i}} = \\sum\\nolimits_{i \\in D_b} {\\rm I} \\left( {y_c^i = \\hat y_c^i} \\right)$, rather than providing individual metric for each sample \\cite{instanceloss,ecenotgood}.",
+    "2412-15301_sent_0d5a9b3b": "Calibration error as loss metric disregards numerous sample-level output-probability mapping relationships.",
+    "2412-15301_sent_55dd0279": "Consequently, the calibrated distribution significantly diverges from the original distribution, as shown in Fig. \\ref{Condidence distribution}.",
+    "2412-15301_subsection_ba8ee4e1": "Parametric $\\rho$-Norm Scaling",
+    "2412-15301_sent_ce813367": "To regulate the influence of output amplitude on the scaling calibration and propose accurate calibrator, we enhance the expressive power by incorporating a parameterized $\\rho$-norm normalization term into the output-probability mapping.",
+    "2412-15301_sent_c1b3becb": "The adopted calibration structure is represented below:",
+    "2412-15301_eq_68b8e3e0": "\\begin{equation}\n {g_c}\\left( z \\right) = \\frac{{{e^{{r_c}}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{r_j}}}} }}\n\\end{equation}",
+    "2412-15301_sent_04c77ffa": "where ${r_j}\\left( z \\right) = \\frac{{{z_j}}}{{\\gamma {{\\left\\| z \\right\\|}_\\rho } + \\beta }}$, $\\gamma > 0$ and $\\beta > 0$.",
+    "2412-15301_sent_34e8aaac": "${\\left\\| \\cdot \\right\\|_\\rho }$ represents $\\rho$-norm, where ${\\left\\| z \\right\\|_\\rho } = {\\left( {{z_1}^\\rho + {z_2}^\\rho + \\cdots + {z_m}^\\rho } \\right)^{{1 \\mathord{\\left/ {\\vphantom {1 \\rho }} \\right.",
+    "2412-15301_sent_d51fa94f": "\\kern-\\nulldelimiterspace} \\rho }}}$.",
+    "2412-15301_sent_604181a7": "$\\rho $ is defined as a learnable parameter in the algorithm that is used to control a learnable norm space to regulate the large output magnitude.",
+    "2412-15301_sent_b01d910b": "In supervised learning, classifiers often produce outputs with substantial magnitudes, particularly for overconfident samples.",
+    "2412-15301_sent_1f129450": "When these outputs have excessively large magnitudes and are fed into a calibrator, they often fall within the saturation interval where the Softmax output converges to 1.",
+    "2412-15301_sent_4bbac8ec": "Consequently, calibrating samples with such high-amplitude outputs becomes insensitive.",
+    "2412-15301_sent_30ef0955": "\\newtheorem{proposition}{Proposition} \\begin{proposition} For any model output $z$ and the probability by mapping of ${g_c} = \\frac{{{e^{{r_c}}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{r_j}}}} }}$ where ${r_j}\\left( z \\right) = \\frac{{{z_j}}}{{\\gamma {{\\left\\| z \\right\\|}_\\rho }}}$, the following inequalities holds.",
+    "2412-15301_eq_db750aa0": " \\begin{equation}\n \\begin{split}\n \\frac{1}{{\\left( {m - 1} \\right){e^{\\frac{1}{\\gamma }{{\\left( {\\frac{1}{{{{\\left( {m - 1} \\right)}^{{1 \\mathord{\\left/\n {\\vphantom {1 {\\rho - 1}}} \\right.\n \\kern-\\nulldelimiterspace} {\\rho - 1}}}}}} + 1} \\right)}^{{{\\rho - 1} \\mathord{\\left/\n {\\vphantom {{\\rho - 1} \\rho }} \\right.\n \\kern-\\nulldelimiterspace} \\rho }}}}} + 1}} \\le g \\\\ \\le \\frac{1}{{\\left( {m - 1} \\right){e^{ - \\frac{1}{\\gamma }{{\\left( {\\frac{1}{{{{\\left( {m - 1} \\right)}^{{1 \\mathord{\\left/\n {\\vphantom {1 {\\rho - 1}}} \\right.\n \\kern-\\nulldelimiterspace} {\\rho - 1}}}}}} + 1} \\right)}^{{{\\rho - 1} \\mathord{\\left/\n {\\vphantom {{\\rho - 1} \\rho }} \\right.\n \\kern-\\nulldelimiterspace} \\rho }}}}} + 1}}\n \\end{split}\n \\end{equation}",
+    "2412-15301_sent_4bed1282": "\\end{proposition} \\begin{proposition} For any $\\gamma > 0$ and $\\beta > 0$ of $\\rho $-Norm Scaling ${g}\\left( z \\right)$, the classification accuracy based one-versus-all classification keeps unchanged after the output-to-probability mapping.",
+    "2412-15301_sent_532897c4": "\\end{proposition} The results in Proposition \\ref{Bound of RMSNorm Softmax} show that $\\rho $-norm is able to restrict the confidence interval to prevent the confidence from a one-hot distribution, yielding a smoother confidence distribution.",
+    "2412-15301_sent_7f4292fc": "When $\\gamma \\to + \\infty $, the calibrated probabilities $g$ tend to ${1 \\mathord{\\left/ {\\vphantom {1 m}} \\right.",
+    "2412-15301_sent_21d81651": "\\kern-\\nulldelimiterspace} m}$.",
+    "2412-15301_sent_a3acf6e9": "When $\\gamma \\to + 0$, all probabilities are adjusted to $\\left[ {0,1} \\right]$.",
+    "2412-15301_sent_19449226": "Furthermore, Proposition \\ref{Accuracy preserving} establishes that the $\\rho $-Norm Scaling structure maintains decision invariance, ensuring that the pre-calibration classification results match the calibrated probability one-versus-all classification outcomes.",
+    "2412-15301_sent_3bdc96ff": "This property serves as specific priori knowledge, preserving dataset distributional properties during optimization, aligning with calibration logic.",
+    "2412-15301_sent_278b643b": "Decision invariance is a crucial consideration in calibration structure design \\cite{TSexpressive,intraorder}.",
+    "2412-15301_sent_e82710ae": "\\begin{proposition} For any output-to-probability mapping ${g_j}\\left( z \\right) = \\frac{{{e^{{z_j}\\sigma \\left( z \\right)}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{z_j}\\sigma \\left( z \\right)}}} }}$, if the function $\\sigma \\left( z \\right) > 0$ holds for any $z$, accuracy of model based one-versus-all classification decision-making keeps unchanged after the output-to-probability mapping.",
+    "2412-15301_sent_c573edb7": "\\end{proposition} Proposition \\ref{Accuracy preserving2} extends the conclusion in Proposition \\ref{Accuracy preserving} by presenting a general mapping-based criterion for satisfying decision invariance, for mapping design.",
+    "2412-15301_sent_e897ad38": "When the function $\\sigma \\left( z \\right)$ is defined as a single hyperparameter, this mapping degenerates into naive Softmax mapping with a temperature coefficient.",
+    "2412-15301_sent_07c184da": "Apart from calibrators, classifier optimization with different $\\sigma \\left( z \\right)$ deserves further exploration.",
+    "2412-15301_fig_a9486190": "\\begin{algorithm}\n \\SetAlgoLined\n \\KwData{Validation set $\\left\\{ {\\left. {\\left( {{x_i},{y_i}} \\right)} \\right|i = 1, \\ldots ,N} \\right\\}$; Classifier ${f}$; Learning rate $\\lambda $; Batch size ${N_B}$.}\n \\KwResult{$\\rho$-Norm Scaling calibrator ${g}\\left( z, \\rho^*, \\theta^* \\right)$}\n\n Initialize $\\theta$, $\\theta^*$, $\\rho^*$, $ECE^*$\\;\n $z \\gets {f}\\left( x \\right)$\\;\n \\While{$\\rho \\in \\left\\{ {1, \\ldots ,3} \\right\\}$}{\n \\While{$t < T_{max}$}{\n $D_{N_B} \\gets$ $\\left\\{{ z^i }\\right\\}_i^{N_B}$ \\;\n ${l_{SCE}} \\gets$ Computing by Eq.(\\ref{eqsce})\\;\n ${l_{KL}} \\gets$ Computing by Eq.(\\ref{eqkl})\\;\n ${\\theta} \\gets {\\theta } - \\lambda \\frac{{\\partial {l}}}{{\\partial {\\theta}}}$\\;\n\n $ECE_{val}$ $\\gets$ $ECE$ on validation set by Eq.(\\ref{EQ1})\\;\n \\If{$ECE_{val} < ECE^*$}{\n $\\rho^* \\gets \\rho $\\;\n $\\theta^* \\gets \\theta $\\;\n $ ECE^* \\gets ECE_{val} $\\;\n\n \\caption{$\\rho$-Norm Scaling Post-hoc Calibrator}\n\n\\end{algorithm}",
+    "2412-15301_sent_d1036513": "\\subfigure[Uncalibrated]{\\includegraphics[width=80pt]{Res34_CIFAR100_original_1.jpg}\\includegraphics[width=80pt]{Res34_CIFAR100_original_2.jpg}} \\subfigure[Ours]{\\includegraphics[width=80pt]{Res34_CIFAR100_ours_1.jpg}\\includegraphics[width=80pt]{Res34_CIFAR100_ours_2.jpg}} \\subfigure[Temp.",
+    "2412-15301_sent_a0421c25": "Scaling]{\\includegraphics[width=80pt]{Res34_CIFAR100_tem_1.jpg}\\includegraphics[width=80pt]{Res34_CIFAR100_tem_2.jpg}} \\subfigure[Vector Scaling]{\\includegraphics[width=80pt]{Res34_CIFAR100_vector_1.jpg}\\includegraphics[width=80pt]{Res34_CIFAR100_vector_2.jpg}} \\subfigure[TS-AvUC]{\\includegraphics[width=80pt]{Res34_CIFAR100_TS-AvUC_1.jpg}\\includegraphics[width=80pt]{Res34_CIFAR100_TS-AvUC_2.jpg}} \\subfigure[Hist.",
+    "2412-15301_sent_a7ee7d4d": "Bin.]{\\includegraphics[width=80pt]{Res34_CIFAR100_hb_1.jpg}\\includegraphics[width=80pt]{Res34_CIFAR100_hb_2.jpg}} \\caption{Confidence histograms and reliability diagrams for different post-hoc calibration methods with ResNet35 on CIFAR-100.",
+    "2412-15301_sent_b267f5ce": "Confidence histograms display the sample count within each bin, whereas reliability diagrams illustrate the difference between the average confidence (marked in red) and the accuracy (indicated in blue) in each bin.} \\end{figure*}",
+    "2412-15301_subsection_0ee3daf3": "Parameter optimization",
+    "2412-15301_sent_624ce1f7": "In this subsection, we address the challenge of optimizing the calibrator parameters from the desired calibration error.",
+    "2412-15301_sent_c4cdc159": "From a logical perspective, optimizing the calibrator with NLL does not differ from the optimization goal of the original classifier, Softmax cross entropy.",
+    "2412-15301_sent_4a17b3d1": "However, it is essential to note that achieving high accuracy in classifiers using cross entropy as the objective and calibrating the model confidence represent distinct objectives \\cite{compromiseacc}.",
+    "2412-15301_sent_07aa76da": "There remains a bias in minimizing NLL compared to minimizing calibration error.",
+    "2412-15301_sent_3be2ebf0": "A straightforward approach is to utilize the calibration error as a loss function for optimizing the parametric calibration mapping.",
+    "2412-15301_sent_ed562246": "With calibration error as loss function, we treat the entire batch as a bin $D$ in each iteration of the optimization, randomly sampling a bin from the validation set.",
+    "2412-15301_sent_8047b51e": "This approach helps alleviate the issue where finite data fail to fully reflect overall uncertainty.",
+    "2412-15301_sent_e2ca7873": "Modified SCE (Square Calibration Error) is shown as follows.",
+    "2412-15301_eq_752223b7": "\\begin{equation}\n {l_{SCE}} = {\\left( {acc\\left( D \\right) - conf\\left( D \\right)} \\right)^2}\n\\end{equation}",
+    "2412-15301_sent_c33ce5f7": "where $conf\\left( D \\right) = \\frac{1}{{\\left| D \\right|}}\\sum\\nolimits_{{z^i} \\in D} {\\kappa \\log \\sum\\nolimits_j^m {{e^{{{{g_j}\\left( {{z_i}} \\right)} \\mathord{\\left/ {\\vphantom {{{g_j}\\left( {{z_i}} \\right)} \\kappa }} \\right.",
+    "2412-15301_sent_406b2e39": "\\kern-\\nulldelimiterspace} \\kappa }}}} }$, ${g_j} = \\frac{{{e^{{r_j}}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{r_j}}}} }}$ and ${r_j}\\left( z \\right) = \\frac{{{z_j}}}{{\\gamma^2 {{\\left\\| z \\right\\|}_\\rho } + \\beta^2 }}$.",
+    "2412-15301_sent_7194f93f": "The function for max confidence in each class is smoothed by sum-exp-up, and the coefficient $\\kappa $ is set relatively small, such as $10^{-4}$, since the probability outputs are less than 1.",
+    "2412-15301_sent_e4acfe40": "The small $\\kappa $ ensures the confidence closely approximates the max predictive probability.",
+    "2412-15301_sent_6160a27d": "Furthermore, to satisfy Proposition \\ref{Accuracy preserving} in optimization, we replace $\\beta$ and $\\gamma$ in the original $\\rho $-Norm Scaling with ${\\beta ^2}$ and ${\\gamma ^2}$ to the constraint that the hyperparameter is greater than zero, respectively.",
+    "2412-15301_sent_de2afe38": "However, the model uncertainty typically represents a statistic of the dataset, lacking the ability to adequately characterize individual samples.",
+    "2412-15301_sent_bd280cbf": "When directly using the calibration error as the optimization objective $\\sum\\nolimits_{i \\in {D}} {{{\\hat p}^i}} = \\sum\\nolimits_{i \\in D} {\\rm I} \\left( {y_c^i = \\hat y_c^i} \\right)$, a substantial amount of sample-level information is lost in accurately characterizing the output-probability mapping $p^i \\gets z^i$, which impedes finding a solution with strong generalization ability.",
+    "2412-15301_sent_8e3a4220": "So, we introduce instance-level KL divergence for the probability distribution between pre-calibration ${s}\\left( {z}\\right)$ and post-calibration ${g}\\left( {z}\\right)$, serving as a regularization technique to maintain the probability distribution similarity between probability distributions before and after calibration.",
+    "2412-15301_sent_8590dc02": "This addition term ensures that the calibrated distribution retains specific distributional characteristics of the original one.",
+    "2412-15301_sent_3ed2cb57": "It can provide important instance-level information for optimization.",
+    "2412-15301_eq_6e18fe7e": "\\begin{equation}\n{l_{KL}}= \\sum\\limits_{{z^i} \\in D} {\\sum\\limits_{j = 1}^m {{g_j}({z^i})\\left( {\\log {g_j}\\left( {{z^i}} \\right) - \\log {s_j}\\left( {{z^i}} \\right)} \\right)} } \n\\end{equation}",
+    "2412-15301_sent_d88c77af": "The final multi-level objective is represented below.",
+    "2412-15301_eq_02a0f56a": "\\begin{equation}\n l = l_{SCE} + \\alpha{l_{KL}}\n\\end{equation}",
+    "2412-15301_sent_e2c5c112": "Relying solely on the bin-level SCE often leads to significant deviations between the pre- and post-calibration probability distributions due to its statistical nature, particularly when calibration structure has strong expressive capacity, as shown in Fig. \\ref{Condidence distribution}.",
+    "2412-15301_sent_17c74332": "To mitigate this, we introduce the instance-level KL divergence of the original output distribution ${s}\\left( {z}\\right)$ concerning the calibrated probability distribution ${g}\\left( {z}\\right)$ as a regularization.",
+    "2412-15301_sent_055300d9": "When KL divergence converges to 0, ${g}\\left( {z}\\right)$ equals ${s}\\left( {z}\\right)$.",
+    "2412-15301_sent_b7f279b8": "Therefore, ${s}\\left( {z}\\right)$ replaces the one-hot label in NLL, similar to label smoothing.",
+    "2412-15301_sent_42c0d3b1": "In parameter optimization, the proposed algorithm employs a two-stage optimization strategy.",
+    "2412-15301_sent_4e48a00e": "In the outer loop, the algorithm conducts a grid search within the intervals $\\left\\{ {1,1.25, \\ldots ,3} \\right\\}$ to determine $\\rho$, using ECE as the metric.",
+    "2412-15301_sent_e48d3f7a": "Meanwhile, in the inner loop, parameters $\\gamma$ and $\\beta$ are optimized by the small batch gradient-based methods with the proposed loss (\\ref{klplussce}).",
+    "2412-15301_sent_111bb0ce": "\\caption{The calibration performance of different post-hoc calibration methods.} { \\begin{tabular}{@{}ccccccccc@{}} Dataset & Model & Metric & Uncalibrated & Hist.",
+    "2412-15301_sent_33ee3f0d": "Binning & TS & Vector Scaling & TS-AvUC & Ours \\\\ \\multirow{3}{*}{CIFAR-100} & \\multirow{3}{*}{ResNet18} & ECE & 0.160$\\pm 0.025$ &0.025$\\pm 0.006$ &0.033$\\pm 0.006$ & 0.061$\\pm 0.012$ & 0.028$\\pm 0.004$ & 0.009(↓ 0.016)\\\\ & & MCE & 0.344$\\pm 0.055$ &0.078$\\pm 0.012$ & 0.059 $\\pm 0.011$ & 0.138 $\\pm 0.022$ & 0.052(↓ 0.007) & 0.098$\\pm 0.021$ \\\\ & & AdaECE & 0.160$\\pm 0.023$ & - & 0.030$\\pm 0.007$ & 0.061$\\pm 0.011$ & 0.027$\\pm 0.006$ & 0.007(↓ 0.020) \\\\ \\multirow{3}{*}{CIFAR-100} & \\multirow{3}{*}{ResNet50} & ECE & 0.186$\\pm 0.031$ &0.025$\\pm 0.004$ & 0.030$\\pm 0.013$ & 0.073$\\pm 0.021$ & 0.052$\\pm 0.012$ & 0.007(↓ 0.018) \\\\ & & MCE & 0.407$\\pm 0.101$ &0.110$\\pm 0.015$ & 0.091(↓ 0.009) & 0.153$\\pm 0.036$ & 0.116$\\pm 0.021$ & 0.100$\\pm 0.023$ \\\\ & & AdaECE & 0.186$\\pm 0.029$ & - & 0.029$\\pm 0.012$ & 0.071$\\pm 0.028$ & 0.052$\\pm 0.010$ & 0.006(↓ 0.023) \\\\ \\multirow{3}{*}{CIFAR-100} & \\multirow{3}{*}{VGG16} & ECE & 0.240$\\pm 0.106$ &0.035$\\pm 0.002$ & 0.029$\\pm 0.003$ & 0.035$\\pm 0.006$ & 0.044$\\pm 0.008$ & 0.019(↓ 0.010) \\\\ & & MCE & 0.508$\\pm 0.151$ & 0.042(↓ 0.001) & 0.093$\\pm 0.029$ & 0.084$\\pm 0.009$ & 0.101$\\pm 0.026$ & 0.043$\\pm 0.003$ \\\\ & & AdaECE & 0.240$\\pm 0.106$ & - & 0.029$\\pm 0.004$ & 0.035$\\pm 0.006$ & 0.044$\\pm 0.008$ &0.019(↓ 0.010) \\\\ \\multirow{3}{*}{CIFAR-10} & \\multirow{3}{*}{ResNet35} & ECE & 0.054$\\pm 0.010$ &0.011$\\pm 0.001$ & 0.015$\\pm 0.002$ & 0.014$\\pm 0.003$ & 0.015$\\pm 0.006$ & 0.007(↓ 0.004) \\\\ & & MCE & 0.300$\\pm 0.085$ &0.255$\\pm 0.102$ & 0.121$\\pm 0.026$ & 0.077(↓ 0.030) & 0.121$\\pm 0.021$ & 0.107$\\pm 0.019$ \\\\ & & AdaECE & 0.054$\\pm 0.011$ & - & 0.014$\\pm 0.004$ & 0.013$\\pm 0.002$ & 0.013$\\pm 0.005$ &0.010(↓ 0.003) \\\\ \\multirow{3}{*}{SVHN} & \\multirow{3}{*}{ResNet18} & ECE & 0.021$\\pm 0.006$ &0.016$\\pm 0.002$ & 0.009$\\pm 0.003$ & 0.007(↓ 0.001) & 0.010$\\pm 0.003$ & 0.008↑$\\pm 0.002$ \\\\ & & MCE & 0.286$\\pm 0.053$ & 0.251(↓ 0.035) & 0.313$\\pm 0.052$ & 0.313$\\pm 0.069$ & 0.315$\\pm 0.080$ & 0.438$\\pm 0.103$ \\\\ & & AdaECE & 0.021$\\pm 0.006$ & - & 0.010$\\pm 0.003$ & 0.009$\\pm 0.002$ & 0.013$\\pm 0.005$ & 0.008(↓ 0.001) \\\\ \\multirow{3}{*}{102 Flower} & \\multirow{3}{*}{ResNet50} & ECE & 0.101$\\pm 0.018$ &0.084$\\pm 0.012$ & 0.086$\\pm 0.011$ & 0.093$\\pm 0.015$ & 0.075$\\pm 0.009$ & 0.046(↓ 0.029) \\\\ & & MCE & 0.231$\\pm 0.048$ &0.365$\\pm 0.066$ & 0.180$\\pm 0.041$ & 0.163$\\pm 0.043$ & 0.165$\\pm 0.044$ & 0.152(↓ 0.011) \\\\ & & AdaECE & 0.100$\\pm 0.017$ & - & 0.089$\\pm 0.012$ & 0.098$\\pm 0.019$ & 0.079$\\pm 0.011$ & 0.048(↓ 0.031) \\\\ \\multirow{3}{*}{Tiny-ImageNet} & \\multirow{3}{*}{ResNet35} & ECE & 0.144$\\pm 0.022$ &0.033$\\pm 0.005$ & 0.017$\\pm 0.003$ & 0.053$\\pm 0.007$ & 0.017$\\pm 0.003$ & 0.007(↓ 0.010) \\\\ & & MCE & 0.236$\\pm 0.052$ &0.055$\\pm 0.016$ & 0.035$\\pm 0.010$ & 0.093$\\pm 0.021$ & 0.030(↓ 0.001) & 0.031$\\pm 0.004$ \\\\ & & AdaECE & 0.143$\\pm 0.021$ & - & 0.017$\\pm 0.004$ & 0.054$\\pm 0.008$ & 0.016$\\pm 0.002$ & 0.006(↓ 0.010) \\\\ \\end{tabular}} \\end{table*}",
+    "2412-15301_sent_61c5288d": "\\caption{The ablation study of calibrator structure and optimization objective on CIFAR-100.} \\begin{tabular}{@{}cccccc@{}} \\multirow{2}{*}{Model} & \\multirow{2}{*}{Metrics} & \\multicolumn{2}{c}{NLL} & \\multicolumn{2}{c}{Ours} \\\\ \\cmidrule(l){3-6} & & Temp.",
+    "2412-15301_sent_4902943d": "Scaling & $\\rho$-Norm Scaling & Temp.",
+    "2412-15301_sent_68d35043": "Scaling & $\\rho$-Norm Scaling \\\\ \\multirow{2}{*}{ResNet35} & ECE & 0.026 & 0.011(↓ 0.015) & 0.024 & 0.009(↓ 0.015) \\\\ & AdaECE & 0.027 & 0.011(↓ 0.016) & 0.024 & 0.007(↓ 0.017) \\\\ \\multirow{2}{*}{ResNet50} & ECE & 0.048 & 0.006(↓ 0.042) & 0.042 & 0.007(↓ 0.035) \\\\ & AdaECE & 0.048 & 0.008(↓ 0.040) & 0.042 & 0.006(↓ 0.036) \\\\ \\end{tabular} \\end{table*}",
+    "2412-15301_section_4829262c": "Experiments",
+    "2412-15301_sent_49bc60ec": "We evaluate our methods on multiple DNNs, including ResNet and VGG series.",
+    "2412-15301_sent_c68688ce": "Our experiments are conducted on SVHN, CIFAR-10/100, 102 Flower, and Tiny-ImageNet for post-hoc calibration performance.",
+    "2412-15301_sent_6cfaae2a": "Different ablation experiments are designed to evaluate efficiency of the $\\rho$-Norm Scaling calibration structure and the multi-level objective.",
+    "2412-15301_sent_cffa8686": "In tables, the best results and relative improvements over $2^{nd}$ best result in each section are in bold.",
+    "2412-15301_sent_5d1286a6": "Results are averaged over five runs with different seeds. Baselines: In experiments, we compare our methods with different calibration methods, such as non-parametric Hist.",
+    "2412-15301_sent_8b9c5658": "Binning, TS, Vector Scaling \\cite{matrixscaling}.",
+    "2412-15301_sent_59f97fca": "Above all parametric structure are optimized by gradient descent based on NLL.",
+    "2412-15301_sent_99b6ecde": "TS-AvUC represents Tem.",
+    "2412-15301_sent_d52cc6e1": "Scaling with NLL-AvUC as objective \\cite{AVUO}.",
+    "2412-15301_sent_4e25e926": "The $\\rho$ in $\\rho$-Norm Scaling is selected by grid search on $\\left\\{ {1,1.25, \\ldots ,3} \\right\\}$ and other parameter are optimized based on Eq.(\\ref{klplussce}).",
+    "2412-15301_sent_e6330150": "In ablation experiments, different structures are optimized by different optimization objectives, such as NLL, SCE, AvUC and SB-ECE \\cite{Softcalibration}.",
+    "2412-15301_sent_b9ee21f6": "In Hist.",
+    "2412-15301_sent_dded9f42": "Binning, ECE, MCE and AdaECE \\cite{AdaECE}, the number of bins is 10.",
+    "2412-15301_sent_5bf8b256": "In all experiments for CIFAR-10/100, the learning rate was set to 0.1, the momentum to 0.9, the weight clipping to Norm=3, and the batch size to 128.",
+    "2412-15301_sent_d406bd94": "The learning rate decreased to 10\\% at 40\\% and 80\\% of the iterations.",
+    "2412-15301_sent_8a07bbf2": "The weight decay was set to $10^{-4}$ and the iteration number was 200.",
+    "2412-15301_sent_fea7a5d6": "For the Tiny-ImageNet, the learning rate was set to 0.01 and batch size was 64.",
+    "2412-15301_sent_010e6ad4": "The hyperparameter $\\alpha$ is set to 1.\\\\",
+    "2412-15301_fig_28a4977b": "\\begin{figure}\n\n \\subfigure[Uncalibrated]{\\includegraphics[width=75pt]{Original.jpg}}\n \\subfigure[SCE]{\\includegraphics[width=75pt]{SCE_probability_distribution.jpg}}\n \\subfigure[SCE+KL]{\\includegraphics[width=75pt]{SCE_KL_probability_ditribution.jpg}}\n \\caption{ Coincidence distribution of different optimization objective in Vector Scaling. In (a), samples are categorized into bins based on confidence levels through Softmax. Each sample in (b) and (c) belongs to the same bin as in (a). Using sample-level SCE alone in post-calibration results in a significant deviation from the original distribution. This challenge is mitigated by the bin-level KL.}\n\n\\end{figure}",
+    "2412-15301_sent_ea3bdc2b": "\\caption{The ablation study with Vector Scaling on CIFAR-100.} { \\begin{tabular}{@{}cccccccccc@{}} Metrics & SCE & KL & SCE+KL & NLL & NLL+KL & NLL-AvUC &SB-ECE & SB-ECE+KL & Uncalibrated \\\\ ECE & 0.173 & 0.161 & 0.041(↓ 0.120) & 0.056 & 0.039(↓ 0.008) & 0.047 & 0.156 & 0.039 (↓ 0.117) & 0.172 \\\\ AdaECE & 0.172 & 0.161 & 0.043(↓ 0.118) & 0.053 & 0.040(↓ 0.005) &0.045 & 0.157 & 0.036 (↓ 0.121) & 0.172 \\\\ KL & 0.109 & 0.001 & 0.003 & 0.006 & 0.004 & 0.002 & 0.097 & 0.002 & - \\\\ \\end{tabular}} \\end{table*}",
+    "2412-15301_sent_b69aa9b2": "\\caption{The calibration performance on ResNet35 of different norm in $\\rho$-Norm Scaling.} { \\begin{tabular}{@{}ccccccccc@{}} \\multirow{2}{*}{Dataset} & \\multirow{2}{*}{Metrics} & \\multicolumn{5}{c}{ Different $\\rho$ in $\\rho$-Norm Scaling} & \\multirow{2}{*}{Uncalibrated} & \\multirow{2}{*}{Temp.",
+    "2412-15301_sent_55e7e702": "Scaling} \\\\ \\cmidrule(lr){3-7} & & 1.5 & 1.75 & 2 & 2.25 & 2.5 & & \\\\ \\multirow{2}{*}{CIFAR-100} & ECE & 0.028 & 0.006(↓ 0.003)& 0.010 & 0.009 & 0.010 & 0.172 & 0.026 \\\\ & AdaECE & 0.028 & 0.008 & 0.009 & 0.007(↓ 0.001) & 0.009 & 0.172 & 0.027 \\\\ \\multirow{2}{*}{Tiny-ImageNet} & ECE & 0.052 & 0.007(↓ 0.011) & 0.018 & 0.040 & 0.044 & 0.144 & 0.017 \\\\ & AdaECE & 0.051 & 0.006(↓ 0.012) & 0.018 & 0.041 & 0.044 & 0.143 & 0.017 \\\\ \\end{tabular}} \\end{table*} The efficiency of our method: Table \\ref{The calibration performance of different calibration methods} presents the outcomes of various calibration techniques.",
+    "2412-15301_sent_8d8f6f5a": "Our method substantially enhances the performance of post-calibration in both ECE and AdaECE, outperforming classical methods.",
+    "2412-15301_sent_46f4155e": "However, $\\rho$-Norm Scaling does not yield superior results in MCE.",
+    "2412-15301_sent_2d67482f": "The confidence histograms and reliability diagrams depicted in Fig. \\ref{Confidencedifferentmethods} reveal a bias in bin $\\left[ {0,0.1} \\right]$ with a minimal number of samples, which does not significantly impact the overall calibration outcomes in ECE and AdaECE.",
+    "2412-15301_sent_f2afa359": "TS, utilizing a single hyperparameter to control the smoothing of uncertainty distribution, achieves superior results compared to post-processing calibrations employing multiple hyperparameters like Vector Scaling.",
+    "2412-15301_sent_8df5ed94": "Furthermore, both TS and our proposed method demonstrate accuracy-preserving property, preserving the order of probability outputs across different categories for individual samples \\cite{intraorder}.",
+    "2412-15301_sent_32367e40": "The notably smaller calibration errors of these mapping, in contrast to Vector Scaling, underscore the pivotal role of maintaining decision invariance as a fundamental prerequisite in calibrator design.\\\\ The ablation study of calibrator structure: To mitigate the influence of the loss function on the experimental outcomes, we conducted ablation experiments and presented the results in Table \\ref{The ablation study of calibrator structure on CIFAR-100}.",
+    "2412-15301_sent_29b64b34": "Notably, in Table \\ref{The ablation study of calibrator structure on CIFAR-100}, $\\rho$-Norm Scaling continues to enhance calibration performance when compared to TS under the same optimization objective.",
+    "2412-15301_sent_6714b1ed": "This observation suggests that the supervised optimization using Softmax cross entropy as the objective leads to a larger amplitude in model output, negatively impacting calibration.",
+    "2412-15301_sent_22f6de7e": "Furthermore, it fails to ensure both classifier accuracy and uncertainty estimates derived from Softmax mapping.",
+    "2412-15301_sent_eceb529b": "Consequently, $\\rho$-Norm Scaling can realize better calibration performance than TS.",
+    "2412-15301_sent_3fe9953c": "\\\\ The ablation study of optimization objective: The KL divergence regularity introduces instance-level information into calibrator optimization, ensuring that the calibrated probability retains certain properties of the uncalibrated distribution, as emphasized by the results in Table \\ref{The ablation study with Vector Scaling on CIFAR-100}.",
+    "2412-15301_sent_319d4260": "The bin-level calibration error as a statistical representation of collective binning properties, compressing sample-level information significantly.",
+    "2412-15301_sent_5156a121": "Furthermore, Vector Scaling offers a broader assumption space and greater expressive power in comparison to Temp.",
+    "2412-15301_sent_baf763a7": "Scaling.",
+    "2412-15301_sent_71d1d23a": "When SCE or SB-ECE is used solely as the loss function, the calibrated results deviate markedly from the original results as shown in Fig. \\ref{Condidence distribution} and the KL divergence remains relatively large.",
+    "2412-15301_sent_2fe29613": "In addition, using KL divergence alone does not yield improved results.",
+    "2412-15301_sent_e3cd9560": "However, better outcomes are achieved when bin-level loss and instance-level loss jointly optimize parameters.",
+    "2412-15301_sent_28ca8aee": "KL divergence, acting as a regularity term, guides the calibrated model to learn distributions mirroring the properties of the original distributions, while SCE fine-tunes the mapping parameters and refines the calibrator model.",
+    "2412-15301_sent_0343faf6": "\\\\ The ablation study of different norms: Table \\ref{The calibration performance on ResNet35 of different norm in -norm scaling} displays calibration results across various norms.",
+    "2412-15301_sent_735b76d2": "The data illustrates that smoother outcomes are achieved when $\\rho$ is close to 2, though $\\rho$ does not guarantee optimality.",
+    "2412-15301_sent_bf7440b5": "Different learning paradigms enable the exploration of diverse spaces, facilitating the acquisition of more precise output-probability mappings.",
+    "2412-15301_sent_cc097b68": "This reflects the significance of searching for the appropriate norm, rather than directly replacing it with the conventional Euclidean norm.",
+    "2412-15301_section_6f8b794f": "Conclusion",
+    "2412-15301_sent_54d32e87": "The desired calibration metric, based on sample set statistics, captures the dataset general characteristics but overlooks sample-level nuances.",
+    "2412-15301_sent_927b9fac": "Relying solely on the calibration error as the optimization objective fails to yield a well-generalized output-probability mapping within a broad assumption space.",
+    "2412-15301_sent_90f53542": "Consequently, integrating specific priori knowledge becomes imperative when designing and optimizing the post-hoc calibrator.",
+    "2412-15301_sent_deb20069": "In this paper, we introduce a $\\rho$-Norm Scaling to mitigate the adverse impact of amplified output amplitude in supervised learning while preserving accuracy.",
+    "2412-15301_sent_c31743cc": "Simultaneously, an instance-level probability distribution regularization is proposed in the optimization, which incorporates specific priori knowledge and emphasizes the need for the uncertainty distribution after calibration to keep some characteristics of the pre-calibration distribution.",
+    "2412-15301_sent_80894b6f": "The experimental results show the significant enhancement in uncertainty calibration performance through $\\rho$-Norm Scaling and multi-level objective.",
+    "2412-15301_sent_0768d47c": "They also underscore the necessity for precise calibrator design to guide the model effectively in learning an ideal calibration mapping.",
+    "2412-15301_sent_3aeb1540": "\\bibliography{aaai25} \\appendix",
+    "2412-15301_subsection_c3c40335": "Proof of Proposition \\ref{Bound of RMSNorm Softmax}",
+    "2412-15301_sent_69a74ef1": "To calculate the extreme value of $\\frac{{{e^{{r_c}}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{r_j}}}} }}$ where ${r_j} = \\frac{{{z_j}}}{{\\gamma {{\\left( {\\sum\\nolimits_{j = 1}^m {z_j^\\rho } } \\right)}^{1/\\rho }}}}$, we consider the extreme value of the following function with restrictions.",
+    "2412-15301_eq_d19bba2f": "\\begin{equation}\n p = \\frac{{{e^{{r_c}}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{r_j}}}} }} \\\\ \\begin{array}{*{20}{c}}\n{s.t.}&{\\sum\\nolimits_{j = 1}^m {r_j^\\rho = \\frac{1}{{{\\gamma ^\\rho }}}} }\n\\end{array}\n\\end{equation}",
+    "2412-15301_sent_fa91748e": "We construct the Lagrangian function as follows.",
+    "2412-15301_eq_e12c1f50": "\\begin{equation}\n L = \\ln \\frac{{{e^{{r_c}}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{r_j}}}} }} + \\lambda (\\sum\\nolimits_{j = 1}^m {r_j^\\rho - \\frac{1}{{{\\gamma ^\\rho }}}} )\n\\end{equation}",
+    "2412-15301_sent_5f6e682e": "Let the derivative of this function be 0.",
+    "2412-15301_eq_04e59534": "\\begin{equation}\n \\frac{{\\partial L}}{{\\partial \\lambda }} = \\sum\\nolimits_{j = 1}^m {r_j^\\rho - - \\frac{1}{{{\\gamma ^\\rho }}}} = 0\n\\end{equation}",
+    "2412-15301_eq_8be223a5": "\\begin{equation}\n \\frac{{\\partial L}}{{{r_c}}} = 1 - \\frac{{{e^{{r_c}}}}}{{\\sum\\nolimits_{k = 1}^m {{e^{{r_k}}}} }} \\pm \\rho \\lambda {r_c}^{\\rho - 1} = 0\n\\end{equation}",
+    "2412-15301_eq_6ab81b87": "\\begin{equation}\n \\frac{{\\partial L}}{{{r_j}}} = \\frac{{{e^{{r_j}}}}}{{\\sum\\nolimits_{k = 1}^m {{e^{{r_k}}}} }} \\mp \\rho \\lambda {r_j}^{\\rho - 1} = 0,j \\ne c\n\\end{equation}",
+    "2412-15301_sent_e9d1f0bb": "From (\\ref{eq12}), we can obtain",
+    "2412-15301_eq_2b33c51a": "\\begin{equation}\n \\lambda = \\frac{{{e^{{r_j}}}}}{{\\rho {r_j}^{\\rho - 1}\\sum\\nolimits_{k = 1}^m {{e^{{r_k}}}} }},j \\ne c\n\\end{equation}",
+    "2412-15301_sent_fa6536f8": "${r_j},j = 1, \\ldots ,m,j \\ne c$ have same sign when function obtain the extreme point.",
+    "2412-15301_sent_31bda972": "We can obtain",
+    "2412-15301_eq_f00631df": "\\begin{equation}\n {r_1} = {r_2} = {r_j},j = 1, \\ldots ,m,j \\ne c\n\\end{equation}",
+    "2412-15301_sent_36f86887": "Adding (\\ref{eq11}) and (\\ref{eq12}) together, we can get",
+    "2412-15301_eq_3e38474c": "\\begin{equation}\n {r_1}^{\\rho - 1} + {r_2}^{\\rho - 1} + \\cdots + {r_m}^{\\rho - 1} = {r_c}^{\\rho - 1}\n\\end{equation}",
+    "2412-15301_sent_32c0cba3": "Combining (\\ref{eq10}), (\\ref{eq14}) and (\\ref{eq15}), we can obtain extreme value point",
+    "2412-15301_eq_feba3a07": "\\begin{equation}\n \\left\\{ {\\begin{array}{*{20}{c}}\n{{r_c} = \\frac{{{{\\left( {m - 1} \\right)}^{\\frac{\\rho }{{\\rho - 1}}}}}}{{\\gamma {{\\left( {\\left( {m - 1} \\right) + {{\\left( {m - 1} \\right)}^{\\frac{\\rho }{{\\rho - 1}}}}} \\right)}^{\\frac{1}{\\rho }}}}}}\\\\\n{{r_j} = - \\frac{1}{{\\gamma {{\\left( {\\left( {m - 1} \\right) + {{\\left( {m - 1} \\right)}^{\\frac{\\rho }{{\\rho - 1}}}}} \\right)}^{\\frac{1}{\\rho }}}}}j \\ne c}\n\\end{array}} \\right. \n or \\end{equation}",
+    "2412-15301_eq_8a87e097": "\\begin{equation}\n\\left\\{ {\\begin{array}{*{20}{c}}\n{{r_c} = - \\frac{{{{\\left( {m - 1} \\right)}^{\\frac{\\rho }{{\\rho - 1}}}}}}{{\\gamma {{\\left( {\\left( {m - 1} \\right) + {{\\left( {m - 1} \\right)}^{\\frac{\\rho }{{\\rho - 1}}}}} \\right)}^{\\frac{1}{\\rho }}}}}}\\\\\n{{r_j} = \\frac{1}{{\\gamma {{\\left( {\\left( {m - 1} \\right) + {{\\left( {m - 1} \\right)}^{\\frac{\\rho }{{\\rho - 1}}}}} \\right)}^{\\frac{1}{\\rho }}}}}j \\ne c}\n\\end{array}} \\right.\n\\end{equation}",
+    "2412-15301_sent_a0b2c74e": "\\caption{Ablation experiments of $\\alpha$ of multi-level objective on $\\rho$-Norm Scaling calibration.} \\begin{tabular}{ccccccccc} Dataset & Model & Metric & 0 & 0.01 & 0.1 & 1 & 10 & 100 \\\\ \\multirow{2}{*}{CIFAR-100} & \\multirow{2}{*}{ResNet35} & ECE & 0.173 & 0.091 & 0.052 & 0.041 & 0.101 & 0.172 \\\\ & & KL & 0.106 & 0.086 & 0.023 & 0.003 & 0.002 & 0.001 \\\\ \\multirow{2}{*}{102 Flower} & \\multirow{2}{*}{ResNet50} & ECE & 0.100 & 0.083 & 0.059 & 0.048 & 0.053 & 0.102 \\\\ & & KL & 0.123 & 0.072 & 0.031 & 0.002 & 0.002 & 0.001 \\\\ \\end{tabular} \\end{table*}",
+    "2412-15301_eq_deaacbec": "\\begin{equation}\n\\begin{array}{l}\n\\max p = \\max \\left\\{ {\\frac{1}{{\\left( {m - 1} \\right){e^{ - \\frac{1}{\\gamma }{{\\left( {\\frac{1}{{{{\\left( {m - 1} \\right)}^{{1 \\mathord{\\left/\n {\\vphantom {1 {\\rho - 1}}} \\right.\n \\kern-\\nulldelimiterspace} {\\rho - 1}}}}}} + 1} \\right)}^{{{\\rho - 1} \\mathord{\\left/\n {\\vphantom {{\\rho - 1} \\rho }} \\right.\n \\kern-\\nulldelimiterspace} \\rho }}}}} + 1}},} \\right.\\\\\n\\left. {\\frac{{{e^{\\frac{1}{\\gamma }}}}}{{\\left( {m - 1} \\right) + {e^{\\frac{1}{\\gamma }}}}},\\frac{1}{{\\left( {m - 1} \\right) + {e^{ - \\frac{1}{\\gamma }}}}}} \\right\\}\n\\end{array}\n\\end{equation}",
+    "2412-15301_sent_dd492955": "$\\frac{{{e^{\\frac{1}{\\gamma }}}}}{{\\left( {m - 1} \\right) + {e^{\\frac{1}{\\gamma }}}}} > \\frac{1}{{\\left( {m - 1} \\right) + {e^{ - \\frac{1}{\\gamma }}}}}$ holds when $\\gamma > 0$.",
+    "2412-15301_eq_0b24f094": "\\begin{equation}\n\\begin{array}{c}\n\\max p = \\max \\left\\{ {\\frac{1}{{\\left( {m - 1} \\right){e^{ - \\frac{1}{\\gamma }{{\\left( {\\frac{1}{{{{\\left( {m - 1} \\right)}^{{1 \\mathord{\\left/\n {\\vphantom {1 {\\rho - 1}}} \\right.\n \\kern-\\nulldelimiterspace} {\\rho - 1}}}}}} + 1} \\right)}^{{{\\rho - 1} \\mathord{\\left/\n {\\vphantom {{\\rho - 1} \\rho }} \\right.\n \\kern-\\nulldelimiterspace} \\rho }}}}} + 1}},\\frac{1}{{\\left( {m - 1} \\right){e^{ - \\frac{1}{\\gamma }}} + 1}}} \\right\\}\\\\\n = \\frac{1}{{\\left( {m - 1} \\right){e^{ - \\frac{1}{\\gamma }{{\\left( {\\frac{1}{{{{\\left( {m - 1} \\right)}^{{1 \\mathord{\\left/\n {\\vphantom {1 {\\rho - 1}}} \\right.\n \\kern-\\nulldelimiterspace} {\\rho - 1}}}}}} + 1} \\right)}^{{{\\rho - 1} \\mathord{\\left/\n {\\vphantom {{\\rho - 1} \\rho }} \\right.\n \\kern-\\nulldelimiterspace} \\rho }}}}} + 1}}\n\\end{array}\n\\end{equation}",
+    "2412-15301_eq_2c6d5288": "\\begin{equation}\n\\begin{array}{l}\n\\min p = \\min \\left\\{ {\\frac{1}{{\\left( {m - 1} \\right){e^{ - \\frac{1}{\\gamma }{{\\left( {\\frac{1}{{{{\\left( {m - 1} \\right)}^{{1 \\mathord{\\left/\n {\\vphantom {1 {\\rho - 1}}} \\right.\n \\kern-\\nulldelimiterspace} {\\rho - 1}}}}}} + 1} \\right)}^{{{\\rho - 1} \\mathord{\\left/\n {\\vphantom {{\\rho - 1} \\rho }} \\right.\n \\kern-\\nulldelimiterspace} \\rho }}}}} + 1}},} \\right.\\\\\n\\left. {\\frac{{{e^{ - \\frac{1}{\\gamma }}}}}{{\\left( {m - 1} \\right) + {e^{ - \\frac{1}{\\gamma }}}}},\\frac{1}{{\\left( {m - 1} \\right) + {e^{\\frac{1}{\\gamma }}}}}} \\right\\}\n\\end{array}\n\\end{equation}",
+    "2412-15301_sent_dcb43755": "And $\\frac{{{e^{ - \\frac{1}{\\gamma }}}}}{{\\left( {m - 1} \\right) + {e^{ - \\frac{1}{\\gamma }}}}} < \\frac{1}{{\\left( {m - 1} \\right) + {e^{\\frac{1}{\\gamma }}}}}$ holds when $\\gamma > 0$.",
+    "2412-15301_eq_5df265ac": "\\begin{equation}\n \\begin{array}{c}\n\\min p = \\min \\left\\{ {\\frac{1}{{\\left( {m - 1} \\right){e^{ - \\frac{1}{\\gamma }{{\\left( {\\frac{1}{{{{\\left( {m - 1} \\right)}^{{1 \\mathord{\\left/\n {\\vphantom {1 {\\rho - 1}}} \\right.\n \\kern-\\nulldelimiterspace} {\\rho - 1}}}}}} + 1} \\right)}^{{{\\rho - 1} \\mathord{\\left/\n {\\vphantom {{\\rho - 1} \\rho }} \\right.\n \\kern-\\nulldelimiterspace} \\rho }}}}} + 1}},\\frac{1}{{\\left( {m - 1} \\right){e^{\\frac{1}{\\gamma }}} + 1}}} \\right\\}\\\\\n = \\frac{1}{{\\left( {m - 1} \\right){e^{ - \\frac{1}{\\gamma }{{\\left( {\\frac{1}{{{{\\left( {m - 1} \\right)}^{{1 \\mathord{\\left/\n {\\vphantom {1 {\\rho - 1}}} \\right.\n \\kern-\\nulldelimiterspace} {\\rho - 1}}}}}} + 1} \\right)}^{{{\\rho - 1} \\mathord{\\left/\n {\\vphantom {{\\rho - 1} \\rho }} \\right.\n \\kern-\\nulldelimiterspace} \\rho }}}}} + 1}}\n\\end{array}\n\\end{equation}",
+    "2412-15301_sent_eaf6171e": "For any model output ${z_1},{z_2}, \\ldots ,{z_m}$, $\\gamma > 0$ and $\\beta > 0$ , $\\sum\\nolimits_{j = 1}^m {{e^{{r_j}}}} > 0$ and $\\gamma {\\left\\| {\\rm{z}} \\right\\|_\\rho } + \\beta > 0$ in the ${p_j} = \\frac{{{e^{{r_j}}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{r_j}}}} }}$ Softmax with $\\rho $-Norm Scaling ${r_j} = \\frac{{{z_j}}}{{\\gamma \\sqrt {\\sum\\nolimits_{j = 1}^m {z_j^2} } + \\beta }}$ are same.",
+    "2412-15301_sent_e7eab6a5": "$p\\left( {{z_j}} \\right) = {{{e^{{{{z_j}} \\mathord{\\left/ {\\vphantom {{{z_j}} a}} \\right.",
+    "2412-15301_sent_02108a05": "\\kern-\\nulldelimiterspace} a}}}} \\mathord{\\left/ {\\vphantom {{{e^{{{{z_j}} \\mathord{\\left/ {\\vphantom {{{z_j}} a}} \\right.",
+    "2412-15301_sent_5cc62b84": "\\kern-\\nulldelimiterspace} a}}}} b}} \\right.",
+    "2412-15301_sent_a600a9a8": "\\kern-\\nulldelimiterspace} b}$ is monotonically increasing function.",
+    "2412-15301_sent_bbe1b9b0": "So, $\\rho $-Norm Scaling satisfies the strictly order-preserving property for different class output, such that ${z_j} > {z_q} \\Rightarrow {p_j} > {p_q}$ , then the model accuracy keeps unchanged.",
+    "2412-15301_sent_be818e4e": "For any model output ${z_1},{z_2}, \\ldots ,{z_m}$, and function $\\sigma \\left( z \\right) > 0$, if ${z_j} > {z_q}$, ${z_j}\\sigma \\left( {{z_1},{z_2},...,{z_m}} \\right) > {z_q}\\sigma \\left( {{z_1},{z_2},...,{z_m}} \\right)$ holds.",
+    "2412-15301_sent_a9f95fc6": "So Softmax ${p_j}\\left( z \\right) = \\frac{{{e^{{z_j}\\sigma \\left( z \\right)}}}}{{\\sum\\nolimits_{j = 1}^m {{e^{{z_j}\\sigma \\left( z \\right)}}} }}$ satisfies the strictly intra order-preserving property for different class output, such that ${z_j} > {z_q} \\Rightarrow {p_j} > {p_q}$, then preserves the accuracy.",
+    "2412-15301_subsection_c7eddce1": "Experiments compute resources",
+    "2412-15301_sent_fc032afb": "For experiments, we utilized compute resources featuring an NVIDIA A100 GPU with PCIe interface and 40GB memory capacity, accompanied by PyTorch version 1.7.0 with CUDA version 11.0.",
+    "2412-15301_sent_2cb93901": "The computational backbone was supported by an Intel Xeon Gold 6278C processor.",
+    "2412-15301_subsection_191e5f6e": "Limitations and future works",
+    "2412-15301_sent_48cfcfaf": "The proposed calibration structure, $\\rho$-Norm Scaling, enhances the expressiveness of TS in the structural design.",
+    "2412-15301_sent_8411f28d": "By adding the correlation term of magnitude, our approach leverages the positive relationship between output magnitude and confidence, thereby refining the model's expressiveness.",
+    "2412-15301_sent_4f81afad": "Nonetheless, further investigation into a more precise representation grounded in decision invariance is warranted, as described in Proposition \\ref{Accuracy preserving2}.",
+    "2412-15301_sent_02e43aca": "Additionally, we employ the grid search method to optimize the parameter $\\rho$, leading to bi-optimization and heightened optimization complexity.",
+    "2412-15301_sent_a82e0bc4": "While this method facilitates swift optimization due to the few optimization parameters, it exhibits increased optimization complexity in contrast to TS.",
+    "2412-15301_sent_4ef3258d": "We adopt a multi-level optimization objective in our optimization approach.",
+    "2412-15301_sent_67df9c25": "A regular term leveraging the similarity between pre- and post-calibration distributions is integrated to address the lack of instance-level information inherent in bin-level expected calibration error optimization.",
+    "2412-15301_sent_f9960cfc": "However, an excessively large value for $\\alpha$ may adversely affect calibration results, as depicted in Tab. \\ref{Tab5}.",
+    "2412-15301_sent_331f846b": "Thus, determining an appropriate value for $\\alpha$ remains a challenge.",
+    "2412-15301_sent_5e7f39e3": "Additionally, the impact of this calibration structure on TS is notably inferior compared to calibration models with more parameters, such as Vector Scaling.The regular term has limited efficacy in optimization problems with few parameters, but it proves effective in well-calibrated models featuring a larger parameter space.",
+    "2412-15301_section_b31ce0f4": "Reproducibility Checklist",
+    "2412-15301_sent_64951bd4": "This paper:",
+    "2412-15301_itemize_dd551749": "itemize",
+    "2412-15301_item_e0f415f6": "item",
+    "2412-15301_sent_5a673e6d": "Includes a conceptual outline and/or pseudocode description of AI methods introduced (yes)",
+    "2412-15301_sent_b6b42c74": "Clearly delineates statements that are opinions, hypothesis, and speculation from objective facts and results (yes)",
+    "2412-15301_sent_8486c179": "Provides well marked pedagogical references for less-familiare readers to gain background necessary to replicate the paper (yes)",
+    "2412-15301_sent_1403a7e4": "Does this paper make theoretical contributions?",
+    "2412-15301_sent_d9a33724": "(yes) If yes, please complete the list below.",
+    "2412-15301_sent_7881ef6c": "All assumptions and restrictions are stated clearly and formally.",
+    "2412-15301_sent_2e425466": "(yes)",
+    "2412-15301_sent_30f35813": "All novel claims are stated formally (e.g., in theorem statements).",
+    "2412-15301_sent_36060328": "Proofs of all novel claims are included. (yes)",
+    "2412-15301_sent_77e26c3e": "Proof sketches or intuitions are given for complex and/or novel results.",
+    "2412-15301_sent_4496defb": "Appropriate citations to theoretical tools used are given.",
+    "2412-15301_sent_a2b7e518": "(NA)",
+    "2412-15301_sent_e972608f": "All theoretical claims are demonstrated empirically to hold.",
+    "2412-15301_sent_586e90f3": "All experimental code used to eliminate or disprove claims is included. (NA)",
+    "2412-15301_sent_26d807ae": "Does this paper include computational experiments?",
+    "2412-15301_sent_aa758cbd": "Any code required for pre-processing data is included in the appendix.",
+    "2412-15301_sent_4b2c803c": "(yes).",
+    "2412-15301_sent_93d8b786": "All source code required for conducting and analyzing the experiments is included in a code appendix.",
+    "2412-15301_sent_6dd4a1a5": "(no)",
+    "2412-15301_sent_0c126239": "All source code required for conducting and analyzing the experiments will be made publicly available upon publication of the paper with a license that allows free usage for research purposes.",
+    "2412-15301_sent_5e18cbd0": "All source code implementing new methods have comments detailing the implementation, with references to the paper where each step comes from (yes)",
+    "2412-15301_sent_5ce747e4": "If an algorithm depends on randomness, then the method used for setting seeds is described in a way sufficient to allow replication of results.",
+    "2412-15301_sent_096e9ad1": "This paper specifies the computing infrastructure used for running experiments (hardware and software), including GPU/CPU models; amount of memory; operating system; names and versions of relevant software libraries and frameworks.",
+    "2412-15301_sent_6b0e4bf6": "This paper formally describes evaluation metrics used and explains the motivation for choosing these metrics.",
+    "2412-15301_sent_7e4f7f5b": "(partial)",
+    "2412-15301_sent_289269c6": "This paper states the number of algorithm runs used to compute each reported result.",
+    "2412-15301_sent_98925a1f": "Analysis of experiments goes beyond single-dimensional summaries of performance (e.g., average; median) to include measures of variation, confidence, or other distributional information.",
+    "2412-15301_sent_bfa3fb2f": "The significance of any improvement or decrease in performance is judged using appropriate statistical tests (e.g., Wilcoxon signed-rank).",
+    "2412-15301_sent_e01ae857": "This paper lists all final (hyper-)parameters used for each model/algorithm in the paper’s experiments.",
+    "2412-15301_sent_acbe30a3": "This paper states the number and range of values tried per (hyper-) parameter during development of the paper, along with the criterion used for selecting the final parameter setting."
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15301_sent_676977e1": "2412-15301_doc_root",
+      "2412-15301_abstract_ce28071e": "2412-15301_doc_root",
+      "2412-15301_sent_a3096fd5": "2412-15301_abstract_ce28071e",
+      "2412-15301_sent_44122902": "2412-15301_abstract_ce28071e",
+      "2412-15301_sent_5528b0c8": "2412-15301_abstract_ce28071e",
+      "2412-15301_sent_362eb0fb": "2412-15301_abstract_ce28071e",
+      "2412-15301_sent_8d063d21": "2412-15301_abstract_ce28071e",
+      "2412-15301_sent_ee37cf2a": "2412-15301_abstract_ce28071e",
+      "2412-15301_sent_f32dc1ba": "2412-15301_abstract_ce28071e",
+      "2412-15301_sent_4f2eb8ab": "2412-15301_abstract_ce28071e",
+      "2412-15301_section_0b79795d": "2412-15301_doc_root",
+      "2412-15301_sent_ecd09b17": "2412-15301_section_0b79795d",
+      "2412-15301_sent_1688dc79": "2412-15301_section_0b79795d",
+      "2412-15301_sent_19ff4ef6": "2412-15301_section_0b79795d",
+      "2412-15301_sent_c60bd2ba": "2412-15301_section_0b79795d",
+      "2412-15301_sent_c0d9b4b1": "2412-15301_section_0b79795d",
+      "2412-15301_fig_b71837c1": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_1e4102c9": "2412-15301_section_0b79795d",
+      "2412-15301_sent_46a91fc4": "2412-15301_section_0b79795d",
+      "2412-15301_sent_68a21915": "2412-15301_section_0b79795d",
+      "2412-15301_sent_0d6fc958": "2412-15301_section_0b79795d",
+      "2412-15301_sent_2edb2648": "2412-15301_section_0b79795d",
+      "2412-15301_sent_8debdd13": "2412-15301_section_0b79795d",
+      "2412-15301_sent_fb4e0032": "2412-15301_section_0b79795d",
+      "2412-15301_sent_f6afa72d": "2412-15301_section_0b79795d",
+      "2412-15301_sent_ccda9197": "2412-15301_section_0b79795d",
+      "2412-15301_sent_41255fc0": "2412-15301_section_0b79795d",
+      "2412-15301_sent_f6bb0935": "2412-15301_section_0b79795d",
+      "2412-15301_sent_0980e872": "2412-15301_section_0b79795d",
+      "2412-15301_sent_cdb6ee95": "2412-15301_section_0b79795d",
+      "2412-15301_sent_d0540eab": "2412-15301_section_0b79795d",
+      "2412-15301_sent_4a037fe6": "2412-15301_section_0b79795d",
+      "2412-15301_sent_00d1453f": "2412-15301_section_0b79795d",
+      "2412-15301_sent_bbdd9370": "2412-15301_section_0b79795d",
+      "2412-15301_sent_a6ba8ec0": "2412-15301_section_0b79795d",
+      "2412-15301_sent_f6daedaa": "2412-15301_section_0b79795d",
+      "2412-15301_sent_234e0565": "2412-15301_section_0b79795d",
+      "2412-15301_section_92e1f394": "2412-15301_doc_root",
+      "2412-15301_sent_5e5f082e": "2412-15301_section_92e1f394",
+      "2412-15301_sent_4ea17dc6": "2412-15301_section_92e1f394",
+      "2412-15301_sent_adc830ce": "2412-15301_section_92e1f394",
+      "2412-15301_sent_c9a74c35": "2412-15301_section_92e1f394",
+      "2412-15301_sent_dd741049": "2412-15301_section_92e1f394",
+      "2412-15301_sent_26ffc31b": "2412-15301_section_92e1f394",
+      "2412-15301_sent_0c379a44": "2412-15301_section_92e1f394",
+      "2412-15301_sent_a9a3d987": "2412-15301_section_92e1f394",
+      "2412-15301_sent_ef037d71": "2412-15301_section_92e1f394",
+      "2412-15301_sent_d024e33e": "2412-15301_section_92e1f394",
+      "2412-15301_sent_e6d40234": "2412-15301_section_92e1f394",
+      "2412-15301_sent_831a94d5": "2412-15301_section_92e1f394",
+      "2412-15301_sent_a3f37102": "2412-15301_section_92e1f394",
+      "2412-15301_sent_cc7ce2bb": "2412-15301_section_92e1f394",
+      "2412-15301_sent_42deb364": "2412-15301_section_92e1f394",
+      "2412-15301_sent_21c3150b": "2412-15301_section_92e1f394",
+      "2412-15301_sent_756a9e12": "2412-15301_section_92e1f394",
+      "2412-15301_sent_e87d3eed": "2412-15301_section_92e1f394",
+      "2412-15301_sent_af187de2": "2412-15301_section_92e1f394",
+      "2412-15301_sent_12546c3e": "2412-15301_section_92e1f394",
+      "2412-15301_sent_5e6e5bc4": "2412-15301_section_92e1f394",
+      "2412-15301_sent_a5e8c3fa": "2412-15301_section_92e1f394",
+      "2412-15301_section_2ba0c1d2": "2412-15301_doc_root",
+      "2412-15301_subsection_d3ed9747": "2412-15301_section_2ba0c1d2",
+      "2412-15301_sent_5707eaae": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_11454eec": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_11c1670a": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_c01cb3be": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_1e855393": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_a2584cc4": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_e1225fa9": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_61bab762": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_4d5e0e66": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_61bcbcff": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_922b6141": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_798b25d8": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_4af6eae9": "2412-15301_subsection_d3ed9747",
+      "2412-15301_eq_c01fe0df": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_e7cd9800": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_600d9d9f": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_830bb123": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_3d9dca3b": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_80cd2a7a": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_d6ff1eae": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_ac7993f4": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_48b24a46": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_19a36c95": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_86264776": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_eb9926bc": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_e680d161": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_3268c63c": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_0d5a9b3b": "2412-15301_subsection_d3ed9747",
+      "2412-15301_sent_55dd0279": "2412-15301_subsection_d3ed9747",
+      "2412-15301_subsection_ba8ee4e1": "2412-15301_section_2ba0c1d2",
+      "2412-15301_sent_ce813367": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_c1b3becb": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_eq_68b8e3e0": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_04c77ffa": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_34e8aaac": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_d51fa94f": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_604181a7": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_b01d910b": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_1f129450": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_4bbac8ec": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_30ef0955": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_eq_db750aa0": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_4bed1282": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_532897c4": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_7f4292fc": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_21d81651": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_a3acf6e9": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_19449226": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_3bdc96ff": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_278b643b": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_e82710ae": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_c573edb7": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_e897ad38": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_07c184da": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_fig_a9486190": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_d1036513": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_a0421c25": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_a7ee7d4d": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_sent_b267f5ce": "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_subsection_0ee3daf3": "2412-15301_section_2ba0c1d2",
+      "2412-15301_sent_624ce1f7": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_c4cdc159": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_4a17b3d1": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_07aa76da": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_3be2ebf0": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_ed562246": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_8047b51e": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_e2ca7873": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_eq_752223b7": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_c33ce5f7": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_406b2e39": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_7194f93f": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_e4acfe40": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_6160a27d": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_de2afe38": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_bd280cbf": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_8e3a4220": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_8590dc02": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_3ed2cb57": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_eq_6e18fe7e": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_d88c77af": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_eq_02a0f56a": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_e2c5c112": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_17c74332": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_055300d9": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_b7f279b8": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_42c0d3b1": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_4e48a00e": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_e48d3f7a": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_111bb0ce": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_33ee3f0d": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_61c5288d": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_4902943d": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_sent_68d35043": "2412-15301_subsection_0ee3daf3",
+      "2412-15301_section_4829262c": "2412-15301_doc_root",
+      "2412-15301_sent_49bc60ec": "2412-15301_section_4829262c",
+      "2412-15301_sent_c68688ce": "2412-15301_section_4829262c",
+      "2412-15301_sent_6cfaae2a": "2412-15301_section_4829262c",
+      "2412-15301_sent_cffa8686": "2412-15301_section_4829262c",
+      "2412-15301_sent_5d1286a6": "2412-15301_section_4829262c",
+      "2412-15301_sent_8b9c5658": "2412-15301_section_4829262c",
+      "2412-15301_sent_59f97fca": "2412-15301_section_4829262c",
+      "2412-15301_sent_99b6ecde": "2412-15301_section_4829262c",
+      "2412-15301_sent_d52cc6e1": "2412-15301_section_4829262c",
+      "2412-15301_sent_4e25e926": "2412-15301_section_4829262c",
+      "2412-15301_sent_e6330150": "2412-15301_section_4829262c",
+      "2412-15301_sent_b9ee21f6": "2412-15301_section_4829262c",
+      "2412-15301_sent_dded9f42": "2412-15301_section_4829262c",
+      "2412-15301_sent_5bf8b256": "2412-15301_section_4829262c",
+      "2412-15301_sent_d406bd94": "2412-15301_section_4829262c",
+      "2412-15301_sent_8a07bbf2": "2412-15301_section_4829262c",
+      "2412-15301_sent_fea7a5d6": "2412-15301_section_4829262c",
+      "2412-15301_sent_010e6ad4": "2412-15301_section_4829262c",
+      "2412-15301_fig_28a4977b": "2412-15301_section_4829262c",
+      "2412-15301_sent_ea3bdc2b": "2412-15301_section_4829262c",
+      "2412-15301_sent_b69aa9b2": "2412-15301_section_4829262c",
+      "2412-15301_sent_55e7e702": "2412-15301_section_4829262c",
+      "2412-15301_sent_8d8f6f5a": "2412-15301_section_4829262c",
+      "2412-15301_sent_46f4155e": "2412-15301_section_4829262c",
+      "2412-15301_sent_2d67482f": "2412-15301_section_4829262c",
+      "2412-15301_sent_f2afa359": "2412-15301_section_4829262c",
+      "2412-15301_sent_8df5ed94": "2412-15301_section_4829262c",
+      "2412-15301_sent_32367e40": "2412-15301_section_4829262c",
+      "2412-15301_sent_29b64b34": "2412-15301_section_4829262c",
+      "2412-15301_sent_6714b1ed": "2412-15301_section_4829262c",
+      "2412-15301_sent_22f6de7e": "2412-15301_section_4829262c",
+      "2412-15301_sent_eceb529b": "2412-15301_section_4829262c",
+      "2412-15301_sent_3fe9953c": "2412-15301_section_4829262c",
+      "2412-15301_sent_319d4260": "2412-15301_section_4829262c",
+      "2412-15301_sent_5156a121": "2412-15301_section_4829262c",
+      "2412-15301_sent_baf763a7": "2412-15301_section_4829262c",
+      "2412-15301_sent_71d1d23a": "2412-15301_section_4829262c",
+      "2412-15301_sent_2fe29613": "2412-15301_section_4829262c",
+      "2412-15301_sent_e3cd9560": "2412-15301_section_4829262c",
+      "2412-15301_sent_28ca8aee": "2412-15301_section_4829262c",
+      "2412-15301_sent_0343faf6": "2412-15301_section_4829262c",
+      "2412-15301_sent_735b76d2": "2412-15301_section_4829262c",
+      "2412-15301_sent_bf7440b5": "2412-15301_section_4829262c",
+      "2412-15301_sent_cc097b68": "2412-15301_section_4829262c",
+      "2412-15301_section_6f8b794f": "2412-15301_doc_root",
+      "2412-15301_sent_54d32e87": "2412-15301_section_6f8b794f",
+      "2412-15301_sent_927b9fac": "2412-15301_section_6f8b794f",
+      "2412-15301_sent_90f53542": "2412-15301_section_6f8b794f",
+      "2412-15301_sent_deb20069": "2412-15301_section_6f8b794f",
+      "2412-15301_sent_c31743cc": "2412-15301_section_6f8b794f",
+      "2412-15301_sent_80894b6f": "2412-15301_section_6f8b794f",
+      "2412-15301_sent_0768d47c": "2412-15301_section_6f8b794f",
+      "2412-15301_sent_3aeb1540": "2412-15301_doc_root",
+      "2412-15301_subsection_c3c40335": "2412-15301_sent_3aeb1540",
+      "2412-15301_sent_69a74ef1": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_d19bba2f": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_fa91748e": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_e12c1f50": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_5f6e682e": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_04e59534": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_8be223a5": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_6ab81b87": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_e9d1f0bb": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_2b33c51a": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_fa6536f8": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_31bda972": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_f00631df": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_36f86887": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_3e38474c": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_32c0cba3": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_feba3a07": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_8a87e097": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_a0b2c74e": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_deaacbec": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_dd492955": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_0b24f094": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_2c6d5288": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_dcb43755": "2412-15301_subsection_c3c40335",
+      "2412-15301_eq_5df265ac": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_eaf6171e": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_e7eab6a5": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_02108a05": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_5cc62b84": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_a600a9a8": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_bbe1b9b0": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_be818e4e": "2412-15301_subsection_c3c40335",
+      "2412-15301_sent_a9f95fc6": "2412-15301_subsection_c3c40335",
+      "2412-15301_subsection_c7eddce1": "2412-15301_sent_3aeb1540",
+      "2412-15301_sent_fc032afb": "2412-15301_subsection_c7eddce1",
+      "2412-15301_sent_2cb93901": "2412-15301_subsection_c7eddce1",
+      "2412-15301_subsection_191e5f6e": "2412-15301_sent_3aeb1540",
+      "2412-15301_sent_48cfcfaf": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_8411f28d": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_4f81afad": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_02e43aca": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_a82e0bc4": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_4ef3258d": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_67df9c25": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_f9960cfc": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_331f846b": "2412-15301_subsection_191e5f6e",
+      "2412-15301_sent_5e7f39e3": "2412-15301_subsection_191e5f6e",
+      "2412-15301_section_b31ce0f4": "2412-15301_doc_root",
+      "2412-15301_sent_64951bd4": "2412-15301_section_b31ce0f4",
+      "2412-15301_itemize_dd551749": "2412-15301_section_b31ce0f4",
+      "2412-15301_item_e0f415f6": "2412-15301_itemize_dd551749",
+      "2412-15301_sent_5a673e6d": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_b6b42c74": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_8486c179": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_1403a7e4": "2412-15301_section_b31ce0f4",
+      "2412-15301_sent_d9a33724": "2412-15301_section_b31ce0f4",
+      "2412-15301_sent_7881ef6c": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_2e425466": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_30f35813": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_36060328": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_77e26c3e": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_4496defb": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_a2b7e518": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_e972608f": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_586e90f3": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_26d807ae": "2412-15301_section_b31ce0f4",
+      "2412-15301_sent_aa758cbd": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_4b2c803c": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_93d8b786": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_6dd4a1a5": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_0c126239": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_5e18cbd0": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_5ce747e4": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_096e9ad1": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_6b0e4bf6": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_7e4f7f5b": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_289269c6": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_98925a1f": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_bfa3fb2f": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_e01ae857": "2412-15301_item_e0f415f6",
+      "2412-15301_sent_acbe30a3": "2412-15301_item_e0f415f6"
+    }
+  },
+  "merged_parents": {
+    "2412-15301_sent_676977e1": [
+      "2412-15301_doc_root"
+    ],
+    "2412-15301_abstract_ce28071e": [
+      "2412-15301_doc_root"
+    ],
+    "2412-15301_sent_a3096fd5": [
+      "2412-15301_abstract_ce28071e"
+    ],
+    "2412-15301_sent_44122902": [
+      "2412-15301_abstract_ce28071e"
+    ],
+    "2412-15301_sent_5528b0c8": [
+      "2412-15301_abstract_ce28071e"
+    ],
+    "2412-15301_sent_362eb0fb": [
+      "2412-15301_abstract_ce28071e"
+    ],
+    "2412-15301_sent_8d063d21": [
+      "2412-15301_abstract_ce28071e"
+    ],
+    "2412-15301_sent_ee37cf2a": [
+      "2412-15301_abstract_ce28071e"
+    ],
+    "2412-15301_sent_f32dc1ba": [
+      "2412-15301_abstract_ce28071e"
+    ],
+    "2412-15301_sent_4f2eb8ab": [
+      "2412-15301_abstract_ce28071e"
+    ],
+    "2412-15301_section_0b79795d": [
+      "2412-15301_doc_root"
+    ],
+    "2412-15301_sent_ecd09b17": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_1688dc79": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_19ff4ef6": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_c60bd2ba": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_c0d9b4b1": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_fig_b71837c1": [
+      "2412-15301_section_0b79795d",
+      "2412-15301_section_4829262c",
+      "2412-15301_subsection_0ee3daf3",
+      "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_subsection_c3c40335",
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_1e4102c9": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_46a91fc4": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_68a21915": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_0d6fc958": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_2edb2648": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_8debdd13": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_fb4e0032": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_f6afa72d": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_ccda9197": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_41255fc0": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_f6bb0935": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_0980e872": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_cdb6ee95": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_d0540eab": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_4a037fe6": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_00d1453f": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_bbdd9370": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_a6ba8ec0": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_f6daedaa": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_sent_234e0565": [
+      "2412-15301_section_0b79795d"
+    ],
+    "2412-15301_section_92e1f394": [
+      "2412-15301_doc_root"
+    ],
+    "2412-15301_sent_5e5f082e": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_4ea17dc6": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_adc830ce": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_c9a74c35": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_dd741049": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_26ffc31b": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_0c379a44": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_a9a3d987": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_ef037d71": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_d024e33e": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_e6d40234": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_831a94d5": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_a3f37102": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_cc7ce2bb": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_42deb364": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_21c3150b": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_756a9e12": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_e87d3eed": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_af187de2": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_12546c3e": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_5e6e5bc4": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_sent_a5e8c3fa": [
+      "2412-15301_section_92e1f394"
+    ],
+    "2412-15301_section_2ba0c1d2": [
+      "2412-15301_doc_root"
+    ],
+    "2412-15301_subsection_d3ed9747": [
+      "2412-15301_section_2ba0c1d2"
+    ],
+    "2412-15301_sent_5707eaae": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_11454eec": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_11c1670a": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_c01cb3be": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_1e855393": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_a2584cc4": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_e1225fa9": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_61bab762": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_4d5e0e66": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_61bcbcff": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_922b6141": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_798b25d8": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_4af6eae9": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_eq_c01fe0df": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_e7cd9800": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_600d9d9f": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_830bb123": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_3d9dca3b": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_80cd2a7a": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_d6ff1eae": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_ac7993f4": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_48b24a46": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_19a36c95": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_86264776": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_eb9926bc": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_e680d161": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_3268c63c": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_0d5a9b3b": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_sent_55dd0279": [
+      "2412-15301_subsection_d3ed9747"
+    ],
+    "2412-15301_subsection_ba8ee4e1": [
+      "2412-15301_section_2ba0c1d2"
+    ],
+    "2412-15301_sent_ce813367": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_c1b3becb": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_eq_68b8e3e0": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_04c77ffa": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_34e8aaac": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_d51fa94f": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_604181a7": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_b01d910b": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_1f129450": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_4bbac8ec": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_30ef0955": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_eq_db750aa0": [
+      "2412-15301_subsection_ba8ee4e1",
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_4bed1282": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_532897c4": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_7f4292fc": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_21d81651": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_a3acf6e9": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_19449226": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_3bdc96ff": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_278b643b": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_e82710ae": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_c573edb7": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_e897ad38": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_07c184da": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_fig_a9486190": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_d1036513": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_a0421c25": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_a7ee7d4d": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_sent_b267f5ce": [
+      "2412-15301_subsection_ba8ee4e1"
+    ],
+    "2412-15301_subsection_0ee3daf3": [
+      "2412-15301_section_2ba0c1d2"
+    ],
+    "2412-15301_sent_624ce1f7": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_c4cdc159": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_4a17b3d1": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_07aa76da": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_3be2ebf0": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_ed562246": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_8047b51e": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_e2ca7873": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_eq_752223b7": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_c33ce5f7": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_406b2e39": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_7194f93f": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_e4acfe40": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_6160a27d": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_de2afe38": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_bd280cbf": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_8e3a4220": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_8590dc02": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_3ed2cb57": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_eq_6e18fe7e": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_d88c77af": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_eq_02a0f56a": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_e2c5c112": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_17c74332": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_055300d9": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_b7f279b8": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_42c0d3b1": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_4e48a00e": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_e48d3f7a": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_111bb0ce": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_33ee3f0d": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_61c5288d": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_4902943d": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_sent_68d35043": [
+      "2412-15301_subsection_0ee3daf3"
+    ],
+    "2412-15301_section_4829262c": [
+      "2412-15301_doc_root"
+    ],
+    "2412-15301_sent_49bc60ec": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_c68688ce": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_6cfaae2a": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_cffa8686": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_5d1286a6": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_8b9c5658": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_59f97fca": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_99b6ecde": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_d52cc6e1": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_4e25e926": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_e6330150": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_b9ee21f6": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_dded9f42": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_5bf8b256": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_d406bd94": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_8a07bbf2": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_fea7a5d6": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_010e6ad4": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_fig_28a4977b": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_ea3bdc2b": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_b69aa9b2": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_55e7e702": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_8d8f6f5a": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_46f4155e": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_2d67482f": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_f2afa359": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_8df5ed94": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_32367e40": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_29b64b34": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_6714b1ed": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_22f6de7e": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_eceb529b": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_3fe9953c": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_319d4260": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_5156a121": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_baf763a7": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_71d1d23a": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_2fe29613": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_e3cd9560": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_28ca8aee": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_0343faf6": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_735b76d2": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_bf7440b5": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_sent_cc097b68": [
+      "2412-15301_section_4829262c"
+    ],
+    "2412-15301_section_6f8b794f": [
+      "2412-15301_doc_root"
+    ],
+    "2412-15301_sent_54d32e87": [
+      "2412-15301_section_6f8b794f"
+    ],
+    "2412-15301_sent_927b9fac": [
+      "2412-15301_section_6f8b794f"
+    ],
+    "2412-15301_sent_90f53542": [
+      "2412-15301_section_6f8b794f"
+    ],
+    "2412-15301_sent_deb20069": [
+      "2412-15301_section_6f8b794f"
+    ],
+    "2412-15301_sent_c31743cc": [
+      "2412-15301_section_6f8b794f"
+    ],
+    "2412-15301_sent_80894b6f": [
+      "2412-15301_section_6f8b794f"
+    ],
+    "2412-15301_sent_0768d47c": [
+      "2412-15301_section_6f8b794f"
+    ],
+    "2412-15301_sent_3aeb1540": [
+      "2412-15301_doc_root",
+      "2412-15301_section_6f8b794f"
+    ],
+    "2412-15301_subsection_c3c40335": [
+      "2412-15301_sent_3aeb1540"
+    ],
+    "2412-15301_sent_69a74ef1": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_d19bba2f": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_fa91748e": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_e12c1f50": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_5f6e682e": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_04e59534": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_8be223a5": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_6ab81b87": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_e9d1f0bb": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_2b33c51a": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_fa6536f8": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_31bda972": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_f00631df": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_36f86887": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_3e38474c": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_32c0cba3": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_feba3a07": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_8a87e097": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_a0b2c74e": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_deaacbec": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_dd492955": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_0b24f094": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_2c6d5288": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_dcb43755": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_eq_5df265ac": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_eaf6171e": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_e7eab6a5": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_02108a05": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_5cc62b84": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_a600a9a8": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_bbe1b9b0": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_be818e4e": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_sent_a9f95fc6": [
+      "2412-15301_subsection_c3c40335"
+    ],
+    "2412-15301_subsection_c7eddce1": [
+      "2412-15301_sent_3aeb1540"
+    ],
+    "2412-15301_sent_fc032afb": [
+      "2412-15301_subsection_c7eddce1"
+    ],
+    "2412-15301_sent_2cb93901": [
+      "2412-15301_subsection_c7eddce1"
+    ],
+    "2412-15301_subsection_191e5f6e": [
+      "2412-15301_sent_3aeb1540"
+    ],
+    "2412-15301_sent_48cfcfaf": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_8411f28d": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_4f81afad": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_02e43aca": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_a82e0bc4": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_4ef3258d": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_67df9c25": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_f9960cfc": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_331f846b": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_sent_5e7f39e3": [
+      "2412-15301_subsection_191e5f6e"
+    ],
+    "2412-15301_section_b31ce0f4": [
+      "2412-15301_doc_root"
+    ],
+    "2412-15301_sent_64951bd4": [
+      "2412-15301_section_b31ce0f4"
+    ],
+    "2412-15301_itemize_dd551749": [
+      "2412-15301_section_b31ce0f4"
+    ],
+    "2412-15301_item_e0f415f6": [
+      "2412-15301_itemize_dd551749"
+    ],
+    "2412-15301_sent_5a673e6d": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_b6b42c74": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_8486c179": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_1403a7e4": [
+      "2412-15301_section_b31ce0f4"
+    ],
+    "2412-15301_sent_d9a33724": [
+      "2412-15301_section_b31ce0f4"
+    ],
+    "2412-15301_sent_7881ef6c": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_2e425466": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_30f35813": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_36060328": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_77e26c3e": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_4496defb": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_a2b7e518": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_e972608f": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_586e90f3": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_26d807ae": [
+      "2412-15301_section_b31ce0f4"
+    ],
+    "2412-15301_sent_aa758cbd": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_4b2c803c": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_93d8b786": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_6dd4a1a5": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_0c126239": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_5e18cbd0": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_5ce747e4": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_096e9ad1": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_6b0e4bf6": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_7e4f7f5b": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_289269c6": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_98925a1f": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_bfa3fb2f": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_e01ae857": [
+      "2412-15301_item_e0f415f6"
+    ],
+    "2412-15301_sent_acbe30a3": [
+      "2412-15301_item_e0f415f6"
+    ]
+  }
+}

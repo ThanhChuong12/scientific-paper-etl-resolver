@@ -1,0 +1,1845 @@
+{
+  "elements": {
+    "2412-15310_doc_root": "DOCUMENT_ROOT",
+    "2412-15310_sent_ac2f55a2": "\\title{MRWeb: An Exploration of Generating Multi-Page Resource-Aware Web Code from UI Designs} \\author{ {\\bf Yuxuan Wan}$^{1}$, {\\bf Yi Dong}$^{1}$, {\\bf Jingyu Xiao}$^{1}$, {\\bf Yintong Huo}$^{1}$, \\\\ {\\bf Wenxuan Wang}$^{1}$\\thanks{\\ \\ Wenxuan Wang is the corresponding author.}, {\\bf Michael R.",
+    "2412-15310_sent_32064a6a": "Lyu}$^{1}$ \\\\ $^1$The Chinese University of Hong Kong, Hong Kong, China \\\\ \\{yxwan9, ythuo, wxwang, lyu\\}@cse.cuhk.edu.hk,\\\\ dy13367795706@gmail.com, whalexiao99@gmail.com \\maketitle",
+    "2412-15310_abstract_ce28071e": "abstract",
+    "2412-15310_sent_dbdb80c2": "Multi-page websites dominate modern web development.",
+    "2412-15310_sent_f2a35974": "However, existing design-to-code methods rely on simplified assumptions, limiting to single-page, self-contained webpages without external resource connection.",
+    "2412-15310_sent_abe664a3": "To address this gap, we introduce the Multi-Page Resource-Aware Webpage (MRWeb) generation task, which transforms UI designs into multi-page, functional web UIs with internal/external navigation, image loading, and backend routing.",
+    "2412-15310_sent_42aefa71": "We propose a novel resource list data structure to track resources, links, and design components.",
+    "2412-15310_sent_73e9e64c": "Our study applies existing methods to the MRWeb problem using a newly curated dataset of 500 websites (300 synthetic, 200 real-world).",
+    "2412-15310_sent_d58b2050": "Specifically, we identify the best metric to evaluate the similarity of the web UI, assess the impact of the resource list on MRWeb generation, analyze MLLM limitations, and evaluate the effectiveness of the MRWeb tool in real-world workflows.",
+    "2412-15310_sent_ce52b870": "The results show that resource lists boost navigation functionality from 0\\% to 66\\%-80\\% while facilitating visual similarity.",
+    "2412-15310_sent_c1e18d3f": "Our proposed metrics and evaluation framework provide new insights into MLLM performance on MRWeb tasks.",
+    "2412-15310_sent_09a2e946": "We release the MRWeb tool, dataset, and evaluation framework to promote further research\\footnote{\\url{https://github.com/WebPAI/MRWeb}}.",
+    "2412-15310_section_0b79795d": "Introduction",
+    "2412-15310_fig_a59b6363": "\\begin{figure}\n\n \\includegraphics[width=\\linewidth]{Sections/figs/pipeline.pdf}\n\n \\caption{Comparison between self-contained webpage and multi-page resource-aware webpage (MRWeb). MRWeb supports multi-page navigation, real-image loading and backend routing.}\n\n\\end{figure}",
+    "2412-15310_sent_78fe483d": "Websites are important in today's digital landscape, serving as essential platforms for diverse applications in our daily lives~\\cite{website_statistics_2024}.",
+    "2412-15310_sent_4c3225bd": "They can be categorized into two types: single-page and multi-page.",
+    "2412-15310_sent_3e9283da": "Single-page websites update content dynamically on a single page without reloading, while multi-page websites consist of multiple interconnected pages.",
+    "2412-15310_sent_ea5ce919": "In reality, multi-page websites are dominant due to their scalability and structured navigation functionality~\\cite{waytogrow2024spa,web2024onepage}.",
+    "2412-15310_sent_7f507413": "To examine this, we conducted a preliminary study by sampling the top 300 most visited websites ranked by the Tranco list~\\footnote{https://tranco-list.eu}.",
+    "2412-15310_sent_78d9ef14": "For each website, we analyzed its structure by recursively visiting all internal links to identify distinct internal pages, as well as counting the number of external links, internal links, and images present on each webpage.",
+    "2412-15310_sent_8f000cbc": "The results showed that 271 (90.3\\%) of the sampled websites are multi-page, highlighting their widespread usage and the complex structures they often exhibit.",
+    "2412-15310_sent_d3b392b6": "Appendix~\\ref{sec:motivating-study} describes the study in detail.",
+    "2412-15310_sent_2ae8205f": "Practical solutions for generating multi-page web user interfaces (UIs) from designs remain underexplored. Existing work focuses on the simpler task of design-to-code, which generates self-contained web pages (Figure~\\ref{fig:pipeline}).",
+    "2412-15310_sent_0ca9452d": "This leaves a gap in addressing the complexities of multi-page, resource-aware web UI development, where (1) webpages link to internal pages with unlimited navigation paths, (2) webpages link to external resources like websites and images, and (3) webpages route to backends for data exchange.",
+    "2412-15310_sent_b2fbc7d2": "We term this task \\taskname to highlight the shift from design-to-code to Multi-Page Resource-Aware Webpage generation.",
+    "2412-15310_sent_e465b6a2": "Figure~\\ref{fig:pipeline} contrasts self-contained webpages with MRWebs, which enable code-free development from UI designs to resource-aware, navigable websites, democratizing web development.",
+    "2412-15310_sent_9ed64821": "Unfortunately, constructing such a framework poses several challenges.",
+    "2412-15310_sent_fa44d096": "First, there is no established data structure that integrates visual design elements with internal or external resources and tracks their correspondences.",
+    "2412-15310_sent_4d4e0711": "Unlike the design-to-code task that generates self-contained code from design images, \\taskname should incorporate resources, navigation paths, and their links to visual design elements, necessitating a new data structure.",
+    "2412-15310_sent_b8c3c03d": "Second, there is a lack of high-quality datasets for \\taskname since the previousn-to-code task did not contain real images or internal/external links.",
+    "2412-15310_sent_960ae0f8": "Third, there are no standardized metrics for evaluating the performance of the \\taskname task.",
+    "2412-15310_sent_b16b99d1": "This makes it difficult to measure the accuracy of generated links, images, and their correspondence with visual design elements.",
+    "2412-15310_sent_8a9e14e3": "As a result, there is insufficient understanding of how effectively MLLMs produce \\taskname code from designs.",
+    "2412-15310_sent_3453065b": "To bridge this gap, we propose the first evaluation framework for \\taskname generation.",
+    "2412-15310_sent_aa8cb1df": "Specifically, we define a novel data structure, the resource list, which uses a dictionary-like format to store internal/external resources, such as links and images, and their correspondence with visual designs (e.g., screenshots).",
+    "2412-15310_sent_06930479": "Next, we collect the first \\taskname dataset, comprising 500 websites (300 synthetic, 200 real-world), along with their associated resource lists, screenshots, and ground truth code.",
+    "2412-15310_sent_28cb5165": "The generation framework accepts the resource lists and screenshots as inputs and calls MLLMs to generate functional \\taskname code directly.",
+    "2412-15310_sent_0af58388": "To assess the generated code, we introduce a suite of metrics designed to evaluate and analyze both the visual and functional performance of MLLMs on the \\taskname task.",
+    "2412-15310_sent_d51449f9": "Additionally, we implement this framework as a user-friendly tool for \\taskname generation, releasing all code and data to encourage future research.",
+    "2412-15310_fig_7993ce42": "\\begin{table*}",
+    "2412-15310_sent_d4397646": "\\caption{Comparison and statistics of benchmarks and datasets.",
+    "2412-15310_sent_dba45a7e": "All statistics are in the ``average $\\pm$ standard deviation'' format.} \\begin{adjustbox}{width=\\textwidth} \\begin{tabular}{|l|c|c|c|c|c|c|} & WebSight & VISION2UI & Design2Code & DWCG & Interaction2Code & MRWeb \\\\ & \\cite{laurençon2024unlocking} & \\cite{Gui2024VISION2UIAR} & \\cite{Si2024Design2CodeHF} & \\cite{Yun2024Web2CodeAL} & \\cite{xiao2024interaction2code} & (Ours) \\\\ Scope & Self-contained & Self-contained & Self-contained & Self-contained & Self-contained & \\taskname \\\\ Int.",
+    "2412-15310_sent_abd45031": "navigation & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush& \\XSolidBrush & \\Checkmark \\\\ Ext.",
+    "2412-15310_sent_e5c8cbbb": "navigation & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\Checkmark \\\\ Backend routing & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\Checkmark \\\\ Real img insertion & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\XSolidBrush & \\Checkmark \\\\ Source & Synthetic & Real-World & Real-World & Synthetic & Real-World & Synthetic / Real-World \\\\ Size & 823K & 20k & 484 & 60K & 97 & 500 (300 / 200) \\\\ Avg.",
+    "2412-15310_sent_6d08d398": "Len (tokens) & $647\\pm216$ & $8460\\pm7120$ & $31216\\pm23902$ & $471.8\\pm162.3$ & $141084\\pm160438$ & $692\\pm227$ / $113724\\pm139761$ \\\\ Avg.",
+    "2412-15310_sent_881a4e30": "Tags & $19\\pm8$ & $175\\pm94$ & $158\\pm100$ & $28.1\\pm10.6$ & $1291\\pm1574$ & $18\\pm7$ / $543\\pm768$ \\\\ Avg.",
+    "2412-15310_sent_a1effb45": "DOM Depth & $5\\pm1$ & $15\\pm5$ & $13\\pm5$ & $5.3\\pm1.0$ & $18\\pm6$ & $5\\pm1$ / $15\\pm6$ \\\\ Avg.",
+    "2412-15310_sent_4b654452": "Unique Tags & $10\\pm3$ & $21\\pm5$ & $22\\pm6$ & $13.6\\pm2.7$ & $31\\pm9$ & $10\\pm3$ / $22\\pm8$ \\\\ Avg.",
+    "2412-15310_sent_adfc3014": "Resource List Len.",
+    "2412-15310_sent_d9f749b8": "& - & - & - & - & - & $3\\pm2$ / $92\\pm130$ \\\\ \\end{tabular} \\end{adjustbox} \\end{table*} To sum up, the contributions of this study are:",
+    "2412-15310_itemize_f57e9751": "itemize",
+    "2412-15310_item_49da0b8e": "item",
+    "2412-15310_sent_417dac99": "Define the \\taskname problem, introduce the first \\taskname benchmark with an innovative resource list data structure, and construct the first \\taskname dataset consisting of 500 websites.",
+    "2412-15310_sent_2b270bf3": "Propose a suite of metrics, conduct the first comprehensive image quality assessment (IQA) in the web UI domain to determine the best evaluation metric for web UI code generation, and collect an annotated IQA dataset for future studies.",
+    "2412-15310_sent_87df5c66": "Conduct a comprehensive study to evaluate the performance of SOTA MLLMs on \\taskname generation and highlighting some challenges faced by MLLMs.",
+    "2412-15310_sent_cb536079": "Develop a user-friendly tool for \\taskname tasks and release all code and data to foster further research and development in this emerging area.",
+    "2412-15310_section_aed402c3": "Related Work",
+    "2412-15310_sent_2da35ffa": "Existing UI code generation methods operate on three unrealistic assumptions: (1) websites have a single or limited number of pages, (2) webpages lack external links, and (3) webpages do not interact with backends.",
+    "2412-15310_sent_1c0208b3": "Our study in Appendix~\\ref{sec:motivating-study} highlights the misalignment of these assumptions with real-world web UI needs. Table~\\ref{tab:comparison} provides a comparison of our benchmark with existing works, contextualizing our contribution.",
+    "2412-15310_sent_7b97ae39": "A detailed discussion of related works is in Appendix~\\ref{appendix:related-work}.",
+    "2412-15310_section_2a3ffdd8": "Task Formulation",
+    "2412-15310_paragraph_aea6ebf5": "Resource List",
+    "2412-15310_paragraph_0f5c5946": "Task Definition",
+    "2412-15310_section_94a9e172": "Dataset Collection",
+    "2412-15310_sent_206d4306": "We collect two types of data: synthetic and real-world.",
+    "2412-15310_sent_a8104f53": "Synthetic data enables controlled, diverse examples, including rare edge cases, but lacks the variety of real-world content.",
+    "2412-15310_sent_a44b564a": "Real-world data captures authentic webpage diversity, supporting model robustness across HTML structures and styles.",
+    "2412-15310_sent_bbe044cf": "Combining both data types provides a comprehensive benchmark.",
+    "2412-15310_sent_352b0c4b": "This section outlines our collection of code-screenshot pairs for synthetic and real-world data, the extraction of resource lists, and the statistics of the sampled data.",
+    "2412-15310_subsection_d8817da9": "Synthetic Data Collection",
+    "2412-15310_paragraph_a48316fa": "Link insertion.",
+    "2412-15310_paragraph_d40574a8": "Image replacement.",
+    "2412-15310_subsection_387b8117": "Real-world Data Collection",
+    "2412-15310_enumerate_53dccb3f": "enumerate",
+    "2412-15310_sent_4b8c2348": "Saving HTML files: The HTML+CSS content from each URL is saved into a single HTML file, ensuring all components are intact.",
+    "2412-15310_sent_3a43e511": "Filtering HTML: We discard websites that are blank or erroneous (e.g., page not found).",
+    "2412-15310_sent_3dd386b3": "HTML Simplification: We simplify the HTML by removing all non-visible elements, comments, and non-functional Javascripts.",
+    "2412-15310_sent_032fb461": "Final Screenshot: A final screenshot is taken after simplification, completing the real-world data pipeline.",
+    "2412-15310_subsection_1d79700c": "Resource List Extraction",
+    "2412-15310_sent_64482c6c": "Resource lists capture navigational and visual elements such as links, images, and backgrounds, structured to preserve the functionality and layout of each webpage.",
+    "2412-15310_sent_b8b2cd97": "For each webpage:",
+    "2412-15310_sent_e2fa4e5c": "Links (<a> tags): We extract each hyperlink’s position, type, and target URL.",
+    "2412-15310_sent_04c13da5": "Images and Background Images: For images, including both image tags and CSS background images, we record their position and source URL.",
+    "2412-15310_sent_480cfeab": "The resource list is automatically constructed by iterating through the webpage’s elements using Python Selenium, collecting attributes for each, and verifying their visibility and functionality.",
+    "2412-15310_subsection_9c689028": "Automation \\& Dataset Statistics",
+    "2412-15310_sent_3b5c5251": "We emphasize that the data collection pipeline is fully automated, enabling the on-demand generation of large-scale MRWeb training data.",
+    "2412-15310_sent_33472c19": "In principle, the synthetic dataset could match the full size of the WebSight dataset (two million), and the real-world data could encompass any website accessible on the internet.",
+    "2412-15310_sent_568abd6a": "To support future research, however, we sampled 300 synthetic and 200 real-world instances.",
+    "2412-15310_sent_07c5c906": "The statistics, quantitative metrics of the sampled dataset, and comparison with other datasets are provided in Table~\\ref{tab:comparison}.",
+    "2412-15310_sent_93703d7e": "To get a sense of the range of domains covered in our benchmark, we manually categorize what type of webpages they are based on their functions.",
+    "2412-15310_sent_839dad0e": "We present the pie chart of the most frequent domains in Figure~\\ref{fig:domain-distribution}.",
+    "2412-15310_sent_cbb8eed6": "The most prominent genres are companies' or organizations' websites and blogs.",
+    "2412-15310_fig_2ec0cc89": "\\begin{figure}\n\n \\includegraphics[width=0.8\\linewidth]{Sections/figs/categories_pie_chart.pdf}\n \\caption{Topic distribution of real-world web data in \\taskname dataset.}\n\n\\end{figure}",
+    "2412-15310_section_ca911de5": "Study Setup",
+    "2412-15310_subsection_ece634fe": "Evaluated Models",
+    "2412-15310_sent_255fe56f": "We employ three state-of-the-art (SOTA) MLLMs: Gemini 1.5 \\cite{google_gemini_api}, GPT-4o \\cite{openai_gpt4o} and Claude-3.5 \\cite{anthropic_claude} to evaluate their performance on \\taskname.",
+    "2412-15310_sent_e66ba695": "the specific model numbers are 20240806 for GPT-4o, 20240620 for Claude-3.5-Sonnet, and Gemini-1.5-Pro accessed during November 2024.",
+    "2412-15310_sent_46627613": "For MLLM model configurations, we set the temperature to 0, the random seed to 42, and the $max\\_tokens$ parameter to 4096 for each model.",
+    "2412-15310_sent_b521737e": "Other parameters are maintained at their default settings as specified in the corresponding API documentation~\\cite{google_gemini_api_docs,openai_vision_guide,anthropic_vision_docs}.",
+    "2412-15310_subsection_1e5aa4ec": "Prompting Strategies",
+    "2412-15310_sent_751e6542": "We use four types of prompting methods: self-contained, zero-shot, CoT, and self-refine.",
+    "2412-15310_sent_3488103e": "Self-contained prompting is adapted from Si et al.~\\cite{Si2024Design2CodeHF} to let the model directly generate code from screenshots without resource lists.",
+    "2412-15310_sent_55a8ea3e": "This method serves as a baseline for other methods that adopt input resource lists.",
+    "2412-15310_sent_d06e1804": "Zero-shot prompting directly lets the model generate HTML code from screenshots and resource lists.",
+    "2412-15310_sent_c9c27ea4": "Chain-of-Thought (CoT) prompting~\\cite{Wei2022ChainOT} generates a chain of thought for each question and then generates the corresponding code.",
+    "2412-15310_sent_50092e83": "For CoT, we use the \"let’s think step by step\" instruction from Chae et al. ~\\cite{Chae2024LanguageMA}.",
+    "2412-15310_sent_43f2d3b0": "Self-refine prompting~\\cite{Chen2023TeachingLL} let the model refine its own generated code via multi-turn conversation.",
+    "2412-15310_sent_4c70b4e5": "We adopt the self-refine prompting and direct promoting method from Si et al.~\\cite{Si2024Design2CodeHF}.",
+    "2412-15310_sent_a84be364": "We list the exact prompts used in our experiments in Appendix~\\ref{appendix:prompts}.",
+    "2412-15310_subsection_f32c3eda": "Metrics",
+    "2412-15310_subsubsection_7d4f8a95": "High-level Metrics",
+    "2412-15310_sent_4877ad4a": "For high-level performance, we evaluate visual similarity and functional similarity.",
+    "2412-15310_sent_a4b3026a": "For visual similarity, we explore three levels of image similarity metrics commonly applied in design-to-code or other computer vision (CV) tasks~\\cite{Wang2004ImageQA}: pixel, structural, and semantic.",
+    "2412-15310_sent_10249c49": "The detailed background and calculation of these metrics are in Appendix~\\ref{appendix:similarity}.",
+    "2412-15310_sent_cf83e505": "Visual: Pixel-level metrics",
+    "2412-15310_sent_285af345": "Mean Absolute Error (MAE)~\\cite{Nguyen2015ReverseEM,Moran2018MachineLP}: Measures the average absolute difference in pixel intensities.",
+    "2412-15310_sent_72a28507": "Peak Signal-to-Noise Ratio (PSNR)~\\cite{Lim2017EnhancedDR,Wang2019EDVRVR}: Based on Mean Squared Error (MSE), with higher values indicating greater similarity.",
+    "2412-15310_sent_cdec3d61": "Normalized Earth Mover's Distance (NEMD)~\\cite{Arjovsky2017WassersteinG,Rubner2000TheEM}: Captures spatial differences between images, normalized to be size-independent.",
+    "2412-15310_sent_8735142a": "Higher NEMD values indicate greater similarity.",
+    "2412-15310_sent_85e259a0": "Visual: Structure-level metrics",
+    "2412-15310_sent_dd5dd55f": "Structural Similarity Index Measure (SSIM)~\\cite{Zhou2024BridgingDA,Wang2004ImageQA}: Measures luminance, contrast, and structural changes.",
+    "2412-15310_sent_9ec76e37": "Visual: Semantic-level metrics",
+    "2412-15310_sent_3565def7": "CLIP Score~\\cite{Radford2021LearningTV,Si2024Design2CodeHF}: Aligns image embeddings with language representations to capture high-level conceptual similarity.",
+    "2412-15310_sent_57e0ebef": "Learned Perceptual Image Patch Similarity (LPIPS)~\\cite{Zhang2018TheUE,Simonyan2014VeryDC}: Assesses perceptual similarity using deep features from VGG~\\cite{Simonyan2014VeryDC}.",
+    "2412-15310_sent_956c984c": "Functional Metric:",
+    "2412-15310_sent_c1cc435a": "Resource Existence Ratio (RER)$_\\uparrow$: The proportion of resources in the reference resource list that exist (i.e., are successfully matched to corresponding resources) in the generated list is calculated as $\\text{RER} = \\frac{\\text{\\# Matched Resources in G}}{\\text{\\# Total Resources in R}}$.",
+    "2412-15310_sent_12feaddc": "Matching is determined based on relevant attributes of resources, such as whether navigational elements direct to the same link or whether images share the same source.",
+    "2412-15310_sent_7d537e35": "All image pairs, except for those used with CLIP Score, are padded with random noise to ensure consistent image sizes for comparison.",
+    "2412-15310_subsubsection_5c783de3": "Fine-Grained Metrics",
+    "2412-15310_sent_9bc2e763": "Beyond assessing visual and functional similarity, we employ a suite of fine-grained metrics to evaluate the specific capabilities of MLLMs, including visual grounding, color recognition, and text extraction.",
+    "2412-15310_sent_30eb3e06": "For each pair of matched resources in RER, we calculate:",
+    "2412-15310_sent_3bdbaa5d": "Position offset$_\\downarrow$: Measures the position shift between the generated and the original element with respect to the size of the original web page.",
+    "2412-15310_sent_f9ac4e3a": "For each pair of matched resources $(r_p, g_q)$, the positional alignment is evaluated by comparing the normalized offset of their corresponding web elements' center points: $\\text{Position Offset} = \\max\\left(\\frac{|x_p - x_q|}{W}, \\frac{|y_p - y_q|}{H}\\right)$.",
+    "2412-15310_sent_1eb8bba3": "$(x_p, y_p)$ and $(x_q, y_q)$ are the center positions of the bounding boxes enclosing the elements; $W$ and $H$ represent the width and height of the original webpage.",
+    "2412-15310_sent_c9999134": "Area Difference$_\\downarrow$: Measures the differences in size between corresponding actionable elements with respect to the original area of the element: $\\text{Area Difference} = \\frac{|A_p - A_q|}{A_p}$, where $A_p$ and $A_q$ are the areas occupied by the reference and generated actionable elements.",
+    "2412-15310_sent_183d3158": "Color Difference$_\\downarrow$: We use the CIEDE2000 color difference formula~\\cite{Luo2001TheDO} to assess the perceptual difference between the colors of element $r_p$ and $g_q$.",
+    "2412-15310_sent_72fe047e": "Text Difference$_\\downarrow$: For resources that involve text, such as buttons, their text similarity $\\text{Text Sim}(r_p, g_q)$ is calculated by normalizing the number of matching characters by the total length of the text.",
+    "2412-15310_sent_21b4f784": "We calculate the text difference by 1 - $\\text{Text Sim}(r_p, g_q)$.",
+    "2412-15310_sent_4b93543e": "\\caption{Overall correlation with human scores for web UI similarity metrics.",
+    "2412-15310_sent_b2a321fe": "CC: Correlation coefficient (absolute value); OR: Outlier ratio; MAE: Mean absolute error; RMS: Root mean square error; SROCC: Spearman's rank-order correlation coefficient (absolute value).",
+    "2412-15310_sent_29e3b7db": "We mark the best results with bold font and the second best with underline.",
+    "2412-15310_sent_d2367cc2": "Metrics are sorted by their SROCC.} \\begin{tabular}{@{}lcccccccccc@{}} & \\multicolumn{4}{c}{Variance-Weighted Regression} & \\multicolumn{4}{c}{Non-Linear Regression} & \\multicolumn{1}{c}{Direct} \\\\ \\cmidrule(lr){2-5} \\cmidrule(lr){6-9} \\cmidrule(lr){10-10} & CC $\\uparrow$ & MAE $\\downarrow$ & RMS $\\downarrow$ & OR $\\downarrow$ & CC $\\uparrow$ & MAE $\\downarrow$ & RMS $\\downarrow$ & OR $\\downarrow$ & SROCC $\\uparrow$ \\\\ MAE & 0.547 & 4.10 & 1.95 & 0.049 & 0.515 & 0.646 & 0.765 & 0.013 & 0.542 \\\\ NEMD & 0.469 & 3.98 & 1.95 & 0.052 & 0.532 & 0.628 & 0.752 & 0.023 & 0.508 \\\\ PSNR & 0.323 & 5.69 & 2.46 & 0.000 & 0.434 & 0.679 & 0.800 & 0.016 & 0.451 \\\\ CLIP & 0.314 & 5.37 & 2.41 & 0.013 & 0.426 & 0.681 & 0.800 & 0.010 & 0.340 \\\\ SSIM & 0.305 & 5.47 & 2.42 & 0.010 & 0.381 & 0.699 & 0.817 & 0.000 & 0.218 \\\\ LPIPS & 0.221 & 5.70 & 2.49 & 0.010 & 0.290 & 0.726 & 0.847 & 0.013 & 0.168 \\\\ Human & & & & & & & & & 0.640 \\\\ \\end{tabular} \\end{table*}",
+    "2412-15310_sent_6fe879b1": "\\caption{Visual metrics of models across methods.",
+    "2412-15310_sent_73e900a6": "SC: Self-contained; ZS: Zero-shot; CoT: Chain-of-thought; SR: Self-refine.",
+    "2412-15310_sent_08a890d1": "The best result per model is highlighted in bold.} \\begin{tabular}{@{}lcccccccccccc@{}} Model & \\multicolumn{4}{c}{Gemini-Pro} & \\multicolumn{4}{c}{GPT-4o} & \\multicolumn{4}{c}{Claude-3.5} \\\\ \\cmidrule(lr){2-5} \\cmidrule(lr){6-9} \\cmidrule(lr){10-13} Method & SC & ZS & CoT & SR & SC & ZS & CoT & SR & SC & ZS & CoT & SR \\\\ MAE\\textsubscript{$\\downarrow$} & 68.3 & 66.7 & 66.5 & 63.1 & 69.3 & 67.7 & 67.9 & 65.1 & 71.6 & 69.1 & 69.3 & 69.4 \\\\ NEMD\\textsubscript{$\\uparrow$} & 0.732 & 0.744 & 0.743 & 0.757 & 0.730 & 0.734 & 0.735 & 0.750 & 0.717 & 0.732 & 0.729 & 0.725 \\\\ CLIP\\textsubscript{$\\uparrow$} & 0.771 & 0.785 & 0.789 & 0.797 & 0.753 & 0.766 & 0.766 & 0.774 & 0.767 & 0.788 & 0.784 & 0.792 \\\\ \\end{tabular} \\end{table*}",
+    "2412-15310_fig_fd33cf20": "\\begin{table}\n\n \\caption{RER of models across methods. SC: Self-contained; ZS: Zero-shot; CoT: Chain-of-thought; SR: Self-refine. The best result per model is highlighted in bold.}\n\n \\begin{tabular}{@{}lcccc@{}}\n\n Act. Exist. Ratio$_\\uparrow$ & SC & ZS & CoT & SR \\\\\n\n Gemini-Pro & 0.008 & 0.822 & 0.819 & 0.832 \\\\\n GPT-4o & 0.006 & 0.779 & 0.774 & 0.803 \\\\\n Claude-3.5 & 0.007 & 0.640 & 0.615 & 0.668 \\\\\n\n \\end{tabular}\n\n\\end{table}",
+    "2412-15310_sent_837bbd61": "\\caption{Comparison of metrics across different models and prompting strategies.",
+    "2412-15310_sent_63aadc90": "ZS: Zero-shot; CoT: Chain-of-thought; SR: Self-refine.",
+    "2412-15310_sent_afcab5e3": "The best result per dimension is highlighted in bold.} \\begin{tabular}{@{}lccccccccc|c@{}} & \\multicolumn{3}{c}{Gemini-Pro} & \\multicolumn{3}{c}{GPT-4o} & \\multicolumn{3}{c}{Claude-3.5} & \\multirow{2}{*}{Avg.} \\\\ \\cmidrule(lr){2-4} \\cmidrule(lr){5-7} \\cmidrule(lr){8-10} Difference$_\\downarrow$ & ZS & CoT & SR & ZS & CoT & SR & ZS & CoT & SR & \\\\ Pos.",
+    "2412-15310_sent_3038ffaa": "Shift & 0.239 & 0.260 & 0.236 & 0.217 & 0.267 & 0.209 & 0.155 & 0.161 & 0.193 & 0.215 \\\\ Area Diff & 0.376 & 0.389 & 0.403 & 0.360 & 0.375 & 0.360 & 0.279 & 0.326 & 0.334 & 0.356 \\\\ Color Diff & 0.128 & 0.144 & 0.110 & 0.043 & 0.066 & 0.055 & 0.057 & 0.024 & 0.038 & 0.074 \\\\ Text Diff & 0.014 & 0.011 & 0.009 & 0.013 & 0.004 & 0.005 & 0.020 & 0.011 & 0.005 & 0.010 \\\\ \\end{tabular} \\end{table*}",
+    "2412-15310_section_36f84e74": "Experiment Results",
+    "2412-15310_subsection_12afae5d": "The Best Web UI Similarity Metric",
+    "2412-15310_sent_1f33372b": "A critical challenge in the \\taskname task is accurately evaluating web UI similarity.",
+    "2412-15310_sent_74156293": "To verify the effectiveness of the evaluation metrics and determine the most suitable one, we initiated a human evaluation in the web UI domain, where we compared various image similarity methods (Section \\ref{sec:metrics}) and discussed their alignment with human preferences.",
+    "2412-15310_sent_869916ce": "We sample 600 pairs of original and generated screenshots and recruit 14 college students with varying levels of familiarity with web applications to rate their perceived similarity on a Likert scale~\\cite{joshi2015likert} within five categories: ``Highly Dissimilar'', ``Dissimilar'', ``Moderately Similar'', ``Similar'', and ``Highly Similar''.",
+    "2412-15310_sent_9fb7b9d4": "This setup follows standard image quality assessment (IQA) procedure~\\cite{Wang2004ImageQA,VQEG2000}.",
+    "2412-15310_sent_1bd77e7b": "We analyzed the alignment between human judgments and objective similarity scores following established evaluation protocols~\\cite{VQEG2000,Wang2004ImageQA}:",
+    "2412-15310_sent_9980903f": "Spearman Rank-Order Correlation Coefficient (SROCC): Measure the rank correlation between human and objective scores by capturing the consistency of the rankings.",
+    "2412-15310_sent_80e5bb1f": "Variance-weighted Regression Analysis: Evaluate how well objective metrics predict human subjective scores using four key metrics: absolute correlation coefficient (CC), outlier ratio (OR), weighted mean absolute error (MAE), and weighted root mean square error (RMSE).",
+    "2412-15310_sent_b112d7d5": "This analysis identifies how well objective scores align with human judgments.",
+    "2412-15310_sent_7b016680": "Nonlinear Regression Analysis: Use logistic functions to model the relationship between objective and subjective scores when the relationship is monotonic but nonlinear.",
+    "2412-15310_sent_42ace881": "We compute CC, OR, MAE, and RMSE to measure the strength and quality of the alignment.",
+    "2412-15310_sent_42d77afd": "Human Evaluators' Consistency: we calculated the SROCC for each pair of evaluators and averaged the results.",
+    "2412-15310_sent_60ce5f13": "This inter-rater reliability serves as a benchmark to evaluate the performance of objective metrics relative to human consensus.",
+    "2412-15310_sent_01078292": "Please refer to Appendix~\\ref{appendix:IQA} for a detailed illustration of the metrics and evaluation practices.",
+    "2412-15310_sent_547a3244": "Pixel-based methods generally perform better.",
+    "2412-15310_sent_c3973e82": "MAE and NEMD perform the best across all approaches (Table~\\ref{tab:IQA}).",
+    "2412-15310_sent_b26bbc38": "The result is initially counter-intuitive as most previous works adopt semantic-level and structure-level metrics such as CLIP and SSIM~\\cite{Si2024Design2CodeHF,xiao2024interaction2code,zhou2024bridging}.",
+    "2412-15310_sent_59171707": "However, this result aligns with the practice in frontend development, where developers use various tools~\\cite{pixelparallel,perfectpixel} to overlay the design image and the result web page to compare their pixel-level differences to refine their UI code~\\cite{pixelperfectmedium,pixelperfectsteps}.",
+    "2412-15310_sent_7e61922d": "Variance-weighted regression results showed that MAE and NEMD achieved the highest correlation coefficients (CC: 0.547, 0.469) and lowest RMS (1.95), demonstrating strong predictive accuracy.",
+    "2412-15310_sent_657e661e": "In non-linear regression, NEMD excelled with the highest CC (0.532) and lowest MAE (0.628) and RMS (0.752), effectively capturing non-linear relationships.",
+    "2412-15310_sent_1b89c8ac": "Inter-rater reliability (SROCC) among human evaluators is 0.640, indicating a relatively high agreement and consistency in subjective assessments.",
+    "2412-15310_sent_fc4f771f": "Among the metrics, MAE (0.542) and NEMD (0.508) demonstrated the best consistency with human rankings.",
+    "2412-15310_sent_c7c3c0e4": "Despite their lower overall alignment scores, SSIM, CLIP, and LPIPS excelled in minimizing outliers (low OR), demonstrating their ability to reduce significant mismatches.",
+    "2412-15310_sent_2129b85f": "To further understand the characteristics of these metrics, we divide the image pairs into three equal-sized groups according to their human ratings (i.e., low, medium, high) and analyze their correspondence with human scores (details in Appendix~\\ref{appendix:sim-analysis}).",
+    "2412-15310_sent_6cde506e": "Analysis reveals pixel-based metrics, particularly MAE and NEMD, excel in low and medium-similarity cases.",
+    "2412-15310_sent_4f6e30c5": "MAE is the most robust metric, maintaining strong performance across all similarity levels.",
+    "2412-15310_sent_6db0ffe5": "While semantic and structural metrics, such as SSIM and LPIPS, perform better in high-similarity cases, they have near-zero performance in low and medium-similarity groups.",
+    "2412-15310_sent_11a930de": "This indicates that pixel-level features are more effective at distinguishing dissimilar images, whereas semantic and structural information better captures fine-grained similarities.",
+    "2412-15310_subsection_26af8e45": "Effectiveness of the Resource List",
+    "2412-15310_sent_dd06abb2": "Central to our framework is a novel data structure, the resource list.",
+    "2412-15310_sent_43d8f8f6": "To assess its impact, we employ MLLMs to generate web page code under various prompting strategies (Section~\\ref{subsubsec:prompt}), using the two best-performing metrics (MAE and NEMD) and the best-performing high-level metrics (CLIP) for visual similarity and RER to measure the function similarity.",
+    "2412-15310_sent_ade5be08": "We use the result of the self-contained (SC) prompt as a baseline.",
+    "2412-15310_sent_94dc93bd": "Adding resource lists can improve the visual similarity of a generated webpage across different MLLMs and metrics.",
+    "2412-15310_sent_565947ae": "Table~\\ref{tab:visual-metrics} shows the comparison of visual metrics.",
+    "2412-15310_sent_68e2f1b6": "We observe that SC consistently results in the lowest visual scores.",
+    "2412-15310_sent_0c81ec2c": "This is because resource lists enable MLLMs to include the exact images displayed on the webpage, thus enhancing the overall similarity.",
+    "2412-15310_sent_6ff8cc61": "Without resource lists, MLLMs can only use placeholder images in the generated web code.",
+    "2412-15310_sent_c62cf4e1": "Some examples of such cases are in Appendix~\\ref{appendix:visual-compare}, Fig.~\\ref{fig:data-compare}.",
+    "2412-15310_sent_c339d4bb": "This highlights the practical value of resource lists in real-world web development compared to self-contained methods.",
+    "2412-15310_sent_8336f89c": "Resource lists enable MLLMs to generate webpages with valid resources, significantly boosting RER from 0\\% to 66\\%-80\\%.",
+    "2412-15310_sent_1fdd1292": "Table~\\ref{tab:function-metrics} shows that under SC prompting, MLLMs exhibit near-zero functional similarity due to the lack of guidance for generating valid links.",
+    "2412-15310_sent_21f23e6f": "However, some links are inferred through common sense (e.g., ``facebook.com'' for Facebook).",
+    "2412-15310_sent_ebe6f07f": "Among prompting strategies, self-refine (SR) consistently achieves the highest scores across models, making it the most effective for both visual and functional metrics.",
+    "2412-15310_sent_6ceeb533": "Genimi-Pro emerges as the top-performing MLLM in reproducing functionality.",
+    "2412-15310_sent_a573f387": "An interesting observation is that CoT prompting slightly decreases performance despite its reasoning capability.",
+    "2412-15310_sent_43c35e18": "We discuss this phenomenon in Appendix~\\ref{appendix:CoT}.",
+    "2412-15310_subsection_c2943209": "Limitations of MLLMs in MRWeb",
+    "2412-15310_sent_300b2466": "For all matched actionable element pairs, we calculate their fine-grained metrics to have a deeper understanding of MLLMs' strengths and weaknesses.",
+    "2412-15310_sent_e7e4486a": "The main challenge in \\taskname generation is the visual grounding problem, where MLLMs struggle to replicate the position and size of elements (Table~\\ref{tab:finegrain}).",
+    "2412-15310_sent_fe7e45a3": "This is reflected by the Positional Shift and Area Difference metrics.",
+    "2412-15310_sent_4076baaa": "MLLMs generate elements with an average 21.5\\% positional shift relative to the entire webpage and an average 35.6\\% size difference compared to the original elements.",
+    "2412-15310_sent_566ae190": "Despite these issues, MLLMs perform well in recognizing color and text, with Color Difference and Text Similarity metrics showing much smaller errors.",
+    "2412-15310_sent_11f6182b": "Among the models, Claude-3.5 demonstrates the best positional accuracy and size recognition, with the lowest Positional Shift (15.5\\%) and Area Difference (27.9\\%) in the Zero-shot strategy.",
+    "2412-15310_sent_52a64754": "GPT-4o excels in Text Similarity (0.004), showing strong semantic accuracy.",
+    "2412-15310_fig_3c79985b": "\\begin{figure}\n\n \\begin{subfigure}[b]{0.49\\linewidth}\n \\includegraphics[width=\\linewidth]{Sections/figs/gpt4o_MAE.pdf}\n\n \\caption{GPT-4o MAE$_\\downarrow$}\n\n \\end{subfigure}\n \\begin{subfigure}[b]{0.49\\linewidth}\n \\includegraphics[width=\\linewidth]{Sections/figs/gpt4o_match_ratio.pdf}\n\n \\caption{GPT-4o RER$_\\uparrow$}\n\n \\end{subfigure}\n\n \\caption{GPT-4o performance decreases with input image size (million pixels) and resource list length.}\n\n\\end{figure}",
+    "2412-15310_sent_786e30e6": "The performance of MLLMs degrades with increasing input complexity, suggesting further optimization in handling large-scale and complex inputs.",
+    "2412-15310_sent_d57f5dab": "To evaluate the robustness of MLLMs in the \\taskname task, we analyzed their visual (MAE) and functional (RER) performances across varying image sizes and resource list lengths.",
+    "2412-15310_sent_36a09b55": "As shown in Fig. \\ref{fig:gpt4o-mae} and \\ref{fig:gpt4o-aer}, GPT-4o's performance lowers with increasing input complexity.",
+    "2412-15310_sent_cc855486": "While it performs well on simpler websites with smaller image sizes and shorter resource lists, its accuracy declines significantly for intricate websites.",
+    "2412-15310_sent_b6956919": "Similar patterns are observed in other MLLMs, as detailed in Appendix~\\ref{appendix:complexity}.",
+    "2412-15310_subsection_2194b772": "\\taskname’s Practical Capabilities.",
+    "2412-15310_sent_435d1e4d": "We developed a user-friendly tool within the \\taskname framework to convert visual designs into multi-page, realistic web UI code.",
+    "2412-15310_sent_81d7f925": "The tool's interface is shown in Appendix~\\ref{appendix:demo}.",
+    "2412-15310_sent_6b34c80e": "We conducted a case study using AI-generated design images\\footnote{\\url{https://openai.com/index/dall-e-3/}} to build a personal website with three pages: home, project, and contact (Appendix~\\ref{appendix:demo}).",
+    "2412-15310_sent_114bc6a6": "We introduced various resources to each page to test the tool’s capabilities.",
+    "2412-15310_sent_f6445b21": "These resources include internal links, external links, images, and backend routing (Table~\\ref{tab:practical}).",
+    "2412-15310_sent_7c3a1dd5": "The tool successfully addressed all the challenges, achieving a 100\\% success rate.",
+    "2412-15310_sent_f37aa449": "The demonstration video of the entire development procedure is available online\\footnote{\\url{https://github.com/WebPAI/MRWeb}}.",
+    "2412-15310_sent_a11b8f96": "Specifically, the generated home page and project page included internal and external links and embedded images with pixel-perfect alignment.",
+    "2412-15310_sent_d304e036": "The contact page demonstrated the tool’s ability to integrate backend routing seamlessly, implying its full-stack capabilities.",
+    "2412-15310_fig_d5c8a70a": "\\begin{table}\n\n \\caption{Total number of challenges in the home, project, and contact page versus tool success rate.}\n\n \\begin{tabular}{lcc}\n\n Resource & Count & Success \\\\\n\n Internal links & 7 & 100\\% \\\\\n External links & 9 & 100\\% \\\\\n Images & 13 & 100\\% \\\\\n Backend routing & 1 & 100\\% \\\\\n\n \\end{tabular}\n\n\\end{table}",
+    "2412-15310_section_560f23c7": "Discussions",
+    "2412-15310_sent_03b34747": "This section highlights key implications of our work for future research.",
+    "2412-15310_paragraph_1c456e25": "Visual metrics for UI quality (RQ1)",
+    "2412-15310_paragraph_2747b6ae": "Enhancing website generation with resource lists (RQ2)",
+    "2412-15310_paragraph_16379b1f": "Improving MLLM visual grounding (RQ3)",
+    "2412-15310_paragraph_3a5ff13d": "Advancing MRWeb generation (RQ4)",
+    "2412-15310_section_6f8b794f": "Conclusion",
+    "2412-15310_sent_0cb83262": "In this paper, we introduce the MRWeb generation task, addressing the limitations of single-page design-to-code methods.",
+    "2412-15310_sent_1d790ce9": "Our contributions include defining the MRWeb problem, creating a benchmark dataset, conducting a comprehensive IQA for web UIs, analyzing MLLM performance, and developing a dedicated MRWeb generation tool.",
+    "2412-15310_sent_0b08a7c1": "We release the tool, dataset, and evaluation framework to facilitate future research.",
+    "2412-15310_section_e646e16b": "Limitations",
+    "2412-15310_sent_11a7cfaa": "Limited Support for Non-Link Functionalities.",
+    "2412-15310_sent_05c4ba5a": "While MRWeb effectively handles links, images, and routing, it does not currently support non-link-based functionalities, as these require distinct formulations and evaluation metrics.",
+    "2412-15310_sent_983c0425": "Addressing this limitation is a key focus for future work, with the goal of enabling full-stack development capabilities.",
+    "2412-15310_sent_244010f5": "Context Length Constraints.",
+    "2412-15310_sent_d7a94043": "MLLMs have limited context windows (e.g., 128K tokens for GPT-4o), which can be a challenge for websites with extensive token requirements.",
+    "2412-15310_sent_aaffee00": "However, our experiments show that all prompts remain within these limits, highlighting the approach's feasibility for most practical scenarios.",
+    "2412-15310_sent_4e7c7186": "Backbone Model Selection.",
+    "2412-15310_sent_88702548": "We validate \\taskname using three popular multimodal LLMs, but smaller models struggle with complex prompts.",
+    "2412-15310_sent_4f588a1b": "To improve adaptability and generalization, future work will explore the potential of emerging models and investigate strategies to handle more complex input scenarios.",
+    "2412-15310_sent_3547f813": "\\bibliographystyle{acl_natbib} \\bibliography{reference} \\appendix",
+    "2412-15310_section_5c59e0fb": "Motivating study",
+    "2412-15310_sent_d5f42696": "\\begin{minipage}{0.3\\textwidth} \\begin{tabular}{lccc} Stat & Ext./Back.",
+    "2412-15310_sent_a97d040f": "& Int.",
+    "2412-15310_sent_92ec8f6f": "& Img \\\\ Median & 26 & 22 & 14 \\\\ Mean & 51 & 45 & 25 \\\\ Max & 361 & 763 & 537 \\\\ \\end{tabular} \\caption{Summary statistics for external/backend links, internal links, and images count.} \\end{minipage} \\begin{minipage}{0.7\\textwidth} \\begin{subfigure}[b]{0.4\\textwidth} \\includegraphics[width=\\linewidth]{Sections/figs/is_multipage_pie_chart.pdf} \\caption{Proportion of multi-page vs single-page websites.} \\end{subfigure} \\begin{subfigure}[b]{0.4\\textwidth} \\includegraphics[width=\\linewidth]{Sections/figs/internal_page_pie_chart.pdf} \\caption{Number of internal pages in multi-page websites.} \\end{subfigure} \\caption{Detailed analysis.} \\end{minipage} \\end{figure*} In this study, we show that the three common assumptions made by previous design-to-code works (i.e., UIs are self-contained and do not have external links, UIs consist of a single or a limited number of pages, and UIs use placeholder images) are highly over-simplified in web UI scenarios.",
+    "2412-15310_sent_db4714cc": "We sample the top 300 most visited websites ranked by the Tranco~\\footnote{https://tranco-list.eu} list and study their characteristics.",
+    "2412-15310_sent_6390802a": "Specifically, we first count the number of external links, internal links, and images on each web page.",
+    "2412-15310_sent_9a43b663": "The statistics in Figure \\ref{fig:motivating-table} highlight the over-simplified assumptions about web UIs: The number of pages involved is typically large, with a mean of 51 external links, 45 internal links, and 25 images.",
+    "2412-15310_sent_29d2ca50": "The maximum number of external links reaches 361, internal links 763, and images 537, indicating that websites generally contain numerous elements that are not accounted for in simplified models.",
+    "2412-15310_sent_79e71de9": "Then, we calculate the proportion of multi-page websites among the samples.",
+    "2412-15310_sent_2e59d9d3": "Figure \\ref{fig:multipage-pie} illustrates the result, which shows that 90.3\\% of the websites are multi-page, while only 9.7\\% are single-page websites.",
+    "2412-15310_sent_2690d713": "This suggests that most modern websites are not self-contained but involve a complex structure with multiple pages.",
+    "2412-15310_sent_c0181541": "Finally, we calculate the number of distinct internal pages each multi-page website contains.",
+    "2412-15310_sent_63ca292c": "Internal pages are web pages within the same domain as the website; for instance, \"apple.com/iphone\" and \"apple.com/ipad\" would both be internal to the website \"apple.com,\" while \"facebook.com\" is external to the website.",
+    "2412-15310_sent_e2a49bce": "To count the number of internal pages for each website, we recursively visit all the internal pages a website links to until no new internal web pages can be found.",
+    "2412-15310_sent_3d08d21c": "The result is shown in Figure \\ref{fig:internal-page-pie}.",
+    "2412-15310_sent_38448dc3": "Less than 50\\% of the multi-page websites have fewer than 10 internal pages, while 18.9\\% of the websites have between 10 and 99 internal pages, demonstrating a moderate complexity.",
+    "2412-15310_sent_8f00542c": "Notably, 36\\% of the websites feature more than 100 internal pages, showcasing the highly complex nature of a significant portion of modern websites.",
+    "2412-15310_sent_a06fc909": "This variability in the number of internal pages challenges the assumption that web UIs consist of a single or a limited number of pages.",
+    "2412-15310_sent_e1bd1c01": "\\begin{tcolorbox}[colback=gray!20, colframe=gray!20, width=\\columnwidth] Conclusion: The three common assumptions made by previous design-to-code works are over-simplified, and manually locating and editing the omitted content in generated code requires high proficiency in coding and remarkable effort.",
+    "2412-15310_section_a7f20481": "Related Works",
+    "2412-15310_sent_d73a0d51": "Current approaches of design-to-code span deep learning (DL), computer vision (CV), and multimodal large language models (MLLMs).",
+    "2412-15310_sent_3c337d55": "DL-based methods use CNNs for GUI prototyping \\cite{acsirouglu2019automatic,Cizotto2023WebPF,Moran2018MachineLP,Xu2021Image2e,Chen2018FromUI}, with Pix2code \\cite{beltramelli2018pix2code} combining CNNs and LSTMs for DSL generation, and \\cite{Chen2022CodeGF} enhancing quality via attention-based encoder-decoder frameworks.",
+    "2412-15310_sent_36f83205": "In CV, Sketch2Code \\cite{jain2019sketch2code} processes hand-drawn sketches using object detection, while REMAUI \\cite{nguyen2015reverse} employs OCR to extract UI elements and build hierarchies.",
+    "2412-15310_sent_88176cc8": "MLLM-based methods offer more advanced multi-modal generation.",
+    "2412-15310_sent_b3193220": "Design2Code \\cite{Si2024Design2CodeHF} uses text-augmented prompts, DCGen \\cite{wan2024automatically} employs a divide-and-conquer layout approach, DeclarUI \\cite{zhou2024bridging} builds page transition graphs for multi-screen apps, and Interaction2Code \\cite{xiao2024interaction2code} generates interactive UIs from web interaction graphs.",
+    "2412-15310_sent_824976a2": "Despite these advances, most methods still rely on the three over-simplified assumptions, leaving the challenge of multi-page website generation underexplored.",
+    "2412-15310_section_c9ffccdb": "Prompts",
+    "2412-15310_sent_5d3a90e1": "In this section, we list the exact prompts used in the experiments.",
+    "2412-15310_paragraph_8c0aea43": "Self-contained prompt.",
+    "2412-15310_paragraph_4610035c": "Zero-shot prompt.",
+    "2412-15310_sent_0552cbe3": "\\{ ``position'': bounding box of format [[x1, y1], [x2, y2]], specifying the top left corner and the bottom right corner of the element; ``type'': element type; ``url'': url of the element; \\} The action list is as follows: [ACTION LIST]",
+    "2412-15310_paragraph_bce6728c": "CoT prompt.",
+    "2412-15310_paragraph_2c38f2cc": "Self-refine prompt.",
+    "2412-15310_sent_0ea8cff5": "\\{ ``position'': bounding box of format [[x1, y1], [x2, y2]], specifying the top left corner and the bottom right corner of the element; ``type'': element type; ``url'': url of the element; \\} The current implementation I have is: [CODE] The action list is as follows: [ACTION LIST]",
+    "2412-15310_section_a05f94eb": "Visual Similarity Metrics",
+    "2412-15310_sent_365ba412": "This section provides all the details of the visual similarity metrics tested in this work.",
+    "2412-15310_sent_13501b96": "At the pixel level, we employ metrics that directly compare pixel values to quantify low-level differences:",
+    "2412-15310_sent_b54fe05d": "Mean Absolute Error (MAE)~\\cite{Nguyen2015ReverseEM,Moran2018MachineLP}: Computes the average absolute difference in pixel intensities, providing a straightforward measure of overall similarity that treats all errors equally without amplifying larger differences.",
+    "2412-15310_sent_3dd544ed": "Peak Signal-to-Noise Ratio (PSNR)~\\cite{Lim2017EnhancedDR,Wang2019EDVRVR}: Measures the ratio between the maximum possible power of a signal (image) and the power of corrupting noise.",
+    "2412-15310_sent_a267e8e0": "PSNR is based on the Mean Squared Error (MSE), with higher values indicating closer similarity between two images.",
+    "2412-15310_sent_56ebc121": "It is widely used to evaluate image quality, especially in compression and restoration tasks.",
+    "2412-15310_sent_c0ac3869": "Wasserstein Distance (Earth Mover's Distance - EMD)~\\cite{Arjovsky2017WassersteinG,Rubner2000TheEM}: Measures the minimum transport cost required to transform one image onto the other, capturing spatial differences in pixel values and reflects structural rearrangements needed to align images.",
+    "2412-15310_sent_f0fd7107": "The EMD depends on the image size, with larger image pairs producing higher EMD values due to more pixels.",
+    "2412-15310_sent_1dd1bc81": "To eliminate this dependency and make the metric size-independent, we define a normalized version $\\text{NEMD} = 1 - \\frac{\\text{EMD}}{\\text{EMD}_{\\text{max}}}$ where $\\text{EMD}_{\\text{max}}$ is the maximum possible EMD between a reference image and any other arbitrary image.",
+    "2412-15310_sent_fe235133": "It represents the worst-case scenario of pixel differences (i.e., the distance from the reference image to a \"completely\" different image).",
+    "2412-15310_sent_6076ef62": "It is achieved by assuming each pixel in the reference image is moved to its farthest possible value (0 or 255), thus providing an upper bound for the EMD.",
+    "2412-15310_sent_c88fd001": "The NEMD ranges from 0 to 1, where higher values indicate greater similarity.",
+    "2412-15310_sent_76dd9207": "This metric is not symmetric, as the $\\text{EMD}_{\\text{max}}$ is computed relative to the reference image.",
+    "2412-15310_sent_36cb631f": "The original web page screenshot serves as the reference image in our experiments.",
+    "2412-15310_sent_33a5a48f": "At the structural level, we use metrics that capture spatial and perceptual coherence:",
+    "2412-15310_sent_15927d3e": "Structural Similarity Index Measure (SSIM)~\\cite{Zhou2024BridgingDA,Wang2004ImageQA}: Assesses structural coherence by evaluating changes in luminance, contrast, and structural information across images.",
+    "2412-15310_sent_2a6c9c6c": "SSIM models perceived image quality by accounting for local patterns and how structural details align, closely mirroring human visual perception.",
+    "2412-15310_sent_5eb88a94": "CLIP score~\\cite{Radford2021LearningTV,Si2024Design2CodeHF}: Derived from the CLIP model, it captures high-level semantic similarities by aligning image embeddings with corresponding language representations.",
+    "2412-15310_sent_2ec7094d": "This approach allows us to gauge similarity based on shared meanings and conceptual elements rather than visual appearance alone.",
+    "2412-15310_sent_4705249a": "It is particularly suited for comparing images representing similar objects or scenes in different styles or contexts.",
+    "2412-15310_sent_805614c4": "Learned Perceptual Image Patch Similarity (LPIPS)~\\cite{Zhang2018TheUE}: Evaluates perceptual similarity by computing the distance between deep feature representations of two images.",
+    "2412-15310_sent_ea9d7b37": "LPIPS offers a robust method for assessing how similar two images are regarding human perception.",
+    "2412-15310_sent_feede7db": "We use VGG~\\cite{Simonyan2014VeryDC} as the backbone model for LPIPS calculation.",
+    "2412-15310_sent_8dc84a05": "Except for the CLIP score, which accepts images of varying sizes as input, we pad each image pair with random noise to ensure the two images in the pair are the same size.",
+    "2412-15310_section_82c3fb35": "Image Quality Analysis Details",
+    "2412-15310_sent_c65d5447": "We analyzed the alignment between human judgments and objective similarity scores following established evaluation protocols~\\cite{VQEG2000,Wang2004ImageQA}.",
+    "2412-15310_sent_4f76aa68": "This section provides a detailed illustration of the metrics and evaluation practices.",
+    "2412-15310_paragraph_d499ab1f": "Processing Human Scores",
+    "2412-15310_sent_ce1d72a3": "After collecting human-perceived similarity scores, the scores of each annotator across all image pairs were normalized using z-scores (mean-centered and scaled by standard deviation) to ensure comparability.",
+    "2412-15310_sent_2c1ca3f9": "We computed the Mean Opinion Scores (MOS) for each image pair by first removing outliers and then averaging all human scores of the image pair.",
+    "2412-15310_sent_9354d7ee": "This process yields a robust, representative set of subjective human scores.",
+    "2412-15310_sent_f5426c4e": "The image database and subjective scores will be publicly available for further study.",
+    "2412-15310_sent_8635e1b8": "\\caption{Correlation of similarity scores with human scores across different score levels (Low, Medium, High).",
+    "2412-15310_sent_5f71da65": "CC-V: Correlation coefficient under variance-weighted regression; CC-N: Correlation coefficient under non-linear regression; SROCC: Spearman's rank-order correlation coefficient.",
+    "2412-15310_sent_1429e9ab": "All correlations are absolute values.",
+    "2412-15310_sent_2a39804e": "SROCC is a more direct measurement of correlations between similarity scores and human scores.} \\begin{tabular}{@{}lccc|ccc|ccc@{}} & \\multicolumn{3}{c|}{Low} & \\multicolumn{3}{c|}{Medium} & \\multicolumn{3}{c}{High} \\\\ \\cmidrule(lr){2-4} \\cmidrule(lr){5-7} \\cmidrule(lr){8-10} & CC-V & CC-N & SROCC & CC-V & CC-N & SROCC & CC-V & CC-N & SROCC \\\\ MAE & 0.413 & 0.429 & 0.401 & 0.211 & 0.222 & 0.212 & 0.406 & 0.420 & 0.330 \\\\ NEMD & 0.422 & 0.430 & 0.408 & 0.075 & 0.108 & 0.209 & 0.286 & 0.301 & 0.328 \\\\ PSNR & 0.264 & 0.313 & 0.351 & 0.193 & 0.192 & 0.191 & 0.582 & 0.583 & 0.264 \\\\ CLIP & 0.065 & 0.194 & 0.058 & 0.143 & 0.262 & 0.145 & 0.357 & 0.376 & 0.361 \\\\ SSIM & 0.033 & 0.033 & 0.012 & 0.066 & 0.069 & 0.058 & 0.494 & 0.508 & 0.379 \\\\ LPIPS & 0.041 & 0.044 & 0.084 & 0.046 & 0.049 & 0.010 & 0.491 & 0.502 & 0.367 \\\\ \\end{tabular} \\end{table*}",
+    "2412-15310_paragraph_79e5d27e": "Alignment Analysis of Objective and Subjective Scores",
+    "2412-15310_sent_b117b54e": "Spearman rank-order correlation coefficient (SROCC): A direct measure of the strength and direction of the association between the ranked objective and subjective scores.",
+    "2412-15310_sent_63277974": "In our experiment, we consider the absolute value of SROCC, which is a metric between 0 and 1, where a indicates perfect positive or negative correlation, and 0 indicates no correlation.",
+    "2412-15310_sent_0d88b47e": "SROCC is particularly useful for evaluating the consistency of scores produced by objective metrics with those of human subjective assessment scores, regardless of the absolute values of the scores.",
+    "2412-15310_sent_13832a85": "Variance-weighted regression analysis: This analysis evaluates how well the objective metrics can predict human subjective scores.",
+    "2412-15310_sent_e6eb6540": "By weighting data points based on their variance before conducting a linear regression, we minimize the influence of noisy or uncertain scores, which leads to more robust and reliable predictions.",
+    "2412-15310_sent_09c55600": "After regression, we calculate several quantities to measure the magnitude of prediction errors and how closely the objective metric matches human assessments.",
+    "2412-15310_sent_a1d5a789": "The metrics are 1) the absolute correlation coefficient (CC): after taking the absolute value, this becomes a score between [0, 1] that measures the linear alignment between predictions and human perceptions, with higher absolute values indicating stronger alignment; 2) the outlier ratio (OR), i.e., the percentage of predictions outside twice the standard deviation, which identifies the ratio of cases where the model significantly deviates from human perception; 3) weighted mean absolute error (MAE), which measures the average magnitude of prediction errors without considering their direction, providing a straightforward indication of overall prediction accuracy; and 4) weighted root mean square error (RMSE), which gives a higher penalty to larger errors and emphasizes the magnitude of extreme deviations.",
+    "2412-15310_sent_6e4e28a9": "These metrics collectively provide a comprehensive evaluation of the model’s ability to predict subjective human scores accurately and robustly.",
+    "2412-15310_sent_b6b8eddb": "Nonlinear regression analysis: In this analysis, logistic functions are used to fit a nonlinear mapping between objective and subjective scores.",
+    "2412-15310_sent_b6b78b95": "This approach is particularly useful when the relationship between objective metrics and human perception is monotonic but not strictly linear.",
+    "2412-15310_sent_c303cfb5": "We also calculate CC, OR, MAE, and RMSE to understand the strength of the nonlinear relationship and discrepancies between the metrics and human evaluations.",
+    "2412-15310_paragraph_69ae0923": "Assessing inter-rater reliability of human scores.",
+    "2412-15310_section_1b7a2ba7": "Analysis of Similarity Metrics Across Different Similarity Levels",
+    "2412-15310_paragraph_a71444dc": "Why do learning- and structure-based metrics fail?",
+    "2412-15310_sent_13898744": "For the low-similarity image group, NEMD consistently achieves the best results (CC-V: 0.422, CC-N: 0.430, SROCC: 0.408), followed by MAE.",
+    "2412-15310_sent_b227ec8b": "Notably, SSIM, CLIP, and LPIPS show near-zero correlation with human perception in this range.",
+    "2412-15310_sent_4fdfcde0": "In the medium-similarity image group, the performance of all metrics generally declines, indicating increased difficulty in predicting similarity when human perception becomes less polarized. NEMD and MAE remain competitive, and CLIP performs best under a nonlinear mapping with a CC-N of 0.262.",
+    "2412-15310_sent_00d45dc8": "For the high-similarity image group, PSNR achieves the highest correlation under variance-weighted mapping and non-linear mapping (CC-V: 0.582, CC-N: 0.583).",
+    "2412-15310_sent_2c4167c6": "Metrics such as SSIM and LPIPS show significant improvement.",
+    "2412-15310_sent_a2a0c798": "SSIM achieves the highest direct correlation (SROCC: 0.379), while LPIPS also demonstrates notable performance in SROCC (0.367).",
+    "2412-15310_sent_52855794": "In conclusion, learning- and structure-based metrics fall short due to near-zero performance in low-similarity groups and poor performance in medium-similarity groups, failing to capture the similarity of intrinsically dissimilar image pairs.",
+    "2412-15310_sent_2d20275f": "In contrast, pixel-based metrics effectively distinguish dissimilar pairs while maintaining reasonable performance for high-similarity pairs, with MAE and NEMD emerging as standout methods.",
+    "2412-15310_section_3a2a8d26": "Why CoT Decrease Performance",
+    "2412-15310_sent_e386f10f": "Manual investigation reveals that MLLMs tend to omit content at the end of their generated code, often ending with placeholder comments like ``additional content goes here.'' The decrease in CoT performance arises because when being explicitly prompted with ``please think step by step,'' it generates HTML code part by part, omitting content at the end of every part, thereby compounding the omissions compared to direct prompts.",
+    "2412-15310_sent_dc01ee7e": "This leads to lower action existence rates and reduced overall performance.",
+    "2412-15310_section_b3f898a4": "MLLMs' Performance and Input Complexity",
+    "2412-15310_sent_194e65a4": "\\begin{subfigure}[b]{0.32\\textwidth} \\includegraphics[width=\\linewidth]{Sections/figs/gemini_MAE.pdf} \\caption{Gemini-Pro-1.5.} \\end{subfigure} \\begin{subfigure}[b]{0.32\\textwidth} \\includegraphics[width=\\linewidth]{Sections/figs/gpt4o_MAE.pdf} \\caption{GPT-4o.} \\end{subfigure} \\begin{subfigure}[b]{0.32\\textwidth} \\includegraphics[width=\\linewidth]{Sections/figs/claude_MAE.pdf} \\caption{Claude-3.5.} \\end{subfigure} \\caption{MAE$_\\downarrow$ vs. input image size (million pixels).} \\end{figure*}",
+    "2412-15310_sent_0420a2e1": "\\begin{subfigure}[b]{0.32\\textwidth} \\includegraphics[width=\\linewidth]{Sections/figs/gemini_match_ratio.pdf} \\caption{Gemini-Pro-1.5.} \\end{subfigure} \\begin{subfigure}[b]{0.32\\textwidth} \\includegraphics[width=\\linewidth]{Sections/figs/gpt4o_match_ratio.pdf} \\caption{GPT-4o.} \\end{subfigure} \\begin{subfigure}[b]{0.32\\textwidth} \\includegraphics[width=\\linewidth]{Sections/figs/claude_match_ratio.pdf} \\caption{Claude-3.5.} \\end{subfigure} \\caption{Action existence ratio$_\\uparrow$ vs. action list length.} \\end{figure*} According to Fig.~\\ref{fig:mae}, as input image size increases, the MAE ($\\downarrow$) grows for all models.",
+    "2412-15310_sent_b47c8e3b": "GPT-4o and Claude-3.5 demonstrate more stable performance compared to Gemini-Pro, which is sensitive to size, particularly under the self-refine strategy.",
+    "2412-15310_sent_f8e6eaaf": "Among the prompting strategies, self-refine consistently performs best for Gemini-Pro and GPT-4o.",
+    "2412-15310_sent_e780db88": "For Claude-3.5, self-refine shows minimal improvement and occasionally underperforms compared to zero-shot and CoT).",
+    "2412-15310_sent_6645717a": "For action list length (Fig.~\\ref{fig:aer}), the action existence ratio ($\\uparrow$) decreases as the list grows longer, highlighting the challenge of maintaining accuracy with increased complexity.",
+    "2412-15310_sent_e84f32d0": "GPT-4o and Claude-3.5 perform comparably, with CoT and self-refine providing slight advantages.",
+    "2412-15310_sent_80358498": "However, for Claude-3.5, SR again offers a limited improvement to other methods.",
+    "2412-15310_section_5399e96c": "Developing Website with the MRWeb Tool",
+    "2412-15310_sent_fb695c71": "In RQ4, we conduct a case study using the MRWeb tool, whose user interface is shown in Figure~\\ref{fig:tool}.",
+    "2412-15310_sent_6499c9ba": "The tool enables users to define design assets, including webpage layouts, external resources (like images and links), and actions such as backend routing.",
+    "2412-15310_sent_31c08550": "These assets are organized using the action list structure—a dictionary-like format that systematically maps resources to visual elements.",
+    "2412-15310_sent_6cde99b1": "Leveraging the \\taskname framework, the tool processes action lists and screenshots as inputs to MLLMs, facilitating the generation of functional, multi-page web UI code with visual consistency.",
+    "2412-15310_sent_2fb6bac5": "The case study focuses on building a personal website with three internal pages: a home page, a project page, and a contact page, using AI-generated design images (Fig~\\ref{fig:demo}).",
+    "2412-15310_sent_2030a273": "Table~\\ref{tab:challenge} summarizes the key challenges introduced for each page.",
+    "2412-15310_fig_84fa6cc8": "\\begin{figure}\n\n \\includegraphics[width=\\linewidth]{Sections/figs/tool.pdf}\n \\caption{User interface of the MRWeb tool.}\n\n\\end{figure}",
+    "2412-15310_fig_5418b458": "\\begin{table}\n\n \\caption{Challenges and performance of the case study.}\n\n \\begin{tabular}{llcc}\n\n & Challenge & Count & Success \\\\\n\n Home page & Internal links & 3 & 100\\% \\\\\n & Images & 4 & 100\\% \\\\\n Project page & Internal links & 2 & 100\\% \\\\\n & External links & 6 & 100\\% \\\\\n & Images & 6 & 100\\% \\\\\n Contact page & Internal links & 2 & 100\\% \\\\\n & External links & 3 & 100\\% \\\\\n & Images & 3 & 100\\% \\\\\n & Backend routing & 1 & 100\\% \\\\\n\n \\end{tabular}\n\\end{table}",
+    "2412-15310_fig_9b580790": "\\begin{figure}\n\n \\begin{subfigure}[b]{0.28\\columnwidth}\n\n \\includegraphics[width=\\linewidth]{Sections/figs/home.png}\n \\caption{Home page design.}\n \\end{subfigure}\n\n \\begin{subfigure}[b]{0.294\\columnwidth}\n \\includegraphics[width=\\linewidth]{Sections/figs/project.png}\n \\caption{Project page design.}\n \\end{subfigure}\n \\begin{subfigure}[b]{0.312\\columnwidth}\n \\includegraphics[width=\\linewidth]{Sections/figs/contact.png}\n \\caption{Contact page design.}\n \\end{subfigure}\n \\caption{Design images of the personal website in RQ4.}\n\n\\end{figure}",
+    "2412-15310_section_f61d415a": "Visual Comparison of Self-Contained Web and MRWeb",
+    "2412-15310_sent_c7081679": "Figure~\\ref{fig:data-compare} shows a comparison between self-contained webpages and our multipages resource-aware webpages (MRWebs).",
+    "2412-15310_sent_7d79f4b3": "Self-contained webpages contain placeholder images and empty links, whereas MRWebs contain real images and links.",
+    "2412-15310_sent_b42479e3": "\\includegraphics[width=\\linewidth]{Sections/figs/comparison.pdf} \\caption{Comparison between self-contained webpages and our multipages resource-aware webpages (MRWebs).",
+    "2412-15310_sent_c09f51a1": "Design-to-code webpages contain placeholder images and empty links, whereas MRWebs contain real images and links.} \\end{figure*}"
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15310_sent_ac2f55a2": "2412-15310_doc_root",
+      "2412-15310_sent_32064a6a": "2412-15310_doc_root",
+      "2412-15310_abstract_ce28071e": "2412-15310_doc_root",
+      "2412-15310_sent_dbdb80c2": "2412-15310_abstract_ce28071e",
+      "2412-15310_sent_f2a35974": "2412-15310_abstract_ce28071e",
+      "2412-15310_sent_abe664a3": "2412-15310_abstract_ce28071e",
+      "2412-15310_sent_42aefa71": "2412-15310_abstract_ce28071e",
+      "2412-15310_sent_73e9e64c": "2412-15310_abstract_ce28071e",
+      "2412-15310_sent_d58b2050": "2412-15310_abstract_ce28071e",
+      "2412-15310_sent_ce52b870": "2412-15310_abstract_ce28071e",
+      "2412-15310_sent_c1e18d3f": "2412-15310_abstract_ce28071e",
+      "2412-15310_sent_09a2e946": "2412-15310_abstract_ce28071e",
+      "2412-15310_section_0b79795d": "2412-15310_doc_root",
+      "2412-15310_fig_a59b6363": "2412-15310_section_0b79795d",
+      "2412-15310_sent_78fe483d": "2412-15310_section_0b79795d",
+      "2412-15310_sent_4c3225bd": "2412-15310_section_0b79795d",
+      "2412-15310_sent_3e9283da": "2412-15310_section_0b79795d",
+      "2412-15310_sent_ea5ce919": "2412-15310_section_0b79795d",
+      "2412-15310_sent_7f507413": "2412-15310_section_0b79795d",
+      "2412-15310_sent_78d9ef14": "2412-15310_section_0b79795d",
+      "2412-15310_sent_8f000cbc": "2412-15310_section_0b79795d",
+      "2412-15310_sent_d3b392b6": "2412-15310_section_0b79795d",
+      "2412-15310_sent_2ae8205f": "2412-15310_section_0b79795d",
+      "2412-15310_sent_0ca9452d": "2412-15310_section_0b79795d",
+      "2412-15310_sent_b2fbc7d2": "2412-15310_section_0b79795d",
+      "2412-15310_sent_e465b6a2": "2412-15310_section_0b79795d",
+      "2412-15310_sent_9ed64821": "2412-15310_section_0b79795d",
+      "2412-15310_sent_fa44d096": "2412-15310_section_0b79795d",
+      "2412-15310_sent_4d4e0711": "2412-15310_section_0b79795d",
+      "2412-15310_sent_b8c3c03d": "2412-15310_section_0b79795d",
+      "2412-15310_sent_960ae0f8": "2412-15310_section_0b79795d",
+      "2412-15310_sent_b16b99d1": "2412-15310_section_0b79795d",
+      "2412-15310_sent_8a9e14e3": "2412-15310_section_0b79795d",
+      "2412-15310_sent_3453065b": "2412-15310_section_0b79795d",
+      "2412-15310_sent_aa8cb1df": "2412-15310_section_0b79795d",
+      "2412-15310_sent_06930479": "2412-15310_section_0b79795d",
+      "2412-15310_sent_28cb5165": "2412-15310_section_0b79795d",
+      "2412-15310_sent_0af58388": "2412-15310_section_0b79795d",
+      "2412-15310_sent_d51449f9": "2412-15310_section_0b79795d",
+      "2412-15310_fig_7993ce42": "2412-15310_section_f61d415a",
+      "2412-15310_sent_d4397646": "2412-15310_section_0b79795d",
+      "2412-15310_sent_dba45a7e": "2412-15310_section_0b79795d",
+      "2412-15310_sent_abd45031": "2412-15310_section_0b79795d",
+      "2412-15310_sent_e5c8cbbb": "2412-15310_section_0b79795d",
+      "2412-15310_sent_6d08d398": "2412-15310_section_0b79795d",
+      "2412-15310_sent_881a4e30": "2412-15310_section_0b79795d",
+      "2412-15310_sent_a1effb45": "2412-15310_section_0b79795d",
+      "2412-15310_sent_4b654452": "2412-15310_section_0b79795d",
+      "2412-15310_sent_adfc3014": "2412-15310_section_0b79795d",
+      "2412-15310_sent_d9f749b8": "2412-15310_section_0b79795d",
+      "2412-15310_itemize_f57e9751": "2412-15310_paragraph_79e5d27e",
+      "2412-15310_item_49da0b8e": "2412-15310_itemize_f57e9751",
+      "2412-15310_sent_417dac99": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_2b270bf3": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_87df5c66": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_cb536079": "2412-15310_item_49da0b8e",
+      "2412-15310_section_aed402c3": "2412-15310_doc_root",
+      "2412-15310_sent_2da35ffa": "2412-15310_section_aed402c3",
+      "2412-15310_sent_1c0208b3": "2412-15310_section_aed402c3",
+      "2412-15310_sent_7b97ae39": "2412-15310_section_aed402c3",
+      "2412-15310_section_2a3ffdd8": "2412-15310_doc_root",
+      "2412-15310_paragraph_aea6ebf5": "2412-15310_section_2a3ffdd8",
+      "2412-15310_paragraph_0f5c5946": "2412-15310_section_2a3ffdd8",
+      "2412-15310_section_94a9e172": "2412-15310_doc_root",
+      "2412-15310_sent_206d4306": "2412-15310_section_94a9e172",
+      "2412-15310_sent_a8104f53": "2412-15310_section_94a9e172",
+      "2412-15310_sent_a44b564a": "2412-15310_section_94a9e172",
+      "2412-15310_sent_bbe044cf": "2412-15310_section_94a9e172",
+      "2412-15310_sent_352b0c4b": "2412-15310_section_94a9e172",
+      "2412-15310_subsection_d8817da9": "2412-15310_section_94a9e172",
+      "2412-15310_paragraph_a48316fa": "2412-15310_subsection_d8817da9",
+      "2412-15310_paragraph_d40574a8": "2412-15310_subsection_d8817da9",
+      "2412-15310_subsection_387b8117": "2412-15310_section_94a9e172",
+      "2412-15310_enumerate_53dccb3f": "2412-15310_subsection_387b8117",
+      "2412-15310_sent_4b8c2348": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_3a43e511": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_3dd386b3": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_032fb461": "2412-15310_item_49da0b8e",
+      "2412-15310_subsection_1d79700c": "2412-15310_section_94a9e172",
+      "2412-15310_sent_64482c6c": "2412-15310_subsection_1d79700c",
+      "2412-15310_sent_b8b2cd97": "2412-15310_subsection_1d79700c",
+      "2412-15310_sent_e2fa4e5c": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_04c13da5": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_480cfeab": "2412-15310_subsection_1d79700c",
+      "2412-15310_subsection_9c689028": "2412-15310_section_94a9e172",
+      "2412-15310_sent_3b5c5251": "2412-15310_subsection_9c689028",
+      "2412-15310_sent_33472c19": "2412-15310_subsection_9c689028",
+      "2412-15310_sent_568abd6a": "2412-15310_subsection_9c689028",
+      "2412-15310_sent_07c5c906": "2412-15310_subsection_9c689028",
+      "2412-15310_sent_93703d7e": "2412-15310_subsection_9c689028",
+      "2412-15310_sent_839dad0e": "2412-15310_subsection_9c689028",
+      "2412-15310_sent_cbb8eed6": "2412-15310_subsection_9c689028",
+      "2412-15310_fig_2ec0cc89": "2412-15310_subsection_9c689028",
+      "2412-15310_section_ca911de5": "2412-15310_doc_root",
+      "2412-15310_subsection_ece634fe": "2412-15310_section_ca911de5",
+      "2412-15310_sent_255fe56f": "2412-15310_subsection_ece634fe",
+      "2412-15310_sent_e66ba695": "2412-15310_subsection_ece634fe",
+      "2412-15310_sent_46627613": "2412-15310_subsection_ece634fe",
+      "2412-15310_sent_b521737e": "2412-15310_subsection_ece634fe",
+      "2412-15310_subsection_1e5aa4ec": "2412-15310_section_ca911de5",
+      "2412-15310_sent_751e6542": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_sent_3488103e": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_sent_55a8ea3e": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_sent_d06e1804": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_sent_c9c27ea4": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_sent_50092e83": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_sent_43f2d3b0": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_sent_4c70b4e5": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_sent_a84be364": "2412-15310_subsection_1e5aa4ec",
+      "2412-15310_subsection_f32c3eda": "2412-15310_section_ca911de5",
+      "2412-15310_subsubsection_7d4f8a95": "2412-15310_subsection_f32c3eda",
+      "2412-15310_sent_4877ad4a": "2412-15310_subsubsection_7d4f8a95",
+      "2412-15310_sent_a4b3026a": "2412-15310_subsubsection_7d4f8a95",
+      "2412-15310_sent_10249c49": "2412-15310_subsubsection_7d4f8a95",
+      "2412-15310_sent_cf83e505": "2412-15310_subsubsection_7d4f8a95",
+      "2412-15310_sent_285af345": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_72a28507": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_cdec3d61": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_8735142a": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_85e259a0": "2412-15310_subsubsection_7d4f8a95",
+      "2412-15310_sent_dd5dd55f": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_9ec76e37": "2412-15310_subsubsection_7d4f8a95",
+      "2412-15310_sent_3565def7": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_57e0ebef": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_956c984c": "2412-15310_subsubsection_7d4f8a95",
+      "2412-15310_sent_c1cc435a": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_12feaddc": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_7d537e35": "2412-15310_subsubsection_7d4f8a95",
+      "2412-15310_subsubsection_5c783de3": "2412-15310_subsection_f32c3eda",
+      "2412-15310_sent_9bc2e763": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_30eb3e06": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_3bdbaa5d": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_f9ac4e3a": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_1eb8bba3": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_c9999134": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_183d3158": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_72fe047e": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_21b4f784": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_4b93543e": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_b2a321fe": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_29e3b7db": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_sent_d2367cc2": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_6fe879b1": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_73e900a6": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_08a890d1": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_fig_fd33cf20": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_837bbd61": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_63aadc90": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_afcab5e3": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_sent_3038ffaa": "2412-15310_subsubsection_5c783de3",
+      "2412-15310_section_36f84e74": "2412-15310_doc_root",
+      "2412-15310_subsection_12afae5d": "2412-15310_section_36f84e74",
+      "2412-15310_sent_1f33372b": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_74156293": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_869916ce": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_9fb7b9d4": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_1bd77e7b": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_9980903f": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_80e5bb1f": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_b112d7d5": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_7b016680": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_42ace881": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_42d77afd": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_60ce5f13": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_01078292": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_547a3244": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_c3973e82": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_b26bbc38": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_59171707": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_7e61922d": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_657e661e": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_1b89c8ac": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_fc4f771f": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_c7c3c0e4": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_2129b85f": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_6cde506e": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_4f6e30c5": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_6db0ffe5": "2412-15310_subsection_12afae5d",
+      "2412-15310_sent_11a930de": "2412-15310_subsection_12afae5d",
+      "2412-15310_subsection_26af8e45": "2412-15310_section_36f84e74",
+      "2412-15310_sent_dd06abb2": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_43d8f8f6": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_ade5be08": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_94dc93bd": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_565947ae": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_68e2f1b6": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_0c81ec2c": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_6ff8cc61": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_c62cf4e1": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_c339d4bb": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_8336f89c": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_1fdd1292": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_21f23e6f": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_ebe6f07f": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_6ceeb533": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_a573f387": "2412-15310_subsection_26af8e45",
+      "2412-15310_sent_43c35e18": "2412-15310_subsection_26af8e45",
+      "2412-15310_subsection_c2943209": "2412-15310_section_36f84e74",
+      "2412-15310_sent_300b2466": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_e7e4486a": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_fe7e45a3": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_4076baaa": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_566ae190": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_11f6182b": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_52a64754": "2412-15310_subsection_c2943209",
+      "2412-15310_fig_3c79985b": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_786e30e6": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_d57f5dab": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_36a09b55": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_cc855486": "2412-15310_subsection_c2943209",
+      "2412-15310_sent_b6956919": "2412-15310_subsection_c2943209",
+      "2412-15310_subsection_2194b772": "2412-15310_section_36f84e74",
+      "2412-15310_sent_435d1e4d": "2412-15310_subsection_2194b772",
+      "2412-15310_sent_81d7f925": "2412-15310_subsection_2194b772",
+      "2412-15310_sent_6b34c80e": "2412-15310_subsection_2194b772",
+      "2412-15310_sent_114bc6a6": "2412-15310_subsection_2194b772",
+      "2412-15310_sent_f6445b21": "2412-15310_subsection_2194b772",
+      "2412-15310_sent_7c3a1dd5": "2412-15310_subsection_2194b772",
+      "2412-15310_sent_f37aa449": "2412-15310_subsection_2194b772",
+      "2412-15310_sent_a11b8f96": "2412-15310_subsection_2194b772",
+      "2412-15310_sent_d304e036": "2412-15310_subsection_2194b772",
+      "2412-15310_fig_d5c8a70a": "2412-15310_subsection_2194b772",
+      "2412-15310_section_560f23c7": "2412-15310_doc_root",
+      "2412-15310_sent_03b34747": "2412-15310_section_560f23c7",
+      "2412-15310_paragraph_1c456e25": "2412-15310_section_560f23c7",
+      "2412-15310_paragraph_2747b6ae": "2412-15310_section_560f23c7",
+      "2412-15310_paragraph_16379b1f": "2412-15310_section_560f23c7",
+      "2412-15310_paragraph_3a5ff13d": "2412-15310_section_560f23c7",
+      "2412-15310_section_6f8b794f": "2412-15310_doc_root",
+      "2412-15310_sent_0cb83262": "2412-15310_section_6f8b794f",
+      "2412-15310_sent_1d790ce9": "2412-15310_section_6f8b794f",
+      "2412-15310_sent_0b08a7c1": "2412-15310_section_6f8b794f",
+      "2412-15310_section_e646e16b": "2412-15310_doc_root",
+      "2412-15310_sent_11a7cfaa": "2412-15310_section_e646e16b",
+      "2412-15310_sent_05c4ba5a": "2412-15310_section_e646e16b",
+      "2412-15310_sent_983c0425": "2412-15310_section_e646e16b",
+      "2412-15310_sent_244010f5": "2412-15310_section_e646e16b",
+      "2412-15310_sent_d7a94043": "2412-15310_section_e646e16b",
+      "2412-15310_sent_aaffee00": "2412-15310_section_e646e16b",
+      "2412-15310_sent_4e7c7186": "2412-15310_section_e646e16b",
+      "2412-15310_sent_88702548": "2412-15310_section_e646e16b",
+      "2412-15310_sent_4f588a1b": "2412-15310_section_e646e16b",
+      "2412-15310_sent_3547f813": "2412-15310_section_e646e16b",
+      "2412-15310_section_5c59e0fb": "2412-15310_doc_root",
+      "2412-15310_sent_d5f42696": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_a97d040f": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_92ec8f6f": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_db4714cc": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_6390802a": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_9a43b663": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_29d2ca50": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_79e71de9": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_2e59d9d3": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_2690d713": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_c0181541": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_63ca292c": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_e2a49bce": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_3d08d21c": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_38448dc3": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_8f00542c": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_a06fc909": "2412-15310_section_5c59e0fb",
+      "2412-15310_sent_e1bd1c01": "2412-15310_section_5c59e0fb",
+      "2412-15310_section_a7f20481": "2412-15310_doc_root",
+      "2412-15310_sent_d73a0d51": "2412-15310_section_a7f20481",
+      "2412-15310_sent_3c337d55": "2412-15310_section_a7f20481",
+      "2412-15310_sent_36f83205": "2412-15310_section_a7f20481",
+      "2412-15310_sent_88176cc8": "2412-15310_section_a7f20481",
+      "2412-15310_sent_b3193220": "2412-15310_section_a7f20481",
+      "2412-15310_sent_824976a2": "2412-15310_section_a7f20481",
+      "2412-15310_section_c9ffccdb": "2412-15310_doc_root",
+      "2412-15310_sent_5d3a90e1": "2412-15310_section_c9ffccdb",
+      "2412-15310_paragraph_8c0aea43": "2412-15310_section_c9ffccdb",
+      "2412-15310_paragraph_4610035c": "2412-15310_section_c9ffccdb",
+      "2412-15310_sent_0552cbe3": "2412-15310_paragraph_bce6728c",
+      "2412-15310_paragraph_bce6728c": "2412-15310_section_c9ffccdb",
+      "2412-15310_paragraph_2c38f2cc": "2412-15310_section_c9ffccdb",
+      "2412-15310_sent_0ea8cff5": "2412-15310_paragraph_2c38f2cc",
+      "2412-15310_section_a05f94eb": "2412-15310_doc_root",
+      "2412-15310_sent_365ba412": "2412-15310_section_a05f94eb",
+      "2412-15310_sent_13501b96": "2412-15310_section_a05f94eb",
+      "2412-15310_sent_b54fe05d": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_3dd544ed": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_a267e8e0": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_56ebc121": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_c0ac3869": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_f0fd7107": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_1dd1bc81": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_fe235133": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_6076ef62": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_c88fd001": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_76dd9207": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_36cb631f": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_33a5a48f": "2412-15310_section_a05f94eb",
+      "2412-15310_sent_15927d3e": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_2a6c9c6c": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_5eb88a94": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_2ec7094d": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_4705249a": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_805614c4": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_ea9d7b37": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_feede7db": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_8dc84a05": "2412-15310_section_a05f94eb",
+      "2412-15310_section_82c3fb35": "2412-15310_doc_root",
+      "2412-15310_sent_c65d5447": "2412-15310_section_82c3fb35",
+      "2412-15310_sent_4f76aa68": "2412-15310_section_82c3fb35",
+      "2412-15310_paragraph_d499ab1f": "2412-15310_section_82c3fb35",
+      "2412-15310_sent_ce1d72a3": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_sent_2c1ca3f9": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_sent_9354d7ee": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_sent_f5426c4e": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_sent_8635e1b8": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_sent_5f71da65": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_sent_1429e9ab": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_sent_2a39804e": "2412-15310_paragraph_d499ab1f",
+      "2412-15310_paragraph_79e5d27e": "2412-15310_section_82c3fb35",
+      "2412-15310_sent_b117b54e": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_63277974": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_0d88b47e": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_13832a85": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_e6eb6540": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_09c55600": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_a1d5a789": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_6e4e28a9": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_b6b8eddb": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_b6b78b95": "2412-15310_item_49da0b8e",
+      "2412-15310_sent_c303cfb5": "2412-15310_item_49da0b8e",
+      "2412-15310_paragraph_69ae0923": "2412-15310_section_82c3fb35",
+      "2412-15310_section_1b7a2ba7": "2412-15310_doc_root",
+      "2412-15310_paragraph_a71444dc": "2412-15310_section_1b7a2ba7",
+      "2412-15310_sent_13898744": "2412-15310_paragraph_a71444dc",
+      "2412-15310_sent_b227ec8b": "2412-15310_paragraph_a71444dc",
+      "2412-15310_sent_4fdfcde0": "2412-15310_paragraph_a71444dc",
+      "2412-15310_sent_00d45dc8": "2412-15310_paragraph_a71444dc",
+      "2412-15310_sent_2c4167c6": "2412-15310_paragraph_a71444dc",
+      "2412-15310_sent_a2a0c798": "2412-15310_paragraph_a71444dc",
+      "2412-15310_sent_52855794": "2412-15310_paragraph_a71444dc",
+      "2412-15310_sent_2d20275f": "2412-15310_paragraph_a71444dc",
+      "2412-15310_section_3a2a8d26": "2412-15310_doc_root",
+      "2412-15310_sent_e386f10f": "2412-15310_section_3a2a8d26",
+      "2412-15310_sent_dc01ee7e": "2412-15310_section_3a2a8d26",
+      "2412-15310_section_b3f898a4": "2412-15310_doc_root",
+      "2412-15310_sent_194e65a4": "2412-15310_section_b3f898a4",
+      "2412-15310_sent_0420a2e1": "2412-15310_section_b3f898a4",
+      "2412-15310_sent_b47c8e3b": "2412-15310_section_b3f898a4",
+      "2412-15310_sent_f8e6eaaf": "2412-15310_section_b3f898a4",
+      "2412-15310_sent_e780db88": "2412-15310_section_b3f898a4",
+      "2412-15310_sent_6645717a": "2412-15310_section_b3f898a4",
+      "2412-15310_sent_e84f32d0": "2412-15310_section_b3f898a4",
+      "2412-15310_sent_80358498": "2412-15310_section_b3f898a4",
+      "2412-15310_section_5399e96c": "2412-15310_doc_root",
+      "2412-15310_sent_fb695c71": "2412-15310_section_5399e96c",
+      "2412-15310_sent_6499c9ba": "2412-15310_section_5399e96c",
+      "2412-15310_sent_31c08550": "2412-15310_section_5399e96c",
+      "2412-15310_sent_6cde99b1": "2412-15310_section_5399e96c",
+      "2412-15310_sent_2fb6bac5": "2412-15310_section_5399e96c",
+      "2412-15310_sent_2030a273": "2412-15310_section_5399e96c",
+      "2412-15310_fig_84fa6cc8": "2412-15310_section_5399e96c",
+      "2412-15310_fig_5418b458": "2412-15310_section_5399e96c",
+      "2412-15310_fig_9b580790": "2412-15310_section_5399e96c",
+      "2412-15310_section_f61d415a": "2412-15310_doc_root",
+      "2412-15310_sent_c7081679": "2412-15310_section_f61d415a",
+      "2412-15310_sent_7d79f4b3": "2412-15310_section_f61d415a",
+      "2412-15310_sent_b42479e3": "2412-15310_section_f61d415a",
+      "2412-15310_sent_c09f51a1": "2412-15310_section_f61d415a"
+    }
+  },
+  "merged_parents": {
+    "2412-15310_sent_ac2f55a2": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_32064a6a": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_abstract_ce28071e": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_dbdb80c2": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_sent_f2a35974": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_sent_abe664a3": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_sent_42aefa71": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_sent_73e9e64c": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_sent_d58b2050": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_sent_ce52b870": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_sent_c1e18d3f": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_sent_09a2e946": [
+      "2412-15310_abstract_ce28071e"
+    ],
+    "2412-15310_section_0b79795d": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_fig_a59b6363": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_78fe483d": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_4c3225bd": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_3e9283da": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_ea5ce919": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_7f507413": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_78d9ef14": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_8f000cbc": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_d3b392b6": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_2ae8205f": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_0ca9452d": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_b2fbc7d2": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_e465b6a2": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_9ed64821": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_fa44d096": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_4d4e0711": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_b8c3c03d": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_960ae0f8": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_b16b99d1": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_8a9e14e3": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_3453065b": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_aa8cb1df": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_06930479": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_28cb5165": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_0af58388": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_d51449f9": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_fig_7993ce42": [
+      "2412-15310_paragraph_d499ab1f",
+      "2412-15310_section_0b79795d",
+      "2412-15310_section_5c59e0fb",
+      "2412-15310_section_b3f898a4",
+      "2412-15310_section_f61d415a",
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_d4397646": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_dba45a7e": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_abd45031": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_e5c8cbbb": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_6d08d398": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_881a4e30": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_a1effb45": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_4b654452": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_adfc3014": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_sent_d9f749b8": [
+      "2412-15310_section_0b79795d"
+    ],
+    "2412-15310_itemize_f57e9751": [
+      "2412-15310_paragraph_79e5d27e",
+      "2412-15310_section_0b79795d",
+      "2412-15310_section_a05f94eb",
+      "2412-15310_subsection_12afae5d",
+      "2412-15310_subsection_1d79700c",
+      "2412-15310_subsubsection_5c783de3",
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_item_49da0b8e": [
+      "2412-15310_enumerate_53dccb3f",
+      "2412-15310_itemize_f57e9751"
+    ],
+    "2412-15310_sent_417dac99": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_2b270bf3": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_87df5c66": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_cb536079": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_section_aed402c3": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_2da35ffa": [
+      "2412-15310_section_aed402c3"
+    ],
+    "2412-15310_sent_1c0208b3": [
+      "2412-15310_section_aed402c3"
+    ],
+    "2412-15310_sent_7b97ae39": [
+      "2412-15310_section_aed402c3"
+    ],
+    "2412-15310_section_2a3ffdd8": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_paragraph_aea6ebf5": [
+      "2412-15310_section_2a3ffdd8"
+    ],
+    "2412-15310_paragraph_0f5c5946": [
+      "2412-15310_section_2a3ffdd8"
+    ],
+    "2412-15310_section_94a9e172": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_206d4306": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_sent_a8104f53": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_sent_a44b564a": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_sent_bbe044cf": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_sent_352b0c4b": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_subsection_d8817da9": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_paragraph_a48316fa": [
+      "2412-15310_subsection_d8817da9"
+    ],
+    "2412-15310_paragraph_d40574a8": [
+      "2412-15310_subsection_d8817da9"
+    ],
+    "2412-15310_subsection_387b8117": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_enumerate_53dccb3f": [
+      "2412-15310_subsection_387b8117"
+    ],
+    "2412-15310_sent_4b8c2348": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_3a43e511": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_3dd386b3": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_032fb461": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_subsection_1d79700c": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_sent_64482c6c": [
+      "2412-15310_subsection_1d79700c"
+    ],
+    "2412-15310_sent_b8b2cd97": [
+      "2412-15310_subsection_1d79700c"
+    ],
+    "2412-15310_sent_e2fa4e5c": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_04c13da5": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_480cfeab": [
+      "2412-15310_subsection_1d79700c"
+    ],
+    "2412-15310_subsection_9c689028": [
+      "2412-15310_section_94a9e172"
+    ],
+    "2412-15310_sent_3b5c5251": [
+      "2412-15310_subsection_9c689028"
+    ],
+    "2412-15310_sent_33472c19": [
+      "2412-15310_subsection_9c689028"
+    ],
+    "2412-15310_sent_568abd6a": [
+      "2412-15310_subsection_9c689028"
+    ],
+    "2412-15310_sent_07c5c906": [
+      "2412-15310_subsection_9c689028"
+    ],
+    "2412-15310_sent_93703d7e": [
+      "2412-15310_subsection_9c689028"
+    ],
+    "2412-15310_sent_839dad0e": [
+      "2412-15310_subsection_9c689028"
+    ],
+    "2412-15310_sent_cbb8eed6": [
+      "2412-15310_subsection_9c689028"
+    ],
+    "2412-15310_fig_2ec0cc89": [
+      "2412-15310_subsection_9c689028"
+    ],
+    "2412-15310_section_ca911de5": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_subsection_ece634fe": [
+      "2412-15310_section_ca911de5"
+    ],
+    "2412-15310_sent_255fe56f": [
+      "2412-15310_subsection_ece634fe"
+    ],
+    "2412-15310_sent_e66ba695": [
+      "2412-15310_subsection_ece634fe"
+    ],
+    "2412-15310_sent_46627613": [
+      "2412-15310_subsection_ece634fe"
+    ],
+    "2412-15310_sent_b521737e": [
+      "2412-15310_subsection_ece634fe"
+    ],
+    "2412-15310_subsection_1e5aa4ec": [
+      "2412-15310_section_ca911de5"
+    ],
+    "2412-15310_sent_751e6542": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_sent_3488103e": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_sent_55a8ea3e": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_sent_d06e1804": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_sent_c9c27ea4": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_sent_50092e83": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_sent_43f2d3b0": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_sent_4c70b4e5": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_sent_a84be364": [
+      "2412-15310_subsection_1e5aa4ec"
+    ],
+    "2412-15310_subsection_f32c3eda": [
+      "2412-15310_section_ca911de5"
+    ],
+    "2412-15310_subsubsection_7d4f8a95": [
+      "2412-15310_subsection_f32c3eda"
+    ],
+    "2412-15310_sent_4877ad4a": [
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_sent_a4b3026a": [
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_sent_10249c49": [
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_sent_cf83e505": [
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_sent_285af345": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_72a28507": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_cdec3d61": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_8735142a": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_85e259a0": [
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_sent_dd5dd55f": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_9ec76e37": [
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_sent_3565def7": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_57e0ebef": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_956c984c": [
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_sent_c1cc435a": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_12feaddc": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_7d537e35": [
+      "2412-15310_subsubsection_7d4f8a95"
+    ],
+    "2412-15310_subsubsection_5c783de3": [
+      "2412-15310_subsection_f32c3eda"
+    ],
+    "2412-15310_sent_9bc2e763": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_30eb3e06": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_3bdbaa5d": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_f9ac4e3a": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_1eb8bba3": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_c9999134": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_183d3158": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_72fe047e": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_21b4f784": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_4b93543e": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_b2a321fe": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_29e3b7db": [
+      "2412-15310_paragraph_d499ab1f",
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_d2367cc2": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_6fe879b1": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_73e900a6": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_08a890d1": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_fig_fd33cf20": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_837bbd61": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_63aadc90": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_afcab5e3": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_sent_3038ffaa": [
+      "2412-15310_subsubsection_5c783de3"
+    ],
+    "2412-15310_section_36f84e74": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_subsection_12afae5d": [
+      "2412-15310_section_36f84e74"
+    ],
+    "2412-15310_sent_1f33372b": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_74156293": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_869916ce": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_9fb7b9d4": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_1bd77e7b": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_9980903f": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_80e5bb1f": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_b112d7d5": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_7b016680": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_42ace881": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_42d77afd": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_60ce5f13": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_01078292": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_547a3244": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_c3973e82": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_b26bbc38": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_59171707": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_7e61922d": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_657e661e": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_1b89c8ac": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_fc4f771f": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_c7c3c0e4": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_2129b85f": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_6cde506e": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_4f6e30c5": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_6db0ffe5": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_sent_11a930de": [
+      "2412-15310_subsection_12afae5d"
+    ],
+    "2412-15310_subsection_26af8e45": [
+      "2412-15310_section_36f84e74"
+    ],
+    "2412-15310_sent_dd06abb2": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_43d8f8f6": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_ade5be08": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_94dc93bd": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_565947ae": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_68e2f1b6": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_0c81ec2c": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_6ff8cc61": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_c62cf4e1": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_c339d4bb": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_8336f89c": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_1fdd1292": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_21f23e6f": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_ebe6f07f": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_6ceeb533": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_a573f387": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_sent_43c35e18": [
+      "2412-15310_subsection_26af8e45"
+    ],
+    "2412-15310_subsection_c2943209": [
+      "2412-15310_section_36f84e74"
+    ],
+    "2412-15310_sent_300b2466": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_e7e4486a": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_fe7e45a3": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_4076baaa": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_566ae190": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_11f6182b": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_52a64754": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_fig_3c79985b": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_786e30e6": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_d57f5dab": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_36a09b55": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_cc855486": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_sent_b6956919": [
+      "2412-15310_subsection_c2943209"
+    ],
+    "2412-15310_subsection_2194b772": [
+      "2412-15310_section_36f84e74"
+    ],
+    "2412-15310_sent_435d1e4d": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_sent_81d7f925": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_sent_6b34c80e": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_sent_114bc6a6": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_sent_f6445b21": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_sent_7c3a1dd5": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_sent_f37aa449": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_sent_a11b8f96": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_sent_d304e036": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_fig_d5c8a70a": [
+      "2412-15310_subsection_2194b772"
+    ],
+    "2412-15310_section_560f23c7": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_03b34747": [
+      "2412-15310_section_560f23c7"
+    ],
+    "2412-15310_paragraph_1c456e25": [
+      "2412-15310_section_560f23c7"
+    ],
+    "2412-15310_paragraph_2747b6ae": [
+      "2412-15310_section_560f23c7"
+    ],
+    "2412-15310_paragraph_16379b1f": [
+      "2412-15310_section_560f23c7"
+    ],
+    "2412-15310_paragraph_3a5ff13d": [
+      "2412-15310_section_560f23c7"
+    ],
+    "2412-15310_section_6f8b794f": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_0cb83262": [
+      "2412-15310_section_6f8b794f"
+    ],
+    "2412-15310_sent_1d790ce9": [
+      "2412-15310_section_6f8b794f"
+    ],
+    "2412-15310_sent_0b08a7c1": [
+      "2412-15310_section_6f8b794f"
+    ],
+    "2412-15310_section_e646e16b": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_11a7cfaa": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_05c4ba5a": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_983c0425": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_244010f5": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_d7a94043": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_aaffee00": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_4e7c7186": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_88702548": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_4f588a1b": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_sent_3547f813": [
+      "2412-15310_section_e646e16b"
+    ],
+    "2412-15310_section_5c59e0fb": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_d5f42696": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_a97d040f": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_92ec8f6f": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_db4714cc": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_6390802a": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_9a43b663": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_29d2ca50": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_79e71de9": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_2e59d9d3": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_2690d713": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_c0181541": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_63ca292c": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_e2a49bce": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_3d08d21c": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_38448dc3": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_8f00542c": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_a06fc909": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_sent_e1bd1c01": [
+      "2412-15310_section_5c59e0fb"
+    ],
+    "2412-15310_section_a7f20481": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_d73a0d51": [
+      "2412-15310_section_a7f20481"
+    ],
+    "2412-15310_sent_3c337d55": [
+      "2412-15310_section_a7f20481"
+    ],
+    "2412-15310_sent_36f83205": [
+      "2412-15310_section_a7f20481"
+    ],
+    "2412-15310_sent_88176cc8": [
+      "2412-15310_section_a7f20481"
+    ],
+    "2412-15310_sent_b3193220": [
+      "2412-15310_section_a7f20481"
+    ],
+    "2412-15310_sent_824976a2": [
+      "2412-15310_section_a7f20481"
+    ],
+    "2412-15310_section_c9ffccdb": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_5d3a90e1": [
+      "2412-15310_section_c9ffccdb"
+    ],
+    "2412-15310_paragraph_8c0aea43": [
+      "2412-15310_section_c9ffccdb"
+    ],
+    "2412-15310_paragraph_4610035c": [
+      "2412-15310_section_c9ffccdb"
+    ],
+    "2412-15310_sent_0552cbe3": [
+      "2412-15310_paragraph_4610035c",
+      "2412-15310_paragraph_bce6728c"
+    ],
+    "2412-15310_paragraph_bce6728c": [
+      "2412-15310_section_c9ffccdb"
+    ],
+    "2412-15310_paragraph_2c38f2cc": [
+      "2412-15310_section_c9ffccdb"
+    ],
+    "2412-15310_sent_0ea8cff5": [
+      "2412-15310_paragraph_2c38f2cc"
+    ],
+    "2412-15310_section_a05f94eb": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_365ba412": [
+      "2412-15310_section_a05f94eb"
+    ],
+    "2412-15310_sent_13501b96": [
+      "2412-15310_section_a05f94eb"
+    ],
+    "2412-15310_sent_b54fe05d": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_3dd544ed": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_a267e8e0": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_56ebc121": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_c0ac3869": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_f0fd7107": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_1dd1bc81": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_fe235133": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_6076ef62": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_c88fd001": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_76dd9207": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_36cb631f": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_33a5a48f": [
+      "2412-15310_section_a05f94eb"
+    ],
+    "2412-15310_sent_15927d3e": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_2a6c9c6c": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_5eb88a94": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_2ec7094d": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_4705249a": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_805614c4": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_ea9d7b37": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_feede7db": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_8dc84a05": [
+      "2412-15310_section_a05f94eb"
+    ],
+    "2412-15310_section_82c3fb35": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_c65d5447": [
+      "2412-15310_section_82c3fb35"
+    ],
+    "2412-15310_sent_4f76aa68": [
+      "2412-15310_section_82c3fb35"
+    ],
+    "2412-15310_paragraph_d499ab1f": [
+      "2412-15310_section_82c3fb35"
+    ],
+    "2412-15310_sent_ce1d72a3": [
+      "2412-15310_paragraph_d499ab1f"
+    ],
+    "2412-15310_sent_2c1ca3f9": [
+      "2412-15310_paragraph_d499ab1f"
+    ],
+    "2412-15310_sent_9354d7ee": [
+      "2412-15310_paragraph_d499ab1f"
+    ],
+    "2412-15310_sent_f5426c4e": [
+      "2412-15310_paragraph_d499ab1f"
+    ],
+    "2412-15310_sent_8635e1b8": [
+      "2412-15310_paragraph_d499ab1f"
+    ],
+    "2412-15310_sent_5f71da65": [
+      "2412-15310_paragraph_d499ab1f"
+    ],
+    "2412-15310_sent_1429e9ab": [
+      "2412-15310_paragraph_d499ab1f"
+    ],
+    "2412-15310_sent_2a39804e": [
+      "2412-15310_paragraph_d499ab1f"
+    ],
+    "2412-15310_paragraph_79e5d27e": [
+      "2412-15310_section_82c3fb35"
+    ],
+    "2412-15310_sent_b117b54e": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_63277974": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_0d88b47e": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_13832a85": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_e6eb6540": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_09c55600": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_a1d5a789": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_6e4e28a9": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_b6b8eddb": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_b6b78b95": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_sent_c303cfb5": [
+      "2412-15310_item_49da0b8e"
+    ],
+    "2412-15310_paragraph_69ae0923": [
+      "2412-15310_section_82c3fb35"
+    ],
+    "2412-15310_section_1b7a2ba7": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_paragraph_a71444dc": [
+      "2412-15310_section_1b7a2ba7"
+    ],
+    "2412-15310_sent_13898744": [
+      "2412-15310_paragraph_a71444dc"
+    ],
+    "2412-15310_sent_b227ec8b": [
+      "2412-15310_paragraph_a71444dc"
+    ],
+    "2412-15310_sent_4fdfcde0": [
+      "2412-15310_paragraph_a71444dc"
+    ],
+    "2412-15310_sent_00d45dc8": [
+      "2412-15310_paragraph_a71444dc"
+    ],
+    "2412-15310_sent_2c4167c6": [
+      "2412-15310_paragraph_a71444dc"
+    ],
+    "2412-15310_sent_a2a0c798": [
+      "2412-15310_paragraph_a71444dc"
+    ],
+    "2412-15310_sent_52855794": [
+      "2412-15310_paragraph_a71444dc"
+    ],
+    "2412-15310_sent_2d20275f": [
+      "2412-15310_paragraph_a71444dc"
+    ],
+    "2412-15310_section_3a2a8d26": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_e386f10f": [
+      "2412-15310_section_3a2a8d26"
+    ],
+    "2412-15310_sent_dc01ee7e": [
+      "2412-15310_section_3a2a8d26"
+    ],
+    "2412-15310_section_b3f898a4": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_194e65a4": [
+      "2412-15310_section_b3f898a4"
+    ],
+    "2412-15310_sent_0420a2e1": [
+      "2412-15310_section_b3f898a4"
+    ],
+    "2412-15310_sent_b47c8e3b": [
+      "2412-15310_section_b3f898a4"
+    ],
+    "2412-15310_sent_f8e6eaaf": [
+      "2412-15310_section_b3f898a4"
+    ],
+    "2412-15310_sent_e780db88": [
+      "2412-15310_section_b3f898a4"
+    ],
+    "2412-15310_sent_6645717a": [
+      "2412-15310_section_b3f898a4"
+    ],
+    "2412-15310_sent_e84f32d0": [
+      "2412-15310_section_b3f898a4"
+    ],
+    "2412-15310_sent_80358498": [
+      "2412-15310_section_b3f898a4"
+    ],
+    "2412-15310_section_5399e96c": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_fb695c71": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_sent_6499c9ba": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_sent_31c08550": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_sent_6cde99b1": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_sent_2fb6bac5": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_sent_2030a273": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_fig_84fa6cc8": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_fig_5418b458": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_fig_9b580790": [
+      "2412-15310_section_5399e96c"
+    ],
+    "2412-15310_section_f61d415a": [
+      "2412-15310_doc_root"
+    ],
+    "2412-15310_sent_c7081679": [
+      "2412-15310_section_f61d415a"
+    ],
+    "2412-15310_sent_7d79f4b3": [
+      "2412-15310_section_f61d415a"
+    ],
+    "2412-15310_sent_b42479e3": [
+      "2412-15310_section_f61d415a"
+    ],
+    "2412-15310_sent_c09f51a1": [
+      "2412-15310_section_f61d415a"
+    ]
+  }
+}

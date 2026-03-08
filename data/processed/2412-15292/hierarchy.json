@@ -1,0 +1,1550 @@
+{
+  "elements": {
+    "2412-15292_doc_root": "DOCUMENT_ROOT",
+    "2412-15292_sent_676977e1": "\\maketitle",
+    "2412-15292_abstract_ce28071e": "abstract",
+    "2412-15292_sent_cdf59497": "The ability to estimate temporal relationships is critical for both animals and artificial agents.",
+    "2412-15292_sent_3aef2b56": "Cognitive science and neuroscience provide remarkable insights into behavioral and neural aspects of temporal credit assignment.",
+    "2412-15292_sent_c4324519": "In particular, scale invariance of learning dynamics, observed in behavior and supported by neural data, is one of the key principles that governs animal perception: proportional rescaling of temporal relationships does not alter the overall learning efficiency.",
+    "2412-15292_sent_d7bffe9b": "Here we integrate a computational neuroscience model of scale invariant memory into deep reinforcement learning (RL) agents.",
+    "2412-15292_sent_a1e8720f": "We first provide a theoretical analysis and then demonstrate through experiments that such agents can learn robustly across a wide range of temporal scales, unlike agents built with commonly used recurrent memory architectures such as LSTM.",
+    "2412-15292_sent_269809c3": "This result illustrates that incorporating computational principles from neuroscience and cognitive science into deep neural networks can enhance adaptability to complex temporal dynamics, mirroring some of the core properties of human learning.",
+    "2412-15292_section_0b79795d": "Introduction",
+    "2412-15292_sent_4843f622": "Learning temporal relationships between cause and effect is critical for successfully obtaining rewards and avoiding punishments in a natural environment.",
+    "2412-15292_sent_c24447b3": "Humans and many other animals can estimate the temporal duration of events and use that estimate as an integral component of decision-making.",
+    "2412-15292_sent_765ef30b": "Furthermore, the ability to do this rapidly and flexibly across a wide range of temporal scales has been critical for survival. While machine learning systems also possess the capacity to represent the elapsed time, typically via recurrent connections, they often struggle with learning temporal relationships, especially when those are extended over multiple scales.",
+    "2412-15292_sent_0fe4e134": "The mammalian ability to estimate time and learn exhibits scale invariance across a wide range of temporal scales, spanning from seconds to several minutes \\citep{buhusi2005makes,gibbon1977scalar,buhusi2009interval,balci2020peak,GallGibb00,balsam2009temporal,gallistel2024time}.",
+    "2412-15292_sent_a21060d0": "A scale invariant system has a linear relationship between the mean estimated time and the actual time, with a constant coefficient of variation.",
+    "2412-15292_sent_14e66153": "In other words, the relative uncertainty or error in time estimation remains constant as the duration increases.",
+    "2412-15292_sent_d6648ffb": "This is known as the Weber-Fechner law \\citep{Fech60}, which states that the just noticeable difference between two stimuli is proportional to the magnitude of the stimuli.",
+    "2412-15292_sent_5debe0db": "Hence the ratio between these two quantities is constant, implying that the perceived magnitude is on a logarithmic scale.",
+    "2412-15292_sent_b53389f4": "This law is foundational for understanding mammalian perceptions and spans virtually all perceptual domains except angles \\citep{gibbon1977scalar,Wilk15}.",
+    "2412-15292_sent_58f3a4c7": "Scale invariance in learning is demonstrated in classical conditioning where animals observe a salient stimulus followed by a reward.",
+    "2412-15292_sent_7c13ee87": "When the temporal distance between stimulus and reward is rescaled by the same factor as between two stimuli, the number of trials the animal needs to learn the value of the stimulus remains unchanged. While previous studies have demonstrated this effect on the order of about a minute \\citep{GallGibb00,balsam2009temporal}, recent work has demonstrated that it holds for at least 16 minutes \\citep{gallistel2024time}.",
+    "2412-15292_sent_732cc504": "Contrary to biological organisms, the performance of machine learning systems is typically not scale invariant.",
+    "2412-15292_sent_1869dbdb": "Machine learning systems tend to perform well only at a limited set of scales and require adjustments of hyperparameters such as learning rate, temporal resolution and temporal discounting to learn problems at different scales.",
+    "2412-15292_sent_ea06678e": "A number of neuroscience studies have investigated the neural underpinning of temporal representations in tasks such as interval timing and temporal bisection \\citep{emmons2017rodent,matell2004cortico,kim2013neural,kim2017optogenetic,parker2014d1,mello2015scalable,narayanan2016ramping,gouvea2015striatal,tiganj2017sequential,donnelly2015ramping}.",
+    "2412-15292_sent_48f7042b": "Neural activity observed in several brain regions, including the hippocampus, prefrontal cortex and striatum, was often characterized by one of two traits: (1) ramping/decaying activity, where neurons monotonically increase/decrease their firing rate as a function of time following some salient stimulus (such as the onset of the interval timing cue); and (2) sequential activity, where neurons activate sequentially following some salient stimulus, with each neuron elevating its firing rate for a distinct period of time.",
+    "2412-15292_sent_6caa8e48": "These sequentially activated neurons, also known as time cells (as a temporal analog of place cells \\citep{o1976place}) have been observed in the hippocampus and the prefrontal cortex in several studies over the recent years \\citep{pastalkova2008internally,macdonald2011hippocampal,salz2016time,cruzado2020conjunctive,eichenbaum2014time,macdonald2021crucial}.",
+    "2412-15292_sent_6694cf50": "Sequential neural activity is also scale invariant: the width of the temporal windows in time cells increases with the peak time and the ratio of the peak times of the adjacent cells is constant (geometric progression), indicating uniform spacing along a logarithmic axis \\citep{cao2022internally}.",
+    "2412-15292_sent_8f4b8fd4": "In this study, we draw on insights from neuroscience and cognitive science to enable more flexible learning in deep reinforcement learning (RL) agents by incorporating scale invariant temporal memory.",
+    "2412-15292_sent_88e3ffaf": "The memory model is based on previous work in computational neuroscience \\citep{shankar2012scale,ShanHowa13}, which has been used to explain a broad range of phenomena in neuroscience \\citep{howard2014unified}, including the emergence of time and place cells, as well as findings from cognitive psychology memory experiments, such as free recall and judgment of recency \\citep{howard2015distributed,tiganj2021computational}.",
+    "2412-15292_sent_45ce6183": "We integrate scale invariant memory into RL agents and evaluate their performance across tasks designed to span a wide range of temporal scales.",
+    "2412-15292_sent_cc9dfb4e": "We compare the performance and neural activity of proposed agents to agents built with standard memory architectures, such as LSTM \\citep{hochreiter1997long} and simple RNN.",
+    "2412-15292_sent_b794fcc5": "Through theoretical analysis and experiments, we demonstrate that agents with scale invariant memory effectively generalize and maintain strong performance across rescaled temporal relationships.",
+    "2412-15292_section_5c13ed15": "Prior work",
+    "2412-15292_sent_e7687f3c": "Previous computational work proposed that ramping/decaying activity and time cells provide a representation essential for timing and learning temporal relationships \\citep{balci2016decision,howard2014unified}.",
+    "2412-15292_sent_b5e0dc72": "This has also been studied in the RL context \\citep{petter2018integrating,namboodiri2022real,ludvig2008stimulus}.",
+    "2412-15292_sent_4fbd7c4b": "A number of computational neuroscience studies have closely examined and attempted to model neural activity during interval timing and similar time-related tasks \\citep{grossberg1989neural,wang2018flexible,jazayeri2015neural,cueva2020low,perez2018synaptic,raphan2019modeling}.",
+    "2412-15292_sent_76ddd4c1": "Together, these models provide remarkable insights into neural mechanisms of temporal learning from computational neuroscience and cognitive science perspectives.",
+    "2412-15292_sent_4b2f0165": "Our efforts focus on examining temporal learning in artificial RL agents trained using error backpropagation.",
+    "2412-15292_sent_13df4b0c": "We believe this effort complements computational neuroscience efforts for building neural models of time-scale invariant learning since we specifically evaluate agents based on a computational neuroscience model of memory.",
+    "2412-15292_sent_358b906c": "\\citet{deverett2019interval} studied interval reproduction in deep RL agents and provided valuable insights about the capabilities of these agents.",
+    "2412-15292_sent_e0900142": "Our work extends this approach, as we closely examine the neural activity of the artificial agents and conduct experiments at different temporal scales.",
+    "2412-15292_sent_52eed51e": "Previous work has also shown that under particular circumstances (mnemonic demand), neural activity in deep RL agents resembles the activity of time cells \\citep{lin2021time}.",
+    "2412-15292_sent_bbc7663e": "Other types of brain-like neural activity have also been observed in deep learning systems \\citep{sorscher2019unified,schaeffer2022no}, which in some cases led to improved performance of deep RL agents \\citep{banino2018vector}.",
+    "2412-15292_sent_42a5c0d5": "Furthermore, recent computational models of hippocampal activity have been linked to modern deep learning architectures, such as transformers \\citep{whittington2021relating}.",
+    "2412-15292_sent_acd1970f": "Our work complements these efforts in brain-inspired AI by comparing neural activity in biological and artificial systems and evaluating whether systems whose activity is closer to biological counterparts indeed perform better.",
+    "2412-15292_sent_c9e8b2e4": "Neural networks that use temporal convolution to construct an offline version of scale invariant memory have been proposed in \\citet{jacques2021deepsith,jacques2022deep}, but these have not been explored in the context of online temporal learning or deep RL.",
+    "2412-15292_sent_d5a24020": "An approach similar to ours has been used to develop systems with scale invariant temporal discounting \\citep{TanoEtal20,masset2023multi,MomeHowa18,tiganj2019estimating}.",
+    "2412-15292_sent_4ee6aa7e": "A similar approach has also been used to build systems that can learn to represent variables such as numerosity and position \\citep{maini2023representing,mochizuki2024incorporating}.",
+    "2412-15292_sent_938dbe3e": "These approaches are complementary to ours since we focus on scale invariance in temporal memory of deep RL agents.",
+    "2412-15292_section_55138803": "Environments",
+    "2412-15292_fig_b71837c1": "\\begin{figure*}",
+    "2412-15292_sent_37e883bc": "\\begin{tabular}{ll} A & B \\\\ \\includegraphics[width=0.34\\textwidth]{intervals.png} & \\includegraphics[width=0.60\\textwidth]{interval_timing_env3D.png} \\\\ \\end{tabular} \\caption{A.",
+    "2412-15292_sent_8c7c0f06": "The six temporal intervals used in the task.",
+    "2412-15292_sent_ae7b573b": "At each trial, a random interval is selected and the agent has to indicate whether the interval was long or short.",
+    "2412-15292_sent_b06c26ae": "B.",
+    "2412-15292_sent_abfca62a": "Schematic of the environment.",
+    "2412-15292_sent_7c4a93c4": "After the agent crosses the start line, one of six delay intervals is presented. } \\end{figure*}",
+    "2412-15292_subsection_81a3b74e": "Interval timing",
+    "2412-15292_sent_5ba04dac": "The interval timing environment was inspired by a neuroscience study where rats had to discriminate between two groups of intervals, long and short, each having three possible durations \\citep{kim2013neural} (Fig.~\\ref{fig:env}A).",
+    "2412-15292_sent_1afc2a32": "The interval begins when the agent crosses the start line (indicated by the red line in Fig.~\\ref{fig:env}B).",
+    "2412-15292_sent_4d561be6": "The duration of the interval is randomly chosen from six equally probable durations.",
+    "2412-15292_sent_9ded110a": "After the end of the interval period, the central bridge of the T-maze drops, and the agent freely navigates towards the end of the track.",
+    "2412-15292_sent_aec2d40b": "When the agent reaches the end, it has to choose one of the goal locations (indicated by the blue lines in Fig.~\\ref{fig:env}B) depending on whether the interval was from the long or short group of intervals.",
+    "2412-15292_sent_a59f7ad1": "We used two versions of this environment: one with 3D realistic visual observations developed using the open-source PyBullet physics engine \\citep{coumans2021}, and the other that consists of a 1D observation space.",
+    "2412-15292_sent_7bca47d9": "The purpose of the simple 1D environment was to facilitate interpretability of the results, while the 3D realistic environment was used to evaluate the scalability of the proposed approach.",
+    "2412-15292_sent_cbbf8969": "In the 3D environment, at each time step, the agent receives a three-dimensional pixel observation of shape $60 \\times 60 \\times 3$ and performs any of the three possible actions: left, right and forward.",
+    "2412-15292_sent_271cef3e": "The forward action moves the agent straight towards the end of the track at a fixed speed of $1$cm/step.",
+    "2412-15292_sent_164f9cf2": "Each left and right action realigns the agent in $7.5^{\\circ} $ increments to a max/min of $\\pm15^{\\circ} $ along the straight portion of the T-maze and without a bound at the end.",
+    "2412-15292_sent_c967d7fe": "Once the agent reaches the goal positions, it receives a reward of either $10$ for a correct or $0$ for an incorrect choice.",
+    "2412-15292_sent_365960e7": "It also receives a reward of $-0.1$ if it tries to turn beyond $15^{\\circ} $ in either direction when on the straight track, or if it collides with the back wall of the environment.",
+    "2412-15292_sent_4b973e34": "In the simple version of the environment (top row in Fig.~\\ref{fig:Cog-RNN}B), the observation space is one-dimensional such that a $\\delta$ pulse is introduced after the fixation period to signal the beginning of an interval, followed by a second $\\delta$ pulse that marks the end of the interval. The interval is followed by a delay period, after which the agent chooses either a ``left'' or ``right'' action, similar to the 3D environment.",
+    "2412-15292_sent_624c58a3": "In this and subsequent environments, the agent receives a reward of $1.0$ for a correct choice and $-1.0$ for an incorrect choice.",
+    "2412-15292_subsection_526a1cfa": "Interval discrimination",
+    "2412-15292_sent_5587e8aa": "This simple environment was based on a duration discrimination task \\citep{intervaldisc}.",
+    "2412-15292_sent_03f0f910": "In each trial, two stimuli are presented sequentially with a delay period separating them.",
+    "2412-15292_sent_30392b84": "The agent is required to determine which of the two stimuli has a longer duration.",
+    "2412-15292_sent_a7c669ad": "The observation space is one-dimensional. Consistent with the 1D interval timing task, the onset and termination of each interval are signaled by a $\\delta$ pulse.",
+    "2412-15292_subsection_f09ff22d": "Delayed-match-to-sample",
+    "2412-15292_sent_14b6414a": "We used an existing delayed-match-to-sample environment from NeuroGym \\citep{molano2022neurogym}.",
+    "2412-15292_sent_c31c408f": "This environment was inspired by a common memory task \\citep{dms} in which a sample stimulus is followed by a delay period and a test stimulus.",
+    "2412-15292_sent_22d78e0f": "To receive a reward, the participant needs to determine whether the test stimulus matches the sample stimulus.",
+    "2412-15292_sent_ee7835c9": "The observation space for this environment is a vector comprising three features.",
+    "2412-15292_subsection_9870617c": "Interval reproduction",
+    "2412-15292_sent_c48a2510": "This simple environment is inspired by the interval reproduction task described by \\citet{deverett2019interval}.",
+    "2412-15292_sent_6865bd55": "In each trial, two stimuli are presented sequentially, separated by an interval that the agent must later reproduce.",
+    "2412-15292_sent_6795f1f4": "During the reproduction phase, which occurs after the second stimulus, the agent must perform an action to replicate the interval within a $20\\%$ tolerance to receive a reward.",
+    "2412-15292_sent_664137f6": "In line with the other 1D tasks, the onset and termination of the interval are marked by a $\\delta$ pulse.",
+    "2412-15292_section_a559b870": "Model",
+    "2412-15292_sent_dec632f8": "Our recurrent deep learning architecture consists of three major parts (Fig.~\\ref{fig:agent}): encoder (used only for the 3D interval timing environment), core, and agent.",
+    "2412-15292_sent_b4b253c5": "The encoder consists of three consecutive convolutional layers.",
+    "2412-15292_sent_885c0735": "The resulting output from the last convolutional layer is flattened and passed through a fully connected layer.",
+    "2412-15292_sent_38075f97": "This encoded representation is then fed into the core, the recurrent memory of our architecture.",
+    "2412-15292_sent_c0fb1520": "We used three different kinds of recurrent cores: RNN, LSTM, and the cognitively inspired RNN, described in detail below, which we abbreviate as CogRNN.",
+    "2412-15292_sent_53fa6697": "Lastly, the output from the core is passed through two attention layers (for the 3D interval timing environment) or a dense layer (for other environments unless specified otherwise).",
+    "2412-15292_sent_0e9a4e74": "This output is then fed into the agent part of the network, which has two branches: (i) policy network and (ii) value network.",
+    "2412-15292_sent_74f9e23a": "At every time step, the agent chooses an action depending on the output of the policy network.",
+    "2412-15292_sent_bcd2c3ba": "Outputs from the policy and value networks are used to calculate losses, which are then used in backpropagation for gradient-based parameter updates.",
+    "2412-15292_fig_e69eca32": "\\begin{figure}\n\n \\includegraphics[width=1\\columnwidth]{new_agent_schematic_interval_timing.png} \n \\caption{Architecture of the (RL) agent. Observations from the environment are processed by a convolutional neural network to extract feature representations. These features are then passed to a recurrent memory module (simple RNN, LSTM or CogRNN), which captures temporal dependencies and provides context for the policy network ($\\pi$) and value network ($V$).}\n\n\\end{figure}",
+    "2412-15292_sent_ca0430be": "\\begin{tabular}{lll} A & B & C \\\\ \\adjustbox{valign=t}{\\includegraphics[width=0.31\\textwidth]{SITH_impulse_2.png}} & \\adjustbox{valign=t}{\\includegraphics[width=0.31\\textwidth]{obs_activity_diff_scale_interval48_B.png}} & \\adjustbox{valign=t}{\\includegraphics[width=0.31\\textwidth]{conv_activity_shift_diff_scale_interval48_C.png}} \\end{tabular} \\caption{A.",
+    "2412-15292_sent_40243ab3": "Response of the CogRNN to $\\delta$ pulses.",
+    "2412-15292_sent_7b0e8dbc": "Neurons in $F_{s;t}$ decay exponentially at a spectrum of time constants $\\mathbf{s}$ implementing a discrete approximation of a real-domain Laplace transform.",
+    "2412-15292_sent_af099926": "Neurons in $\\tilde{f}_{\\taustar;s}$ activate sequentially, resembling time cells.",
+    "2412-15292_sent_2930892b": "Log-compressed memory (bottom) of three signals that are rescaled versions of each other (top) at time $t=250$.",
+    "2412-15292_sent_9d797e65": "Each circle represents the activity of individual neurons and their position along the x-axis corresponds to their peak time.",
+    "2412-15292_sent_9bce1478": "C.",
+    "2412-15292_sent_e4a993d1": "Log-compressed memory turns rescaling into translation.",
+    "2412-15292_sent_891a89eb": "The top plot is the same as the bottom plot in B, but with the x-axis corresponding to the neuron index instead of the peak time.",
+    "2412-15292_subsection_d179645b": "Scale invariant memory network",
+    "2412-15292_sent_ba6af72d": "Building on models from computational and cognitive neuroscience \\citep{shankar2012scale,howard2014unified}, we designed a neural network architecture that maintains a scale invariant memory.",
+    "2412-15292_sent_3f05c0ec": "Specifically, this network constructs an approximation of a real-domain Laplace transform of the temporal history of the input signal and then constructs an approximate inverse of the history -- giving rise to an internal timeline of the past along a log-compressed axis characterized by sequentially activated neurons (Fig.~\\ref{fig:Cog-RNN}A).",
+    "2412-15292_sent_c6e0e44b": "To construct a scale invariant memory we use a network composed of two layers.",
+    "2412-15292_sent_5802da69": "The input coming from the encoder, which we label as $f$, is fed into a recurrent layer ($F$) with the weights analytically computed to approximate the real-domain Laplace transform of the temporal history of the input.",
+    "2412-15292_sent_6e82506b": "The output of the recurrent layer is mapped through a linear layer with analytically computed weights implementing the inverse Laplace transform $\\tilde{f}$ (Fig.~\\ref{fig:Cog-RNN}A).",
+    "2412-15292_sent_e061de16": "Below we describe this procedure step by step, first the continuous-time formulation and then discrete, neural network implementation.",
+    "2412-15292_subsubsection_22d479da": "Continuous-time formulation",
+    "2412-15292_sent_5159284b": "Given a one-dimensional input signal $f(t)$, we define a modified version of the Laplace transform $F(s;t)$:",
+    "2412-15292_eq_68b1ffaa": "\\begin{equation}\n F(s;t) = \\int_{0}^t e^{-s\\left(t - t' \\right)}f(t') dt'.\n\n\\end{equation}",
+    "2412-15292_sent_1d27909f": "This modified version differs from the standard Laplace transform only in the variable $s$.",
+    "2412-15292_sent_faf46614": "Instead of $s$ being a complex value composed of real and imaginary parts, we restrict $s$ to a positive real value.",
+    "2412-15292_sent_93888587": "This modification simplifies the neural network implementation while giving us the computational benefits of the standard Laplace transform, as illustrated below.",
+    "2412-15292_sent_3ab1be25": "Note that $F$ is also a function of time $t$.",
+    "2412-15292_sent_e193fcc4": "This implies that at every moment, we construct the Laplace transform of the input function up to time $t$: ${f(0 \\leq t'<t) \\xrightarrow{L} F(s;t)}$.",
+    "2412-15292_sent_f22597ef": "To construct the temporal history of the input, we need to invert the Laplace transform.",
+    "2412-15292_sent_16d96dac": "The inverse, which we denote as $\\tilde{f}(\\taustar;t)$, can be computed using Post's inversion formula \\citep{Post30}:",
+    "2412-15292_eq_dc9cc321": "\\begin{equation}\n \\tilde{f}(\\taustar;t) = \\Lk F(s;t) = \\frac{(-1)^k}{k!} s^{k+1} \\frac{d^k}{ds^k}F(s;t), \n\\end{equation}",
+    "2412-15292_sent_5f6167c6": "where $\\taustar := k/s$ and $k \\rightarrow \\infty$ (see \\citet{TanoEtal20,horvath2020numerical} for alternative approaches to computing the inverse transform).",
+    "2412-15292_subsubsection_e69374eb": "Neural networks implementation",
+    "2412-15292_sent_01c5e028": "To describe a neural network approximation of the Laplace transform, we first rewrite Eq.~\\ref{eq:Laplace_int} in a differential form:",
+    "2412-15292_eq_e087dea7": "\\begin{equation}\n \\frac{dF(s;t)}{dt} = -s F(s;t) + f(t). \n\\end{equation}",
+    "2412-15292_sent_5f5e550c": "The impulse response (response to input $f(t) = \\delta(0)$) of $F(s;t)$ decays exponentially as a function of time $t$ with decay rate $s$: $e^{-st}$ (the second row in Fig.~\\ref{fig:Cog-RNN}A).",
+    "2412-15292_sent_3a1369ab": "Note that this is a linear transform, so $F(s;t)$ will be a convolution between $f(t)$ and the impulse response.",
+    "2412-15292_sent_a001f29e": "We implement an approximation of the modified Laplace and inverse Laplace transform as a two-layer neural network with analytically computed weights.",
+    "2412-15292_sent_1d280faf": "The first layer implements the modified Laplace transform through an RNN.",
+    "2412-15292_sent_2618990f": "The second layer implements the inverse Laplace transform as a dense layer with weights analytically calculated to compute a $k$-th order derivative with respect to $s$.",
+    "2412-15292_sent_e050a425": "While in the Laplace domain $s$ is a continuous variable, here we redefine $s$ as a vector of $N$ elements.",
+    "2412-15292_sent_4832aeed": "We can now write a discrete-time approximation of Eq.~\\ref{eq:Laplace_diff} as an RNN with a diagonal connectivity matrix:",
+    "2412-15292_eq_b8c34471": "\\begin{equation}\n F_{s;t} = \\mathbf{L} F_{s;t-1} + f_t , \n\\end{equation}",
+    "2412-15292_sent_4d057bdc": "where $\\mathbf{L}$ is an $N \\times N$ recurrent matrix $\\mathbf{L} := e^{-\\mathbf{S}\\Delta t}$ implementing the discrete Laplace transform operator and $\\mathbf{S}$ is a diagonal matrix composed of $s$ values.",
+    "2412-15292_sent_eb3610af": "At every time step $t$, $F_{s;t}$ is an $N$-element vector.",
+    "2412-15292_sent_e8e16927": "For brevity of notation, we assume that the duration of a discrete-time step $\\Delta t = 1$.",
+    "2412-15292_sent_44425903": "Following Eq.~\\ref{eq:Laplace_inv}, a discrete approximation of the inverse Laplace transform, $\\tilde{f}_{\\taustar;t}$, can be implemented as a dense layer on top of $F_{s;t}$.",
+    "2412-15292_sent_0335dd99": "The connectivity matrix of the dense layer is \\Lk (see \\citet{maini2023representing} for the derivation of the exact matrix form of \\Lk).",
+    "2412-15292_sent_0ee9a47b": "To interpret $\\tilde{f}_{\\taustar;t}$ and to select $s$ values in an informed way, we compute the impulse response of $\\tilde{f}_{\\taustar;t}$.",
+    "2412-15292_sent_3e131989": "For input $f(t) = \\delta(0)$, the activity of $\\tilde{f}_{\\taustar;t}$ is:",
+    "2412-15292_eq_7485f8f9": "\\begin{equation}\n \\tilde{f}_{\\taustar;t} = \\frac{1}{t} \\frac{k^{k+1}}{k!} \\left(\\frac{t}{\\taustar}\\right)^{k+1} e^{-k\\frac{t}{\\taustar}}. \n\\end{equation}",
+    "2412-15292_sent_67f866e2": "The impulse responses of units in $\\tilde{f}_{\\taustar;t}$ is a set of unimodal basis functions (Fig.~\\ref{fig:Cog-RNN}A).",
+    "2412-15292_sent_a6ce4f4e": "To better characterize their properties, we first find the peak time by taking a partial derivative with respect to $t$, equate it with 0 and solve for $t$: $\\partial \\tilde{f}_{\\taustar;t}/ \\partial t = 0 \\rightarrow t=\\taustar$.",
+    "2412-15292_sent_7479582d": "Therefore, each unit in $\\tilde{f}_{\\taustar;t}$ peaks at $\\taustar$.",
+    "2412-15292_sent_e1d9056d": "To further characterize our approximation, we express the width of the unimodal basis functions of the impulse response of $\\tilde{f}_{\\taustar;t}$ through the coefficient of variation $c$: $c=1/\\sqrt{k+1}$.",
+    "2412-15292_sent_aff7f41d": "Importantly, $c$ does not depend on $t$ and $\\taustar$, implying that the width of the unimodal basis functions increases linearly with their peak time.",
+    "2412-15292_sent_736e2a9e": "Therefore, when observed as a function of $\\log(t)$, the width of the unimodal basis functions is constant.",
+    "2412-15292_sent_1b28bbe7": "We choose values of $\\taustar$ as log-spaced between some minimum $\\taustar_{min}$ and maximum $\\taustar_{max}$ as specified in the next section.",
+    "2412-15292_sent_47855ae5": "Note that fixing the values of $\\taustar$ and choosing $k$ also fixes values of $s$ since $s=k/\\taustar$, so $s$ is not a trainable parameter.",
+    "2412-15292_sent_0bcc3d98": "Because of the log-spacing and because $c$ does not depend on $t$ and $\\taustar$, when analyzed as a function of $\\log(t)$, the unimodal basis functions are equidistant and equally wide, providing uniform support over the $\\log(t)$ axis (Fig~\\ref{fig:Cog-RNN}C).",
+    "2412-15292_sent_b57364f3": "Because the described system is linear, any input function is represented as a convolution with a set of these basis functions.",
+    "2412-15292_sent_af1a6e34": "As we demonstrate next, this produces a log-compressed memory that is scale invariant.",
+    "2412-15292_subsubsection_8fc4fc99": "Invariance to temporal rescaling",
+    "2412-15292_sent_8ba48cff": "Following Eq.~\\eqref{eq:Laplace_inv} and Eq.~\\eqref{eq:Laplace_inv_discrete_impulse} we note that $\\tilde{f}(\\taustar;t)$ is scale invariant in the sense that rescaling $\\tilde{f}(\\taustar;t) \\longrightarrow \\tilde{f}(\\taustar;a t)$ can be undone by setting $\\taustar_i \\longrightarrow \\taustar_i /a$.",
+    "2412-15292_sent_e662efe1": "Choosing $\\taustar$ to be log-spaced ($\\taustar_i = (1+c)^{i-1} \\taustar_{min}$, with $c>0$) makes the rescaling of $\\taustar$ equivalent to translation: $\\taustar_i = \\taustar_{i+\\Delta}$ where $\\Delta = log_{1+c}a$.",
+    "2412-15292_sent_73423d2c": "This implies that temporal rescaling will cause a translation of the sequentially activated units (Fig.~\\ref{fig:Cog-RNN}B,C).",
+    "2412-15292_sent_5cd2628b": "This approach can be used to either build agents whose temporal memory representation covaries with the temporal scale (i.e., temporal rescaling is converted into translation as described above) or agents with temporal memory that is invariant of the temporal scale (i.e., if time in the environment rescales, the agent will have identical memory representation).",
+    "2412-15292_sent_306d3a66": "When the objective is to build agents that are invariant to temporal rescaling, we apply convolution and pooling over $\\tilde{f}$.",
+    "2412-15292_sent_e833d196": "The output of convolution and pooling is translation invariant, making the network invariant to temporal rescaling (top row in Fig.~\\ref{fig:results_invariance}A).",
+    "2412-15292_sent_a8e68a84": "We note that since rescaling is converted into translation, the presence of edge effects impacts the output of convolution and pooling, thereby making the invariance imperfect.",
+    "2412-15292_subsubsection_5ba8f69f": "Intuition",
+    "2412-15292_sent_b5d2021c": "To provide an intuitive understanding of the scale invariant memory, we refer to Fig.~\\ref{fig:Cog-RNN}B.",
+    "2412-15292_sent_d703f2d6": "The top row shows three input signals each composed of two $\\delta$ pulses.",
+    "2412-15292_sent_eafc4645": "Each of the three signals is a rescaled version of another, i.e. $f_1(t) = f_2(a_1 t) = f_3(a_2 t)$ where $a_i$ is the scaling factor ($a_1=2$ and $a_2=4$ in our example).",
+    "2412-15292_sent_ea57a367": "The second row shows activity of neurons in the scale invariant memory of the above signals (this is the state of the memory at time $t=250$).",
+    "2412-15292_sent_c0230cd3": "Neurons in a scale invariant memory are activated sequentially as a function of internal representation of time.",
+    "2412-15292_sent_bb512a8b": "Each circle in the plot represents activity of a single neuron and the x-axis corresponds to the log-spaced peak times (hence we refer to it as an internal representation time).",
+    "2412-15292_sent_152c9622": "Together, these neurons code a log-compressed memory of the input.",
+    "2412-15292_sent_bd923643": "This memory representation converts functions of time $t$ into functions of $log(t)$.",
+    "2412-15292_sent_91b30b06": "If time is rescaled by factor $a$, the resulting representation will be shifted (translated) by $\\log(a)$: $f(at) \\rightarrow f(\\log(at)) = f(\\log(a) + \\log(t))$.",
+    "2412-15292_sent_475759c1": "Therefore, the memory representation is covariant with respect to rescaling.",
+    "2412-15292_sent_fad178e3": "The strength of such a representation is that it makes computational problems that occur at different scales equally difficult.",
+    "2412-15292_sent_0a927ce8": "When plotted as a function of neuron index, rather than peak time (top row in Fig.~\\ref{fig:Cog-RNN}C), the three signals corresponding to three temporal scales are now translated, rather than rescaled, versions of one another.",
+    "2412-15292_sent_c75795cd": "If the x-axis is shifted by $\\log(a)$, the three signals overlap (bottom row in Fig.~\\ref{fig:Cog-RNN}C).",
+    "2412-15292_subsection_00e29565": "RL Agent",
+    "2412-15292_sent_5fea7cfe": "We used deep RL agents based on a synchronous version of A3C \\citep{mnih2016asynchronous} that uses advantage to calculate gradient-based policy updates.",
+    "2412-15292_sent_7137be6e": "However, as the direct calculation of advantage may lead to high variance and longer training times, we have used an exponentially weighted estimator of advantage called generalized advantage estimator (GAE) \\citep{SchulmanMLJA15}.",
+    "2412-15292_subsection_ba757b56": "Hyperparameters and training",
+    "2412-15292_sent_58b282f8": "Our setup for the 3D interval timing environment used the three following convolutional layers: 32 kernels of size $8 \\times 8$ (stride 2), 16 kernels of size $4 \\times 4$ (stride 1), and 32 kernels of size $8 \\times 8$ (stride 2).",
+    "2412-15292_sent_53a13ebc": "The fully connected layer after the convolution layer has 64 nodes.",
+    "2412-15292_sent_882114c0": "Outputs of all layers had ReLU activation.",
+    "2412-15292_sent_ecc26193": "Following the encoder, the RL agent had either an LSTM network with $256$ hidden units, or the CogRNN architecture with $8$ log-spaced units having $\\taustar_{min} = 1$, $\\taustar_{max} = 1000$, and $k = 8$.",
+    "2412-15292_sent_0cf825e0": "We also introduced two layered multihead-attention \\citep{attention} over the $\\taustar$ with $8$ heads and $d_{model}$ $128$.",
+    "2412-15292_sent_ab26dbfa": "Parameters related to the RL algorithm were a discount factor ($\\gamma$) of 0.98 and a decay ($\\lambda$) factor of 0.95.",
+    "2412-15292_sent_1fcd17f3": "We used the Adam optimizer with $\\beta_{1} = 0.9$, $\\beta_{2} = 0.999$, and $\\epsilon = 1e^{-8}$.",
+    "2412-15292_sent_12194b22": "We also trained the RL agents with varying learning rates, including $0.001$, $0.0001$ and $0.00001$, and selected the best-performing learning rates for each agent.",
+    "2412-15292_sent_cfb6254d": "We explored the impact of the hyperparameters (learning rate and entropy coefficient) and provided results as a part of the Supplemental Information.",
+    "2412-15292_sent_054f17ac": "\\sloppy For simple environments, we used LSTM networks with $128$ hidden size and the same CogRNN network without the attention network.",
+    "2412-15292_sent_5f3c3611": "We updated the model parameters after each trial instead of backpropagating the gradients after horizon number of steps.\\footnote{Our implementation is available in\\\\ \\url{https://github.com/cogneuroai/RL-with-scale-invariant-memory}.}",
+    "2412-15292_sent_7277f268": "\\rotatebox[origin=c]{90}{ \\ } \\begin{minipage}{0.23\\textwidth} Interval timing (1D) \\end{minipage} \\begin{minipage}{0.23\\textwidth} Interval discrimination (1D) \\end{minipage} \\begin{minipage}{0.23\\textwidth} Delayed match to sample (1D) \\end{minipage} \\begin{minipage}{0.23\\textwidth} Interval timing (3D) \\end{minipage} \\rotatebox[origin=c]{90}{CogRNN} \\begin{minipage}{0.23\\textwidth} \\includegraphics[width=\\linewidth]{interval_timing_sith_diff_scales_gamma1.0_wo_legend_v2.png} \\end{minipage} \\begin{minipage}{0.23\\textwidth} \\includegraphics[width=\\linewidth]{interval_disc_sith_diff_scales_gamma1.0_wo_legend_v2.png} \\end{minipage} \\begin{minipage}{0.23\\textwidth} \\includegraphics[width=\\linewidth]{dms_sith_diff_scales_gamma1.0_wo_legend_v2.png} \\end{minipage} \\begin{minipage}{0.23\\textwidth} \\includegraphics[width=\\linewidth]{performance_sith_attention_dts_3D_trial_number_bf_wo_legend_v2.png} \\end{minipage} \\rotatebox[origin=c]{90}{LSTM} \\begin{minipage}{0.23\\textwidth} \\includegraphics[width=\\linewidth]{interval_timing_lstm_diff_scales_gamma1.0_wo_legend_v2.png} \\end{minipage} \\begin{minipage}{0.23\\textwidth} \\includegraphics[width=\\linewidth]{interval_disc_lstm_diff_scales_gamma1.0_wo_legend_v2.png} \\end{minipage} \\begin{minipage}{0.23\\textwidth} \\includegraphics[width=\\linewidth]{dms_lstm_diff_scales_gamma1.0_wo_legend_v2.png} \\end{minipage} \\begin{minipage}{0.23\\textwidth} \\includegraphics[width=\\linewidth]{performance_lstm_dts_3D_trial_number_bf_wo_legend_v2.png} \\end{minipage} \\begin{minipage}{0.4\\textwidth} \\includegraphics[width=\\linewidth]{performance_legend.png} \\end{minipage} \\caption{The performance (mean with standard error over five runs) across the four tasks for CogRNN and LSTM agents.} \\end{figure*}",
+    "2412-15292_section_fd69c5cf": "Results",
+    "2412-15292_subsection_d3704bd8": "Agents with scale invariant memory learn equally well at different temporal scales",
+    "2412-15292_sent_7ee832f8": "We first demonstrate that when temporal relationships between task-relevant variables rescale, CogRNN agents learn at about the same rate.",
+    "2412-15292_sent_44e570df": "This is because the log compression causes the memory representation to shift rather than rescale (Fig.~\\ref{fig:Cog-RNN}B), making the learning problem equally difficult at every scale where the temporal relationships fall between the hyperparameters $\\taustar_{min}$ and $\\taustar_{max}$.",
+    "2412-15292_sent_25d33131": "We trained agents based on CogRNN, LSTM and RNN in each of the five environments.",
+    "2412-15292_sent_aea02d31": "To evaluate robustness to rescaling in four environments (interval timing 1D and 3D, interval discrimination and delayed-match-to-sample) we conducted the training with different durations of task-relevant temporal intervals.",
+    "2412-15292_sent_9481fef0": "We controlled the duration using a step size parameter, which varied from 10 to 100.",
+    "2412-15292_sent_7bd7efd8": "In interval timing for instance, with a step size of 10, the intervals ranged from 300 to 480 steps, while with a step size of 100, they ranged from 30 to 48 steps.",
+    "2412-15292_sent_a9c08908": "All other parameters of the environment and of the agents remained unchanged across different scales.",
+    "2412-15292_sent_0643742a": "The mean reward as a function of the number of trials in those four environments is shown in Fig.~\\ref{fig:performance_results} for CogRNN and LSTM agents.",
+    "2412-15292_sent_1f7646c3": "Agents based on CogRNN reached high performance in all tasks.",
+    "2412-15292_sent_eb341f9a": "Critically, the speed of learning was similar at different temporal scales.",
+    "2412-15292_sent_9ad92230": "While LSTM and RNN agents were able to learn in all environments except the 3D interval timing environment, they did so with different learning speeds for different temporal scales.",
+    "2412-15292_sent_4370470c": "Psychometric curves shown in Fig. S2 provide another performance measure.",
+    "2412-15292_sent_f036131f": "The y-axis on the psychometric curves represents the probability of selecting the long interval. For an agent that performs perfectly, that probability would be zero for the three short intervals and one for the three long intervals.",
+    "2412-15292_sent_c416de79": "Consistent with the results in Fig.~\\ref{fig:performance_results}, CogRNN agents performed better than others.",
+    "2412-15292_sent_9948a7f6": "Similar to rat behavior, agents made the most mistakes for the most difficult time intervals (36 and 40 steps).",
+    "2412-15292_sent_214d05c1": "The results of training on the interval reproduction task are shown in Fig. S11, Fig. S12, Table S1, and Table S2.",
+    "2412-15292_sent_b9f05d3b": "This task differs conceptually from the other four, since we did not train agents on rescaled versions of the environments.",
+    "2412-15292_sent_2d51293d": "Instead, we trained on different interval durations, similar to \\citet{deverett2019interval}.",
+    "2412-15292_sent_9192781f": "The results indicate that CogRNN agents were able to improve performance simultaneously at all training and validation intervals, demonstrating the capabilities of multi-scale learning.",
+    "2412-15292_sent_8f8bfa47": "On the other hand, LSTM agents learned quickly only at short intervals.",
+    "2412-15292_sent_f0474d03": "If LSTM agents were trained much longer, they could possibly learn the task at all scales, but critically, their learning is scale-dependent.",
+    "2412-15292_sent_1cedb6ba": "We also highlight that training of CogRNN agents took roughly half the time as training of LSTM agents (since CogRNN has fewer trainable parameters).",
+    "2412-15292_subsection_11dc7102": "Combining scale invariant memory with translation-invariance results in invariance to temporal rescaling",
+    "2412-15292_sent_b5ef7dbf": "We now consider a case where the entire environment, including the duration of stimuli and the intervals between the stimuli, is rescaled in time (i.e., the elapse of time in the environment is sped up or slowed down, rather than just rescaling the time between task-relevant variables as in the previous case).",
+    "2412-15292_sent_7e64f982": "Then combining scale invariant memory with convolution and maxpool results in agents which observation space is invariant (no longer covariant) of the temporal scale.",
+    "2412-15292_sent_c7ed1de1": "If trained at one scale, such agents will follow the same policy when presented with the environment at a different scale and obtain the same performance as on the scale that was used for training (aside from edge effects mentioned in the Model section).",
+    "2412-15292_sent_fdde3b76": "The agents do not need to know the scale as long as the temporal relationships again fall between the hyperparameters $\\taustar_{min}$ and $\\taustar_{max}$.",
+    "2412-15292_fig_f8f942ef": "\\begin{figure}\n\n \\begin{minipage}{\\columnwidth}\n\n A \n \\raisebox{-\\height}{\\includegraphics[width=0.9\\columnwidth]{conv_filt_output.png}}\n \\end{minipage}\n\n \\begin{minipage}{\\columnwidth}\n\n B \n \\raisebox{-\\height}{\\includegraphics[width=0.9\\columnwidth]{new_f_tilde_conv_rnn_activity_performance_v2.png}}\n \\end{minipage}\n \\caption{A. Output of convolution and pooling operations for three signals from Fig.~\\ref{fig:Cog-RNN}B. B. Performance of CogRNN ($\\tilde{f}$) and RNN agents trained on the 1D interval timing task. The agents were trained on scale 1 and evaluated on scales 1, 2 and 4. }\n\\end{figure}",
+    "2412-15292_sent_3982235a": "We demonstrate this property by training agents in the 1D interval timing environment shown in Fig.~\\ref{fig:Cog-RNN}B.",
+    "2412-15292_sent_3dcee66e": "For simplicity, instead of A2C, we used the REINFORCE algorithm \\cite{williams1992simple}.",
+    "2412-15292_sent_e9b53a6f": "Agents with scale invariant memory followed by convolution and pooling were able to learn the task after about 100k trials.",
+    "2412-15292_sent_cb38b485": "We then rescaled the time in the observation space to 2x and 4x the initial scale.",
+    "2412-15292_sent_209e8ae5": "Without additional training, our agents reached perfect performance (Fig.~\\ref{fig:results_invariance}B).",
+    "2412-15292_sent_a78cfa0a": "This was not the case for agents trained with RNNs, as they failed to generalize across different temporal scales.",
+    "2412-15292_subsection_5986cb1b": "Neural activity is scale invariant and resembles time cells recorded from mammalian brains",
+    "2412-15292_sent_0eaafce4": "Mammalian neural activity during tasks such as interval timing and delayed match to sample is characterized by neurons with monotonically growing/decaying firing rates and neurons that exhibit sequential activation (time cells) \\cite{JinEtal09,tiganj2017sequential,tiganj2018compressed}.",
+    "2412-15292_sent_d3f5ed6d": "Consistent with the Weber-Fechner law, the width of the temporal windows in time cells increases with the peak time \\citep{cao2022internally}.",
+    "2412-15292_sent_72dc06a7": "To test whether these properties from biological neurons are present in the artificial agents, we selected a representative agent from RNN, LSTM and CogRNN cores.",
+    "2412-15292_sent_dec1f267": "To clean the data, for each of the three agents, we first removed neurons that were persistently active (i.e. that had constant activity, therefore not encoding any temporal information) and neurons that were completely silent.",
+    "2412-15292_sent_2e47e320": "We then identified neurons that had monotonically growing/decaying activity, finding such neurons in all three agents (Fig. S3).",
+    "2412-15292_sent_db73ad22": "Next, we identified neurons with transient activation sometime during the timed interval (neurons that resemble time cells) and again found them in all three agents (Fig.~\\ref{fig:neurons_timecells}).",
+    "2412-15292_sent_3a24d0d0": "For CogRNN, the activation pattern resembles the scale invariant impulse responses shown in Fig.~\\ref{fig:Cog-RNN}A.",
+    "2412-15292_sent_7afcc4ba": "\\begin{tabular}{c c c} \\ \\ \\ \\ RNN & \\ \\ \\ \\ \\ LSTM & \\ \\ \\ \\ \\ \\ CogRNN \\\\ \\includegraphics[scale=0.32]{time_cells_rnn_int48_scale1.png} & \\includegraphics[scale=0.32]{time_cells_lstm_int48_scale1.png} & \\includegraphics[scale=0.32]{time_cells_cogrnn_int48_scale1_v2.png}\\\\ \\end{tabular} \\caption{Normalized activity of neurons that resemble time cells from three representative agents.",
+    "2412-15292_sent_da091f38": "Neurons are sorted by peak time.} \\end{figure*} To better understand the activation profiles, we fitted each time cell with a Gaussian distribution and estimated standard deviation.",
+    "2412-15292_sent_4ea35ed7": "For a representation to be scale invariant, the relationship between the peak time and the standard deviation should be linear.",
+    "2412-15292_sent_d883ebd0": "This was the case only for CogRNN neurons (Fig. S4).",
+    "2412-15292_sent_2e64c419": "Note that some of the CogRNN neurons with large peaks deviate from the linear relationship.",
+    "2412-15292_sent_746ebc84": "This is because the numerical derivative $d^k/ds^k$ suffers from edge effects.",
+    "2412-15292_sent_b18afbb9": "Increasing $\\taustar_{max}$ would extend the range of CogRNN representation while requiring a logarithmic increase in the number of neurons.",
+    "2412-15292_subsection_4bf54f23": "Ablation studies",
+    "2412-15292_sent_bc752f4a": "To validate the robustness of our approach and understand better potential limitations, we ran several ablation studies that are added to the Supplemental Information.",
+    "2412-15292_sent_3a058714": "The ablations studies were conducted on the 3D interval timing environment.",
+    "2412-15292_sent_d4de32cf": "We trained the agents using LSTM and RNN with frozen weights, neither of which was able to learn the task (Fig. S1).",
+    "2412-15292_sent_5b5c30f2": "Note that CogRNN can be considered a type of RNN with frozen (analytically calculated) weights.",
+    "2412-15292_sent_47b7c621": "We removed the inverse Laplace transform and instead of $\\tilde{f}$ used CogRNN with $F$ (the Laplace transform).",
+    "2412-15292_sent_66bc3c58": "CogRNN $F$ agents were also not able to learn the task as well as $\\tilde{f}$ (Fig. S1), indicating the importance of the inverse Laplace transform and the time cells (since those are generated through the inverse Laplace transform).",
+    "2412-15292_sent_76699b52": "To examine the impact of CogRNN parameters we changed the values of $\\taustar_{min}$ (Fig. S5), $\\taustar_{max}$ (Fig. S6), and $k$ (Fig. S7).",
+    "2412-15292_sent_8ddca24d": "In general, CogRNN $\\tilde{f}$ agents reached high performance except in cases where hyperparameters were inappropriate for the properties of the environment.",
+    "2412-15292_sent_c9647871": "We further evaluated the robustness of the results to the choice of the training parameters by varying learning rate (Fig. S8), entropy (Fig. S9) and horizon (Fig. S10).",
+    "2412-15292_sent_8c1e0d5c": "In general, for our main experiments, we selected the hyperparameters that led to the best results as specified in the Model section.",
+    "2412-15292_section_eed9474f": "Discussion",
+    "2412-15292_sent_afdfe9c2": "Our results demonstrated that artificial agents can approach scale invariant learning when equipped with scale invariant memory.",
+    "2412-15292_sent_dedd0193": "When temporal relationships in the environment rescale, the log compression in the scale invariant memory causes temporal memory to shift rather than rescale.",
+    "2412-15292_sent_9ce6a3f4": "This shift ensures the difficulty of learning the task remains consistent.",
+    "2412-15292_sent_a28c3589": "We have demonstrated that when the environment is perfectly rescaled, the agents can generalize and use the knowledge acquired at one scale to solve the problem at different scales.",
+    "2412-15292_sent_4959ed96": "These results were observed despite the fact that RL algorithms such as A2C contain components that break scale invariance, including exponential temporal discounting, horizon (n-step returns) and rollout length.",
+    "2412-15292_sent_85dfb7de": "Combining the proposed approach with scale invariant (power-law) temporal discounting \\cite{TanoEtal20,tiganj2019estimating,redish2010neural} could further improve the results.",
+    "2412-15292_sent_f464c629": "We believe that the fundamental principles behind this work have the potential to impact research above and beyond interval timing, temporal discrimination and delayed match to sample.",
+    "2412-15292_sent_3d51525a": "Humans can move objects from one place on the desk to another, furniture from one room to another, or drive a car from one location to another.",
+    "2412-15292_sent_f091aeab": "We did not evolve to drive cars for hundreds of miles.",
+    "2412-15292_sent_93e7e5f0": "But an ample amount of data from cognitive psychology suggests that we did evolve a scale invariant representation that enables us to efficiently and automatically represent arbitrary scales and operate on them.",
+    "2412-15292_sent_813cbd33": "Building scale invariance into deep neural networks is critical for developing systems that can adjust to new environments rapidly and flexibly without the need for continual tweaking of hyperparameters.",
+    "2412-15292_section_84ffd62e": "Acknowledgments",
+    "2412-15292_sent_98b67deb": "This research was supported in part by Lilly Endowment, Inc., through its support for the Indiana University Pervasive Technology Institute.",
+    "2412-15292_sent_bb3186a8": "\\bibliography{references,bibdesk} \\appendix \\onecolumn \\setcounter{page}{1} \\renewcommand{\\thepage}{S\\arabic{page}}",
+    "2412-15292_section_d5336a7b": "Supplemental Information",
+    "2412-15292_sent_61669363": "\\setcounter{figure}{0} \\renewcommand{\\thefigure}{S\\arabic{figure}} \\setcounter{table}{0} \\renewcommand{\\thetable}{S\\arabic{table}} As Supplemental Information, we provide additional results on the 3D interval timing environment:",
+    "2412-15292_itemize_68b6853a": "itemize",
+    "2412-15292_item_343a362f": "item",
+    "2412-15292_sent_30ed7273": "Results of the ablation analysis where agents were trained with frozen RNN, frozen LSTM, and CogRNN $F$ (Fig.~\\ref{fig:performance_ablation}).",
+    "2412-15292_sent_2edda4dd": "None of the agents reached good performance.",
+    "2412-15292_sent_b4494374": "Psychometric curves (Fig.~\\ref{fig:psychometric_supplemental}).",
+    "2412-15292_sent_42050381": "Activity heatmaps for neurons with monotonically decreasing/increasing activity (Fig.~\\ref{fig:neurons_decay_ramp}).",
+    "2412-15292_sent_1b3a7767": "CogRNN $\\tilde{f}$ neurons resemble sequentially activated time cells recorded in mammalian brains where width increases with the peak time (Fig.~\\ref{fig:peaks_width}).",
+    "2412-15292_sent_9b483eb4": "Results of hyperparameter exploration with different values of:",
+    "2412-15292_sent_6bc31576": "$\\taustar_{min}$ (Fig.~\\ref{fig:ablation_f_tilde_tstr_min}),",
+    "2412-15292_sent_9ce3ee47": "$\\taustar_{max}$ (Fig.~\\ref{fig:ablation_f_tilde_tstr_max}),",
+    "2412-15292_sent_3b55b472": "$k$ (Fig.~\\ref{fig:ablation_f_tilde_k}),",
+    "2412-15292_sent_715b35d7": "learning rate (Fig.~\\ref{fig:learning_rate_supplemental}),",
+    "2412-15292_sent_e639e082": "entropy coefficient (Fig.~\\ref{fig:entropy_supplemental}),",
+    "2412-15292_sent_5199b3e1": "horizon (Fig.~\\ref{fig:horizon_supplemental}).",
+    "2412-15292_sent_a6cbebd0": "Results of training on interval reproduction task (Table~\\ref{tab:interval_reprod_perf_CogRNN}, Table~\\ref{tab:interval_reprod_perf_LSTM}, Fig.~\\ref{fig:interval_reprod_cogrnn_supplemental}, Fig.~\\ref{fig:interval_reprod_rnn_supplemental}).",
+    "2412-15292_section_12a79b96": "Ablation analysis",
+    "2412-15292_sent_af46605f": "\\includegraphics[width=0.4\\textwidth]{performance_rnn_lstm_frozen_F_3D_trial_number_bf.png} \\caption{Performance of the frozen RNN, frozen LSTM, and CogRNN F agents for the same time scale during the 3D interval timing task.} \\end{figure*}",
+    "2412-15292_section_68af1eb9": "Psychometric curves",
+    "2412-15292_fig_b30c59fe": "\\begin{figure}\n\n \\begin{tabular}{c c c}\n RNN & LSTM & CogRNN \\\\ \n \\includegraphics[scale=0.32]{rnn_temp_bis_2D_psychometric_curve.png} & \n \\includegraphics[scale=0.32]{lstm_temp_bis_2D_psychometric_curve.png} & \n \\includegraphics[scale=0.32]{sith_temp_bis_2D_psychometric_curve.png}\\\\ \n \\end{tabular}\n \\caption{Psychometric curves for (a) RNN, (b) LSTM, and (c) CogRNN $\\tilde{f}$ agents during 3D interval timing task. The average performance across agents is shown for each group, with error bars indicating the confidence intervals.}\n\n\\end{figure}",
+    "2412-15292_section_87309d9f": "Neural activity in RNN, LSTM, and CogRNN agents in 3D interval timing task",
+    "2412-15292_fig_48957a0b": "\\begin{figure}\n\n \\begin{tabular}{c c c}\n \\ \\ \\ \\ \\ \\ RNN & \\ \\ \\ \\ \\ \\ \\ LSTM & \\ \\ \\ \\ \\ \\ \\ \\ CogRNN\\\\ \n \\includegraphics[scale=0.32]{ramping_decaying_cells_rnn_int48_scale1.png} & \n \\includegraphics[scale=0.32]{ramping_decaying_cells_lstm_int48_scale1.png} & \\includegraphics[scale=0.32]{ramping_decaying_cells_cogrnn_int48_scale1.png}\\\\ \n \\end{tabular}\n \\caption{Normalized activity of neurons that have monotonically decreasing/increasing activity from three representative agents. Neurons are sorted by peak time.}\n\n\\end{figure}",
+    "2412-15292_fig_17bac0bc": "\\begin{figure}\n\n \\begin{tabular}{c c c}\n RNN & LSTM & CogRNN \\\\ \n \\includegraphics[scale=0.32]{peaks_vs_stddevs_rnn_int48_scale1.png} & \n \\includegraphics[scale=0.32]{peaks_vs_stddevs_lstm_int48_scale1.png} & \\includegraphics[scale=0.32]{peaks_vs_stddevs_cogrnn_int48_scale1.png}\\\\ \n \\end{tabular}\n \\caption{Relationship between peak time and standard deviation for neurons whose activity resembled time cells.}\n\n\\end{figure}",
+    "2412-15292_section_8c4b1b23": "Hyperparameter exploration for CogRNN in the 3D interval timing task",
+    "2412-15292_sent_15d4a8a0": "\\includegraphics[width=0.4\\textwidth]{performance_sith_tau_min_3D_trial_number_bf.png} \\caption{Performances of the CogRNN $\\tilde{f}$ agents for different values of $\\taustar_{min}$.} \\end{figure*}",
+    "2412-15292_sent_c5468ce0": "\\includegraphics[width=0.4\\textwidth]{performance_sith_tau_max_3D_trial_number_bf.png} \\caption{Performances of the CogRNN $\\tilde{f}$ agents for different values of $\\taustar_{max}$.} \\end{figure*}",
+    "2412-15292_sent_f44ad305": "\\includegraphics[width=0.4\\textwidth]{performance_sith_k_3D_trial_number_bf.png} \\caption{Performances of the CogRNN $\\tilde{f}$ agents for different values of $k$.} \\end{figure*}",
+    "2412-15292_sent_3ff3508f": "\\begin{tabular}{c} \\includegraphics[scale=0.23]{performance_lstm_lr_3D_trial_number_bf.png} \\\\ {a}\\\\ \\includegraphics[scale=0.23]{performance_sith_lr_3D_trial_number_bf.png} \\\\ {b}\\\\ \\end{tabular} \\caption{Performances of (a) LSTM and (b) CogRNN $\\tilde{f}$ agents for different learning rates.} \\end{figure*}",
+    "2412-15292_sent_5f73ee13": "\\begin{tabular}{c} \\includegraphics[scale=0.23]{performance_lstm_entropy_3D_trial_number_bf.png} \\\\ {a}\\\\ \\includegraphics[scale=0.23]{performance_sith_entropy_3D_trial_number_bf.png} \\\\ {b}\\\\ \\end{tabular} \\caption{Performances of (a) LSTM and (b) CogRNN $\\tilde{f}$ agents for different entropy coefficients.} \\end{figure*}",
+    "2412-15292_sent_d83320ac": "\\begin{tabular}{c} \\includegraphics[scale=0.23]{performance_lstm_horizon_3D_trial_number_bf.png} \\\\ {a}\\\\ \\includegraphics[scale=0.23]{performance_sith_horizon_3D_trial_number_bf.png} \\\\ {b}\\\\ \\end{tabular} \\caption{Performances of (a) LSTM and (b) CogRNN $\\tilde{f}$ agents for different horizon lengths.} \\end{figure*}",
+    "2412-15292_section_39769d4e": "Results of training on Interval Reproduction task",
+    "2412-15292_fig_96ad0f29": "\\begin{table}\n\n \\begin{tabular}{c|cccccccccc}\n\n Trial & \\multicolumn{10}{c}{Training intervals} \\\\ \n & 10 & 20 & 30 & 40 & 50 & 60 & 70 & 80 & 90 & 100 \\\\ \n 25k & .8±.4 & .5±.4 & .5±.4 & .6±.4 & .5±.3 & .8±.2 & .9±.1 & .7±.3 & .6±.2 & .2±.1 \\\\ \n 50k & .8±.4 & .6±.5 & .8±.4 & .8±.4 & .7±.4 & 1.0±.0 & 1.0±.0 & 1.0±.0 & .9±.1 & .9±.1 \\\\ \n 100k & 1.0±.0 & .6±.5 & .8±.4 & .8±.4 & 1.0±.0 & 1.0±.0 & 1.0±.0 & .9±.1 & .8±.4 & .6±.4 \\\\ \n \\end{tabular}\n\n \\begin{tabular}{c|ccccccccc}\n\n Trial & \\multicolumn{9}{c}{Validation intervals} \\\\ \n & 15 & 25 & 35 & 45 & 55 & 65 & 75 & 85 & 95 \\\\ \n 25k & .2±.2 & .5±.4 & .6±.4 & .5±.3 & .6±.3 & .7±.2 & .9±.2 & .6±.2 & .4±.2 \\\\ \n 50k & .2±.3 & .5±.5 & .8±.4 & .7±.4 & .9±.2 & 1.0±.1 & .9±.1 & 1.0±.1 & .9±.1 \\\\ \n 100k & .2±.3 & .6±.5 & .7±.4 & .8±.3 & 1.0±.0 & 1.0±.1 & 1.0±.0 & .7±.4 & .8±.4 \\\\ \n \\end{tabular}\n \\caption{Mean accuracy and standard-deviation in learning the interval reproduction task for the CogRNN agent.}\n\n\\end{table}",
+    "2412-15292_fig_f799d51e": "\\begin{table}\n\n \\begin{tabular}{c|cccccccccc} \n\n Trial & \\multicolumn{9}{c}{Training intervals} \\\\ \n & 10 & 20 & 30 & 40 & 50 & 60 & 70 & 80 & 90 & 100 \\\\ \n 25k & 1.0±.0 & .1±.1 & .1±.1 & .2±.1 & .2±.1 & .1±.0 & .1±.0 & .0±.1 & .1±.1 & .1±.1 \\\\\n 50k & .4±.4 & .2±.2 & .2±.2 & .1±.1 & .1±.1 & .3±.1 & .3±.1 & .1±.1 & .1±.1 & .1±.1 \\\\\n 100k & 1.0±.0 & .4±.4 & .4±.3 & .2±.1 & .2±.1 & .2±.1 & .2±.1 & .1±.1 & .1±.1 & .1±.1 \\\\ \n \\end{tabular}\n\n \\begin{tabular}{c|ccccccccc}\n\n Trial & \\multicolumn{9}{c}{Validation intervals} \\\\ \n & 15 & 25 & 35 & 45 & 55 & 65 & 75 & 85 & 95 \\\\ \n 25k & .2±.2 & .1±.1 & .1±.0 & .2±.1 & .2±.1 & .1±.1 & .2±.2 & .2±.2 & .3±.1 \\\\ \n 50k & .1±.1 & .2±.3 & .2±.1 & .1±.1 & .1±.1 & .2±.1 & .2±.1 & .1±.0 & .1±.1 \\\\ \n 100k & .6±.4 & .3±.4 & .3±.2 & .2±.1 & .1±.1 & .1±.1 & .1±.0 & .1±.1 & .1±.1 \\\\ \n \\end{tabular}\n \\caption{Mean accuracy and standard-deviation in learning the interval reproduction task for the LSTM agent.}\n\n\\end{table}",
+    "2412-15292_sent_73f8358d": "\\begin{tabular}{c} \\includegraphics[scale=0.23]{interval_reprod_sith_train.png} \\\\ {a}\\\\ \\includegraphics[scale=0.23]{interval_reprod_sith_test.png} \\\\ {b}\\\\ \\end{tabular} \\caption{Performances of CogRNN $\\tilde{f}$ agents in learning (a) train and (b) validation intervals for the interval reproduction task.} \\end{figure*}",
+    "2412-15292_sent_c1466ba7": "\\begin{tabular}{c} \\includegraphics[scale=0.23]{interval_reprod_lstm_train.png} \\\\ {a}\\\\ \\includegraphics[scale=0.23]{interval_reprod_lstm_test.png} \\\\ {b}\\\\ \\end{tabular} \\caption{Performances of LSTM agents in learning (a) train and (b) validation intervals for the interval reproduction task.} \\end{figure*}"
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15292_sent_676977e1": "2412-15292_doc_root",
+      "2412-15292_abstract_ce28071e": "2412-15292_doc_root",
+      "2412-15292_sent_cdf59497": "2412-15292_abstract_ce28071e",
+      "2412-15292_sent_3aef2b56": "2412-15292_abstract_ce28071e",
+      "2412-15292_sent_c4324519": "2412-15292_abstract_ce28071e",
+      "2412-15292_sent_d7bffe9b": "2412-15292_abstract_ce28071e",
+      "2412-15292_sent_a1e8720f": "2412-15292_abstract_ce28071e",
+      "2412-15292_sent_269809c3": "2412-15292_abstract_ce28071e",
+      "2412-15292_section_0b79795d": "2412-15292_doc_root",
+      "2412-15292_sent_4843f622": "2412-15292_section_0b79795d",
+      "2412-15292_sent_c24447b3": "2412-15292_section_0b79795d",
+      "2412-15292_sent_765ef30b": "2412-15292_section_0b79795d",
+      "2412-15292_sent_0fe4e134": "2412-15292_section_0b79795d",
+      "2412-15292_sent_a21060d0": "2412-15292_section_0b79795d",
+      "2412-15292_sent_14e66153": "2412-15292_section_0b79795d",
+      "2412-15292_sent_d6648ffb": "2412-15292_section_0b79795d",
+      "2412-15292_sent_5debe0db": "2412-15292_section_0b79795d",
+      "2412-15292_sent_b53389f4": "2412-15292_section_0b79795d",
+      "2412-15292_sent_58f3a4c7": "2412-15292_section_0b79795d",
+      "2412-15292_sent_7c13ee87": "2412-15292_section_0b79795d",
+      "2412-15292_sent_732cc504": "2412-15292_section_0b79795d",
+      "2412-15292_sent_1869dbdb": "2412-15292_section_0b79795d",
+      "2412-15292_sent_ea06678e": "2412-15292_section_0b79795d",
+      "2412-15292_sent_48f7042b": "2412-15292_section_0b79795d",
+      "2412-15292_sent_6caa8e48": "2412-15292_section_0b79795d",
+      "2412-15292_sent_6694cf50": "2412-15292_section_0b79795d",
+      "2412-15292_sent_8f4b8fd4": "2412-15292_section_0b79795d",
+      "2412-15292_sent_88e3ffaf": "2412-15292_section_0b79795d",
+      "2412-15292_sent_45ce6183": "2412-15292_section_0b79795d",
+      "2412-15292_sent_cc9dfb4e": "2412-15292_section_0b79795d",
+      "2412-15292_sent_b794fcc5": "2412-15292_section_0b79795d",
+      "2412-15292_section_5c13ed15": "2412-15292_doc_root",
+      "2412-15292_sent_e7687f3c": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_b5e0dc72": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_4fbd7c4b": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_76ddd4c1": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_4b2f0165": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_13df4b0c": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_358b906c": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_e0900142": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_52eed51e": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_bbc7663e": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_42a5c0d5": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_acd1970f": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_c9e8b2e4": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_d5a24020": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_4ee6aa7e": "2412-15292_section_5c13ed15",
+      "2412-15292_sent_938dbe3e": "2412-15292_section_5c13ed15",
+      "2412-15292_section_55138803": "2412-15292_doc_root",
+      "2412-15292_fig_b71837c1": "2412-15292_section_39769d4e",
+      "2412-15292_sent_37e883bc": "2412-15292_section_55138803",
+      "2412-15292_sent_8c7c0f06": "2412-15292_section_55138803",
+      "2412-15292_sent_ae7b573b": "2412-15292_section_55138803",
+      "2412-15292_sent_b06c26ae": "2412-15292_section_a559b870",
+      "2412-15292_sent_abfca62a": "2412-15292_section_55138803",
+      "2412-15292_sent_7c4a93c4": "2412-15292_section_55138803",
+      "2412-15292_subsection_81a3b74e": "2412-15292_section_55138803",
+      "2412-15292_sent_5ba04dac": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_1afc2a32": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_4d561be6": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_9ded110a": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_aec2d40b": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_a59f7ad1": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_7bca47d9": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_cbbf8969": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_271cef3e": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_164f9cf2": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_c967d7fe": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_365960e7": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_4b973e34": "2412-15292_subsection_81a3b74e",
+      "2412-15292_sent_624c58a3": "2412-15292_subsection_81a3b74e",
+      "2412-15292_subsection_526a1cfa": "2412-15292_section_55138803",
+      "2412-15292_sent_5587e8aa": "2412-15292_subsection_526a1cfa",
+      "2412-15292_sent_03f0f910": "2412-15292_subsection_526a1cfa",
+      "2412-15292_sent_30392b84": "2412-15292_subsection_526a1cfa",
+      "2412-15292_sent_a7c669ad": "2412-15292_subsection_526a1cfa",
+      "2412-15292_subsection_f09ff22d": "2412-15292_section_55138803",
+      "2412-15292_sent_14b6414a": "2412-15292_subsection_f09ff22d",
+      "2412-15292_sent_c31c408f": "2412-15292_subsection_f09ff22d",
+      "2412-15292_sent_22d78e0f": "2412-15292_subsection_f09ff22d",
+      "2412-15292_sent_ee7835c9": "2412-15292_subsection_f09ff22d",
+      "2412-15292_subsection_9870617c": "2412-15292_section_55138803",
+      "2412-15292_sent_c48a2510": "2412-15292_subsection_9870617c",
+      "2412-15292_sent_6865bd55": "2412-15292_subsection_9870617c",
+      "2412-15292_sent_6795f1f4": "2412-15292_subsection_9870617c",
+      "2412-15292_sent_664137f6": "2412-15292_subsection_9870617c",
+      "2412-15292_section_a559b870": "2412-15292_doc_root",
+      "2412-15292_sent_dec632f8": "2412-15292_section_a559b870",
+      "2412-15292_sent_b4b253c5": "2412-15292_section_a559b870",
+      "2412-15292_sent_885c0735": "2412-15292_section_a559b870",
+      "2412-15292_sent_38075f97": "2412-15292_section_a559b870",
+      "2412-15292_sent_c0fb1520": "2412-15292_section_a559b870",
+      "2412-15292_sent_53fa6697": "2412-15292_section_a559b870",
+      "2412-15292_sent_0e9a4e74": "2412-15292_section_a559b870",
+      "2412-15292_sent_74f9e23a": "2412-15292_section_a559b870",
+      "2412-15292_sent_bcd2c3ba": "2412-15292_section_a559b870",
+      "2412-15292_fig_e69eca32": "2412-15292_section_a559b870",
+      "2412-15292_sent_ca0430be": "2412-15292_section_a559b870",
+      "2412-15292_sent_40243ab3": "2412-15292_section_a559b870",
+      "2412-15292_sent_7b0e8dbc": "2412-15292_section_a559b870",
+      "2412-15292_sent_af099926": "2412-15292_section_a559b870",
+      "2412-15292_sent_2930892b": "2412-15292_section_a559b870",
+      "2412-15292_sent_9d797e65": "2412-15292_section_a559b870",
+      "2412-15292_sent_9bce1478": "2412-15292_section_a559b870",
+      "2412-15292_sent_e4a993d1": "2412-15292_section_a559b870",
+      "2412-15292_sent_891a89eb": "2412-15292_section_a559b870",
+      "2412-15292_subsection_d179645b": "2412-15292_section_a559b870",
+      "2412-15292_sent_ba6af72d": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_3f05c0ec": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_c6e0e44b": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_5802da69": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_6e82506b": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_e061de16": "2412-15292_subsection_d179645b",
+      "2412-15292_subsubsection_22d479da": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_5159284b": "2412-15292_subsubsection_22d479da",
+      "2412-15292_eq_68b1ffaa": "2412-15292_subsubsection_22d479da",
+      "2412-15292_sent_1d27909f": "2412-15292_subsubsection_22d479da",
+      "2412-15292_sent_faf46614": "2412-15292_subsubsection_22d479da",
+      "2412-15292_sent_93888587": "2412-15292_subsubsection_22d479da",
+      "2412-15292_sent_3ab1be25": "2412-15292_subsubsection_22d479da",
+      "2412-15292_sent_e193fcc4": "2412-15292_subsubsection_22d479da",
+      "2412-15292_sent_f22597ef": "2412-15292_subsubsection_22d479da",
+      "2412-15292_sent_16d96dac": "2412-15292_subsubsection_22d479da",
+      "2412-15292_eq_dc9cc321": "2412-15292_subsubsection_22d479da",
+      "2412-15292_sent_5f6167c6": "2412-15292_subsubsection_22d479da",
+      "2412-15292_subsubsection_e69374eb": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_01c5e028": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_eq_e087dea7": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_5f5e550c": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_3a1369ab": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_a001f29e": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_1d280faf": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_2618990f": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_e050a425": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_4832aeed": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_eq_b8c34471": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_4d057bdc": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_eb3610af": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_e8e16927": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_44425903": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_0335dd99": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_0ee9a47b": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_3e131989": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_eq_7485f8f9": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_67f866e2": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_a6ce4f4e": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_7479582d": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_e1d9056d": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_aff7f41d": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_736e2a9e": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_1b28bbe7": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_47855ae5": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_0bcc3d98": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_b57364f3": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_sent_af1a6e34": "2412-15292_subsubsection_e69374eb",
+      "2412-15292_subsubsection_8fc4fc99": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_8ba48cff": "2412-15292_subsubsection_8fc4fc99",
+      "2412-15292_sent_e662efe1": "2412-15292_subsubsection_8fc4fc99",
+      "2412-15292_sent_73423d2c": "2412-15292_subsubsection_8fc4fc99",
+      "2412-15292_sent_5cd2628b": "2412-15292_subsubsection_8fc4fc99",
+      "2412-15292_sent_306d3a66": "2412-15292_subsubsection_8fc4fc99",
+      "2412-15292_sent_e833d196": "2412-15292_subsubsection_8fc4fc99",
+      "2412-15292_sent_a8e68a84": "2412-15292_subsubsection_8fc4fc99",
+      "2412-15292_subsubsection_5ba8f69f": "2412-15292_subsection_d179645b",
+      "2412-15292_sent_b5d2021c": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_d703f2d6": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_eafc4645": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_ea57a367": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_c0230cd3": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_bb512a8b": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_152c9622": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_bd923643": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_91b30b06": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_475759c1": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_fad178e3": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_0a927ce8": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_sent_c75795cd": "2412-15292_subsubsection_5ba8f69f",
+      "2412-15292_subsection_00e29565": "2412-15292_section_a559b870",
+      "2412-15292_sent_5fea7cfe": "2412-15292_subsection_00e29565",
+      "2412-15292_sent_7137be6e": "2412-15292_subsection_00e29565",
+      "2412-15292_subsection_ba757b56": "2412-15292_section_a559b870",
+      "2412-15292_sent_58b282f8": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_53a13ebc": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_882114c0": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_ecc26193": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_0cf825e0": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_ab26dbfa": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_1fcd17f3": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_12194b22": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_cfb6254d": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_054f17ac": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_5f3c3611": "2412-15292_subsection_ba757b56",
+      "2412-15292_sent_7277f268": "2412-15292_subsection_ba757b56",
+      "2412-15292_section_fd69c5cf": "2412-15292_doc_root",
+      "2412-15292_subsection_d3704bd8": "2412-15292_section_fd69c5cf",
+      "2412-15292_sent_7ee832f8": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_44e570df": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_25d33131": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_aea02d31": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_9481fef0": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_7bd7efd8": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_a9c08908": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_0643742a": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_1f7646c3": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_eb341f9a": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_9ad92230": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_4370470c": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_f036131f": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_c416de79": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_9948a7f6": "2412-15292_item_343a362f",
+      "2412-15292_sent_214d05c1": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_b9f05d3b": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_2d51293d": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_9192781f": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_8f8bfa47": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_f0474d03": "2412-15292_subsection_d3704bd8",
+      "2412-15292_sent_1cedb6ba": "2412-15292_subsection_d3704bd8",
+      "2412-15292_subsection_11dc7102": "2412-15292_section_fd69c5cf",
+      "2412-15292_sent_b5ef7dbf": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_7e64f982": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_c7ed1de1": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_fdde3b76": "2412-15292_subsection_11dc7102",
+      "2412-15292_fig_f8f942ef": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_3982235a": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_3dcee66e": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_e9b53a6f": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_cb38b485": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_209e8ae5": "2412-15292_subsection_11dc7102",
+      "2412-15292_sent_a78cfa0a": "2412-15292_subsection_11dc7102",
+      "2412-15292_subsection_5986cb1b": "2412-15292_section_fd69c5cf",
+      "2412-15292_sent_0eaafce4": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_d3f5ed6d": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_72dc06a7": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_dec1f267": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_2e47e320": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_db73ad22": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_3a24d0d0": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_7afcc4ba": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_da091f38": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_4ea35ed7": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_d883ebd0": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_2e64c419": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_746ebc84": "2412-15292_subsection_5986cb1b",
+      "2412-15292_sent_b18afbb9": "2412-15292_subsection_5986cb1b",
+      "2412-15292_subsection_4bf54f23": "2412-15292_section_fd69c5cf",
+      "2412-15292_sent_bc752f4a": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_3a058714": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_d4de32cf": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_5b5c30f2": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_47b7c621": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_66bc3c58": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_76699b52": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_8ddca24d": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_c9647871": "2412-15292_subsection_4bf54f23",
+      "2412-15292_sent_8c1e0d5c": "2412-15292_subsection_4bf54f23",
+      "2412-15292_section_eed9474f": "2412-15292_doc_root",
+      "2412-15292_sent_afdfe9c2": "2412-15292_section_eed9474f",
+      "2412-15292_sent_dedd0193": "2412-15292_section_eed9474f",
+      "2412-15292_sent_9ce6a3f4": "2412-15292_section_eed9474f",
+      "2412-15292_sent_a28c3589": "2412-15292_section_eed9474f",
+      "2412-15292_sent_4959ed96": "2412-15292_section_eed9474f",
+      "2412-15292_sent_85dfb7de": "2412-15292_section_eed9474f",
+      "2412-15292_sent_f464c629": "2412-15292_section_eed9474f",
+      "2412-15292_sent_3d51525a": "2412-15292_section_eed9474f",
+      "2412-15292_sent_f091aeab": "2412-15292_section_eed9474f",
+      "2412-15292_sent_93e7e5f0": "2412-15292_section_eed9474f",
+      "2412-15292_sent_813cbd33": "2412-15292_section_eed9474f",
+      "2412-15292_section_84ffd62e": "2412-15292_doc_root",
+      "2412-15292_sent_98b67deb": "2412-15292_section_84ffd62e",
+      "2412-15292_sent_bb3186a8": "2412-15292_section_84ffd62e",
+      "2412-15292_section_d5336a7b": "2412-15292_doc_root",
+      "2412-15292_sent_61669363": "2412-15292_section_d5336a7b",
+      "2412-15292_itemize_68b6853a": "2412-15292_item_343a362f",
+      "2412-15292_item_343a362f": "2412-15292_itemize_68b6853a",
+      "2412-15292_sent_30ed7273": "2412-15292_item_343a362f",
+      "2412-15292_sent_2edda4dd": "2412-15292_item_343a362f",
+      "2412-15292_sent_b4494374": "2412-15292_item_343a362f",
+      "2412-15292_sent_42050381": "2412-15292_item_343a362f",
+      "2412-15292_sent_1b3a7767": "2412-15292_item_343a362f",
+      "2412-15292_sent_9b483eb4": "2412-15292_item_343a362f",
+      "2412-15292_sent_6bc31576": "2412-15292_item_343a362f",
+      "2412-15292_sent_9ce3ee47": "2412-15292_item_343a362f",
+      "2412-15292_sent_3b55b472": "2412-15292_item_343a362f",
+      "2412-15292_sent_715b35d7": "2412-15292_item_343a362f",
+      "2412-15292_sent_e639e082": "2412-15292_item_343a362f",
+      "2412-15292_sent_5199b3e1": "2412-15292_item_343a362f",
+      "2412-15292_sent_a6cbebd0": "2412-15292_item_343a362f",
+      "2412-15292_section_12a79b96": "2412-15292_doc_root",
+      "2412-15292_sent_af46605f": "2412-15292_section_12a79b96",
+      "2412-15292_section_68af1eb9": "2412-15292_doc_root",
+      "2412-15292_fig_b30c59fe": "2412-15292_section_68af1eb9",
+      "2412-15292_section_87309d9f": "2412-15292_doc_root",
+      "2412-15292_fig_48957a0b": "2412-15292_section_87309d9f",
+      "2412-15292_fig_17bac0bc": "2412-15292_section_87309d9f",
+      "2412-15292_section_8c4b1b23": "2412-15292_doc_root",
+      "2412-15292_sent_15d4a8a0": "2412-15292_section_8c4b1b23",
+      "2412-15292_sent_c5468ce0": "2412-15292_section_8c4b1b23",
+      "2412-15292_sent_f44ad305": "2412-15292_section_8c4b1b23",
+      "2412-15292_sent_3ff3508f": "2412-15292_section_8c4b1b23",
+      "2412-15292_sent_5f73ee13": "2412-15292_section_8c4b1b23",
+      "2412-15292_sent_d83320ac": "2412-15292_section_8c4b1b23",
+      "2412-15292_section_39769d4e": "2412-15292_doc_root",
+      "2412-15292_fig_96ad0f29": "2412-15292_section_39769d4e",
+      "2412-15292_fig_f799d51e": "2412-15292_section_39769d4e",
+      "2412-15292_sent_73f8358d": "2412-15292_section_39769d4e",
+      "2412-15292_sent_c1466ba7": "2412-15292_section_39769d4e"
+    }
+  },
+  "merged_parents": {
+    "2412-15292_sent_676977e1": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_abstract_ce28071e": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_cdf59497": [
+      "2412-15292_abstract_ce28071e"
+    ],
+    "2412-15292_sent_3aef2b56": [
+      "2412-15292_abstract_ce28071e"
+    ],
+    "2412-15292_sent_c4324519": [
+      "2412-15292_abstract_ce28071e"
+    ],
+    "2412-15292_sent_d7bffe9b": [
+      "2412-15292_abstract_ce28071e"
+    ],
+    "2412-15292_sent_a1e8720f": [
+      "2412-15292_abstract_ce28071e"
+    ],
+    "2412-15292_sent_269809c3": [
+      "2412-15292_abstract_ce28071e"
+    ],
+    "2412-15292_section_0b79795d": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_4843f622": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_c24447b3": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_765ef30b": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_0fe4e134": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_a21060d0": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_14e66153": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_d6648ffb": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_5debe0db": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_b53389f4": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_58f3a4c7": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_7c13ee87": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_732cc504": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_1869dbdb": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_ea06678e": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_48f7042b": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_6caa8e48": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_6694cf50": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_8f4b8fd4": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_88e3ffaf": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_45ce6183": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_cc9dfb4e": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_sent_b794fcc5": [
+      "2412-15292_section_0b79795d"
+    ],
+    "2412-15292_section_5c13ed15": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_e7687f3c": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_b5e0dc72": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_4fbd7c4b": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_76ddd4c1": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_4b2f0165": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_13df4b0c": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_358b906c": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_e0900142": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_52eed51e": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_bbc7663e": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_42a5c0d5": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_acd1970f": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_c9e8b2e4": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_d5a24020": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_4ee6aa7e": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_sent_938dbe3e": [
+      "2412-15292_section_5c13ed15"
+    ],
+    "2412-15292_section_55138803": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_fig_b71837c1": [
+      "2412-15292_section_12a79b96",
+      "2412-15292_section_39769d4e",
+      "2412-15292_section_55138803",
+      "2412-15292_section_8c4b1b23",
+      "2412-15292_section_a559b870",
+      "2412-15292_subsection_5986cb1b",
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_37e883bc": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_sent_8c7c0f06": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_sent_ae7b573b": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_sent_b06c26ae": [
+      "2412-15292_section_55138803",
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_abfca62a": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_sent_7c4a93c4": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_subsection_81a3b74e": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_sent_5ba04dac": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_1afc2a32": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_4d561be6": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_9ded110a": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_aec2d40b": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_a59f7ad1": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_7bca47d9": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_cbbf8969": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_271cef3e": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_164f9cf2": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_c967d7fe": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_365960e7": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_4b973e34": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_sent_624c58a3": [
+      "2412-15292_subsection_81a3b74e"
+    ],
+    "2412-15292_subsection_526a1cfa": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_sent_5587e8aa": [
+      "2412-15292_subsection_526a1cfa"
+    ],
+    "2412-15292_sent_03f0f910": [
+      "2412-15292_subsection_526a1cfa"
+    ],
+    "2412-15292_sent_30392b84": [
+      "2412-15292_subsection_526a1cfa"
+    ],
+    "2412-15292_sent_a7c669ad": [
+      "2412-15292_subsection_526a1cfa"
+    ],
+    "2412-15292_subsection_f09ff22d": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_sent_14b6414a": [
+      "2412-15292_subsection_f09ff22d"
+    ],
+    "2412-15292_sent_c31c408f": [
+      "2412-15292_subsection_f09ff22d"
+    ],
+    "2412-15292_sent_22d78e0f": [
+      "2412-15292_subsection_f09ff22d"
+    ],
+    "2412-15292_sent_ee7835c9": [
+      "2412-15292_subsection_f09ff22d"
+    ],
+    "2412-15292_subsection_9870617c": [
+      "2412-15292_section_55138803"
+    ],
+    "2412-15292_sent_c48a2510": [
+      "2412-15292_subsection_9870617c"
+    ],
+    "2412-15292_sent_6865bd55": [
+      "2412-15292_subsection_9870617c"
+    ],
+    "2412-15292_sent_6795f1f4": [
+      "2412-15292_subsection_9870617c"
+    ],
+    "2412-15292_sent_664137f6": [
+      "2412-15292_subsection_9870617c"
+    ],
+    "2412-15292_section_a559b870": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_dec632f8": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_b4b253c5": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_885c0735": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_38075f97": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_c0fb1520": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_53fa6697": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_0e9a4e74": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_74f9e23a": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_bcd2c3ba": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_fig_e69eca32": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_ca0430be": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_40243ab3": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_7b0e8dbc": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_af099926": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_2930892b": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_9d797e65": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_9bce1478": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_e4a993d1": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_891a89eb": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_subsection_d179645b": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_ba6af72d": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_3f05c0ec": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_c6e0e44b": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_5802da69": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_6e82506b": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_e061de16": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_subsubsection_22d479da": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_5159284b": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_eq_68b1ffaa": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_sent_1d27909f": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_sent_faf46614": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_sent_93888587": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_sent_3ab1be25": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_sent_e193fcc4": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_sent_f22597ef": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_sent_16d96dac": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_eq_dc9cc321": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_sent_5f6167c6": [
+      "2412-15292_subsubsection_22d479da"
+    ],
+    "2412-15292_subsubsection_e69374eb": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_01c5e028": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_eq_e087dea7": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_5f5e550c": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_3a1369ab": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_a001f29e": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_1d280faf": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_2618990f": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_e050a425": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_4832aeed": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_eq_b8c34471": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_4d057bdc": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_eb3610af": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_e8e16927": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_44425903": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_0335dd99": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_0ee9a47b": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_3e131989": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_eq_7485f8f9": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_67f866e2": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_a6ce4f4e": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_7479582d": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_e1d9056d": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_aff7f41d": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_736e2a9e": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_1b28bbe7": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_47855ae5": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_0bcc3d98": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_b57364f3": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_sent_af1a6e34": [
+      "2412-15292_subsubsection_e69374eb"
+    ],
+    "2412-15292_subsubsection_8fc4fc99": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_8ba48cff": [
+      "2412-15292_subsubsection_8fc4fc99"
+    ],
+    "2412-15292_sent_e662efe1": [
+      "2412-15292_subsubsection_8fc4fc99"
+    ],
+    "2412-15292_sent_73423d2c": [
+      "2412-15292_subsubsection_8fc4fc99"
+    ],
+    "2412-15292_sent_5cd2628b": [
+      "2412-15292_subsubsection_8fc4fc99"
+    ],
+    "2412-15292_sent_306d3a66": [
+      "2412-15292_subsubsection_8fc4fc99"
+    ],
+    "2412-15292_sent_e833d196": [
+      "2412-15292_subsubsection_8fc4fc99"
+    ],
+    "2412-15292_sent_a8e68a84": [
+      "2412-15292_subsubsection_8fc4fc99"
+    ],
+    "2412-15292_subsubsection_5ba8f69f": [
+      "2412-15292_subsection_d179645b"
+    ],
+    "2412-15292_sent_b5d2021c": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_d703f2d6": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_eafc4645": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_ea57a367": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_c0230cd3": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_bb512a8b": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_152c9622": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_bd923643": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_91b30b06": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_475759c1": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_fad178e3": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_0a927ce8": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_sent_c75795cd": [
+      "2412-15292_subsubsection_5ba8f69f"
+    ],
+    "2412-15292_subsection_00e29565": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_5fea7cfe": [
+      "2412-15292_subsection_00e29565"
+    ],
+    "2412-15292_sent_7137be6e": [
+      "2412-15292_subsection_00e29565"
+    ],
+    "2412-15292_subsection_ba757b56": [
+      "2412-15292_section_a559b870"
+    ],
+    "2412-15292_sent_58b282f8": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_53a13ebc": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_882114c0": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_ecc26193": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_0cf825e0": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_ab26dbfa": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_1fcd17f3": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_12194b22": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_cfb6254d": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_054f17ac": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_5f3c3611": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_sent_7277f268": [
+      "2412-15292_subsection_ba757b56"
+    ],
+    "2412-15292_section_fd69c5cf": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_subsection_d3704bd8": [
+      "2412-15292_section_fd69c5cf"
+    ],
+    "2412-15292_sent_7ee832f8": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_44e570df": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_25d33131": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_aea02d31": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_9481fef0": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_7bd7efd8": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_a9c08908": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_0643742a": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_1f7646c3": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_eb341f9a": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_9ad92230": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_4370470c": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_f036131f": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_c416de79": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_9948a7f6": [
+      "2412-15292_item_343a362f",
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_214d05c1": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_b9f05d3b": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_2d51293d": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_9192781f": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_8f8bfa47": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_f0474d03": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_sent_1cedb6ba": [
+      "2412-15292_subsection_d3704bd8"
+    ],
+    "2412-15292_subsection_11dc7102": [
+      "2412-15292_section_fd69c5cf"
+    ],
+    "2412-15292_sent_b5ef7dbf": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_7e64f982": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_c7ed1de1": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_fdde3b76": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_fig_f8f942ef": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_3982235a": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_3dcee66e": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_e9b53a6f": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_cb38b485": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_209e8ae5": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_sent_a78cfa0a": [
+      "2412-15292_subsection_11dc7102"
+    ],
+    "2412-15292_subsection_5986cb1b": [
+      "2412-15292_section_fd69c5cf"
+    ],
+    "2412-15292_sent_0eaafce4": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_d3f5ed6d": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_72dc06a7": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_dec1f267": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_2e47e320": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_db73ad22": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_3a24d0d0": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_7afcc4ba": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_da091f38": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_4ea35ed7": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_d883ebd0": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_2e64c419": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_746ebc84": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_sent_b18afbb9": [
+      "2412-15292_subsection_5986cb1b"
+    ],
+    "2412-15292_subsection_4bf54f23": [
+      "2412-15292_section_fd69c5cf"
+    ],
+    "2412-15292_sent_bc752f4a": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_3a058714": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_d4de32cf": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_5b5c30f2": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_47b7c621": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_66bc3c58": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_76699b52": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_8ddca24d": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_c9647871": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_sent_8c1e0d5c": [
+      "2412-15292_subsection_4bf54f23"
+    ],
+    "2412-15292_section_eed9474f": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_afdfe9c2": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_dedd0193": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_9ce6a3f4": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_a28c3589": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_4959ed96": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_85dfb7de": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_f464c629": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_3d51525a": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_f091aeab": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_93e7e5f0": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_sent_813cbd33": [
+      "2412-15292_section_eed9474f"
+    ],
+    "2412-15292_section_84ffd62e": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_98b67deb": [
+      "2412-15292_section_84ffd62e"
+    ],
+    "2412-15292_sent_bb3186a8": [
+      "2412-15292_section_84ffd62e"
+    ],
+    "2412-15292_section_d5336a7b": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_61669363": [
+      "2412-15292_section_d5336a7b"
+    ],
+    "2412-15292_itemize_68b6853a": [
+      "2412-15292_item_343a362f",
+      "2412-15292_section_d5336a7b"
+    ],
+    "2412-15292_item_343a362f": [
+      "2412-15292_itemize_68b6853a"
+    ],
+    "2412-15292_sent_30ed7273": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_2edda4dd": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_b4494374": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_42050381": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_1b3a7767": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_9b483eb4": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_6bc31576": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_9ce3ee47": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_3b55b472": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_715b35d7": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_e639e082": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_5199b3e1": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_sent_a6cbebd0": [
+      "2412-15292_item_343a362f"
+    ],
+    "2412-15292_section_12a79b96": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_af46605f": [
+      "2412-15292_section_12a79b96"
+    ],
+    "2412-15292_section_68af1eb9": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_fig_b30c59fe": [
+      "2412-15292_section_68af1eb9"
+    ],
+    "2412-15292_section_87309d9f": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_fig_48957a0b": [
+      "2412-15292_section_87309d9f"
+    ],
+    "2412-15292_fig_17bac0bc": [
+      "2412-15292_section_87309d9f"
+    ],
+    "2412-15292_section_8c4b1b23": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_sent_15d4a8a0": [
+      "2412-15292_section_8c4b1b23"
+    ],
+    "2412-15292_sent_c5468ce0": [
+      "2412-15292_section_8c4b1b23"
+    ],
+    "2412-15292_sent_f44ad305": [
+      "2412-15292_section_8c4b1b23"
+    ],
+    "2412-15292_sent_3ff3508f": [
+      "2412-15292_section_8c4b1b23"
+    ],
+    "2412-15292_sent_5f73ee13": [
+      "2412-15292_section_8c4b1b23"
+    ],
+    "2412-15292_sent_d83320ac": [
+      "2412-15292_section_8c4b1b23"
+    ],
+    "2412-15292_section_39769d4e": [
+      "2412-15292_doc_root"
+    ],
+    "2412-15292_fig_96ad0f29": [
+      "2412-15292_section_39769d4e"
+    ],
+    "2412-15292_fig_f799d51e": [
+      "2412-15292_section_39769d4e"
+    ],
+    "2412-15292_sent_73f8358d": [
+      "2412-15292_section_39769d4e"
+    ],
+    "2412-15292_sent_c1466ba7": [
+      "2412-15292_section_39769d4e"
+    ]
+  }
+}

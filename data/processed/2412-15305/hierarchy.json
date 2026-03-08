@@ -1,0 +1,2434 @@
+{
+  "elements": {
+    "2412-15305_doc_root": "DOCUMENT_ROOT",
+    "2412-15305_sent_676977e1": "\\maketitle",
+    "2412-15305_abstract_ce28071e": "abstract",
+    "2412-15305_sent_c08a994d": "Solving complex reasoning tasks is a key real-world application of agents.",
+    "2412-15305_sent_7956b1ba": "Thanks to the pretraining of Large Language Models (LLMs) on code data, recent approaches like CodeAct successfully use code as LLM agents' action, achieving good results.",
+    "2412-15305_sent_3f6a4142": "However, CodeAct greedily generates the next action's code block by relying on fragmented thoughts, resulting in inconsistency and instability.",
+    "2412-15305_sent_5a55b0aa": "Moreover, CodeAct lacks action-related ground-truth (GT), making its supervision signals and termination conditions questionable in multi-turn interactions.",
+    "2412-15305_sent_0c8aff30": "To address these issues, we first introduce a simple yet effective end-to-end code generation paradigm, CodeProgram, which leverages code's systematic logic to align with global reasoning and enable cohesive problem-solving.",
+    "2412-15305_sent_c76441c7": "Then, we propose Tree-of-Code (ToC), which self-grows CodeProgram nodes based on the executable nature of the code and enables self-supervision in a GT-free scenario.",
+    "2412-15305_sent_9c2731a7": "Experimental results on two datasets using ten popular zero-shot LLMs show ToC remarkably boosts accuracy by nearly 20\\% over CodeAct with less than 1/4 turns.",
+    "2412-15305_sent_25acd278": "Several LLMs even perform better on one-turn CodeProgram than on multi-turn CodeAct.",
+    "2412-15305_sent_edcba266": "To further investigate the trade-off between efficacy and efficiency, we test different ToC tree sizes and exploration mechanisms.",
+    "2412-15305_sent_3f64ff44": "We also highlight the potential of ToC’s end-to-end data generation for supervised and reinforced fine-tuning.",
+    "2412-15305_section_0b79795d": "Introduction",
+    "2412-15305_sent_d7ee82d5": "Large language models (LLMs) significantly improve agents' ability to leverage external tools.",
+    "2412-15305_sent_54cb9e7a": "\\cite{chen2023autoagents,hong2023metagpt,paul2024continually}.",
+    "2412-15305_sent_d8a29a76": "Effectively and efficiently handling complex real-world problems \\cite{blount1994agi}, especially those requiring multiple tools and calls \\cite{li2023api,wang2024codeact}, has become a key focus across industry and academia.",
+    "2412-15305_sent_dc6b144e": "Currently, the widely used paradigm, ReAct, \\cite{yao2022react}, combines reasoning with action strategies, allowing for actions to be performed incrementally and adjusted based on environmental feedback.",
+    "2412-15305_sent_6001db6f": "The application of code generation techniques to complex task planning and execution has garnered significant attention~\\cite{holtl2mac,wen2024learning,xu2024wizardlm}, particularly with the emergence of CodeAct~\\cite{wang2024codeact} approaches.",
+    "2412-15305_sent_2f18dbcb": "CodeAct moves the interaction unit from ReAct's individual tool calls to generating code blocks with local reasoning, while uniquely using code logic and libraries.",
+    "2412-15305_sent_4d9881bf": "Rather than JSON \\cite{Qin2023ToolLLMFL} or text \\cite{Park2023GenerativeAI}, it treats code as action, utilizing LLM's pre-trained coding skills for efficient handling of complex tasks.",
+    "2412-15305_sent_18d7490f": "However, each turn of CodeAct is based on individual actions rather than the entire program.",
+    "2412-15305_sent_d3717d2b": "It can not autonomously reason and generate complete code in one turn.",
+    "2412-15305_sent_260699a6": "Instead, it follows a step-by-step generation and interaction process.",
+    "2412-15305_sent_0a00558c": "This is akin to the brain's control of motor actions, processing tasks iteratively and incrementally, with the basal ganglia supporting step-granularity execution and the cerebellum refining and sequencing for the complete complex motor task \\cite{Shenjing2023}.",
+    "2412-15305_sent_919b1f16": "On the one hand, the fragmented and stalled thinking in code can hinder a thorough understanding of the logical chains embedded within it, potentially leading to redundant code \\cite{wang2023leti,guo2024deepseek}.",
+    "2412-15305_sent_983ccca6": "Repeatedly integrating all prior thoughts causes context overload due to long histories, making it more prone to accumulating significant model hallucinations~\\cite{ji2023survey}.",
+    "2412-15305_sent_00ae8065": "On the other hand, solving complex problems can have multiple solutions \\cite{Mialon2023GAIAAB}, such as calling tools in different sequences.",
+    "2412-15305_sent_ff7d0454": "LLMs also tend to explore randomly, resulting in varied solutions, making it difficult to set a standard answer for each step.",
+    "2412-15305_sent_13251b7c": "Long action sequences over multiple turns only provide sparse rewards \\cite{Xu2023SparseJ}.",
+    "2412-15305_sent_d5a9c820": "When using these trajectories as training data for supervised fine-tuning (SFT), they can only be combined into an overall program response as one sample \\cite{wang2024codeact}.",
+    "2412-15305_sent_2e029645": "Applying reinforcement learning is challenging due to the lack of necessary process supervision \\cite{zelikman2024quiet}, leading to fundamental issues.",
+    "2412-15305_sent_28b6c9c6": "Therefore, we are considering how to use task-level feedback as a supervision signal for each turn.",
+    "2412-15305_sent_259558de": "Additionally, how can we design a framework that incorporates reflection and refinement based on environmental feedback to create real multi-turn trajectory data?",
+    "2412-15305_sent_d1ac8366": "Here, we are inspired by the Dorsolateral Prefrontal Cortex (DPC), which is involved in high-level global cognitive circuits~\\cite{Kaller2015PredictingPP}, to simulate how programmers form systematic representations and utilizations of code.",
+    "2412-15305_sent_c01d792c": "We first propose an end-to-end code reasoning and generation paradigm, dubbed CodeProgram.",
+    "2412-15305_sent_36ce5cfc": "In this way, the final answer can serve as a direct evaluation metric.",
+    "2412-15305_sent_ede5d1ca": "To utilize environmental feedback from code execution, we further develop a framework called Tree-of-Code (ToC).",
+    "2412-15305_sent_efb5a79e": "In this method, task-level CodePrograms serve as nodes, forming a self-expanding exploration tree driven by the verifiability of code execution.",
+    "2412-15305_sent_602bda8d": "This differs from \"Tree-of-Thoughts\" (ToT) \\cite{yao2024tree}, which enhances \"Chain-of-Thought\" (CoT) \\cite{wei2022cot} by exploring varied approaches within the same solution.",
+    "2412-15305_sent_db391f26": "In contrast, we generate diverse solutions through random settings, with each node representing a complete solution.",
+    "2412-15305_sent_f61266a4": "This concept is akin to a Code \"Random Forest\" \\cite{rigatti2017randomforest}.",
+    "2412-15305_sent_e52b2b12": "Experimental results on two types of multi-turn, multi-tool, complex task datasets, using ten LLMs, demonstrate that ToC outperforms CodeAct in both accuracy and efficiency.",
+    "2412-15305_sent_560f0544": "The core contributions of this paper are summarized as follows:",
+    "2412-15305_enumerate_58297aaf": "enumerate",
+    "2412-15305_item_092db380": "item",
+    "2412-15305_sent_c982ea58": "We introduce CodeProgram, an end-to-end paradigm designed to continuously generate complete code solutions using necessary tools.",
+    "2412-15305_sent_93acc029": "The purpose and its advantages are analyzed.",
+    "2412-15305_sent_1538a894": "We present Tree-of-Code (ToC), which self-grows CodeProgram nodes by leveraging the executable nature of the code.",
+    "2412-15305_sent_c28c68a0": "By exploring random settings, ToC enhances performance in solving complex tasks through ensembling.",
+    "2412-15305_sent_eafd497a": "Empirical validation on two complex task datasets, M3ToolEval and API-Bank, demonstrates significant improvements in both problem-solving performance and efficiency.",
+    "2412-15305_section_ca381abf": "Design Motivation",
+    "2412-15305_fig_22e584e7": "\\begin{figure}\n\n \\includegraphics[width=0.48\\textwidth]{figs/Figure_4.pdf}\n \\caption{Illustration of our design motivation.\n\n\\end{figure}",
+    "2412-15305_sent_ab150ab8": "In industry, complex tasks requiring multiple tools and function calls, are typically driven by open-ended user queries.",
+    "2412-15305_sent_504fe07d": "This creates two key challenges: (1) For zero-shot queries, it is challenging to pre-obtain task-level ground-truth (GT).",
+    "2412-15305_sent_6dee55ee": "Manual annotation or assigning different rewards to responses is required for subsequent SFT \\cite{chung2024flant5} or reinforced fine-tuning (ReFT) \\cite{Luong2024ReFT}.",
+    "2412-15305_sent_327f481f": "Moreover, without GT, the termination criteria become unclear.",
+    "2412-15305_sent_d9fe04ba": "(2) Multi-turn interactions lack a fixed trajectory, making it difficult to define the process supervised signals \\cite{Luo2024ImproveMR}.",
+    "2412-15305_sent_f81fb0d9": "Current methods often rely on a 'judge' model to evaluate whether the user’s needs from the task query are met at each step \\cite{Chen2024JumpCoderGB,Li2024CodeTree}.",
+    "2412-15305_sent_e9ab3994": "However, each evaluation demands strong analytical and reasoning skills from the model, making it costly and time-consuming.",
+    "2412-15305_sent_db8ce929": "Existing methods deliberately avoid these challenges by assuming GT is known, matching task-level GT with action-related outcomes at each step.",
+    "2412-15305_sent_0ae87b13": "The process stops if they match, or continues until the step limit is reached. The tool agent in Figure \\ref{fig:cute} illustrates this.",
+    "2412-15305_sent_29f6b799": "We aim to explore whether it is possible to develop a method that can self-provide supervision and termination criteria at each step while approximating GT in a GT-free scenario.",
+    "2412-15305_sent_436f2436": "Unlike cerebellum-controlled step-by-step motor tasks, we learn from the DPC to treat each turn as a complete task.",
+    "2412-15305_sent_e6518eba": "By iteratively approaching the feasible region, we collect a batch of feasible solutions and then consider the optimal one.",
+    "2412-15305_sent_d8e306aa": "Inspired by it, we represent the program agent in Figure \\ref{fig:cute} to simulate the cognitive process of senior programmers.",
+    "2412-15305_sent_49d3308f": "When working on a project, they start with global planning, complete the entire code, and iteratively debug until no errors are reported, leveraging the systematic logic and environmental feedback inherent to the code project.",
+    "2412-15305_fig_250c430b": "\\begin{figure}\n \\includegraphics[width=0.48\\textwidth]{figs/CodeProgram.pdf}\n \\caption{Illustration of CodeProgram.}\n\n\\end{figure}",
+    "2412-15305_section_2b32e1ab": "CodeProgram",
+    "2412-15305_sent_e7d1dd9f": "A block of code in CodeAct's actions corresponds to the eyes or mouths of the smiley face in Figure \\ref{fig:cute}, when faces represent complex tasks.",
+    "2412-15305_sent_f7e34578": "We propose CodeProgram, which can draw the complete face in one turn.",
+    "2412-15305_sent_f06cf601": "Figure \\ref{fig:codeprogram} illustrates how it works.",
+    "2412-15305_sent_0191f447": "Specifically, code serves as a bridge, aligning with natural language reasoning and connecting it to execution outcomes in the environment.",
+    "2412-15305_sent_6194418a": "By decoupling the reasoning process from code execution, we achieve flexibility while ensuring consistency.",
+    "2412-15305_subsection_94394ef2": "Code as Reasoning",
+    "2412-15305_sent_78906a85": "Code generation plays a crucial role in the concept of \"code-as-reasoning,\" where the process of writing code itself reflects a reasoning process.",
+    "2412-15305_sent_aa417658": "Global reasoning is required to guide complete code generation in a single end-to-end process.",
+    "2412-15305_sent_dac30153": "This enables the seamless integration of various reasoning methods for large language models (LLMs), such as prompt engineering \\cite{chen2023prompteng}, Chain-of-Thoughts (CoT) \\cite{wei2022cot}, Tree-of Thoughts (ToT) \\cite{yao2024tree}, in-context learning \\cite{kojima2022step_by_step}, self-reflection ~\\cite{zhang2024selfcontrastreflect}, and System2 reasoning \\cite{frankish2010system2reason,openai2024o1,yudong2024}.",
+    "2412-15305_sent_dfd80277": "Furthermore, longer chains of thought have consistently been shown to improve task performance \\cite{wei2022cot,zelikman2024quiet}.",
+    "2412-15305_sent_77a93508": "Building on this foundation of global reasoning, we write the root prompt based on previous work \\cite{wang2024codeact} to guide the generation of step-by-step CoT thoughts and the corresponding complete code.",
+    "2412-15305_sent_8f27e507": "LLMs are prompted to first analyze and break down the problem, generate reasoning-based thoughts for solving it, and then produce the complete code that reflects and executes that reasoning.",
+    "2412-15305_sent_2b7d3e45": "The thoughts and codes are enclosed using the \"<thought>-</thought>\" and \"<execute>-</execute>\" tags, respectively.",
+    "2412-15305_sent_0826d63d": "The root prompt is shown in Appendix \\ref{Appendix Prompt}.",
+    "2412-15305_fig_b71837c1": "\\begin{figure*}",
+    "2412-15305_sent_874214ef": "\\includegraphics[width=1\\textwidth]{figs/Figure_1.pdf} \\caption{An Overview of CodeAct and ToC.",
+    "2412-15305_sent_08fedb50": "(a) CodeAct regards code as action with step-by-step reasoning.",
+    "2412-15305_sent_fa38f304": "(b) ToC applies execution-based reflection in the tree structure, where each node generates end-to-end code with global planning as its thoughts.",
+    "2412-15305_sent_5692bec2": "At each layer, different nodes are executed in parallel; if executed successfully, they are collected for voting.",
+    "2412-15305_sent_c25d3823": "Yellow boxes with dashed borders indicate invalid nodes that fail execution.",
+    "2412-15305_sent_a3459557": "Both red and green boxes represent valid nodes: red boxes are discarded through LLM voting, while green boxes are finally accepted. The query is \"Find nearby restaurants within 1km of San Francisco\" from API-Bank level-3 dataset.",
+    "2412-15305_subsection_49320271": "Two Helper Tools",
+    "2412-15305_sent_c384f709": "CodeProgram struggles when LLMs must rely on tool outputs to determine the next steps.",
+    "2412-15305_sent_e356e21a": "For example, we can only provide the final summary answer based on all tool outputs; in web browsing tasks, the next action is determined only after the page content is viewed. To maintain end-to-end flow, we introduce two additional functions that call the LLM into our code: a general res\\_handler, which defines a prompt to generate results that meet the prompt requirements for final summarization, and a specific next\\_action for web tasks, which decides the next action from a given set of possible browsing actions based on the page content, visited URLs, and task query.",
+    "2412-15305_sent_5f91a38d": "Their tool descriptions and functions are shown in Appendix \\ref{Helper Tool}.",
+    "2412-15305_sent_ae8aa7fd": "They help better understand the semantic relationships between tools, ensuring a smooth and cohesive sequence of tool calls during code generation.",
+    "2412-15305_subsection_c04e686c": "Execution Outcome can be Label",
+    "2412-15305_sent_6a3b4c6e": "The code solution is task-level, and its execution outcome is a self-provided annotation that can be directly used as labels.",
+    "2412-15305_sent_7213759a": "Specifically, it includes supervision signals to select the \"successfully executed\" samples for SFT, and various rich comments (such as specific results or error messages) that can be quantified as rewards for ReFT, as long as we repeat the CodeProgram in different settings multiple times to receive feedback.",
+    "2412-15305_sent_de327dcb": "In this way, the code acts as a verifier.",
+    "2412-15305_sent_5dc5e7e2": "This idea inspires us to build a single-layer multi-node Tree-of-Code (ToC).",
+    "2412-15305_sent_db3b4ce0": "Thanks to the task-level granularity, the code's execution outcomes align with the task query and the thought-code output, facilitating the generation of valuable training data, as the thoughts, code, and execution-based labels are tightly synchronized. In summary, CodeProgram is an annotation-free, end-to-end generation approach well-suited for producing large-scale training data, increasing efficiency, and improving task-solving performance.",
+    "2412-15305_section_e79aebc1": "Tree-of-Code Method",
+    "2412-15305_sent_7bbe8edb": "Following the design motivation in Figure \\ref{fig:cute}, we need to collect all successfully executed solutions and identify the one closest to the GT.",
+    "2412-15305_sent_fa82f259": "CodeProgram introduced in Section \\ref{codeprogram} has allowed us to achieve two key goals: (1) to directly reflect on and refine the task-level code, and (2) to use its execution results as terminal criteria.",
+    "2412-15305_sent_03e5c9aa": "We now propose an execution-based, self-growing, and self-filtering tree, with CodeProgram as its nodes.",
+    "2412-15305_sent_e8c67960": "\\includegraphics[width=0.95\\textwidth]{figs/Figure_2.pdf} \\caption{Illustrative example of a branch of ToC.",
+    "2412-15305_sent_979b0dfe": "We demonstrated the process of a node expanding into deeper levels.",
+    "2412-15305_sent_42458686": "Based on the user query, tool descriptions, and previous execution outcomes, ToC first thinks about how to do it and then writes the end-to-end code.",
+    "2412-15305_sent_afb9d513": "The example is selected from M3ToolEval dataset.",
+    "2412-15305_subsection_8186f26a": "Overview of Tree-of-Code",
+    "2412-15305_sent_d0ca33a4": "We represent the ToC framework as $T=(N, S)$, where $N$ denotes a set of nodes ($N$), and $S$ represents the stems (unidirectional arrows in Figure \\ref{fig:overview}) , modeling the reflection reasoning process of LLMs when expanding the nodes.",
+    "2412-15305_sent_f204bc6e": "The overview of ToC and how it works is illustrated in Figure \\ref{fig:overview}.",
+    "2412-15305_sent_abf1245e": "Let $L$ denote the max depth, $l$ the layer index, $M$ the expanded layer's max width, $m$ the node index, $l \\in \\{1, \\dots, L\\}$, $m \\in \\{1, \\dots, M\\}$.",
+    "2412-15305_sent_7b25606a": "We use $T$ for the thoughts of the $N$, $C$ for code, and $E$ for its execution result.",
+    "2412-15305_sent_e77397a7": "The next-layer $N$ is denoted as:",
+    "2412-15305_eq_341f9155": "\\begin{equation}\nN_{(l+1)\\text{-}m} =S_{l\\to {(l+1)}} (f, \\sum_{j=0}^{l} (T_{j\\text{-}m} + C_{j\\text{-}m} + E_{j\\text{-}m}))\n\\end{equation}",
+    "2412-15305_sent_2168c387": "where $f$ represents the basic information of the task, such as the user's query, and all tool descriptions.",
+    "2412-15305_sent_e449eb3f": "The sum $\\sum_{j=0}^{l}$ indicates that each reflection reasoning process for generating the next node relies on the thoughts, code, and execution results from all ancestor nodes in the history.",
+    "2412-15305_sent_94ce233e": "The node index is fixed for simplicity in the formula.",
+    "2412-15305_subsection_f9773996": "Tree Expansion",
+    "2412-15305_sent_8809e58c": "We initialize from a root node and recursively expand the tree.",
+    "2412-15305_sent_70866700": "The expansion process follows: (1) The breadth-first search (BFS) strategy is applied, with each parent node branching into $M$ child nodes.",
+    "2412-15305_sent_25bac4ae": "(2) Whether the node continues to grow depends solely on the evaluation of its own execution state (success or failure).",
+    "2412-15305_sent_895dd3c0": "For each $N_{l}$,",
+    "2412-15305_eq_d2b760f7": "\\begin{equation}\n\\left\\{\n \\begin{array}{ll}\n \\text{stop and collect,}\n & \\text{if } E_{l} \\neq \\text{None or error},\\\\\n \\text{grow } N_{(l+1)}, & \\text{otherwise.}\n \\end{array}\n\n\\right.\n\\end{equation}",
+    "2412-15305_sent_3f517b13": "(3) Expansion continues until all child nodes stop or the maximum depth ($L$) of 3 is reached. Execution-based Reflection.",
+    "2412-15305_sent_cd3d8aff": "We can not guarantee that the end-to-end code solution will be correct on the first attempt.",
+    "2412-15305_sent_006249a7": "Treating task-level execution errors as continuation signals, we propose execution-based reflection, which enables LLMs to self-reflect, identify errors, refine thoughts, and improve code through prompting, significantly enhancing problem-solving.",
+    "2412-15305_sent_b4da35c7": "The prompt for reflection is shown in Appendix \\ref{Reflection Prompt}.",
+    "2412-15305_sent_e231ccd8": "As long as execution fails, self-reflection continues iteratively, generating new nodes.",
+    "2412-15305_sent_9c7a21fc": "This allows the branch to grow as a data sample, with each node in the trajectory providing supervision signals.",
+    "2412-15305_sent_8adde716": "Since these supervision signals are inherently embedded within the CodeProgram node, the growth process is self-driven.",
+    "2412-15305_sent_a44b22ff": "Therefore, the whole tree is end-to-end generated. Figure \\ref{fig:example} illustrates an example of a branch of ToC.",
+    "2412-15305_sent_65f5f18a": "Additionally, our flexible tree-structured framework allows for the integration of any reflection method in end-to-end code generation.",
+    "2412-15305_sent_a58e27b7": "Exploration strategy.",
+    "2412-15305_sent_0602e623": "Generating code in a single pass presents two main limitations on diversity:",
+    "2412-15305_itemize_2d7e3d91": "itemize",
+    "2412-15305_sent_439ad0be": "1) Limited strategy: It easily leads to cognitive narrowing, where the fundamental reasoning mechanism remains unchanged.",
+    "2412-15305_sent_ddc8aaf7": "2) Limited robustness: If an error occurs, the only option for the user is to re-run the whole process, without any proactive adjustments, which leads to inefficiencies.",
+    "2412-15305_sent_0390aacc": "Research \\cite{renze2024self} has shown that performance benefits from diverse perspectives of error identification, which encourages models to generate multiple solutions.",
+    "2412-15305_sent_72ae977d": "To enhance the diversity of ToC, we introduce randomness into the expansion process by varying LLMs and prompts, inspired by the random forest \\cite{rigatti2017randomforest}.",
+    "2412-15305_sent_8faf0a65": "At the system level, different LLMs are randomly explored from our LLM list, which will be introduced in Section \\ref{section models}, with a consistent temperature setting of 0.1.",
+    "2412-15305_sent_749e67c4": "At the instruction level, prompts are randomly selected from a diverse pool, designed through self-evolution and human crafting phases.",
+    "2412-15305_sent_08248cbf": "In the first phase, we used our ten LLMs to create ten various prompts based on the prompt evolution with the root prompt (see Appendix \\ref{Appendix Prompt}).",
+    "2412-15305_sent_dd735af9": "The prompt for prompt evolution requires maintaining consistent core content with the root prompt while encouraging orthogonal or divergent expressions.",
+    "2412-15305_sent_b532033f": "Then, we manually selected six distinct prompts, randomly applying one or more of the following modifications: (1) Adding more detailed usage examples (beyond just printing \"Hello world\") to three prompts; (2) Adjusting their format by adding line breaks and indentation; (3) Randomly rearranging components, such as the reflection part, usage examples, role instructions, tool descriptions, and the chat history.",
+    "2412-15305_subsection_4e03f1b6": "Final Result Generator",
+    "2412-15305_sent_ab7ebe32": "Once valid outputs from successfully executed nodes are collected, the same LLM makes the final decision by performing a majority vote and summarization to determine the most likely answer — this corresponds to the green node in Figure \\ref{fig:overview}.",
+    "2412-15305_sent_a97c0a75": "Other valid responses (red nodes) are discarded.",
+    "2412-15305_fig_4dc81d89": "\\begin{figure}\n\n \\includegraphics[width=0.4\\textwidth]{figs/Figure_3.pdf}\n \\caption{A detailed example illustrating ToC's execution-based reflection and expansion. \n\n\\end{figure}",
+    "2412-15305_sent_cbc08814": "\\renewcommand{\\arraystretch}{1.35} \\scalebox{0.65}{ \\begin{tabular}{l | c c c c | c c c c} \\multirow{2}{*}{Model} & \\multicolumn{4}{c|}{M3ToolEval} & \\multicolumn{4}{c}{API-Bank level-3} \\\\ \\cmidrule(lr){2-5} \\cmidrule(lr){6-9} & ReAct & CodeAct & CodeProgram & ToC (1-3) & ReAct & CodeAct & CodeProgram & ToC (1-3) \\\\ claude-instant-1 & 28.0\\% (8.7) & 18.0\\% (8.9) & 30.5\\% (1) & 35.3\\% (1) & 0.0\\% (10.0) & 2.0\\% (10.0) & 6.0\\% (1) & 18.0\\% (1) \\\\ claude-2 & 40.2\\% (8.2) & 54.9\\% (7.2) & 57.3\\% (1) & 59.8\\% (1) & 0.0\\% (10.0) & 20.0\\% (8.9) & 8.0\\% (1) & 18.0\\% (1) \\\\ claude-3-haiku & 24.4\\% (9.0) & 9.8\\% (9.4) & 29.3\\% (1) & 31.7\\% (1) & 10.0\\% (9.4) & 0.0\\% (10.0) & 6.0\\% (1) & 8.0\\% (1)\\\\ claude-3-5-sonnet & 48.8\\% (7.7) & 73.2\\% (5.7)& 73.2\\% (1) & 82.9\\% (1) & 14.0\\% (9.3) & 32.0\\% (7.8) & 48.0\\% (1) & 52.0\\% (1) \\\\ gpt-3.5-turbo-1106 & 18.3\\% (8.9) & 25.6\\% (8.6) & 12.2\\% (1) & 17.1\\% (1) & 14.0\\% (9.2) & 2.0\\% (9.9) & 4.0\\% (1) & 8.0\\% (1) \\\\ gpt-4-1106-preview & 54.9\\% (7.5) & 75.6\\% (5.4) & 72.0\\% (1) & 73.2\\% (1) & 18.0\\% (8.2) & 30.0\\% (8.2) & 34.0\\% (1) & 38.0\\% (1)\\\\ gpt-4o-mini-2024-07-18 & 32.9\\% (8.4) & 47.6\\% (7.0) & 31.7\\% (1) & 42.7\\% (1) & 10.0\\% (9.6) & 16.0\\% (9.5) & 14.0\\% (1) & 20.0\\% (1)\\\\ gpt-4o-2024-08-06 & 35.4\\% (8.5) & 56.1\\% (6.7) & 51.2\\% (1) & 62.2\\% (1) & 14.0\\% (9.4) & 36.0\\% (7.8) & 28.0\\% (1) & 32.0\\% (1) \\\\ qwen2.5-72b-instruct & 50.0\\% (7.9) & 70.7\\% (5.6) & 51.2\\% (1) & 59.8\\% (1) & 2.0\\% (9.9) & 30.0\\% (8.2) & 24.0\\% (1) & 32.0\\% (1)\\\\ deepseek-chat & 47.6\\% (7.6) & 62.2\\% (5.9) & 40.2\\% (1) & 52.4\\% (1) & 0.0\\% (9.8) & 24.0\\% (8.6) & 22.0\\% (1) & 26.0\\% (1)\\\\ Avg.",
+    "2412-15305_sent_7471c6e3": "& 38.05\\% (8.24) & 49.37\\% (7.04) & 43.53\\% (1) & 50.98\\% (1) & 8.2\\% (9.48) & 19.2\\% (8.89) & 19.4\\% (1) & 24.4\\% (1)\\\\ \\end{tabular} \\caption{Detailed performance comparison of different models under ReAct, CodeAct, CodeProgram, and one-layer, three-node Tree-of-Code (ToC) on the M3ToolEval and API-Bank level-3 datasets.",
+    "2412-15305_sent_2b32c03b": "The correctness is reported, with the average number of turns in parentheses.",
+    "2412-15305_sent_541bac8c": "The noteworthy point is that since the model is fixed, the ToC mechanism at this time represents the ToC mechanism without model exploration (w/o model exploration).} \\end{table*}",
+    "2412-15305_section_3c8b9414": "Experiment and Analysis",
+    "2412-15305_subsection_ad2376be": "Setup",
+    "2412-15305_sent_87f320e9": "Datasets.",
+    "2412-15305_sent_6bd083c7": "Following CodeAct, our evaluation is based on M3ToolEval\\footnote{\\url{https://github.com/xingyaoww/code-act/tree/main/scripts/eval/m3tooleval}} (M3) \\cite{wang2024codeact} and the test set of API-Bank\\footnote{\\url{https://huggingface.co/datasets/liminghao1630/API-Bank/tree/main} } \\cite{li2023api}.",
+    "2412-15305_sent_046804c5": "M3 consists of 82 tasks utilizing 100 tools in code/JSON/txt action space respectively across 5 types of scenarios, including DNA sequencer, message decoder, trade calculator, travel itinerary planning, and web browsing.",
+    "2412-15305_sent_c133e1c1": "API-Bank contains 314 tool-use dialogues and 73 API tools, including level-1, 2, 3.",
+    "2412-15305_sent_ce606109": "Unlike CodeAct, which evaluates only on level-1, we focus directly on the 50 most challenging level-3 tasks, on which nearly all non-GPT4 models score 0\\%, according to the original paper.",
+    "2412-15305_sent_4e7bb5c8": "For M3, we add the \"next\\_action\" tool, which is a customized function introduced in Section \\ref{Two Helper Tools}.",
+    "2412-15305_sent_4ae4f8d6": "For API-Bank, which only supports JSON format, we make the following modifications to adapt it for code interaction: (1) functionalize all API tools, (2) add output examples to each function description (shown in Figure \\ref{fig:function}).",
+    "2412-15305_sent_536e22fa": "We include all tool signatures in the prompt context and let LLMs inherently search and select tools, instead of using ToolSearch API, deemed the least essential in \\cite{li2023api}.",
+    "2412-15305_sent_1e10ab5a": "(3) determine correctness by matching the response to the expected final output through conditional keywords, not by API call matching.",
+    "2412-15305_sent_c5ea0ac5": "Models.",
+    "2412-15305_sent_49da9049": "We include the following ten models in our model pool for evaluation: the GPT family from OpenAI \\cite{achiam2023gpt,bubeck2023sparks,openai2024hello}, including gpt-3.5-turbo-1106, gpt-4o-mini-2024-07-18, gpt-4o-2024-08-06, and gpt-4-1106-preview checkpoints, excels in generation capabilities.",
+    "2412-15305_sent_ed443fbc": "From the Anthropic's Claude family \\cite{anthropic2023claude,anthropic2024claude}, we select claude-instant-1, claude-2, claude-3-haiku-20240307, and claude-3-5-sonnet-20240620 known for their code generation and problem-solving capabilities.",
+    "2412-15305_sent_19029be2": "Besides, we incorporate open-sourced deepseek-chat from DeepSeek \\cite{guo2024deepseek} and qwen2.5-72b-instruct from Alibaba \\cite{bai2023qwen}.",
+    "2412-15305_sent_1968f8e5": "Baselines.",
+    "2412-15305_sent_8bfa9766": "ReAct \\cite{yao2022react} combines reasoning and action in a dynamic, step-by-step interaction, providing a flexible approach to task-solving by adjusting action strategies based on environmental feedback.",
+    "2412-15305_sent_b6a58e1b": "CodeAct \\cite{wang2024codeact} replaces the JSON in ReAct with a block of code as the LLM agent's action, enabling multi-turn interactions and effectively expanding the action space for solving complex real-world problems.",
+    "2412-15305_sent_4ba3a8f1": "Metrics.",
+    "2412-15305_sent_3d764478": "The evaluation includes accuracy and averaged turns.",
+    "2412-15305_sent_436a971e": "Accuracy represents the percentage of complex tasks that are correctly solved. Each LLM-generated code is considered one turn.",
+    "2412-15305_sent_f9728972": "For parallel generation, the number of threads counts as turns in terms of resource usage, but when considering time, multiple parallel generations count as one turn.",
+    "2412-15305_sent_b4857ee2": "We use the latter approach.",
+    "2412-15305_fig_9ea6621e": "\\begin{figure}\n\n \\includegraphics[width=0.46\\textwidth]{figs/std_10_light.pdf}\n \\caption{\n Performance of 10 LLMs on ReAct, CodeAct, CodeProgram, and 1-3 ToC for the M3 dataset is visualized, with average and standard deviation reported.\n\n\\end{figure}",
+    "2412-15305_subsection_296356d6": "One-turn vs. Multi-turn",
+    "2412-15305_sent_4f645f71": "CodeProgram enables global planning and complete solutions in a single turn by leveraging code’s ability to handle long logic chains, aligning with global reasoning in language, and defining clear tool inputs and outputs.",
+    "2412-15305_sent_da7b7f3c": "With a significant advantage in the number of turn, Table \\ref{tab:fix} and Figure \\ref{fig:std} demonstrate that the performance of some models even surpasses the multi-turn CodeAct, particularly for the Claude series models.",
+    "2412-15305_sent_2d5c0b28": "We grow CodeProgram into a single-layer, three-node (1-3) Tree-of-Code (ToC).",
+    "2412-15305_sent_1ec09255": "The prompt for each node is randomly sampled from our prompt pool.",
+    "2412-15305_sent_a80127d3": "Compared to CodeProgram, the simple 1-3 tree-structured ToC with random prompts significantly boosts performance.",
+    "2412-15305_sent_51b552c4": "The average performance of 1-3 ToC already surpasses CodeAct, highlighting the power of prompt randomness.",
+    "2412-15305_sent_98779add": "Upon reviewing the generated code, we observe that LLMs often produce modular code for each step or add comments before modules, even when not explicitly required. We highlight the best-performing models in bold.",
+    "2412-15305_sent_77cee26e": "Experimental results show that the top models differ between the CodeAct and ToC, and even within CodeAct, performance varies by dataset.",
+    "2412-15305_sent_14d1890f": "For M3, gpt-4 performs best, while for API-Bank level-3, gpt-4o excels, likely because API-Bank level-3 emphasizes tool usage over scenario understanding, with simpler problem expressions.",
+    "2412-15305_sent_d16461c1": "For ToC, claude-3-5-sonnet stands out due to its strong prompt-following ability, which is key for aligning reasoning with code and tool selection.",
+    "2412-15305_fig_91bc84b9": "\\begin{figure}\n\n \\includegraphics[width=0.45\\textwidth]{figs/function.pdf}\n\n \\caption{Example of the function signature in level-3.\n\n\\end{figure}",
+    "2412-15305_subsection_55ddb909": "ToC vs. CodeAct and ReAct",
+    "2412-15305_sent_79344a97": "We primarily compare the ToC framework, which is comprised of CodeProgram nodes, with the CodeAct and ReAct framework, which are comprised of steps, using the M3 and the level-3 datasets.",
+    "2412-15305_sent_01a22f1d": "For ToC, we randomly sample the LLM and prompt from the LLM list and prompt pool, respectively, at each node exploration.",
+    "2412-15305_sent_6f92a64b": "For CodeAct and ReAct, we report the average results across all models used in this paper.",
+    "2412-15305_sent_05739c38": "Table \\ref{tab:main} shows that ToC consistently achieves superior performance and demonstrates a significant advantage with fewer interaction steps, highlighting its efficiency in managing complex tool-use scenarios.",
+    "2412-15305_fig_b01a8c95": "\\begin{table}\n\n \\resizebox{\\columnwidth}{!}{\n \\begin{tabular}{lcc|cc}\n\n \\multirow{2}{*}{Mechanism} & \\multicolumn{2}{c}{M3ToolEval} & \\multicolumn{2}{c}{API-Bank level-3} \\\\\n \\cmidrule(r){2-3} \\cmidrule(r){4-5}\n & Avg Turns & Correct & Avg Turns & Correct \\\\\n\n ReAct & 8.2 & 38.1\\% & 9.5 & 8.2\\%\\\\\n CodeAct & 7.0 & 49.4\\% & 8.9 & 19.2\\% \\\\\n Tree-of-Code & 1.7 & 67.1\\%$\\uparrow$ & 2.1 & 38.0\\% $ \\uparrow$ \\\\\n\n \\end{tabular}\n\n \\caption{\n Performance comparison of CodeAct and our ToC in terms of averaged turns and accuracy on M3 and API-Bank level-3 tasks. Note: all numerical results presented in this paper are rounded to one decimal place. \n\n\\end{table}",
+    "2412-15305_subsection_befb9473": "Analysis and Ablation Studies",
+    "2412-15305_fig_3b9d55c5": "\\begin{table}\n\n\\renewcommand{\\arraystretch}{1.1}\n \\resizebox{\\columnwidth}{!}{\n\\begin{tabular}{c|c|c|c}\n\nLayer / Node Per Layer & 1 & 2 & 3 \\\\ \n1 & 73.2\\% (1) & 75.6\\% (1) & 82.9\\% (1) \\\\ \n2 & 73.2\\% (1.4) & 76.8\\% (1.4) & 84.1\\% (1.5) \\\\\n3 & 74.4\\% (1.8) & 79.3\\% (1.7) & 84.1\\% (1.6) \\\\ \n\\end{tabular}\n\n\\caption{The performance of varying tree sizes.}\n\n\\end{table}",
+    "2412-15305_sent_cc6490c8": "Varying tree sizes.",
+    "2412-15305_sent_cf8d2dae": "We test the performance of the top model, claude-3-5-sonnet, on different tree sizes to evaluate the trade-off between efficacy and efficiency.",
+    "2412-15305_sent_4f61bcda": "Table \\ref{tab:tree} shows impressive results: with proper prompts and no additional training, the model achieves 84.1\\% accuracy (3-3) on the M3, 10.9\\% higher than 73.2\\% (1-1).",
+    "2412-15305_sent_e74023a6": "Visualization results for ReAct, CodeAct, and 3-3 ToC on the M3 dataset (Figure \\ref{fig:chart}) show that ToC achieves near-perfect accuracy on all tasks except the web browsing task.",
+    "2412-15305_fig_472910d1": "\\begin{figure}\n\n \\includegraphics[height=0.2\\textwidth, width=0.45\\textwidth]{figs/task_chart.pdf}\n\n \\caption{Comparison across five tasks in the M3.\n\n\\end{figure}",
+    "2412-15305_sent_21881646": "Prompt exploration.",
+    "2412-15305_sent_b37f1bdf": "The ablation results in Table \\ref{tab:ablation} demonstrate the effectiveness of prompt exploration.",
+    "2412-15305_sent_9478b728": "By comparing the random model with the fixed model, prompt exploration proves more crucial in low-diversity scenarios.",
+    "2412-15305_fig_69934bb0": "\\begin{table}\n\n\\renewcommand{\\arraystretch}{1} \n\\resizebox{\\columnwidth}{!}{\n\\begin{tabular}{l |c|c}\n\nMechanism \n& \\multicolumn{2}{c}{M3ToolEval} \\\\ \\cmidrule(l){2-3}\n & Avg Turns & Correct \\\\ \n\n\\multicolumn{3}{c}{Random Model ($\\Delta=3.7$\\%)} \\\\ \nToC & 1.7 & 67.1\\% \\\\ \nToC w/o prompt exploration & 1.9 & 63.4\\% $\\downarrow$ \\\\ \n\n\\multicolumn{3}{c}{Fixed Model (the best) ($\\Delta=8.5$\\%)} \\\\ \nToC w/o model exploration & 1.6 & 84.1\\% \\\\ \nToC w/o model+prompt exploration & 1.8 & 75.6\\% $\\downarrow\\downarrow$ \\\\ \n\n\\end{tabular}\n\n\\caption{Results of the ablation study.}\n\n\\end{table}",
+    "2412-15305_section_eed9474f": "Discussion",
+    "2412-15305_sent_6fc04c84": "Why we do not try a search tree?",
+    "2412-15305_sent_39028c24": "We initially explored using evolutionary algorithms to merge nodes from different branches for the next generation, aiming to reduce the search space.",
+    "2412-15305_sent_d6013c3d": "However, after extensive testing, we found this approach impractical and hard to implement.",
+    "2412-15305_sent_34d62ed5": "We analyzed error cases from ToC and found that a single branch can easily fall into specific errors.",
+    "2412-15305_sent_9fdf6903": "Since different branches follow distinct reasoning paths, they struggle to learn from each other.",
+    "2412-15305_sent_e8caec73": "Even with reflection and random exploration, LLMs are prone to early-stage errors that disrupt subsequent reasoning \\cite{an2023mistakereasoner,bao2024CoT+reflect,tong2024canmistake}.",
+    "2412-15305_sent_10feaf91": "This issue mirrors the human cognitive challenge of breaking out of a \"bistable state\" — like the famous \"duck-rabbit illusion\" or Rubin's vase \\cite{Hancock2013Bistable}.",
+    "2412-15305_sent_3dd060fa": "In such states, a person may generate multiple parallel thoughts, but once one is chosen, it is difficult to switch to another without external intervention \\cite{Andreev2020ControlOD}.",
+    "2412-15305_sent_633483bc": "This highlights the need for introducing random exploration and multiple nodes at each growth step, as these strategies help overcome cognitive bottlenecks.",
+    "2412-15305_section_aed402c3": "Related Work",
+    "2412-15305_sent_aefe58b2": "LLM Code Generation.",
+    "2412-15305_sent_4d540f09": "Chain of Codes framework \\cite{li2023coc} expands the range of reasoning tasks that LLMs can solve by \"thinking in code.\" Similarly, CodePlan \\cite{wen2024codeplan} utilizes pseudocode to guide structured reasoning.",
+    "2412-15305_sent_16d3b730": "Additionally, the Structured Chain-of-Thought Prompting (SCoT) technique \\cite{esfahani2024understanding} has highlighted the potential of structured prompts in this domain.",
+    "2412-15305_sent_9bb7d779": "Recent works combining code with agents have primarily focused on task completion within programming-related domains, such as software development \\cite{qian2024chatdev,wang2023leti}, programming assistance \\cite{islam2024mapcoder,wen2024program}, and scientific problems \\cite{chen2022pot,gao2023palsci,hong2024datasci}.",
+    "2412-15305_sent_13bd97c3": "Few methods \\cite{wang2024codeact} treat code as a scalable language format to call multiple tools for solving complex real-world tasks.",
+    "2412-15305_sent_f3e0c0d4": "Recently, we found a new work, CodeTree \\cite{Li2024CodeTree}, which uses a tree structure to explore the search space of code generation tasks.",
+    "2412-15305_sent_bfcece96": "Unlike our approach, it focuses on multi-agent searching rather than an end-to-end self-growing tree.",
+    "2412-15305_sent_1716d228": "Additionally, it was released three months later than the initial submission of our work.",
+    "2412-15305_section_6f8b794f": "Conclusion",
+    "2412-15305_sent_861708c7": "In this paper, we introduced the Tree-of-Code (ToC) method, which combines execution-based reflection with end-to-end thought-code generation for complex task handling.",
+    "2412-15305_sent_1f32e33e": "With efficient model integration and prompt exploration, ToC significantly outperformed the baselines on two complex task datasets, boosting both efficiency and task-solving capabilities.",
+    "2412-15305_sent_af7f10ce": "The ToC framework opens up exciting possibilities for advancing human-like global cognition, inspiring further exploration of tree structures in end-to-end code generation, particularly for complex multi-tool tasks, data generation, and reinforced fine-tuning.",
+    "2412-15305_section_e646e16b": "Limitations",
+    "2412-15305_subsection_859b4090": "Additional engineering effort",
+    "2412-15305_sent_cf528687": "We efficiently transform multi-turn interactions into a single-turn complete program comprising a series of tool calls.",
+    "2412-15305_sent_b1b81006": "However, this approach demands more detailed usage instructions for the tools.",
+    "2412-15305_sent_172d05bb": "For actions with limited semantic information (e.g., webpage clicking and scrolling), an artificially constrained action exploration space is also necessary.",
+    "2412-15305_sent_3789b87b": "Consequently, additional engineering efforts are required to fully implement our end-to-end code generation approach.",
+    "2412-15305_subsection_289e69f1": "Limited reasoning scope for Program",
+    "2412-15305_sent_b1256f03": "We emphasize that our method operates at the granularity of code \"program\" rather than \"action\".",
+    "2412-15305_sent_e68e6592": "However, it is limited in fully open-ended scenarios requiring step-by-step exploration, such as a robot navigating an unfamiliar environment, or in handling tasks with extremely long sequences beyond the capabilities of current reasoning methods, like generating an entire paper.",
+    "2412-15305_sent_668ee159": "In such cases, it cannot provide a complete final solution.",
+    "2412-15305_sent_90996e49": "For larger and more complex system programs in the future, our method may serve as a \"subprogram\" within the overall solution, similar to a single agent's role in multi-agent systems.",
+    "2412-15305_subsection_b0ea7f3a": "Opportunities for Reflection Refinement",
+    "2412-15305_sent_85ad4130": "While our framework provides a solid foundation inspired by human problem-solving, it uses a basic reflection mechanism, relying on execution feedback alone.",
+    "2412-15305_sent_00b7fbc0": "Whether tracking full execution history or selectively summarizing with LLMs offers better performance remains an open question.",
+    "2412-15305_sent_bad5282e": "Future research could explore enhanced search strategies or adaptive pruning methods to handle more complex real-world tasks.",
+    "2412-15305_subsection_b3b788ad": "Vast Potential in Prompt Pool Design",
+    "2412-15305_sent_9b4676a3": "We enhanced the diversity of strategies and the robustness of results in our Tree-of-Code by designing a prompt pool composed of multiple prompts.",
+    "2412-15305_sent_223778e2": "The introduction of multiple reasoning paths guided by diverse prompts represents a significant innovation.",
+    "2412-15305_sent_222aa2e1": "However, our current approach relies primarily on simple prompt evolution and manual adjustments.",
+    "2412-15305_sent_50c197d0": "Future work should focus on more in-depth and systematic research into constructing prompt pools.",
+    "2412-15305_sent_ebe857c1": "\\bibliography{ToC} \\appendix \\onecolumn",
+    "2412-15305_section_45d74bdb": "Prompt",
+    "2412-15305_subsection_df61d912": "Root Prompt",
+    "2412-15305_sent_5869d479": "\\begin{lstlisting}[breaklines=true, basicstyle=] You are a helpful assistant assigned with the task of problem-solving.",
+    "2412-15305_sent_ee1c1767": "To achieve this, you will be using an interactive coding environment equipped with a variety of tool functions to assist you throughout the process.\\n\\n At each turn, you should first provide your step-by-step thinking for solving the task, for example: <thought> I need to print \"hello world!\"</thought>.",
+    "2412-15305_sent_462ecbeb": "After that, you can Interact with a Python programming environment and receive the corresponding output.",
+    "2412-15305_sent_af716325": "Your code should be enclosed using \"<execute>\" tag, for example: <execute> print(\"Hello World!\") </execute>.\\n\\n You can use the following functions:\\n{toolset_descs}\\n.",
+    "2412-15305_sent_cf431a8e": "Ensure the code matches the fn_signature and input-output formats for proper execution.\\n Here's the chat history for your reference:\\n{chat_history}\\n\\n History End:\\n User's Query:\\n{query}\\nYour Thought And Code:\\n \\end{lstlisting}",
+    "2412-15305_subsection_541fee53": "Additional Prompt",
+    "2412-15305_subsubsection_cf3c82bb": "Reflection Prompt",
+    "2412-15305_sent_d895a25a": "\\begin{lstlisting}[breaklines=true, basicstyle=] Based on the provided chat history, reflect on the code and its execution.",
+    "2412-15305_sent_e7fbb31f": "Identify potential issues or areas for optimization and provide specific suggestions to refine and improve the code.",
+    "2412-15305_sent_22aaeed4": "Consider edge cases, efficiency, and clarity in your reflections.",
+    "2412-15305_subsubsection_09b9266c": "The Prompt for Prompt Evolution",
+    "2412-15305_sent_0d8e4188": "\\begin{lstlisting}[breaklines=true, basicstyle=] In order to guide the diversity of results and enhance the performance through ensemble methods, we need to increase the diversity of prompts.",
+    "2412-15305_sent_8d0a74c8": "We diversify the current prompt while maintaining consistency in core content, aiming for orthogonal expressions or prompts that lead to different directions and divergent thinking.",
+    "2412-15305_subsubsection_f09d2c4a": "The Prompt Sample from Prompt Pool for API-Bank",
+    "2412-15305_sent_9042df1b": "\\begin{lstlisting}[breaklines=true, basicstyle=] Note: The outputs produced by the tool will be formatted like a JSON dictionary.",
+    "2412-15305_sent_099cefe5": "For example, 'result = {{'api_name': 'QueryMeeting', 'input': {{'user_name': 'John'}}, 'output': {{'meetings': [{{'meeting_id': 1, 'meeting_name': 'Meeting with the client', 'meeting_time': '2021-01-01 10:00:00', 'meeting_location': 'Room 1', 'meeting_attendees': ['John', 'Mary', 'Peter']}}, {{'meeting_id': 2, 'meeting_name': 'Meeting about the new project', 'meeting_time': '2021-01-02 10:00:00', 'meeting_location': 'Room 2', 'meeting_attendees': ['John', 'Mary', 'Peter']}}]}}, 'exception': None}}' Ensure that the code strictly adheres to the function descriptions and the input-output format provided. Navigate through the 'output' key correctly to retrieve results.",
+    "2412-15305_sent_b202c759": "If you encounter any unfamiliar formats, first print the structure to ensure proper handling in the future.",
+    "2412-15305_sent_8b0d1a9c": "Consistently focus on the user's request and attempt to produce the complete solution without needing multiple steps.",
+    "2412-15305_section_06bf5e19": "Helper tools",
+    "2412-15305_subsection_4472e1ee": "ResHandler",
+    "2412-15305_subsubsection_1bbbe31f": "ResHandler Tool Description",
+    "2412-15305_sent_13fd93e6": "\\begin{lstlisting}[breaklines=true, basicstyle=] res_handler(): name=\"res_handler\", description='Define a prompt to generate results that meet the prompt requirements.",
+    "2412-15305_sent_97f9a08d": "Note that you need to define the requirements for the generated results in the prompt.",
+    "2412-15305_sent_e580d2ba": "input: prompt (str): The input prompt for the large language model, defining the task requirements for the generated results.",
+    "2412-15305_sent_1774dfba": "Common tasks include summarization, stylistic writing, translation, question answering, etc. output: completion (str): The inference result generated by the large model, typically a summary, writing output, translation result, or answer that meets the requirements.', function=res_handler, fn_signature='res_handler(prompt: str) -> str') \\end{lstlisting}",
+    "2412-15305_subsubsection_62d99aa3": "ResHandler Tool Function",
+    "2412-15305_sent_546132fe": "\\begin{lstlisting}[breaklines=true, basicstyle=] from some_model_API import llm_playground def res_handler(prompt): result_str = \"\" result = llm_playground(prompt[:20000], stream=False) for item in result: result_str += item return result_str \\end{lstlisting}",
+    "2412-15305_subsection_e0c0fd4a": "NextAction for Web Task",
+    "2412-15305_subsubsection_116a8bb7": "NextAction Tool Description",
+    "2412-15305_sent_ca456595": "\\begin{lstlisting}[breaklines=true, basicstyle=] from typing import Tuple next_action(): name=\"next_action\", description='Examine the results of the view function to determine if it can answer the user's original question, and decide what to do next.",
+    "2412-15305_sent_7aa130d6": "Return the next action and the viewed whole page content.The next possible actions include click_url(URL), go_to_previous_page() and end(), which represent clicking a link, and go_to_previous_page() means you should go to previous page to find answer, and end() means you have found the answer page, respectively.",
+    "2412-15305_sent_49e115e3": "If next action is end(), it means that relevant information to user query is found, you should summarize string result based on res_handler.",
+    "2412-15305_sent_25f75cdd": "click_url(URL), go_to_previous_page() can be directly called, and URL should be Clickable url.",
+    "2412-15305_sent_406797a4": "Note that query should be user's original question and can not be rewritten.', function=next_action, fn_signature=\"next_action(query: str, current_page_content: str, visited_urls: List[str]) -> Tuple[str, str]\") \\end{lstlisting}",
+    "2412-15305_sent_78e8f8d6": "\\begin{lstlisting}[breaklines=true, basicstyle=] from some_model_API import llm_playground def next_action(query=\"\", current_page_content=\"\", visited_urls=[]): visited_urls = [x.replace('\\'', '').replace('\\\"', '') for x in visited_urls] visited_urls = list(set(visited_urls)) whole_page_content = current_page_content while True: scroll_down_page = scroll_down() if scroll_down_page == \"[Reached the bottom of the page.]\\n\": break else: whole_page_content += scroll_down_page def extract_clickable_paths(text: str) -> list[str]: import re pattern = r\"Clickable '([^']*)'\" matches = re.findall(pattern, text) return matches all_urls = extract_clickable_paths(whole_page_content) not_visited = [] highlight_urls = [] for v in all_urls: if v in visited_urls: highlight_urls.append(v) else: not_visited.append(v) if len(highlight_urls) == 0: json_str_format = \"<thought>your thought of your decision</thought>\\n<action>click_url(specific_url) or end() or not_found()</action>\" prompt = f\"You are viewing page contents, the content is: \\n{whole_page_content}\\n You should make decision on the next step.",
+    "2412-15305_sent_f20dacf1": "given user query {query}, you have the following options, please follow the output format.",
+    "2412-15305_sent_027902f4": "\\n1.",
+    "2412-15305_sent_70197cef": "end(): it means current user query can be answered by current page content.",
+    "2412-15305_sent_657ff28f": "\\n2.",
+    "2412-15305_sent_c581e66b": "click_url(URL): it means current user query should be checked by clicking one of the urls shown on the current page content for more details.",
+    "2412-15305_sent_15c74223": "specify the detailed url into URL field.\\nPlease visit any Clickable urls as many as possible that has not been visited. \\n3.",
+    "2412-15305_sent_2cac718f": "not_found(): it means that current page does not contain answer for current query and all Clickable URLS have been clicked. \\nYour output format: {json_str_format}\\n\\nYour Output:\\n\" else: visited_url_str = ', '.join(['\\'' + x + '\\'' for x in highlight_urls]) json_str_format = \"<thought>your thought of your decision</thought>\\n<action>click_url(specific_url) or end() or not_found()</action>\" prompt = f\"You are viewing page contents, the content is: \\n{whole_page_content}\\n You should make decision on the next step.",
+    "2412-15305_sent_fd6f1538": "specify the detailed url into URL field.\\n3.",
+    "2412-15305_sent_65cdb01b": "not_found(): it means that current page does not contain answer for current query and all Clickable URLS have been clicked. \\nRemember that you have visited the url list [{visited_url_str}].",
+    "2412-15305_sent_5b17f383": "You are not allowed to visit the urls you have visited. Please visit any Clickable urls as many as possible that has not been visited.\\nYour output format: {json_str_format}\\n\\nYour Output:\\n\" result_str = \"\" result = llm_playground(prompt[:20000]) for item in result: result_str += item if not \"Clickable\" in whole_page_content and not \"end()\" in result_str: return (\"go_to_previous_page()\", whole_page_content) if not \"end()\" in result_str and len(not_visited) == 0: return (\"go_to_previous_page()\", whole_page_content) if \"click_url\" in result_str: import re pattern = r\"click_url$'.*'$\" match = re.search(pattern, result_str) if match: return (match.group(), whole_page_content) else: pattern = r\"click_url$.*$\" match = re.search(pattern, result_str) if match: return (match.group(), whole_page_content) elif \"end()\" in result_str: return (\"end()\", whole_page_content) elif \"not_found()\" in result_str: return (\"go_to_previous_page()\", whole_page_content) return (\"end()\", whole_page_content) \\end{lstlisting}",
+    "2412-15305_sent_bfec7915": "However, CodeAct greedily generates the next action's code block by relying on fragmented thoughts, resulting in inconsistency and accumulative hallucination.",
+    "2412-15305_sent_4a18c137": "To address these issues, we propose Tree-of-Code (ToC), a self-growing framework that generates nodes through self-supervision, incorporating prompt and model exploration in a GT-free setting.",
+    "2412-15305_sent_f3f46eef": "Each node employs CodeProgram, an end-to-end code generation paradigm that aligns executable code logic with global reasoning.",
+    "2412-15305_sent_57faee01": "This approach uses task-level execution success as both node validity and stop-growing flags, bypassing process supervision to enable online applications.",
+    "2412-15305_sent_008e1b88": "Experiments on two datasets with ten popular zero-shot LLMs show that ToC boosts accuracy by nearly 20\\% over CodeAct with fewer than 1/4 turns.",
+    "2412-15305_sent_b552c9ce": "To further investigate the trade-off between efficacy and efficiency, ablation studies on different ToC tree sizes and exploration mechanisms validate ToC's superiority.",
+    "2412-15305_sent_2a5bab5f": "CodeAct moves the interaction unit from ReAct's individual tool calls to generating code blocks with local reasoning while leveraging code logic and libraries.",
+    "2412-15305_sent_d07e64f7": "However, CodeAct treats each turn as an individual action rather than addressing the entire program, following a step-by-step generation process.",
+    "2412-15305_sent_86d4af08": "While this approach may seem explorative, it has four critical limitations: (I).",
+    "2412-15305_sent_af6e141e": "CodeAct assumes that the ground truth (GT) is known and uses GT matching as a termination criterion, which is unrealistic and unfeasible.",
+    "2412-15305_sent_07180317": "(II).",
+    "2412-15305_sent_ae52496c": "Fragmented thinking is inefficient.",
+    "2412-15305_sent_0256fa8c": "For simple problems, stalled thinking is not only unnecessary but also disrupts the logical chains in the code \\cite{wang2023leti,guo2024deepseek}.",
+    "2412-15305_sent_d5421224": "Moreover, as the number of turns increases, repeatedly integrating prior thoughts causes context overload, heightening model hallucinations \\cite{ji2023survey}, increasing computational cost.",
+    "2412-15305_sent_a60cf9e1": "(III).",
+    "2412-15305_sent_556ed999": "CodeAct lacks exploration of diverse reasoning paths.",
+    "2412-15305_sent_af9217f9": "While it supports multi-turn interactions, it follows a single reasoning process.",
+    "2412-15305_sent_58d3ad25": "In contrast, solving complex problems often has multiple solutions \\cite{Mialon2023GAIAAB}, where different approaches can branch from different points, making it difficult to set a standard answer for each turn.",
+    "2412-15305_sent_55f4b437": "(IV).",
+    "2412-15305_sent_4e285e61": "Generated trajectory data is hard to reuse.",
+    "2412-15305_sent_90e6e642": "When using these trajectories for supervised fine-tuning (SFT), they cannot be directly combined into a single program response \\cite{wang2024codeact}.",
+    "2412-15305_sent_65e7a01d": "Reinforcement learning is also challenging due to the lack of process supervision \\cite{zelikman2024quiet}, leading to fundamental issues.",
+    "2412-15305_sent_e5455cee": "Since defining and obtaining supervision signals for intermediate states is challenging, we propose using task-level feedback directly, treating task completion as a single step.",
+    "2412-15305_sent_d5e3d2fe": "We introduce CodeProgram, an end-to-end code reasoning and generation paradigm, as a ‘turn,’ where the only environmental supervision is execution success.",
+    "2412-15305_sent_c00c1678": "To incorporate reflection and exploration, we design an outcome-driven refinement framework, Tree-of-Code (ToC), that enables multi-turn interactions with diverse solutions exploring the model and prompt pools as tree branches, where task-level CodePrograms serve as the nodes.",
+    "2412-15305_sent_b9214e34": "The final output is determined by voting on the collected nodes, selected based on their successful execution.",
+    "2412-15305_sent_6cbaa361": "It’s important to note that, in this paper, a ‘turn’ refers to a single action of code generation.",
+    "2412-15305_sent_93ee2bcc": "For our CodeProgram, a turn involves completing the entire program, rather than just a single task step (as in CodeAct).",
+    "2412-15305_sent_eb5d97de": "Although ToC’s name and structure are similar to \"Tree-of-Thoughts\" (ToT) \\cite{yao2024tree}, their meanings fundamentally differ.",
+    "2412-15305_sent_43c92b87": "Our concept might be closer to a Code \"Random Forest\" \\cite{rigatti2017randomforest}.",
+    "2412-15305_sent_4173e330": "While ToT enhances \"Chain-of-Thought\" (CoT) \\cite{wei2022cot} by exploring different thoughts within the same solution, ToC explores multiple distinct program solutions.",
+    "2412-15305_sent_22279f59": "In other words, each node in ToC represents a complete solution, and the tree as a whole captures different iterative optimizations (depth) across a variety of complete solutions (breadth).",
+    "2412-15305_sent_d4e75031": "We propose a self-growing Tree-of-Code (ToC) structure that automatically reflects and explores diverse, complete solution nodes without labeled data, facilitating complex tasks in multi-tool online scenarios.",
+    "2412-15305_sent_ac346373": "Each node in ToC, called a CodeProgram, is generated end-to-end.",
+    "2412-15305_sent_83e3ad26": "We are the first to define process-level supervision at the task-outcome level using execution success.",
+    "2412-15305_sent_b822a5ff": "Extensive experiments and ablation studies on two multi-tool, complex task datasets with ten models, demonstrate that ToC significantly enhances problem-solving accuracy and efficiency in real-world, zero-shot scenarios.",
+    "2412-15305_sent_2d42be6c": "(b) ToC applies execution-based reflection in the tree structure, where each node (CodeProgram) generates end-to-end code with global planning as its thoughts.",
+    "2412-15305_sent_06e63dca": "At each layer, nodes are executed in parallel; if executed successfully, they are collected for voting.",
+    "2412-15305_sent_2b5df5d1": "Note that the process supervision relies solely on the node's execution success or failure, rather than on the specific content executed (whether correct or incorrect), which would require pre-known labels.",
+    "2412-15305_sent_d68f216e": "The query is \"Find nearby restaurants within 1km of San Francisco\" from API-Bank level-3 dataset.",
+    "2412-15305_sent_685537f3": "This creates two key challenges: (1) For zero-shot queries, it is unrealistic to pre-obtain task-level ground-truth (GT), which is required for SFT \\cite{chung2024flant5} or reinforced fine-tuning (ReFT) \\cite{Luong2024ReFT}.",
+    "2412-15305_sent_cbb0ef87": "(2) Multi-turn interactions lack a standard trajectory, making it difficult to define the process supervised signals \\cite{Luo2024ImproveMR}.",
+    "2412-15305_sent_5ad83760": "Current methods often rely on 'LLM-as-judge' to evaluate whether the user’s needs are met at each step \\cite{Chen2024JumpCoderGB,Li2024CodeTree}.",
+    "2412-15305_sent_bfa5063c": "However, it would require an API call after every step to check progress, ultimately increasing both time and token costs.",
+    "2412-15305_sent_ff6f2944": "Besides, the evaluation without objective signals demands strong analytical and reasoning skills from LLMs. Existing methods deliberately avoid these challenges by assuming GT is known~\\cite{wang2024codeact}, matching task-level GT with action-related outcomes at each step, like the tool agent in Figure \\ref{fig:cute}: the interaction turn stops only if they match, or continues until the step limit is reached. Since intermediate states are absent, if possible, why not treat each complete end-to-end execution as an atomic state?",
+    "2412-15305_sent_97e0a550": "By iteratively exploring feasible solutions through parallel executions, we first collect a batch of solutions, and then determine the optimal one, as shown by the program agent in Figure \\ref{fig:cute}.",
+    "2412-15305_sent_390f53d4": "This idea inspires our node outcome-driven reflection system specifically designed for multi-tool interaction in real-world environments.",
+    "2412-15305_sent_e000906d": "Our key contribution is a self-growing framework enabling LLM agents to autonomously interact with code through zero-shot learning without GT supervision, whose implementation details will be subsequently presented.",
+    "2412-15305_sent_ffee50b9": "Following the design motivation, we need to collect all valid solutions and identify the one closest to the GT.",
+    "2412-15305_sent_ee2077ae": "By treating each tree node as a complete task-level solution and exploring different nodes for breadth while deepening through iterative refinement, we propose ToC (Tree-of-Code), an execution-based, self-growing, and self-filtering tree for handling real-world complex tasks.",
+    "2412-15305_sent_2c4bf114": "\\includegraphics[width=0.98\\textwidth]{figs/Figure_2.pdf} \\caption{Illustrative example of a branch of ToC.",
+    "2412-15305_sent_0d5f19de": "Let $L$ denote the max depth, $l$ the layer index, $M$ the expanded layer's max-width, $m$ the node index, $l \\in \\{1, \\dots, L\\}$, $m \\in \\{1, \\dots, M\\}$.",
+    "2412-15305_subsection_c87b8bba": "Tree Node Generation",
+    "2412-15305_sent_a3dc3339": "Unlike tool agents like CodeAct, which treat each intermediate action and environmental feedback as a step, each node in our ToC represents a complete task, effectively increasing the granularity of task handling at each layer.",
+    "2412-15305_sent_c76c12bc": "In other words, a single tree node (one turn) is equivalent to multiple turns of CodeAct, with both being directly comparable and serving the same purpose (final response), significantly improving efficiency.",
+    "2412-15305_sent_2942f3da": "We refer to this end-to-end code reasoning and generation paradigm as CodeProgram.",
+    "2412-15305_sent_34ae4080": "Specifically, the end-to-end code in CodeProgram serves as a bridge, aligning with natural language reasoning and execution outcomes in the environment.",
+    "2412-15305_sent_27d19c2d": "Besides, by decoupling the reasoning process from code execution, we achieve flexibility while ensuring consistency.",
+    "2412-15305_sent_6528b220": "On the one hand, CodeProgram leverages the concept of \"code-as-reasoning\" to generate code, where the process of writing code itself mirrors the reasoning process.",
+    "2412-15305_sent_195c641f": "On the other hand, global reasoning is essential for guiding CodeProgram's complete code generation in a single end-to-end flow.",
+    "2412-15305_sent_0ee23c66": "This approach enables the seamless integration of various reasoning techniques for large language models (LLMs), such as prompt engineering \\cite{chen2023prompteng}, Chain-of-Thoughts (CoT) \\cite{wei2022cot}, Tree-of-Thoughts (ToT) \\cite{yao2024tree}, in-context learning \\cite{kojima2022step_by_step}, self-reflection \\cite{zhang2024selfcontrastreflect}, and System2 reasoning \\cite{frankish2010system2reason,openai2024o1}.",
+    "2412-15305_sent_d1795e8d": "Additionally, longer chains of thought have consistently been shown to enhance task performance \\cite{zelikman2024quiet}.",
+    "2412-15305_sent_053f578b": "CodeProgram struggles with environmental exploration when LLMs must rely on tool outputs to determine the next steps.",
+    "2412-15305_sent_33435e82": "For instance, in web browsing tasks, the next action can only be decided after viewing the page content, and a final summary answer can only be provided after considering all tool outputs.",
+    "2412-15305_sent_2d9280c8": "Thus, to maintain end-to-end flow, we introduce two functions: a general res\\_handler, which defines a prompt to generate results that meet the prompt requirements for final summarization, and a specific next\\_action for web tasks, which decides the next action from a given set of possible browsing actions based on the page content, visited URLs, and task query.",
+    "2412-15305_sent_f8c91abe": "They help better understand the semantic relationships between tools, ensuring a smooth, cohesive sequence of tool calls during code generation.",
+    "2412-15305_sent_93ba5665": "In the Appendix \\ref{Helper Tool Example}, we also provide an example demonstrating how these helper tools work.",
+    "2412-15305_subsubsection_89c6a923": "Execution Outcome as Process Label",
+    "2412-15305_sent_130648c9": "Note that we focus solely on task execution success, using a simple true/false label to filter feasible solutions and approximate more effective ones.",
+    "2412-15305_sent_8a75e8dc": "This label is weak but available, simple, and useful—unlike pre-known GT or correctness judgments.",
+    "2412-15305_sent_5db57021": "Benefiting from our end-to-end paradigm (a direct, complete task-level response to a single query), we can select \"successfully executed\" samples for SFT and use various rich comments (such as specific results or error messages) as rewards for ReFT by repeating the CodeProgram in different settings (i.e., multi-nodes).",
+    "2412-15305_sent_2b1494ba": "In this context, the code acts as a verifier.",
+    "2412-15305_sent_0d9432e3": "This verification-then-refinement concept also inspires the development of a multi-layer Tree-of-Code (ToC).",
+    "2412-15305_sent_a0a38321": "Thanks to task-level granularity, the code's execution outcomes align with both the task query and the thought-code output, enabling the generation of valuable data for potential future training.",
+    "2412-15305_sent_8749af7c": "The expansion process follows: (1) The breadth-first search (BFS) strategy is applied, with each parent node branching into $M = 3$ child nodes.",
+    "2412-15305_sent_55304d35": "(3) Expansion continues until all child nodes stop or the maximum depth ($L$) of 3 is reached.",
+    "2412-15305_fig_2eef38e6": "\\begin{figure}\n\n \\includegraphics[width=0.40\\textwidth]{figs/Figure_3.pdf}\n \\caption{A detailed example illustrating ToC's execution-based reflection and expansion. \n\n\\end{figure}",
+    "2412-15305_sent_a50ef4ef": "Execution-based Reflection.",
+    "2412-15305_sent_9aa6350f": "We can not guarantee that one node solution will be correct on the first attempt.",
+    "2412-15305_sent_fd72689a": "Treating task-level execution errors as continuation signals, we propose execution-based reflection, which enables LLMs to self-reflect, identify errors, refine thoughts, and improve code.",
+    "2412-15305_sent_f01f30e8": "As long as execution fails, self-reflection continues iteratively, generating next-layer new nodes.",
+    "2412-15305_sent_f53f57e9": "This also allows the branch to grow into deeper layers, where each node in the trajectory provides process supervision signals based on its outcome.",
+    "2412-15305_sent_59d386d0": "Note that the definition of 'turn' is equivalent to that of 'layer'; both terms carry the same meaning.",
+    "2412-15305_sent_d6e2f487": "Therefore, the whole tree is end-to-end generated. Figure \\ref{fig:example} shows an example of a branch of ToC while Figure \\ref{fig:tree} demonstrates execution-based reflection and tree expansion.",
+    "2412-15305_sent_f6713231": "Additionally, our flexible tree-structured framework allows for the integration of any reflection method for tree expansion.",
+    "2412-15305_sent_6f17782a": "Research \\cite{renze2024self} has shown that performance benefits from diverse perspectives of error identification, which encourages models to generate multiple solutions (ie.",
+    "2412-15305_sent_6b76db0d": "nodes in ToC).",
+    "2412-15305_sent_4b3988ee": "At the system level, different LLMs from our list, introduced in Section \\ref{section models}, are explored randomly with a consistent temperature setting of 0.1.",
+    "2412-15305_sent_847e1d01": "At the instruction level, prompts are randomly selected from a diverse pool, created through self-evolution and human crafting.",
+    "2412-15305_sent_b591de43": "The random exploration mechanisms operate at each node individually, while the prompt pool is created just once for the entire system.",
+    "2412-15305_sent_fda75ee4": "Specifically, we used ten LLMs to generate ten diverse prompts through prompt evolution from the root prompt (see Appendix \\ref{Appendix Prompt}).",
+    "2412-15305_sent_c5d607d7": "The evolution process ensures the core content remains consistent while promoting orthogonal or divergent expressions.",
+    "2412-15305_sent_f4c75387": "Six distinct prompts were manually selected and the following modifications were then applied: (1) adding detailed usage examples (beyond just printing \"Hello world\") to three prompts; (2) adjusting the format with line breaks and indentation; (3) randomly rearranging components, including the reflection part, usage examples, role instructions, tool descriptions, and chat history.",
+    "2412-15305_sent_17934df6": "Once valid outputs from successfully executed nodes are collected, the same LLM makes the final decision by performing a majority vote and summarization to determine the most likely answer.",
+    "2412-15305_sent_076c3c3e": "Ties are rare in our observations, so we always choose the most frequent answer without special handling.",
+    "2412-15305_sent_74367e75": "Considering API-Bank only supports JSON format, we make following modifications to adapt it for code interaction: (1) functionalize all API tools, (2) add output examples to each function description (Figure \\ref{fig:function}).",
+    "2412-15305_sent_19f00e1b": "\\resizebox{0.85\\textwidth}{!}{ \\renewcommand{\\arraystretch}{1.0} \\begin{tabular}{lccc|ccc} \\multirow{2}{*}{Mechanism} & \\multicolumn{3}{c}{M3ToolEval} & \\multicolumn{3}{c}{API-Bank level-3} \\\\ \\cmidrule(r){2-4} \\cmidrule(r){5-7} & Avg Turns & Correct & Output Words & Avg Turns & Correct & Output Words\\\\ ReAct & 8.2 & 38.1 \\% & 1.86 k & 9.5 & 8.2 \\% & 1.66 k \\\\ CodeAct & 7.0 & 49.4 \\% & 1.91 k & 8.9 & 19.2 \\% & 1.82 k \\\\ Tree-of-Code (3-3) & 1.7 $\\downarrow$ & 67.1 \\% $\\uparrow$ & 0.44 k $\\downarrow$ & 2.1 $\\downarrow$ & 38.0 \\% $\\uparrow$ & 0.39 k $\\downarrow$ \\\\ \\end{tabular} \\caption{ Performance comparison of the baselines and our ToC in terms of averaged turns, output words, and accuracy on two datasets.",
+    "2412-15305_sent_00c01265": "Note: all numerical results presented in this paper are rounded. \\end{table*} Models.",
+    "2412-15305_sent_cf0d880d": "ReAct \\cite{yao2022react} combines reasoning and action in a dynamic, step-by-step interaction, providing a flexible approach to task-solving.",
+    "2412-15305_sent_8f7e93c7": "We use JSON as the action space.",
+    "2412-15305_sent_e5c95a11": "CodeAct \\cite{wang2024codeact} utilizes a block of code as the LLM agent's action, enabling more efficient multi-turn interactions.",
+    "2412-15305_sent_353822ce": "Accuracy represents the percentage of complex tasks that are correctly solved. We consider the LLM-generated code at the same layer, generated in parallel, as one turn.",
+    "2412-15305_sent_5349ec8a": "We also record the average number of output words for the API cost evaluation.",
+    "2412-15305_sent_b226d286": "For CodeAct and ReAct, we report the average results across all LLMs used in this paper.",
+    "2412-15305_sent_078439bf": "Table \\ref{tab:main} shows ToC achieves consistent superior performance (nearly 20\\% higher) with significantly fewer interaction steps and averaged output words (nearly 1/4), highlighting its efficiency in handling complex tool-use scenarios.",
+    "2412-15305_sent_8ac2d9b1": "Specifically, Figure \\ref{fig:chart} shows the comparison of ReAct, CodeAct, and ToC on the five tasks in the M3, where ToC achieves near-perfect accuracy on all tasks except the web browsing task.",
+    "2412-15305_fig_9dba27a8": "\\begin{figure}\n\n \\includegraphics[height=0.25\\textwidth, width=0.48\\textwidth]{figs/task_chart.pdf}\n\n \\caption{Comparison across five tasks in the M3.\n\n\\end{figure}",
+    "2412-15305_subsubsection_204d48f6": "Other multi-turn vs. Our one-turn",
+    "2412-15305_sent_1cadea60": "Furthermore, we explore the performance of one-layer ToC (1-x) with the fixed model.",
+    "2412-15305_sent_570d29be": "As a node in ToC, CodeProgram enables the complete solution in a single turn by leveraging code’s ability to handle long logic chains.",
+    "2412-15305_sent_32d56ec3": "Table \\ref{tab:fix} shows that, with a significant advantage in the number of turns (one vs. multi-turn: averaged 7.0/8.9), our performance on some models even surpasses multi-turn CodeAct and ReAct, particularly with the Claude series.",
+    "2412-15305_sent_d927ffd3": "Compared to CodeProgram, ie.",
+    "2412-15305_sent_b2063241": "ToC (1-1), the single layer, three nodes ToC (1-3) with random prompts significantly boosts performance.",
+    "2412-15305_sent_9952ad2d": "Its average accuracy already surpasses CodeAct, highlighting the effectiveness of prompt randomness.",
+    "2412-15305_sent_3c8d8281": "We highlight the best-performing models in bold.",
+    "2412-15305_sent_87c35305": "\\renewcommand{\\arraystretch}{1.35} \\scalebox{0.68}{ \\begin{tabular}{l | c c c c | c c c c} \\multirow{2}{*}{Model} & \\multicolumn{4}{c|}{M3ToolEval} & \\multicolumn{4}{c}{API-Bank level-3} \\\\ \\cmidrule(lr){2-5} \\cmidrule(lr){6-9} & ReAct & CodeAct & ToC (1-1) & ToC (1-3) & ReAct & CodeAct & ToC (1-1) & ToC (1-3) \\\\ claude-instant-1 & 28.0\\% (8.7) & 18.0\\% (8.9) & 30.5\\% (1) & 35.3\\% (1) & 0.0\\% (10.0) & 2.0\\% (10.0) & 6.0\\% (1) & 18.0\\% (1) \\\\ claude-2 & 40.2\\% (8.2) & 54.9\\% (7.2) & 57.3\\% (1) & 59.8\\% (1) & 0.0\\% (10.0) & 20.0\\% (8.9) & 8.0\\% (1) & 18.0\\% (1) \\\\ claude-3-haiku & 24.4\\% (9.0) & 9.8\\% (9.4) & 29.3\\% (1) & 31.7\\% (1) & 10.0\\% (9.4) & 0.0\\% (10.0) & 6.0\\% (1) & 8.0\\% (1)\\\\ claude-3-5-sonnet & 48.8\\% (7.7) & 73.2\\% (5.7)& 73.2\\% (1) & 82.9\\% (1) & 14.0\\% (9.3) & 32.0\\% (7.8) & 48.0\\% (1) & 52.0\\% (1) \\\\ gpt-3.5-turbo-1106 & 18.3\\% (8.9) & 25.6\\% (8.6) & 12.2\\% (1) & 17.1\\% (1) & 14.0\\% (9.2) & 2.0\\% (9.9) & 4.0\\% (1) & 8.0\\% (1) \\\\ gpt-4-1106-preview & 54.9\\% (7.5) & 75.6\\% (5.4) & 72.0\\% (1) & 73.2\\% (1) & 18.0\\% (8.2) & 30.0\\% (8.2) & 34.0\\% (1) & 38.0\\% (1)\\\\ gpt-4o-mini-2024-07-18 & 32.9\\% (8.4) & 47.6\\% (7.0) & 31.7\\% (1) & 42.7\\% (1) & 10.0\\% (9.6) & 16.0\\% (9.5) & 14.0\\% (1) & 20.0\\% (1)\\\\ gpt-4o-2024-08-06 & 35.4\\% (8.5) & 56.1\\% (6.7) & 51.2\\% (1) & 62.2\\% (1) & 14.0\\% (9.4) & 36.0\\% (7.8) & 28.0\\% (1) & 32.0\\% (1) \\\\ qwen2.5-72b-instruct & 50.0\\% (7.9) & 70.7\\% (5.6) & 51.2\\% (1) & 59.8\\% (1) & 2.0\\% (9.9) & 30.0\\% (8.2) & 24.0\\% (1) & 32.0\\% (1)\\\\ deepseek-chat & 47.6\\% (7.6) & 62.2\\% (5.9) & 40.2\\% (1) & 52.4\\% (1) & 0.0\\% (9.8) & 24.0\\% (8.6) & 22.0\\% (1) & 26.0\\% (1)\\\\ Avg.",
+    "2412-15305_sent_f11d713c": "& 38.05\\% (8.24) & 49.37\\% (7.04) & 43.53\\% (1) & 50.98\\% (1) & 8.2\\% (9.48) & 19.2\\% (8.89) & 19.4\\% (1) & 24.4\\% (1)\\\\ \\end{tabular} \\caption{Ablation study of the model exploration.",
+    "2412-15305_sent_8b57f4a8": "With different fixed models, the detailed performance comparison of ReAct, CodeAct, ablated ToC (1-1) (ie.",
+    "2412-15305_sent_223eeff5": "the CodeProgram node), and ToC (1-3) on the M3ToolEval and API-Bank level-3 datasets is shown.",
+    "2412-15305_sent_18e2db53": "It seems the \"nodes per Layer\" contribute more than Layers, likely because our tree structure is designed to enhance exploration.",
+    "2412-15305_sent_65970b24": "Increasing the number of nodes certainly introduces more diverse prompts and model variations, whereas adding more layers (ie.",
+    "2412-15305_sent_c8ad4335": "more turns) mainly accumulates histories without significantly improving decision-making, especially with models that have limited contextual understanding.",
+    "2412-15305_sent_425270be": "Ablation results in Table \\ref{tab:ablation} confirm the effectiveness of prompt exploration.",
+    "2412-15305_sent_45c143f3": "By comparing the random model with the fixed model (claude-3-5-sonnet), prompt exploration proves to be more critical in scenarios with lower diversity.",
+    "2412-15305_sent_ec89cc57": "LLM Code Generation for Complex Tasks.",
+    "2412-15305_sent_8963b38f": "Recent works integrating LLMs with code have largely focused on task completion in programming domains like software development \\cite{qian2024chatdev,wang2023leti}, programming assistance \\cite{islam2024mapcoder,wen2024program}, and scientific problems \\cite{chen2022pot,gao2023palsci,hong2024datasci}.",
+    "2412-15305_sent_794d1bd4": "These studies primarily address pure code generation, where correct task completion only relates to accurate reasoning logic within the code.",
+    "2412-15305_sent_92cd86a1": "For example, Chain of Codes \\cite{li2023coc} broadens LLM capabilities by enabling \"thinking in code.\" In contrast, our work addresses real-world, zero-shot online complex tasks that involve multiple tool calls.",
+    "2412-15305_sent_0202c928": "Only CodeAct \\cite{wang2024codeact} treats code as a scalable language to call multiple tools, but their approach is limited by an almost one-turn, one-tool, step-by-step mechanism.",
+    "2412-15305_sent_9f26815b": "This results in stalled thinking and accumulated histories, relying heavily on ground-truth supervision for each step, which is incompatible with zero-shot, online settings.",
+    "2412-15305_sent_24b7c154": "In our framework, every node represents a complete solution that can be directly evaluated via execution supervision without requiring additional labels.",
+    "2412-15305_sent_563ab40d": "Tree-based Code Generation.",
+    "2412-15305_sent_bf5c9ab7": "A recent work, CodeTree \\cite{Li2024CodeTree}, uses a tree structure to explore the search space of code generation tasks.",
+    "2412-15305_sent_3a226713": "Unlike our approach, CodeTree focuses on multi-agent searching rather than an end-to-end, self-growing tree.",
+    "2412-15305_sent_52cbab9f": "While self-repair trees \\cite{olausson2023self} begin with a specification root node, grow into initial programs through separate feedback and repair stages--often bottlenecked by the model’s limited capacity--our approach unifies reasoning (including reflection) and generation in a single cycle at each node, and directly expands the tree with prompt and model exploration.",
+    "2412-15305_sent_76293141": "Some contemporaneous works utilizing tree-based search, such as MCTS \\cite{xu2024SRA-MCTS,yu2024outcome}, require multiple rollouts and significant computational resources, making them unsuitable for online, real-time applications.",
+    "2412-15305_sent_76bdb3c9": "Unlike these methods, our self-growing tree generates multiple valid solutions and directly selects the one closest to the ground truth through a voting mechanism.",
+    "2412-15305_sent_aa8b2b0e": "Additionally, these studies typically focus on tasks with easier-to-obtain process supervision, whereas our work addresses real-world, complex multi-tool datasets.",
+    "2412-15305_sent_29175901": "This paper introduced the Tree-of-Code (ToC) method, which enables self-growing, end-to-end thought-code generation based on successful execution, addressing complex multi-tool online tasks.",
+    "2412-15305_sent_734eeb40": "With efficient model integration and prompt exploration, ToC outperformed baselines on two complex task datasets, improving both efficiency and task-solving performance.",
+    "2412-15305_sent_688b9825": "Even though, in practical industrial applications where a predefined toolset is available, CodeProgram’s end-to-end execution remains more efficient for online, zero-shot scenarios, for fewer turns, and for fewer LLM calls.",
+    "2412-15305_subsection_84ffd62e": "Acknowledgments",
+    "2412-15305_sent_b6759aea": "This work was supported by the National Science and Technology Major Project under Grant 2022ZD0116409, and the National Natural Science Foundation of China under Grant 62301559.",
+    "2412-15305_subsection_fef80d91": "An example to show the performance of two helpers tools",
+    "2412-15305_sent_96621450": "For web-based queries, ResHandler and NextAction, these two helper tools are essential to ensure that our method can directly generate the final result without requiring intermediate feedback.",
+    "2412-15305_sent_c88de71b": "To further clarify their effectiveness, we provide a qualitative and specific example demonstrating how they function in practice.",
+    "2412-15305_sent_ea253705": "Below is the full code output for the query: \"Find the email of Henry Santiago.",
+    "2412-15305_sent_b23459b2": "Answer in the format of 'xxx@xxx.xxx'.\" from typing import List, Tuple \\begin{lstlisting}[breaklines=true, basicstyle=] def find_email(query: str, current_page_content: str, visited_urls: List[str], max_depth: int = 30) -> str: if max_depth <= 0: raise Exception(\"Max search depth reached, email not found.\") # Check if the email is directly available in the current page content if \"Henry Santiago\" in current_page_content and \"@\" in current_page_content: email = res_handler(f\"Extract the email of Henry Santiago from the following text: {current_page_content}\") if email: return email.strip() # Identify clickable URLs and navigate to them next_step_action, reference_page_content = next_action(query, current_page_content, visited_urls) if next_step_action == \"end()\": email = res_handler(f\"Extract the email of Henry Santiago from the following text: {reference_page_content}\") if email: return email.strip() else: raise Exception(\"Email not found in the reference page content.\") elif next_step_action.startswith(\"click_url\"): url = next_step_action.split('(')[1].split(')')[0].strip().strip('\"') if url not in visited_urls: visited_urls.append(url) new_page_content = click_url(url) return find_email(query, new_page_content, visited_urls, max_depth - 1) elif next_step_action == \"go_to_previous_page()\": new_page_content = go_to_previous_page() return find_email(query, new_page_content, visited_urls, max_depth - 1) else: raise Exception(\"Unknown next step action encountered.\") # Main function to start the search def main(): query = \"Find the email of Henry Santiago\" initial_page_content = view() visited_urls = [] try: email = find_email(query, initial_page_content, visited_urls) print(email) except Exception as e: print(f\"Error: {e}\") if __name__ == \"__main__\": main() \\end{lstlisting} Functionality of the Helper Tools For res\\_handler: Example usage: \\begin{lstlisting}[breaklines=true, basicstyle=] email = res_handler(\"Extract the email of Henry Santiago from the following text: {current_page_content}\") \\end{lstlisting} We provide the content that the final result depends on (i.e., the return value of other functions in the code) as input to this function.",
+    "2412-15305_sent_16234c47": "It then passes the information to an LLM to generate the final answer.",
+    "2412-15305_sent_118aad86": "For next\\_action: Example usage: \\begin{lstlisting}[breaklines=true, basicstyle=] # Identify clickable URLs and navigate to them next_step_action, reference_page_content = next_action(query, current_page_content, visited_urls) \\end{lstlisting} This function determines the next action based on: the current page content, the original query, and the list of visited URLs.",
+    "2412-15305_section_a5894db6": "Visualization of the Table 2",
+    "2412-15305_fig_f3147c06": "\\begin{figure}\n\n \\includegraphics[width=1\\textwidth]{figs/std_10_light.pdf}\n \\caption{\n Performance of 10 LLMs on ReAct, CodeAct, CodeProgram, and 1-3 ToC for the M3 dataset is visualized, with average and standard deviation reported.\n\n\\end{figure}"
+  },
+  "hierarchy": {
+    "1": {
+      "2412-15305_sent_676977e1": "2412-15305_doc_root",
+      "2412-15305_abstract_ce28071e": "2412-15305_doc_root",
+      "2412-15305_sent_c08a994d": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_7956b1ba": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_3f6a4142": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_5a55b0aa": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_0c8aff30": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_c76441c7": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_9c2731a7": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_25acd278": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_edcba266": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_3f64ff44": "2412-15305_abstract_ce28071e",
+      "2412-15305_section_0b79795d": "2412-15305_doc_root",
+      "2412-15305_sent_d7ee82d5": "2412-15305_section_0b79795d",
+      "2412-15305_sent_54cb9e7a": "2412-15305_section_0b79795d",
+      "2412-15305_sent_d8a29a76": "2412-15305_section_0b79795d",
+      "2412-15305_sent_dc6b144e": "2412-15305_section_0b79795d",
+      "2412-15305_sent_6001db6f": "2412-15305_section_0b79795d",
+      "2412-15305_sent_2f18dbcb": "2412-15305_section_0b79795d",
+      "2412-15305_sent_4d9881bf": "2412-15305_section_0b79795d",
+      "2412-15305_sent_18d7490f": "2412-15305_section_0b79795d",
+      "2412-15305_sent_d3717d2b": "2412-15305_section_0b79795d",
+      "2412-15305_sent_260699a6": "2412-15305_section_0b79795d",
+      "2412-15305_sent_0a00558c": "2412-15305_section_0b79795d",
+      "2412-15305_sent_919b1f16": "2412-15305_section_0b79795d",
+      "2412-15305_sent_983ccca6": "2412-15305_section_0b79795d",
+      "2412-15305_sent_00ae8065": "2412-15305_section_0b79795d",
+      "2412-15305_sent_ff7d0454": "2412-15305_section_0b79795d",
+      "2412-15305_sent_13251b7c": "2412-15305_section_0b79795d",
+      "2412-15305_sent_d5a9c820": "2412-15305_section_0b79795d",
+      "2412-15305_sent_2e029645": "2412-15305_section_0b79795d",
+      "2412-15305_sent_28b6c9c6": "2412-15305_section_0b79795d",
+      "2412-15305_sent_259558de": "2412-15305_section_0b79795d",
+      "2412-15305_sent_d1ac8366": "2412-15305_section_0b79795d",
+      "2412-15305_sent_c01d792c": "2412-15305_section_0b79795d",
+      "2412-15305_sent_36ce5cfc": "2412-15305_section_0b79795d",
+      "2412-15305_sent_ede5d1ca": "2412-15305_section_0b79795d",
+      "2412-15305_sent_efb5a79e": "2412-15305_section_0b79795d",
+      "2412-15305_sent_602bda8d": "2412-15305_section_0b79795d",
+      "2412-15305_sent_db391f26": "2412-15305_section_0b79795d",
+      "2412-15305_sent_f61266a4": "2412-15305_section_0b79795d",
+      "2412-15305_sent_e52b2b12": "2412-15305_section_0b79795d",
+      "2412-15305_sent_560f0544": "2412-15305_section_0b79795d",
+      "2412-15305_enumerate_58297aaf": "2412-15305_section_0b79795d",
+      "2412-15305_item_092db380": "2412-15305_itemize_2d7e3d91",
+      "2412-15305_sent_c982ea58": "2412-15305_item_092db380",
+      "2412-15305_sent_93acc029": "2412-15305_item_092db380",
+      "2412-15305_sent_1538a894": "2412-15305_item_092db380",
+      "2412-15305_sent_c28c68a0": "2412-15305_item_092db380",
+      "2412-15305_sent_eafd497a": "2412-15305_item_092db380",
+      "2412-15305_section_ca381abf": "2412-15305_doc_root",
+      "2412-15305_fig_22e584e7": "2412-15305_section_ca381abf",
+      "2412-15305_sent_ab150ab8": "2412-15305_section_ca381abf",
+      "2412-15305_sent_504fe07d": "2412-15305_section_ca381abf",
+      "2412-15305_sent_6dee55ee": "2412-15305_section_ca381abf",
+      "2412-15305_sent_327f481f": "2412-15305_section_ca381abf",
+      "2412-15305_sent_d9fe04ba": "2412-15305_section_ca381abf",
+      "2412-15305_sent_f81fb0d9": "2412-15305_section_ca381abf",
+      "2412-15305_sent_e9ab3994": "2412-15305_section_ca381abf",
+      "2412-15305_sent_db8ce929": "2412-15305_section_ca381abf",
+      "2412-15305_sent_0ae87b13": "2412-15305_section_ca381abf",
+      "2412-15305_sent_29f6b799": "2412-15305_section_ca381abf",
+      "2412-15305_sent_436f2436": "2412-15305_section_ca381abf",
+      "2412-15305_sent_e6518eba": "2412-15305_section_ca381abf",
+      "2412-15305_sent_d8e306aa": "2412-15305_section_ca381abf",
+      "2412-15305_sent_49d3308f": "2412-15305_section_ca381abf",
+      "2412-15305_fig_250c430b": "2412-15305_section_ca381abf",
+      "2412-15305_section_2b32e1ab": "2412-15305_doc_root",
+      "2412-15305_sent_e7d1dd9f": "2412-15305_section_2b32e1ab",
+      "2412-15305_sent_f7e34578": "2412-15305_section_2b32e1ab",
+      "2412-15305_sent_f06cf601": "2412-15305_section_2b32e1ab",
+      "2412-15305_sent_0191f447": "2412-15305_section_2b32e1ab",
+      "2412-15305_sent_6194418a": "2412-15305_section_2b32e1ab",
+      "2412-15305_subsection_94394ef2": "2412-15305_section_2b32e1ab",
+      "2412-15305_sent_78906a85": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_aa417658": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_dac30153": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_dfd80277": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_77a93508": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_8f27e507": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_2b7d3e45": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_0826d63d": "2412-15305_subsection_94394ef2",
+      "2412-15305_fig_b71837c1": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_sent_874214ef": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_08fedb50": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_fa38f304": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_5692bec2": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_c25d3823": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_a3459557": "2412-15305_subsection_94394ef2",
+      "2412-15305_subsection_49320271": "2412-15305_section_2b32e1ab",
+      "2412-15305_sent_c384f709": "2412-15305_subsection_49320271",
+      "2412-15305_sent_e356e21a": "2412-15305_subsection_49320271",
+      "2412-15305_sent_5f91a38d": "2412-15305_subsection_49320271",
+      "2412-15305_sent_ae8aa7fd": "2412-15305_subsection_49320271",
+      "2412-15305_subsection_c04e686c": "2412-15305_section_2b32e1ab",
+      "2412-15305_sent_6a3b4c6e": "2412-15305_subsection_c04e686c",
+      "2412-15305_sent_7213759a": "2412-15305_subsection_c04e686c",
+      "2412-15305_sent_de327dcb": "2412-15305_subsection_c04e686c",
+      "2412-15305_sent_5dc5e7e2": "2412-15305_subsection_c04e686c",
+      "2412-15305_sent_db3b4ce0": "2412-15305_subsection_c04e686c",
+      "2412-15305_section_e79aebc1": "2412-15305_doc_root",
+      "2412-15305_sent_7bbe8edb": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_fa82f259": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_03e5c9aa": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_e8c67960": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_979b0dfe": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_42458686": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_afb9d513": "2412-15305_section_e79aebc1",
+      "2412-15305_subsection_8186f26a": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_d0ca33a4": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_f204bc6e": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_abf1245e": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_7b25606a": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_e77397a7": "2412-15305_subsection_8186f26a",
+      "2412-15305_eq_341f9155": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_2168c387": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_e449eb3f": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_94ce233e": "2412-15305_subsection_8186f26a",
+      "2412-15305_subsection_f9773996": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_8809e58c": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_70866700": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_25bac4ae": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_895dd3c0": "2412-15305_subsection_f9773996",
+      "2412-15305_eq_d2b760f7": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_3f517b13": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_cd3d8aff": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_006249a7": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_b4da35c7": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_e231ccd8": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_9c7a21fc": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_8adde716": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_a44b22ff": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_65f5f18a": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_a58e27b7": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_0602e623": "2412-15305_subsection_f9773996",
+      "2412-15305_itemize_2d7e3d91": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_439ad0be": "2412-15305_item_092db380",
+      "2412-15305_sent_ddc8aaf7": "2412-15305_item_092db380",
+      "2412-15305_sent_0390aacc": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_72ae977d": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_8faf0a65": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_749e67c4": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_08248cbf": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_dd735af9": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_b532033f": "2412-15305_subsection_f9773996",
+      "2412-15305_subsection_4e03f1b6": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_ab7ebe32": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_sent_a97c0a75": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_fig_4dc81d89": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_sent_cbc08814": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_sent_7471c6e3": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_sent_2b32c03b": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_sent_541bac8c": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_section_3c8b9414": "2412-15305_doc_root",
+      "2412-15305_subsection_ad2376be": "2412-15305_section_3c8b9414",
+      "2412-15305_sent_87f320e9": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_6bd083c7": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_046804c5": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_c133e1c1": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_ce606109": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_4e7bb5c8": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_4ae4f8d6": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_536e22fa": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_1e10ab5a": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_c5ea0ac5": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_49da9049": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_ed443fbc": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_19029be2": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_1968f8e5": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_8bfa9766": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_b6a58e1b": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_4ba3a8f1": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_3d764478": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_436a971e": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_f9728972": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_b4857ee2": "2412-15305_subsection_ad2376be",
+      "2412-15305_fig_9ea6621e": "2412-15305_subsection_ad2376be",
+      "2412-15305_subsection_296356d6": "2412-15305_section_3c8b9414",
+      "2412-15305_sent_4f645f71": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_da7b7f3c": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_2d5c0b28": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_1ec09255": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_a80127d3": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_51b552c4": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_98779add": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_77cee26e": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_14d1890f": "2412-15305_subsection_296356d6",
+      "2412-15305_sent_d16461c1": "2412-15305_subsection_296356d6",
+      "2412-15305_fig_91bc84b9": "2412-15305_subsection_296356d6",
+      "2412-15305_subsection_55ddb909": "2412-15305_section_3c8b9414",
+      "2412-15305_sent_79344a97": "2412-15305_subsection_55ddb909",
+      "2412-15305_sent_01a22f1d": "2412-15305_subsection_55ddb909",
+      "2412-15305_sent_6f92a64b": "2412-15305_subsection_55ddb909",
+      "2412-15305_sent_05739c38": "2412-15305_subsection_55ddb909",
+      "2412-15305_fig_b01a8c95": "2412-15305_subsection_55ddb909",
+      "2412-15305_subsection_befb9473": "2412-15305_section_3c8b9414",
+      "2412-15305_fig_3b9d55c5": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_cc6490c8": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_cf8d2dae": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_4f61bcda": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_e74023a6": "2412-15305_subsection_befb9473",
+      "2412-15305_fig_472910d1": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_21881646": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_b37f1bdf": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_9478b728": "2412-15305_subsection_befb9473",
+      "2412-15305_fig_69934bb0": "2412-15305_subsection_befb9473",
+      "2412-15305_section_eed9474f": "2412-15305_doc_root",
+      "2412-15305_sent_6fc04c84": "2412-15305_section_eed9474f",
+      "2412-15305_sent_39028c24": "2412-15305_section_eed9474f",
+      "2412-15305_sent_d6013c3d": "2412-15305_section_eed9474f",
+      "2412-15305_sent_34d62ed5": "2412-15305_section_eed9474f",
+      "2412-15305_sent_9fdf6903": "2412-15305_section_eed9474f",
+      "2412-15305_sent_e8caec73": "2412-15305_section_eed9474f",
+      "2412-15305_sent_10feaf91": "2412-15305_section_eed9474f",
+      "2412-15305_sent_3dd060fa": "2412-15305_section_eed9474f",
+      "2412-15305_sent_633483bc": "2412-15305_section_eed9474f",
+      "2412-15305_section_aed402c3": "2412-15305_doc_root",
+      "2412-15305_sent_aefe58b2": "2412-15305_section_aed402c3",
+      "2412-15305_sent_4d540f09": "2412-15305_section_aed402c3",
+      "2412-15305_sent_16d3b730": "2412-15305_section_aed402c3",
+      "2412-15305_sent_9bb7d779": "2412-15305_section_aed402c3",
+      "2412-15305_sent_13bd97c3": "2412-15305_section_aed402c3",
+      "2412-15305_sent_f3e0c0d4": "2412-15305_section_aed402c3",
+      "2412-15305_sent_bfcece96": "2412-15305_section_aed402c3",
+      "2412-15305_sent_1716d228": "2412-15305_section_aed402c3",
+      "2412-15305_section_6f8b794f": "2412-15305_doc_root",
+      "2412-15305_sent_861708c7": "2412-15305_section_6f8b794f",
+      "2412-15305_sent_1f32e33e": "2412-15305_section_6f8b794f",
+      "2412-15305_sent_af7f10ce": "2412-15305_section_6f8b794f",
+      "2412-15305_section_e646e16b": "2412-15305_doc_root",
+      "2412-15305_subsection_859b4090": "2412-15305_section_e646e16b",
+      "2412-15305_sent_cf528687": "2412-15305_subsection_859b4090",
+      "2412-15305_sent_b1b81006": "2412-15305_subsection_859b4090",
+      "2412-15305_sent_172d05bb": "2412-15305_subsection_859b4090",
+      "2412-15305_sent_3789b87b": "2412-15305_subsection_859b4090",
+      "2412-15305_subsection_289e69f1": "2412-15305_section_e646e16b",
+      "2412-15305_sent_b1256f03": "2412-15305_subsection_289e69f1",
+      "2412-15305_sent_e68e6592": "2412-15305_subsection_289e69f1",
+      "2412-15305_sent_668ee159": "2412-15305_subsection_289e69f1",
+      "2412-15305_sent_90996e49": "2412-15305_subsection_289e69f1",
+      "2412-15305_subsection_b0ea7f3a": "2412-15305_section_e646e16b",
+      "2412-15305_sent_85ad4130": "2412-15305_subsection_b0ea7f3a",
+      "2412-15305_sent_00b7fbc0": "2412-15305_subsection_b0ea7f3a",
+      "2412-15305_sent_bad5282e": "2412-15305_subsection_b0ea7f3a",
+      "2412-15305_subsection_b3b788ad": "2412-15305_section_e646e16b",
+      "2412-15305_sent_9b4676a3": "2412-15305_subsection_b3b788ad",
+      "2412-15305_sent_223778e2": "2412-15305_subsection_b3b788ad",
+      "2412-15305_sent_222aa2e1": "2412-15305_subsection_b3b788ad",
+      "2412-15305_sent_50c197d0": "2412-15305_subsection_b3b788ad",
+      "2412-15305_sent_ebe857c1": "2412-15305_subsection_b3b788ad",
+      "2412-15305_section_45d74bdb": "2412-15305_doc_root",
+      "2412-15305_subsection_df61d912": "2412-15305_section_45d74bdb",
+      "2412-15305_sent_5869d479": "2412-15305_subsection_df61d912",
+      "2412-15305_sent_ee1c1767": "2412-15305_subsection_df61d912",
+      "2412-15305_sent_462ecbeb": "2412-15305_subsection_df61d912",
+      "2412-15305_sent_af716325": "2412-15305_subsection_df61d912",
+      "2412-15305_sent_cf431a8e": "2412-15305_subsection_df61d912",
+      "2412-15305_subsection_541fee53": "2412-15305_section_45d74bdb",
+      "2412-15305_subsubsection_cf3c82bb": "2412-15305_subsection_541fee53",
+      "2412-15305_sent_d895a25a": "2412-15305_subsubsection_cf3c82bb",
+      "2412-15305_sent_e7fbb31f": "2412-15305_subsubsection_cf3c82bb",
+      "2412-15305_sent_22aaeed4": "2412-15305_subsubsection_cf3c82bb",
+      "2412-15305_subsubsection_09b9266c": "2412-15305_subsection_541fee53",
+      "2412-15305_sent_0d8e4188": "2412-15305_subsubsection_09b9266c",
+      "2412-15305_sent_8d0a74c8": "2412-15305_subsubsection_09b9266c",
+      "2412-15305_subsubsection_f09d2c4a": "2412-15305_subsection_541fee53",
+      "2412-15305_sent_9042df1b": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_sent_099cefe5": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_sent_b202c759": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_sent_8b0d1a9c": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_section_06bf5e19": "2412-15305_doc_root",
+      "2412-15305_subsection_4472e1ee": "2412-15305_section_06bf5e19",
+      "2412-15305_subsubsection_1bbbe31f": "2412-15305_subsection_4472e1ee",
+      "2412-15305_sent_13fd93e6": "2412-15305_subsubsection_1bbbe31f",
+      "2412-15305_sent_97f9a08d": "2412-15305_subsubsection_1bbbe31f",
+      "2412-15305_sent_e580d2ba": "2412-15305_subsubsection_1bbbe31f",
+      "2412-15305_sent_1774dfba": "2412-15305_subsubsection_1bbbe31f",
+      "2412-15305_subsubsection_62d99aa3": "2412-15305_subsection_4472e1ee",
+      "2412-15305_sent_546132fe": "2412-15305_subsubsection_62d99aa3",
+      "2412-15305_subsection_e0c0fd4a": "2412-15305_section_06bf5e19",
+      "2412-15305_subsubsection_116a8bb7": "2412-15305_subsection_e0c0fd4a",
+      "2412-15305_sent_ca456595": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_7aa130d6": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_49e115e3": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_25f75cdd": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_406797a4": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_78e8f8d6": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_f20dacf1": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_027902f4": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_70197cef": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_657ff28f": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_c581e66b": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_15c74223": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_2cac718f": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_fd6f1538": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_65cdb01b": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_5b17f383": "2412-15305_subsubsection_116a8bb7"
+    },
+    "2": {
+      "2412-15305_sent_676977e1": "2412-15305_doc_root",
+      "2412-15305_abstract_ce28071e": "2412-15305_doc_root",
+      "2412-15305_sent_c08a994d": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_7956b1ba": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_bfec7915": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_5a55b0aa": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_4a18c137": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_f3f46eef": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_57faee01": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_008e1b88": "2412-15305_abstract_ce28071e",
+      "2412-15305_sent_b552c9ce": "2412-15305_abstract_ce28071e",
+      "2412-15305_section_0b79795d": "2412-15305_doc_root",
+      "2412-15305_sent_d7ee82d5": "2412-15305_section_0b79795d",
+      "2412-15305_sent_54cb9e7a": "2412-15305_section_0b79795d",
+      "2412-15305_sent_d8a29a76": "2412-15305_section_0b79795d",
+      "2412-15305_sent_dc6b144e": "2412-15305_section_0b79795d",
+      "2412-15305_sent_6001db6f": "2412-15305_section_0b79795d",
+      "2412-15305_sent_2a5bab5f": "2412-15305_section_0b79795d",
+      "2412-15305_sent_4d9881bf": "2412-15305_section_0b79795d",
+      "2412-15305_sent_d07e64f7": "2412-15305_section_0b79795d",
+      "2412-15305_sent_86d4af08": "2412-15305_section_0b79795d",
+      "2412-15305_sent_af6e141e": "2412-15305_section_0b79795d",
+      "2412-15305_sent_07180317": "2412-15305_section_0b79795d",
+      "2412-15305_sent_ae52496c": "2412-15305_section_0b79795d",
+      "2412-15305_sent_0256fa8c": "2412-15305_section_0b79795d",
+      "2412-15305_sent_d5421224": "2412-15305_section_0b79795d",
+      "2412-15305_sent_a60cf9e1": "2412-15305_section_0b79795d",
+      "2412-15305_sent_556ed999": "2412-15305_section_0b79795d",
+      "2412-15305_sent_af9217f9": "2412-15305_section_0b79795d",
+      "2412-15305_sent_58d3ad25": "2412-15305_section_0b79795d",
+      "2412-15305_sent_55f4b437": "2412-15305_section_0b79795d",
+      "2412-15305_sent_4e285e61": "2412-15305_section_0b79795d",
+      "2412-15305_sent_90e6e642": "2412-15305_section_0b79795d",
+      "2412-15305_sent_65e7a01d": "2412-15305_section_0b79795d",
+      "2412-15305_sent_e5455cee": "2412-15305_section_0b79795d",
+      "2412-15305_sent_d5e3d2fe": "2412-15305_section_0b79795d",
+      "2412-15305_sent_c00c1678": "2412-15305_section_0b79795d",
+      "2412-15305_sent_b9214e34": "2412-15305_section_0b79795d",
+      "2412-15305_sent_6cbaa361": "2412-15305_section_0b79795d",
+      "2412-15305_sent_93ee2bcc": "2412-15305_section_0b79795d",
+      "2412-15305_sent_eb5d97de": "2412-15305_section_0b79795d",
+      "2412-15305_sent_43c92b87": "2412-15305_section_0b79795d",
+      "2412-15305_sent_4173e330": "2412-15305_section_0b79795d",
+      "2412-15305_sent_22279f59": "2412-15305_section_0b79795d",
+      "2412-15305_sent_560f0544": "2412-15305_section_0b79795d",
+      "2412-15305_enumerate_58297aaf": "2412-15305_section_0b79795d",
+      "2412-15305_item_092db380": "2412-15305_itemize_2d7e3d91",
+      "2412-15305_sent_d4e75031": "2412-15305_item_092db380",
+      "2412-15305_sent_ac346373": "2412-15305_item_092db380",
+      "2412-15305_sent_83e3ad26": "2412-15305_item_092db380",
+      "2412-15305_sent_b822a5ff": "2412-15305_item_092db380",
+      "2412-15305_section_ca381abf": "2412-15305_doc_root",
+      "2412-15305_fig_22e584e7": "2412-15305_section_ca381abf",
+      "2412-15305_fig_b71837c1": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_sent_874214ef": "2412-15305_section_ca381abf",
+      "2412-15305_sent_08fedb50": "2412-15305_section_ca381abf",
+      "2412-15305_sent_2d42be6c": "2412-15305_section_ca381abf",
+      "2412-15305_sent_06e63dca": "2412-15305_section_ca381abf",
+      "2412-15305_sent_2b5df5d1": "2412-15305_section_ca381abf",
+      "2412-15305_sent_d68f216e": "2412-15305_section_ca381abf",
+      "2412-15305_sent_ab150ab8": "2412-15305_section_ca381abf",
+      "2412-15305_sent_685537f3": "2412-15305_section_ca381abf",
+      "2412-15305_sent_327f481f": "2412-15305_section_ca381abf",
+      "2412-15305_sent_cbb0ef87": "2412-15305_section_ca381abf",
+      "2412-15305_sent_5ad83760": "2412-15305_section_ca381abf",
+      "2412-15305_sent_bfa5063c": "2412-15305_section_ca381abf",
+      "2412-15305_sent_ff6f2944": "2412-15305_section_ca381abf",
+      "2412-15305_sent_97e0a550": "2412-15305_section_ca381abf",
+      "2412-15305_sent_390f53d4": "2412-15305_section_ca381abf",
+      "2412-15305_sent_e000906d": "2412-15305_section_ca381abf",
+      "2412-15305_section_e79aebc1": "2412-15305_doc_root",
+      "2412-15305_sent_ffee50b9": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_ee2077ae": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_2c4bf114": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_979b0dfe": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_42458686": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_afb9d513": "2412-15305_section_e79aebc1",
+      "2412-15305_subsection_8186f26a": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_d0ca33a4": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_f204bc6e": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_0d5f19de": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_7b25606a": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_e77397a7": "2412-15305_subsection_8186f26a",
+      "2412-15305_eq_341f9155": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_2168c387": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_e449eb3f": "2412-15305_subsection_8186f26a",
+      "2412-15305_sent_94ce233e": "2412-15305_subsection_8186f26a",
+      "2412-15305_subsection_c87b8bba": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_a3dc3339": "2412-15305_subsection_c87b8bba",
+      "2412-15305_sent_c76c12bc": "2412-15305_subsection_c87b8bba",
+      "2412-15305_sent_2942f3da": "2412-15305_subsection_c87b8bba",
+      "2412-15305_sent_f06cf601": "2412-15305_subsection_c87b8bba",
+      "2412-15305_sent_34ae4080": "2412-15305_subsection_c87b8bba",
+      "2412-15305_sent_27d19c2d": "2412-15305_subsection_c87b8bba",
+      "2412-15305_subsection_94394ef2": "2412-15305_subsection_c87b8bba",
+      "2412-15305_sent_6528b220": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_195c641f": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_0ee23c66": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_d1795e8d": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_77a93508": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_8f27e507": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_2b7d3e45": "2412-15305_subsection_94394ef2",
+      "2412-15305_sent_0826d63d": "2412-15305_subsection_94394ef2",
+      "2412-15305_fig_250c430b": "2412-15305_subsection_94394ef2",
+      "2412-15305_subsection_49320271": "2412-15305_subsection_c87b8bba",
+      "2412-15305_sent_053f578b": "2412-15305_subsection_49320271",
+      "2412-15305_sent_33435e82": "2412-15305_subsection_49320271",
+      "2412-15305_sent_2d9280c8": "2412-15305_subsection_49320271",
+      "2412-15305_sent_5f91a38d": "2412-15305_subsection_49320271",
+      "2412-15305_sent_f8c91abe": "2412-15305_subsection_49320271",
+      "2412-15305_sent_93ba5665": "2412-15305_subsection_49320271",
+      "2412-15305_subsubsection_89c6a923": "2412-15305_subsection_c87b8bba",
+      "2412-15305_sent_6a3b4c6e": "2412-15305_subsubsection_89c6a923",
+      "2412-15305_sent_130648c9": "2412-15305_subsubsection_89c6a923",
+      "2412-15305_sent_8a75e8dc": "2412-15305_subsubsection_89c6a923",
+      "2412-15305_sent_5db57021": "2412-15305_subsubsection_89c6a923",
+      "2412-15305_sent_2b1494ba": "2412-15305_subsubsection_89c6a923",
+      "2412-15305_sent_0d9432e3": "2412-15305_subsubsection_89c6a923",
+      "2412-15305_sent_a0a38321": "2412-15305_subsubsection_89c6a923",
+      "2412-15305_subsection_f9773996": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_8809e58c": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_8749af7c": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_25bac4ae": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_895dd3c0": "2412-15305_subsection_f9773996",
+      "2412-15305_eq_d2b760f7": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_55304d35": "2412-15305_subsection_f9773996",
+      "2412-15305_fig_2eef38e6": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_a50ef4ef": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_9aa6350f": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_fd72689a": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_f01f30e8": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_b4da35c7": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_f53f57e9": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_59d386d0": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_8adde716": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_d6e2f487": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_f6713231": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_a58e27b7": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_0602e623": "2412-15305_subsection_f9773996",
+      "2412-15305_itemize_2d7e3d91": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_439ad0be": "2412-15305_item_092db380",
+      "2412-15305_sent_ddc8aaf7": "2412-15305_item_092db380",
+      "2412-15305_sent_6f17782a": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_6b76db0d": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_72ae977d": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_4b3988ee": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_847e1d01": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_b591de43": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_fda75ee4": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_c5d607d7": "2412-15305_subsection_f9773996",
+      "2412-15305_sent_f4c75387": "2412-15305_subsection_f9773996",
+      "2412-15305_subsection_4e03f1b6": "2412-15305_section_e79aebc1",
+      "2412-15305_sent_17934df6": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_sent_076c3c3e": "2412-15305_subsection_4e03f1b6",
+      "2412-15305_section_3c8b9414": "2412-15305_doc_root",
+      "2412-15305_subsection_ad2376be": "2412-15305_section_3c8b9414",
+      "2412-15305_sent_87f320e9": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_6bd083c7": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_046804c5": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_c133e1c1": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_ce606109": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_74367e75": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_536e22fa": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_1e10ab5a": "2412-15305_subsection_ad2376be",
+      "2412-15305_fig_91bc84b9": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_19f00e1b": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_00c01265": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_49da9049": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_ed443fbc": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_19029be2": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_1968f8e5": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_cf0d880d": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_8f7e93c7": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_e5c95a11": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_4ba3a8f1": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_3d764478": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_353822ce": "2412-15305_subsection_ad2376be",
+      "2412-15305_sent_5349ec8a": "2412-15305_subsection_ad2376be",
+      "2412-15305_subsection_55ddb909": "2412-15305_section_3c8b9414",
+      "2412-15305_sent_79344a97": "2412-15305_subsection_55ddb909",
+      "2412-15305_sent_01a22f1d": "2412-15305_subsection_55ddb909",
+      "2412-15305_sent_b226d286": "2412-15305_subsection_55ddb909",
+      "2412-15305_sent_078439bf": "2412-15305_subsection_55ddb909",
+      "2412-15305_sent_8ac2d9b1": "2412-15305_subsection_55ddb909",
+      "2412-15305_fig_9dba27a8": "2412-15305_subsection_55ddb909",
+      "2412-15305_subsubsection_204d48f6": "2412-15305_subsection_55ddb909",
+      "2412-15305_sent_1cadea60": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_570d29be": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_32d56ec3": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_d927ffd3": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_b2063241": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_9952ad2d": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_3c8d8281": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_77cee26e": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_14d1890f": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_sent_d16461c1": "2412-15305_subsubsection_204d48f6",
+      "2412-15305_subsection_befb9473": "2412-15305_section_3c8b9414",
+      "2412-15305_sent_87c35305": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_f11d713c": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_8b57f4a8": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_223eeff5": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_2b32c03b": "2412-15305_subsection_befb9473",
+      "2412-15305_fig_3b9d55c5": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_cc6490c8": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_cf8d2dae": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_4f61bcda": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_18e2db53": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_65970b24": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_c8ad4335": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_21881646": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_425270be": "2412-15305_subsection_befb9473",
+      "2412-15305_sent_45c143f3": "2412-15305_subsection_befb9473",
+      "2412-15305_fig_69934bb0": "2412-15305_subsection_befb9473",
+      "2412-15305_section_aed402c3": "2412-15305_doc_root",
+      "2412-15305_sent_ec89cc57": "2412-15305_section_aed402c3",
+      "2412-15305_sent_8963b38f": "2412-15305_section_aed402c3",
+      "2412-15305_sent_794d1bd4": "2412-15305_section_aed402c3",
+      "2412-15305_sent_92cd86a1": "2412-15305_section_aed402c3",
+      "2412-15305_sent_0202c928": "2412-15305_section_aed402c3",
+      "2412-15305_sent_9f26815b": "2412-15305_section_aed402c3",
+      "2412-15305_sent_24b7c154": "2412-15305_section_aed402c3",
+      "2412-15305_sent_563ab40d": "2412-15305_section_aed402c3",
+      "2412-15305_sent_bf5c9ab7": "2412-15305_section_aed402c3",
+      "2412-15305_sent_3a226713": "2412-15305_section_aed402c3",
+      "2412-15305_sent_52cbab9f": "2412-15305_section_aed402c3",
+      "2412-15305_sent_76293141": "2412-15305_section_aed402c3",
+      "2412-15305_sent_76bdb3c9": "2412-15305_section_aed402c3",
+      "2412-15305_sent_aa8b2b0e": "2412-15305_section_aed402c3",
+      "2412-15305_section_6f8b794f": "2412-15305_doc_root",
+      "2412-15305_sent_29175901": "2412-15305_section_6f8b794f",
+      "2412-15305_sent_734eeb40": "2412-15305_section_6f8b794f",
+      "2412-15305_section_e646e16b": "2412-15305_doc_root",
+      "2412-15305_subsection_289e69f1": "2412-15305_section_e646e16b",
+      "2412-15305_sent_b1256f03": "2412-15305_subsection_289e69f1",
+      "2412-15305_sent_e68e6592": "2412-15305_subsection_289e69f1",
+      "2412-15305_sent_668ee159": "2412-15305_subsection_289e69f1",
+      "2412-15305_sent_688b9825": "2412-15305_subsection_289e69f1",
+      "2412-15305_sent_90996e49": "2412-15305_subsection_289e69f1",
+      "2412-15305_subsection_b0ea7f3a": "2412-15305_section_e646e16b",
+      "2412-15305_sent_85ad4130": "2412-15305_subsection_b0ea7f3a",
+      "2412-15305_sent_00b7fbc0": "2412-15305_subsection_b0ea7f3a",
+      "2412-15305_sent_bad5282e": "2412-15305_subsection_b0ea7f3a",
+      "2412-15305_subsection_b3b788ad": "2412-15305_section_e646e16b",
+      "2412-15305_sent_9b4676a3": "2412-15305_subsection_b3b788ad",
+      "2412-15305_sent_223778e2": "2412-15305_subsection_b3b788ad",
+      "2412-15305_sent_222aa2e1": "2412-15305_subsection_b3b788ad",
+      "2412-15305_sent_50c197d0": "2412-15305_subsection_b3b788ad",
+      "2412-15305_subsection_84ffd62e": "2412-15305_section_e646e16b",
+      "2412-15305_sent_b6759aea": "2412-15305_subsection_84ffd62e",
+      "2412-15305_sent_ebe857c1": "2412-15305_subsection_84ffd62e",
+      "2412-15305_section_45d74bdb": "2412-15305_doc_root",
+      "2412-15305_subsection_df61d912": "2412-15305_section_45d74bdb",
+      "2412-15305_sent_5869d479": "2412-15305_subsection_df61d912",
+      "2412-15305_sent_ee1c1767": "2412-15305_subsection_df61d912",
+      "2412-15305_sent_462ecbeb": "2412-15305_subsection_df61d912",
+      "2412-15305_sent_af716325": "2412-15305_subsection_df61d912",
+      "2412-15305_sent_cf431a8e": "2412-15305_subsection_df61d912",
+      "2412-15305_subsection_541fee53": "2412-15305_section_45d74bdb",
+      "2412-15305_subsubsection_cf3c82bb": "2412-15305_subsection_541fee53",
+      "2412-15305_sent_d895a25a": "2412-15305_subsubsection_cf3c82bb",
+      "2412-15305_sent_e7fbb31f": "2412-15305_subsubsection_cf3c82bb",
+      "2412-15305_sent_22aaeed4": "2412-15305_subsubsection_cf3c82bb",
+      "2412-15305_subsubsection_09b9266c": "2412-15305_subsection_541fee53",
+      "2412-15305_sent_0d8e4188": "2412-15305_subsubsection_09b9266c",
+      "2412-15305_sent_8d0a74c8": "2412-15305_subsubsection_09b9266c",
+      "2412-15305_subsubsection_f09d2c4a": "2412-15305_subsection_541fee53",
+      "2412-15305_sent_9042df1b": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_sent_099cefe5": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_sent_b202c759": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_sent_8b0d1a9c": "2412-15305_subsubsection_f09d2c4a",
+      "2412-15305_section_06bf5e19": "2412-15305_doc_root",
+      "2412-15305_subsection_4472e1ee": "2412-15305_section_06bf5e19",
+      "2412-15305_subsubsection_1bbbe31f": "2412-15305_subsection_4472e1ee",
+      "2412-15305_sent_13fd93e6": "2412-15305_subsubsection_1bbbe31f",
+      "2412-15305_sent_97f9a08d": "2412-15305_subsubsection_1bbbe31f",
+      "2412-15305_sent_e580d2ba": "2412-15305_subsubsection_1bbbe31f",
+      "2412-15305_sent_1774dfba": "2412-15305_subsubsection_1bbbe31f",
+      "2412-15305_subsubsection_62d99aa3": "2412-15305_subsection_4472e1ee",
+      "2412-15305_sent_546132fe": "2412-15305_subsubsection_62d99aa3",
+      "2412-15305_subsection_e0c0fd4a": "2412-15305_section_06bf5e19",
+      "2412-15305_subsubsection_116a8bb7": "2412-15305_subsection_e0c0fd4a",
+      "2412-15305_sent_ca456595": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_7aa130d6": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_49e115e3": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_25f75cdd": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_406797a4": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_78e8f8d6": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_f20dacf1": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_027902f4": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_70197cef": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_657ff28f": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_c581e66b": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_15c74223": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_2cac718f": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_fd6f1538": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_65cdb01b": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_sent_5b17f383": "2412-15305_subsubsection_116a8bb7",
+      "2412-15305_subsection_fef80d91": "2412-15305_section_06bf5e19",
+      "2412-15305_sent_96621450": "2412-15305_subsection_fef80d91",
+      "2412-15305_sent_c88de71b": "2412-15305_subsection_fef80d91",
+      "2412-15305_sent_ea253705": "2412-15305_subsection_fef80d91",
+      "2412-15305_sent_b23459b2": "2412-15305_subsection_fef80d91",
+      "2412-15305_sent_16234c47": "2412-15305_subsection_fef80d91",
+      "2412-15305_sent_118aad86": "2412-15305_subsection_fef80d91",
+      "2412-15305_section_a5894db6": "2412-15305_doc_root",
+      "2412-15305_fig_f3147c06": "2412-15305_section_a5894db6"
+    }
+  },
+  "merged_parents": {
+    "2412-15305_sent_676977e1": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_abstract_ce28071e": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_sent_c08a994d": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_7956b1ba": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_3f6a4142": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_5a55b0aa": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_0c8aff30": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_c76441c7": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_9c2731a7": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_25acd278": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_edcba266": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_3f64ff44": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_section_0b79795d": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_sent_d7ee82d5": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_54cb9e7a": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_d8a29a76": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_dc6b144e": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_6001db6f": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_2f18dbcb": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_4d9881bf": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_18d7490f": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_d3717d2b": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_260699a6": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_0a00558c": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_919b1f16": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_983ccca6": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_00ae8065": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_ff7d0454": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_13251b7c": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_d5a9c820": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_2e029645": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_28b6c9c6": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_259558de": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_d1ac8366": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_c01d792c": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_36ce5cfc": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_ede5d1ca": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_efb5a79e": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_602bda8d": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_db391f26": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_f61266a4": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_e52b2b12": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_560f0544": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_enumerate_58297aaf": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_item_092db380": [
+      "2412-15305_enumerate_58297aaf",
+      "2412-15305_itemize_2d7e3d91"
+    ],
+    "2412-15305_sent_c982ea58": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_93acc029": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_1538a894": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_c28c68a0": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_eafd497a": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_section_ca381abf": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_fig_22e584e7": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_ab150ab8": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_504fe07d": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_6dee55ee": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_327f481f": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_d9fe04ba": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_f81fb0d9": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_e9ab3994": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_db8ce929": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_0ae87b13": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_29f6b799": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_436f2436": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_e6518eba": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_d8e306aa": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_49d3308f": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_fig_250c430b": [
+      "2412-15305_section_ca381abf",
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_section_2b32e1ab": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_sent_e7d1dd9f": [
+      "2412-15305_section_2b32e1ab"
+    ],
+    "2412-15305_sent_f7e34578": [
+      "2412-15305_section_2b32e1ab"
+    ],
+    "2412-15305_sent_f06cf601": [
+      "2412-15305_section_2b32e1ab",
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_0191f447": [
+      "2412-15305_section_2b32e1ab"
+    ],
+    "2412-15305_sent_6194418a": [
+      "2412-15305_section_2b32e1ab"
+    ],
+    "2412-15305_subsection_94394ef2": [
+      "2412-15305_section_2b32e1ab",
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_78906a85": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_aa417658": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_dac30153": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_dfd80277": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_77a93508": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_8f27e507": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_2b7d3e45": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_0826d63d": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_fig_b71837c1": [
+      "2412-15305_section_ca381abf",
+      "2412-15305_section_e79aebc1",
+      "2412-15305_subsection_4e03f1b6",
+      "2412-15305_subsection_94394ef2",
+      "2412-15305_subsection_ad2376be",
+      "2412-15305_subsection_befb9473",
+      "2412-15305_subsubsection_09b9266c",
+      "2412-15305_subsubsection_cf3c82bb",
+      "2412-15305_subsubsection_f09d2c4a"
+    ],
+    "2412-15305_sent_874214ef": [
+      "2412-15305_section_ca381abf",
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_08fedb50": [
+      "2412-15305_section_ca381abf",
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_fa38f304": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_5692bec2": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_c25d3823": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_a3459557": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_subsection_49320271": [
+      "2412-15305_section_2b32e1ab",
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_c384f709": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_sent_e356e21a": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_sent_5f91a38d": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_sent_ae8aa7fd": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_subsection_c04e686c": [
+      "2412-15305_section_2b32e1ab"
+    ],
+    "2412-15305_sent_6a3b4c6e": [
+      "2412-15305_subsection_c04e686c",
+      "2412-15305_subsubsection_89c6a923"
+    ],
+    "2412-15305_sent_7213759a": [
+      "2412-15305_subsection_c04e686c"
+    ],
+    "2412-15305_sent_de327dcb": [
+      "2412-15305_subsection_c04e686c"
+    ],
+    "2412-15305_sent_5dc5e7e2": [
+      "2412-15305_subsection_c04e686c"
+    ],
+    "2412-15305_sent_db3b4ce0": [
+      "2412-15305_subsection_c04e686c"
+    ],
+    "2412-15305_section_e79aebc1": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_sent_7bbe8edb": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_fa82f259": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_03e5c9aa": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_e8c67960": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_979b0dfe": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_42458686": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_afb9d513": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_subsection_8186f26a": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_d0ca33a4": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_sent_f204bc6e": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_sent_abf1245e": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_sent_7b25606a": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_sent_e77397a7": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_eq_341f9155": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_sent_2168c387": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_sent_e449eb3f": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_sent_94ce233e": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_subsection_f9773996": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_8809e58c": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_70866700": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_25bac4ae": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_895dd3c0": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_eq_d2b760f7": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_3f517b13": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_cd3d8aff": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_006249a7": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_b4da35c7": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_e231ccd8": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_9c7a21fc": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_8adde716": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_a44b22ff": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_65f5f18a": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_a58e27b7": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_0602e623": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_itemize_2d7e3d91": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_439ad0be": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_ddc8aaf7": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_0390aacc": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_72ae977d": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_8faf0a65": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_749e67c4": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_08248cbf": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_dd735af9": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_b532033f": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_subsection_4e03f1b6": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_ab7ebe32": [
+      "2412-15305_subsection_4e03f1b6"
+    ],
+    "2412-15305_sent_a97c0a75": [
+      "2412-15305_subsection_4e03f1b6"
+    ],
+    "2412-15305_fig_4dc81d89": [
+      "2412-15305_subsection_4e03f1b6"
+    ],
+    "2412-15305_sent_cbc08814": [
+      "2412-15305_subsection_4e03f1b6"
+    ],
+    "2412-15305_sent_7471c6e3": [
+      "2412-15305_subsection_4e03f1b6"
+    ],
+    "2412-15305_sent_2b32c03b": [
+      "2412-15305_subsection_4e03f1b6",
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_541bac8c": [
+      "2412-15305_subsection_4e03f1b6"
+    ],
+    "2412-15305_section_3c8b9414": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_subsection_ad2376be": [
+      "2412-15305_section_3c8b9414"
+    ],
+    "2412-15305_sent_87f320e9": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_6bd083c7": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_046804c5": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_c133e1c1": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_ce606109": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_4e7bb5c8": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_4ae4f8d6": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_536e22fa": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_1e10ab5a": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_c5ea0ac5": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_49da9049": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_ed443fbc": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_19029be2": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_1968f8e5": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_8bfa9766": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_b6a58e1b": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_4ba3a8f1": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_3d764478": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_436a971e": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_f9728972": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_b4857ee2": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_fig_9ea6621e": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_subsection_296356d6": [
+      "2412-15305_section_3c8b9414"
+    ],
+    "2412-15305_sent_4f645f71": [
+      "2412-15305_subsection_296356d6"
+    ],
+    "2412-15305_sent_da7b7f3c": [
+      "2412-15305_subsection_296356d6"
+    ],
+    "2412-15305_sent_2d5c0b28": [
+      "2412-15305_subsection_296356d6"
+    ],
+    "2412-15305_sent_1ec09255": [
+      "2412-15305_subsection_296356d6"
+    ],
+    "2412-15305_sent_a80127d3": [
+      "2412-15305_subsection_296356d6"
+    ],
+    "2412-15305_sent_51b552c4": [
+      "2412-15305_subsection_296356d6"
+    ],
+    "2412-15305_sent_98779add": [
+      "2412-15305_subsection_296356d6"
+    ],
+    "2412-15305_sent_77cee26e": [
+      "2412-15305_subsection_296356d6",
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_14d1890f": [
+      "2412-15305_subsection_296356d6",
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_d16461c1": [
+      "2412-15305_subsection_296356d6",
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_fig_91bc84b9": [
+      "2412-15305_subsection_296356d6",
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_subsection_55ddb909": [
+      "2412-15305_section_3c8b9414"
+    ],
+    "2412-15305_sent_79344a97": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_sent_01a22f1d": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_sent_6f92a64b": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_sent_05739c38": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_fig_b01a8c95": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_subsection_befb9473": [
+      "2412-15305_section_3c8b9414"
+    ],
+    "2412-15305_fig_3b9d55c5": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_cc6490c8": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_cf8d2dae": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_4f61bcda": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_e74023a6": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_fig_472910d1": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_21881646": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_b37f1bdf": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_9478b728": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_fig_69934bb0": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_section_eed9474f": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_sent_6fc04c84": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_sent_39028c24": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_sent_d6013c3d": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_sent_34d62ed5": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_sent_9fdf6903": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_sent_e8caec73": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_sent_10feaf91": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_sent_3dd060fa": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_sent_633483bc": [
+      "2412-15305_section_eed9474f"
+    ],
+    "2412-15305_section_aed402c3": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_sent_aefe58b2": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_4d540f09": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_16d3b730": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_9bb7d779": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_13bd97c3": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_f3e0c0d4": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_bfcece96": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_1716d228": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_section_6f8b794f": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_sent_861708c7": [
+      "2412-15305_section_6f8b794f"
+    ],
+    "2412-15305_sent_1f32e33e": [
+      "2412-15305_section_6f8b794f"
+    ],
+    "2412-15305_sent_af7f10ce": [
+      "2412-15305_section_6f8b794f"
+    ],
+    "2412-15305_section_e646e16b": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_subsection_859b4090": [
+      "2412-15305_section_e646e16b"
+    ],
+    "2412-15305_sent_cf528687": [
+      "2412-15305_subsection_859b4090"
+    ],
+    "2412-15305_sent_b1b81006": [
+      "2412-15305_subsection_859b4090"
+    ],
+    "2412-15305_sent_172d05bb": [
+      "2412-15305_subsection_859b4090"
+    ],
+    "2412-15305_sent_3789b87b": [
+      "2412-15305_subsection_859b4090"
+    ],
+    "2412-15305_subsection_289e69f1": [
+      "2412-15305_section_e646e16b"
+    ],
+    "2412-15305_sent_b1256f03": [
+      "2412-15305_subsection_289e69f1"
+    ],
+    "2412-15305_sent_e68e6592": [
+      "2412-15305_subsection_289e69f1"
+    ],
+    "2412-15305_sent_668ee159": [
+      "2412-15305_subsection_289e69f1"
+    ],
+    "2412-15305_sent_90996e49": [
+      "2412-15305_subsection_289e69f1"
+    ],
+    "2412-15305_subsection_b0ea7f3a": [
+      "2412-15305_section_e646e16b"
+    ],
+    "2412-15305_sent_85ad4130": [
+      "2412-15305_subsection_b0ea7f3a"
+    ],
+    "2412-15305_sent_00b7fbc0": [
+      "2412-15305_subsection_b0ea7f3a"
+    ],
+    "2412-15305_sent_bad5282e": [
+      "2412-15305_subsection_b0ea7f3a"
+    ],
+    "2412-15305_subsection_b3b788ad": [
+      "2412-15305_section_e646e16b"
+    ],
+    "2412-15305_sent_9b4676a3": [
+      "2412-15305_subsection_b3b788ad"
+    ],
+    "2412-15305_sent_223778e2": [
+      "2412-15305_subsection_b3b788ad"
+    ],
+    "2412-15305_sent_222aa2e1": [
+      "2412-15305_subsection_b3b788ad"
+    ],
+    "2412-15305_sent_50c197d0": [
+      "2412-15305_subsection_b3b788ad"
+    ],
+    "2412-15305_sent_ebe857c1": [
+      "2412-15305_subsection_84ffd62e",
+      "2412-15305_subsection_b3b788ad"
+    ],
+    "2412-15305_section_45d74bdb": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_subsection_df61d912": [
+      "2412-15305_section_45d74bdb"
+    ],
+    "2412-15305_sent_5869d479": [
+      "2412-15305_subsection_df61d912"
+    ],
+    "2412-15305_sent_ee1c1767": [
+      "2412-15305_subsection_df61d912"
+    ],
+    "2412-15305_sent_462ecbeb": [
+      "2412-15305_subsection_df61d912"
+    ],
+    "2412-15305_sent_af716325": [
+      "2412-15305_subsection_df61d912"
+    ],
+    "2412-15305_sent_cf431a8e": [
+      "2412-15305_subsection_df61d912"
+    ],
+    "2412-15305_subsection_541fee53": [
+      "2412-15305_section_45d74bdb"
+    ],
+    "2412-15305_subsubsection_cf3c82bb": [
+      "2412-15305_subsection_541fee53"
+    ],
+    "2412-15305_sent_d895a25a": [
+      "2412-15305_subsubsection_cf3c82bb"
+    ],
+    "2412-15305_sent_e7fbb31f": [
+      "2412-15305_subsubsection_cf3c82bb"
+    ],
+    "2412-15305_sent_22aaeed4": [
+      "2412-15305_subsubsection_cf3c82bb"
+    ],
+    "2412-15305_subsubsection_09b9266c": [
+      "2412-15305_subsection_541fee53"
+    ],
+    "2412-15305_sent_0d8e4188": [
+      "2412-15305_subsubsection_09b9266c"
+    ],
+    "2412-15305_sent_8d0a74c8": [
+      "2412-15305_subsubsection_09b9266c"
+    ],
+    "2412-15305_subsubsection_f09d2c4a": [
+      "2412-15305_subsection_541fee53"
+    ],
+    "2412-15305_sent_9042df1b": [
+      "2412-15305_subsubsection_f09d2c4a"
+    ],
+    "2412-15305_sent_099cefe5": [
+      "2412-15305_subsubsection_f09d2c4a"
+    ],
+    "2412-15305_sent_b202c759": [
+      "2412-15305_subsubsection_f09d2c4a"
+    ],
+    "2412-15305_sent_8b0d1a9c": [
+      "2412-15305_subsubsection_f09d2c4a"
+    ],
+    "2412-15305_section_06bf5e19": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_subsection_4472e1ee": [
+      "2412-15305_section_06bf5e19"
+    ],
+    "2412-15305_subsubsection_1bbbe31f": [
+      "2412-15305_subsection_4472e1ee"
+    ],
+    "2412-15305_sent_13fd93e6": [
+      "2412-15305_subsubsection_1bbbe31f"
+    ],
+    "2412-15305_sent_97f9a08d": [
+      "2412-15305_subsubsection_1bbbe31f"
+    ],
+    "2412-15305_sent_e580d2ba": [
+      "2412-15305_subsubsection_1bbbe31f"
+    ],
+    "2412-15305_sent_1774dfba": [
+      "2412-15305_subsubsection_1bbbe31f"
+    ],
+    "2412-15305_subsubsection_62d99aa3": [
+      "2412-15305_subsection_4472e1ee"
+    ],
+    "2412-15305_sent_546132fe": [
+      "2412-15305_subsubsection_62d99aa3"
+    ],
+    "2412-15305_subsection_e0c0fd4a": [
+      "2412-15305_section_06bf5e19"
+    ],
+    "2412-15305_subsubsection_116a8bb7": [
+      "2412-15305_subsection_e0c0fd4a"
+    ],
+    "2412-15305_sent_ca456595": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_7aa130d6": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_49e115e3": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_25f75cdd": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_406797a4": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_78e8f8d6": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_f20dacf1": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_027902f4": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_70197cef": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_657ff28f": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_c581e66b": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_15c74223": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_2cac718f": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_fd6f1538": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_65cdb01b": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_5b17f383": [
+      "2412-15305_subsubsection_116a8bb7"
+    ],
+    "2412-15305_sent_bfec7915": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_4a18c137": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_f3f46eef": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_57faee01": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_008e1b88": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_b552c9ce": [
+      "2412-15305_abstract_ce28071e"
+    ],
+    "2412-15305_sent_2a5bab5f": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_d07e64f7": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_86d4af08": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_af6e141e": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_07180317": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_ae52496c": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_0256fa8c": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_d5421224": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_a60cf9e1": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_556ed999": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_af9217f9": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_58d3ad25": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_55f4b437": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_4e285e61": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_90e6e642": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_65e7a01d": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_e5455cee": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_d5e3d2fe": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_c00c1678": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_b9214e34": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_6cbaa361": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_93ee2bcc": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_eb5d97de": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_43c92b87": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_4173e330": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_22279f59": [
+      "2412-15305_section_0b79795d"
+    ],
+    "2412-15305_sent_d4e75031": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_ac346373": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_83e3ad26": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_b822a5ff": [
+      "2412-15305_item_092db380"
+    ],
+    "2412-15305_sent_2d42be6c": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_06e63dca": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_2b5df5d1": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_d68f216e": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_685537f3": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_cbb0ef87": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_5ad83760": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_bfa5063c": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_ff6f2944": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_97e0a550": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_390f53d4": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_e000906d": [
+      "2412-15305_section_ca381abf"
+    ],
+    "2412-15305_sent_ffee50b9": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_ee2077ae": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_2c4bf114": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_0d5f19de": [
+      "2412-15305_subsection_8186f26a"
+    ],
+    "2412-15305_subsection_c87b8bba": [
+      "2412-15305_section_e79aebc1"
+    ],
+    "2412-15305_sent_a3dc3339": [
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_c76c12bc": [
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_2942f3da": [
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_34ae4080": [
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_27d19c2d": [
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_6528b220": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_195c641f": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_0ee23c66": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_d1795e8d": [
+      "2412-15305_subsection_94394ef2"
+    ],
+    "2412-15305_sent_053f578b": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_sent_33435e82": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_sent_2d9280c8": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_sent_f8c91abe": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_sent_93ba5665": [
+      "2412-15305_subsection_49320271"
+    ],
+    "2412-15305_subsubsection_89c6a923": [
+      "2412-15305_subsection_c87b8bba"
+    ],
+    "2412-15305_sent_130648c9": [
+      "2412-15305_subsubsection_89c6a923"
+    ],
+    "2412-15305_sent_8a75e8dc": [
+      "2412-15305_subsubsection_89c6a923"
+    ],
+    "2412-15305_sent_5db57021": [
+      "2412-15305_subsubsection_89c6a923"
+    ],
+    "2412-15305_sent_2b1494ba": [
+      "2412-15305_subsubsection_89c6a923"
+    ],
+    "2412-15305_sent_0d9432e3": [
+      "2412-15305_subsubsection_89c6a923"
+    ],
+    "2412-15305_sent_a0a38321": [
+      "2412-15305_subsubsection_89c6a923"
+    ],
+    "2412-15305_sent_8749af7c": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_55304d35": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_fig_2eef38e6": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_a50ef4ef": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_9aa6350f": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_fd72689a": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_f01f30e8": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_f53f57e9": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_59d386d0": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_d6e2f487": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_f6713231": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_6f17782a": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_6b76db0d": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_4b3988ee": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_847e1d01": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_b591de43": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_fda75ee4": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_c5d607d7": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_f4c75387": [
+      "2412-15305_subsection_f9773996"
+    ],
+    "2412-15305_sent_17934df6": [
+      "2412-15305_subsection_4e03f1b6"
+    ],
+    "2412-15305_sent_076c3c3e": [
+      "2412-15305_subsection_4e03f1b6"
+    ],
+    "2412-15305_sent_74367e75": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_19f00e1b": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_00c01265": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_cf0d880d": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_8f7e93c7": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_e5c95a11": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_353822ce": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_5349ec8a": [
+      "2412-15305_subsection_ad2376be"
+    ],
+    "2412-15305_sent_b226d286": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_sent_078439bf": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_sent_8ac2d9b1": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_fig_9dba27a8": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_subsubsection_204d48f6": [
+      "2412-15305_subsection_55ddb909"
+    ],
+    "2412-15305_sent_1cadea60": [
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_570d29be": [
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_32d56ec3": [
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_d927ffd3": [
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_b2063241": [
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_9952ad2d": [
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_3c8d8281": [
+      "2412-15305_subsubsection_204d48f6"
+    ],
+    "2412-15305_sent_87c35305": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_f11d713c": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_8b57f4a8": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_223eeff5": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_18e2db53": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_65970b24": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_c8ad4335": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_425270be": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_45c143f3": [
+      "2412-15305_subsection_befb9473"
+    ],
+    "2412-15305_sent_ec89cc57": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_8963b38f": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_794d1bd4": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_92cd86a1": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_0202c928": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_9f26815b": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_24b7c154": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_563ab40d": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_bf5c9ab7": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_3a226713": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_52cbab9f": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_76293141": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_76bdb3c9": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_aa8b2b0e": [
+      "2412-15305_section_aed402c3"
+    ],
+    "2412-15305_sent_29175901": [
+      "2412-15305_section_6f8b794f"
+    ],
+    "2412-15305_sent_734eeb40": [
+      "2412-15305_section_6f8b794f"
+    ],
+    "2412-15305_sent_688b9825": [
+      "2412-15305_subsection_289e69f1"
+    ],
+    "2412-15305_subsection_84ffd62e": [
+      "2412-15305_section_e646e16b"
+    ],
+    "2412-15305_sent_b6759aea": [
+      "2412-15305_subsection_84ffd62e"
+    ],
+    "2412-15305_subsection_fef80d91": [
+      "2412-15305_section_06bf5e19"
+    ],
+    "2412-15305_sent_96621450": [
+      "2412-15305_subsection_fef80d91"
+    ],
+    "2412-15305_sent_c88de71b": [
+      "2412-15305_subsection_fef80d91"
+    ],
+    "2412-15305_sent_ea253705": [
+      "2412-15305_subsection_fef80d91"
+    ],
+    "2412-15305_sent_b23459b2": [
+      "2412-15305_subsection_fef80d91"
+    ],
+    "2412-15305_sent_16234c47": [
+      "2412-15305_subsection_fef80d91"
+    ],
+    "2412-15305_sent_118aad86": [
+      "2412-15305_subsection_fef80d91"
+    ],
+    "2412-15305_section_a5894db6": [
+      "2412-15305_doc_root"
+    ],
+    "2412-15305_fig_f3147c06": [
+      "2412-15305_section_a5894db6"
+    ]
+  }
+}
