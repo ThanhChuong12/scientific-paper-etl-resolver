@@ -11,6 +11,11 @@ Problem Type: RANKING/RETRIEVAL
 
 Pipeline Steps:
 1. Data Loading & Cleaning
+2. Data Labeling (Manual + Automatic)
+3. Feature Engineering
+4. Model Training (XGBoost Ranker)
+5. Evaluation (MRR@5)x
+6. Prediction Generation (pred.json)
 """
 
 import json
@@ -720,3 +725,127 @@ class FeatureExtractor:
         if len(words) < n:
             return set()
         return set(' '.join(words[i:i+n]) for i in range(len(words) - n + 1))
+
+
+# ================ DATA LABELING ================
+class DataLabeler:
+    """Handles manual and automatic data labeling"""
+    
+    def __init__(self, feature_extractor: FeatureExtractor):
+        self.feature_extractor = feature_extractor
+    
+    def create_manual_labels(
+        self, 
+        pub_id: str,
+        bib_entries: List[BibEntry],
+        arxiv_entries: Dict[str, ArxivEntry],
+        known_matches: Dict[str, str]  # bib_key -> arxiv_id
+    ) -> List[MatchPair]:
+        """
+        Create labeled pairs for manual labeling.
+        known_matches: Dictionary mapping bib_key to correct arxiv_id
+        """
+        pairs = []
+        
+        for bib in bib_entries:
+            for arxiv_id, arxiv in arxiv_entries.items():
+                # Check if this is a known match
+                is_match = known_matches.get(bib.key) == arxiv_id
+                
+                features = self.feature_extractor.extract_features(bib, arxiv)
+                
+                pair = MatchPair(
+                    publication_id=pub_id,
+                    bib_key=bib.key,
+                    arxiv_id=arxiv_id,
+                    features=features,
+                    label=1 if is_match else 0,
+                    label_source="manual"
+                )
+                pairs.append(pair)
+        
+        return pairs
+    
+    def create_auto_labels(
+        self,
+        pub_id: str,
+        bib_entries: List[BibEntry],
+        arxiv_entries: Dict[str, ArxivEntry],
+        threshold: float = 0.7
+    ) -> Tuple[List[MatchPair], Dict[str, str]]:
+        """
+        Create automatically labeled pairs using heuristics.
+        Returns pairs and discovered matches.
+        """
+        pairs = []
+        discovered_matches = {}
+        
+        for bib in bib_entries:
+            best_score = 0.0
+            best_arxiv_id = None
+            
+            for arxiv_id, arxiv in arxiv_entries.items():
+                features = self.feature_extractor.extract_features(bib, arxiv)
+                
+                # Calculate heuristic score
+                score = self._calculate_heuristic_score(features)
+                
+                if score > best_score:
+                    best_score = score
+                    best_arxiv_id = arxiv_id
+                
+                # Determine label
+                is_match = score >= threshold
+                
+                pair = MatchPair(
+                    publication_id=pub_id,
+                    bib_key=bib.key,
+                    arxiv_id=arxiv_id,
+                    features=features,
+                    label=1 if is_match else 0,
+                    label_source="auto"
+                )
+                pairs.append(pair)
+            
+            # Record best match if above threshold
+            if best_score >= threshold and best_arxiv_id:
+                discovered_matches[bib.key] = best_arxiv_id
+        
+        return pairs, discovered_matches
+    
+    def _calculate_heuristic_score(self, features: Dict[str, float]) -> float:
+        """Calculate matching score using heuristics"""
+        score = 0.0
+        
+        # Strong indicators (high weight)
+        if features.get('title_exact_match', 0) > 0:
+            return 1.0
+        if features.get('venue_arxiv_id_match', 0) > 0:
+            return 0.95
+        if features.get('bib_arxiv_match', 0) > 0:
+            return 0.95
+        if features.get('key_has_arxiv', 0) > 0:
+            score += 0.3
+        
+        # Title similarity (high weight)
+        title_jaccard = features.get('title_jaccard_nostop', 0)
+        score += title_jaccard * 0.35
+        
+        title_sequence = features.get('title_sequence_ratio', 0)
+        score += title_sequence * 0.2
+        
+        # Author similarity (medium weight)
+        author_overlap = features.get('author_lastname_overlap', 0)
+        score += author_overlap * 0.2
+        
+        first_author = features.get('author_first_match', 0)
+        score += first_author * 0.1
+        
+        # Year match (low weight but important)
+        year_match = features.get('year_exact_match', 0)
+        score += year_match * 0.1
+        
+        year_norm = features.get('year_diff_normalized', 0)
+        score += year_norm * 0.05
+        
+        return min(score, 1.0)
