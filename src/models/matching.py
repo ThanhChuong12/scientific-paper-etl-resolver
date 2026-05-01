@@ -450,3 +450,273 @@ class DataLoader:
             with open(labels_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         return {}
+
+
+# ================ FEATURE ENGINEERING ================
+class FeatureExtractor:
+    """Extracts features for matching pairs"""
+    
+    def __init__(self):
+        self.tfidf_vectorizer = TfidfVectorizer(
+            max_features=5000,
+            ngram_range=(1, 2),
+            stop_words='english'
+        )
+        self._fitted = False
+    
+    def fit(self, titles: List[str]):
+        """Fit TF-IDF vectorizer on corpus of titles"""
+        cleaned_titles = [TextCleaner.clean_text(t) for t in titles]
+        self.tfidf_vectorizer.fit(cleaned_titles)
+        self._fitted = True
+    
+    def extract_features(self, bib: BibEntry, arxiv: ArxivEntry) -> Dict[str, float]:
+        """Extract all features for a (BibTeX, ArxivEntry) pair"""
+        features = {}
+        
+        # 1. Title similarity features
+        title_features = self._title_features(bib.title, arxiv.title)
+        features.update(title_features)
+        
+        # 2. Author similarity features
+        author_features = self._author_features(bib.authors, arxiv.authors)
+        features.update(author_features)
+        
+        # 3. Year features
+        year_features = self._year_features(bib.year, arxiv.year)
+        features.update(year_features)
+        
+        # 4. Venue/arXiv features
+        venue_features = self._venue_features(bib.venue, arxiv.arxiv_id)
+        features.update(venue_features)
+        
+        # 5. Key-based features (arXiv ID in bib key)
+        key_features = self._key_features(bib.key, bib.arxiv_id, arxiv.arxiv_id)
+        features.update(key_features)
+        
+        return features
+    
+    def _title_features(self, bib_title: str, arxiv_title: str) -> Dict[str, float]:
+        """Extract title similarity features"""
+        bib_clean = TextCleaner.clean_text(bib_title)
+        arxiv_clean = TextCleaner.clean_text(arxiv_title)
+        
+        bib_no_stop = TextCleaner.clean_text(bib_title, remove_stopwords=True)
+        arxiv_no_stop = TextCleaner.clean_text(arxiv_title, remove_stopwords=True)
+        
+        features = {}
+        
+        # 1. Exact match
+        features['title_exact_match'] = float(bib_clean == arxiv_clean)
+        
+        # 2. Jaccard similarity on tokens
+        bib_tokens = set(bib_clean.split())
+        arxiv_tokens = set(arxiv_clean.split())
+        if bib_tokens or arxiv_tokens:
+            features['title_jaccard'] = len(bib_tokens & arxiv_tokens) / len(bib_tokens | arxiv_tokens)
+        else:
+            features['title_jaccard'] = 0.0
+        
+        # 3. Jaccard without stopwords
+        bib_tokens_ns = set(bib_no_stop.split())
+        arxiv_tokens_ns = set(arxiv_no_stop.split())
+        if bib_tokens_ns or arxiv_tokens_ns:
+            features['title_jaccard_nostop'] = len(bib_tokens_ns & arxiv_tokens_ns) / len(bib_tokens_ns | arxiv_tokens_ns)
+        else:
+            features['title_jaccard_nostop'] = 0.0
+        
+        # 4. TF-IDF cosine similarity
+        if self._fitted:
+            try:
+                tfidf_matrix = self.tfidf_vectorizer.transform([bib_clean, arxiv_clean])
+                features['title_tfidf_cosine'] = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+            except:
+                features['title_tfidf_cosine'] = 0.0
+        else:
+            features['title_tfidf_cosine'] = 0.0
+        
+        # 5. Sequence matcher ratio (Levenshtein-like)
+        features['title_sequence_ratio'] = SequenceMatcher(None, bib_clean, arxiv_clean).ratio()
+        
+        # 6. Length ratio
+        if max(len(bib_clean), len(arxiv_clean)) > 0:
+            features['title_len_ratio'] = min(len(bib_clean), len(arxiv_clean)) / max(len(bib_clean), len(arxiv_clean))
+        else:
+            features['title_len_ratio'] = 0.0
+        
+        # 7. Word count ratio
+        bib_words = len(bib_clean.split())
+        arxiv_words = len(arxiv_clean.split())
+        if max(bib_words, arxiv_words) > 0:
+            features['title_word_ratio'] = min(bib_words, arxiv_words) / max(bib_words, arxiv_words)
+        else:
+            features['title_word_ratio'] = 0.0
+        
+        # 8. Common bigrams
+        bib_bigrams = self._get_ngrams(bib_no_stop, 2)
+        arxiv_bigrams = self._get_ngrams(arxiv_no_stop, 2)
+        if bib_bigrams or arxiv_bigrams:
+            features['title_bigram_overlap'] = len(bib_bigrams & arxiv_bigrams) / max(1, len(bib_bigrams | arxiv_bigrams))
+        else:
+            features['title_bigram_overlap'] = 0.0
+        
+        # 9. Common trigrams  
+        bib_trigrams = self._get_ngrams(bib_no_stop, 3)
+        arxiv_trigrams = self._get_ngrams(arxiv_no_stop, 3)
+        if bib_trigrams or arxiv_trigrams:
+            features['title_trigram_overlap'] = len(bib_trigrams & arxiv_trigrams) / max(1, len(bib_trigrams | arxiv_trigrams))
+        else:
+            features['title_trigram_overlap'] = 0.0
+        
+        # 10. Contains key terms
+        key_terms = ['survey', 'review', 'benchmark', 'analysis', 'study', 'evaluation']
+        bib_has_key = any(term in bib_clean for term in key_terms)
+        arxiv_has_key = any(term in arxiv_clean for term in key_terms)
+        features['title_keyterm_match'] = float(bib_has_key == arxiv_has_key)
+        
+        return features
+    
+    def _author_features(self, bib_authors: List[str], arxiv_authors: List[str]) -> Dict[str, float]:
+        """Extract author similarity features"""
+        features = {}
+        
+        if not bib_authors or not arxiv_authors:
+            features['author_jaccard'] = 0.0
+            features['author_first_match'] = 0.0
+            features['author_last_match'] = 0.0
+            features['author_count_ratio'] = 0.0
+            features['author_lastname_overlap'] = 0.0
+            features['author_any_match'] = 0.0
+            return features
+        
+        # Normalize author names
+        bib_normalized = [TextCleaner.normalize_author_name(a) for a in bib_authors]
+        arxiv_normalized = [TextCleaner.normalize_author_name(a) for a in arxiv_authors]
+        
+        # Extract lastnames
+        bib_lastnames = set(TextCleaner.extract_lastname(a) for a in bib_authors)
+        arxiv_lastnames = set(TextCleaner.extract_lastname(a) for a in arxiv_authors)
+        
+        # 1. Full name Jaccard
+        bib_set = set(bib_normalized)
+        arxiv_set = set(arxiv_normalized)
+        features['author_jaccard'] = len(bib_set & arxiv_set) / max(1, len(bib_set | arxiv_set))
+        
+        # 2. First author match (lastname)
+        bib_first_last = TextCleaner.extract_lastname(bib_authors[0]) if bib_authors else ""
+        arxiv_first_last = TextCleaner.extract_lastname(arxiv_authors[0]) if arxiv_authors else ""
+        features['author_first_match'] = float(bib_first_last == arxiv_first_last and bib_first_last != "")
+        
+        # 3. Last author match (lastname)
+        bib_last_last = TextCleaner.extract_lastname(bib_authors[-1]) if bib_authors else ""
+        arxiv_last_last = TextCleaner.extract_lastname(arxiv_authors[-1]) if arxiv_authors else ""
+        features['author_last_match'] = float(bib_last_last == arxiv_last_last and bib_last_last != "")
+        
+        # 4. Author count ratio
+        features['author_count_ratio'] = min(len(bib_authors), len(arxiv_authors)) / max(len(bib_authors), len(arxiv_authors))
+        
+        # 5. Lastname overlap
+        if bib_lastnames or arxiv_lastnames:
+            features['author_lastname_overlap'] = len(bib_lastnames & arxiv_lastnames) / max(1, len(bib_lastnames | arxiv_lastnames))
+        else:
+            features['author_lastname_overlap'] = 0.0
+        
+        # 6. Any author match
+        features['author_any_match'] = float(len(bib_lastnames & arxiv_lastnames) > 0)
+        
+        return features
+    
+    def _year_features(self, bib_year: str, arxiv_year: str) -> Dict[str, float]:
+        """Extract year-based features"""
+        features = {}
+        
+        try:
+            bib_y = int(bib_year) if bib_year and bib_year.isdigit() else 0
+            arxiv_y = int(arxiv_year) if arxiv_year and arxiv_year.isdigit() else 0
+        except:
+            bib_y, arxiv_y = 0, 0
+        
+        # 1. Exact year match
+        features['year_exact_match'] = float(bib_y == arxiv_y and bib_y > 0)
+        
+        # 2. Year difference
+        if bib_y > 0 and arxiv_y > 0:
+            features['year_diff'] = abs(bib_y - arxiv_y)
+            features['year_diff_normalized'] = 1.0 / (1.0 + abs(bib_y - arxiv_y))
+        else:
+            features['year_diff'] = 10  # Default large difference
+            features['year_diff_normalized'] = 0.1
+        
+        # 3. Year within range (arXiv typically precedes publication)
+        if bib_y > 0 and arxiv_y > 0:
+            diff = bib_y - arxiv_y
+            features['year_arxiv_before_pub'] = float(0 <= diff <= 2)
+        else:
+            features['year_arxiv_before_pub'] = 0.0
+        
+        return features
+    
+    def _venue_features(self, venue: str, arxiv_id: str) -> Dict[str, float]:
+        """Extract venue/arXiv related features"""
+        features = {}
+        
+        venue_clean = venue.lower() if venue else ""
+        
+        # 1. Is arXiv preprint
+        features['venue_is_arxiv'] = float('arxiv' in venue_clean or 'preprint' in venue_clean)
+        
+        # 2. ArXiv ID format in venue
+        arxiv_pattern = re.search(r'(\d{4}\.\d{4,5})', venue_clean)
+        features['venue_has_arxiv_id'] = float(arxiv_pattern is not None)
+        
+        # 3. ArXiv ID match
+        if arxiv_pattern:
+            venue_arxiv = arxiv_pattern.group(1)
+            arxiv_normalized = arxiv_id.replace('-', '.')
+            features['venue_arxiv_id_match'] = float(venue_arxiv == arxiv_normalized)
+        else:
+            features['venue_arxiv_id_match'] = 0.0
+        
+        return features
+    
+    def _key_features(self, bib_key: str, bib_arxiv_id: str, arxiv_id: str) -> Dict[str, float]:
+        """Extract features based on BibTeX key"""
+        features = {}
+        
+        bib_key_lower = bib_key.lower()
+        arxiv_normalized = arxiv_id.replace('-', '').replace('.', '')
+        
+        # 1. ArXiv ID in bib key
+        features['key_has_arxiv'] = float(arxiv_normalized in bib_key_lower.replace('-', '').replace('.', ''))
+        
+        # 2. Extracted arXiv ID match
+        if bib_arxiv_id:
+            bib_arxiv_norm = bib_arxiv_id.replace('-', '.').replace('_', '.')
+            arxiv_norm = arxiv_id.replace('-', '.')
+            features['bib_arxiv_match'] = float(bib_arxiv_norm == arxiv_norm)
+        else:
+            features['bib_arxiv_match'] = 0.0
+        
+        # 3. Year in key matches
+        key_year_match = re.search(r'(\d{4})', bib_key)
+        if key_year_match:
+            key_year = key_year_match.group(1)
+            # Check if arxiv_id starts with year pattern (e.g., 2412- means 2024)
+            if arxiv_id[:2].isdigit():
+                arxiv_year_prefix = arxiv_id[:2]
+                # 24 -> 2024, 23 -> 2023, etc.
+                arxiv_year = f"20{arxiv_year_prefix}"
+                features['key_year_match'] = float(key_year == arxiv_year)
+            else:
+                features['key_year_match'] = 0.0
+        else:
+            features['key_year_match'] = 0.0
+        
+        return features
+    
+    def _get_ngrams(self, text: str, n: int) -> Set[str]:
+        """Get n-grams from text"""
+        words = text.split()
+        if len(words) < n:
+            return set()
+        return set(' '.join(words[i:i+n]) for i in range(len(words) - n + 1))
