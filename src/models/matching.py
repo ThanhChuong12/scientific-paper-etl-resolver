@@ -849,3 +849,686 @@ class DataLabeler:
         score += year_norm * 0.05
         
         return min(score, 1.0)
+
+
+# ================ MODEL TRAINING ================
+class ReferenceMatcherModel:
+    """Machine learning model for reference matching"""
+    
+    def __init__(self, model_type: str = 'gradient_boosting'):
+        self.model_type = model_type
+        self.model = None
+        self.scaler = StandardScaler()
+        self.feature_cols = None
+        
+        self._init_model()
+    
+    def _init_model(self):
+        """Initialize the underlying ML model"""
+        if self.model_type == 'gradient_boosting':
+            self.model = GradientBoostingClassifier(
+                n_estimators=100,
+                max_depth=5,
+                learning_rate=0.1,
+                subsample=0.8,
+                random_state=42
+            )
+        elif self.model_type == 'random_forest':
+            self.model = RandomForestClassifier(
+                n_estimators=100,
+                max_depth=10,
+                random_state=42
+            )
+        elif self.model_type == 'logistic':
+            self.model = LogisticRegression(
+                max_iter=1000,
+                random_state=42
+            )
+        else:
+            raise ValueError(f"Unknown model type: {self.model_type}")
+    
+    def train(self, pairs: List[MatchPair], valid_pairs: Optional[List[MatchPair]] = None):
+        """Train the model on labeled pairs"""
+        # Convert to DataFrame
+        df = self._pairs_to_dataframe(pairs)
+        
+        # Get feature columns
+        self.feature_cols = [col for col in df.columns 
+                           if col not in ['publication_id', 'bib_key', 'arxiv_id', 'label', 'label_source']]
+        
+        X = df[self.feature_cols].values
+        y = df['label'].values
+        
+        # Scale features
+        X_scaled = self.scaler.fit_transform(X)
+        
+        # Train model
+        self.model.fit(X_scaled, y)
+        
+        logger.info(f"Model trained on {len(pairs)} pairs")
+        
+        # Evaluate on validation if provided
+        if valid_pairs:
+            valid_df = self._pairs_to_dataframe(valid_pairs)
+            X_valid = valid_df[self.feature_cols].values
+            y_valid = valid_df['label'].values
+            X_valid_scaled = self.scaler.transform(X_valid)
+            
+            valid_acc = self.model.score(X_valid_scaled, y_valid)
+            logger.info(f"Validation accuracy: {valid_acc:.4f}")
+    
+    def predict_scores(self, pairs: List[MatchPair]) -> List[MatchPair]:
+        """Predict matching scores for pairs"""
+        if not self.feature_cols:
+            raise ValueError("Model not trained yet")
+        
+        df = self._pairs_to_dataframe(pairs)
+        X = df[self.feature_cols].values
+        X_scaled = self.scaler.transform(X)
+        
+        # Get probability of positive class
+        scores = self.model.predict_proba(X_scaled)[:, 1]
+        
+        # Update pairs with scores
+        for pair, score in zip(pairs, scores):
+            pair.pred_score = score
+        
+        return pairs
+    
+    def rank_candidates(self, pairs: List[MatchPair]) -> Dict[str, List[Tuple[str, float]]]:
+        """
+        Rank candidates for each BibTeX entry.
+        Returns: {bib_key: [(arxiv_id, score), ...]}
+        """
+        # Predict scores
+        pairs = self.predict_scores(pairs)
+        
+        # Group by bib_key
+        by_bib_key = defaultdict(list)
+        for pair in pairs:
+            by_bib_key[pair.bib_key].append((pair.arxiv_id, pair.pred_score))
+        
+        # Sort by score (descending)
+        ranked = {}
+        for bib_key, candidates in by_bib_key.items():
+            ranked[bib_key] = sorted(candidates, key=lambda x: x[1], reverse=True)
+        
+        return ranked
+    
+    def _pairs_to_dataframe(self, pairs: List[MatchPair]) -> pd.DataFrame:
+        """Convert list of MatchPair to DataFrame"""
+        records = []
+        for pair in pairs:
+            record = {
+                'publication_id': pair.publication_id,
+                'bib_key': pair.bib_key,
+                'arxiv_id': pair.arxiv_id,
+                'label': pair.label,
+                'label_source': pair.label_source,
+                **pair.features
+            }
+            records.append(record)
+        return pd.DataFrame(records)
+
+
+# ================ EVALUATION ================
+class Evaluator:
+    """Evaluates matching performance using MRR@K"""
+    
+    @staticmethod
+    def calculate_mrr(
+        ranked_candidates: Dict[str, List[Tuple[str, float]]],
+        ground_truth: Dict[str, str],
+        k: int = 5
+    ) -> Tuple[float, Dict[str, float]]:
+        """
+        Calculate Mean Reciprocal Rank @ K
+        
+        Args:
+            ranked_candidates: {bib_key: [(arxiv_id, score), ...]}
+            ground_truth: {bib_key: correct_arxiv_id}
+            k: Top-k candidates to consider
+            
+        Returns:
+            (mrr_score, {bib_key: reciprocal_rank})
+        """
+        reciprocal_ranks = {}
+        
+        for bib_key, correct_arxiv in ground_truth.items():
+            if bib_key not in ranked_candidates:
+                reciprocal_ranks[bib_key] = 0.0
+                continue
+            
+            # Get top-k candidates
+            top_k = ranked_candidates[bib_key][:k]
+            top_k_ids = [arxiv_id for arxiv_id, _ in top_k]
+            
+            # Find rank of correct answer
+            if correct_arxiv in top_k_ids:
+                rank = top_k_ids.index(correct_arxiv) + 1
+                reciprocal_ranks[bib_key] = 1.0 / rank
+            else:
+                reciprocal_ranks[bib_key] = 0.0
+        
+        # Calculate MRR
+        if reciprocal_ranks:
+            mrr = np.mean(list(reciprocal_ranks.values()))
+        else:
+            mrr = 0.0
+        
+        return mrr, reciprocal_ranks
+    
+    @staticmethod
+    def generate_predictions(
+        ranked_candidates: Dict[str, List[Tuple[str, float]]],
+        ground_truth: Dict[str, str],
+        partition: str,
+        k: int = 5
+    ) -> Dict:
+        """Generate predictions in required format"""
+        predictions = {}
+        
+        for bib_key in ranked_candidates:
+            top_k = ranked_candidates[bib_key][:k]
+            predictions[bib_key] = [arxiv_id for arxiv_id, _ in top_k]
+        
+        return {
+            "partition": partition,
+            "groundtruth": ground_truth,
+            "prediction": predictions
+        }
+
+
+# ================ MAIN PIPELINE ================
+class ReferenceMatchingPipeline:
+    """Complete reference matching pipeline"""
+    
+    def __init__(self, data_dir: Path, processed_dir: Optional[Path] = None, output_dir: Optional[Path] = None):
+        self.data_dir = Path(data_dir)
+        self.processed_dir = Path(processed_dir) if processed_dir else None
+        self.output_dir = output_dir or self.data_dir
+        
+        self.data_loader = DataLoader(data_dir, processed_dir)
+        self.feature_extractor = FeatureExtractor()
+        self.labeler = DataLabeler(self.feature_extractor)
+        self.model = ReferenceMatcherModel(model_type='gradient_boosting')
+        self.evaluator = Evaluator()
+        
+        # Data storage
+        self.publications = {}  # {pub_id: (bib_entries, arxiv_entries)}
+        self.all_pairs = {}  # {pub_id: List[MatchPair]}
+        self.ground_truth = {}  # {pub_id: {bib_key: arxiv_id}}
+        self.split_info = {}  # {pub_id: 'train'/'valid'/'test'}
+        self.label_config = {}  # Store label.json configuration
+        
+    def load_label_config(self, label_json_path: Path) -> Dict:
+        """Load label.json configuration file"""
+        with open(label_json_path, 'r', encoding='utf-8') as f:
+            self.label_config = json.load(f)
+        logger.info(f"Loaded label config: {self.label_config['manual_subset']['count']} manual, {self.label_config['auto_subset']['count']} auto")
+        return self.label_config
+    
+    def load_all_publications(self, manual_only: bool = False, auto_only: bool = False, max_auto: int = None) -> int:
+        """
+        Load all publications from data directory.
+        
+        Args:
+            manual_only: Load only manually labeled publications
+            auto_only: Load only auto-labeled publications
+            max_auto: Maximum number of auto publications to load (for faster testing)
+        """
+        manual_pubs = set(self.label_config.get('manual_subset', {}).get('papers', []))
+        auto_pubs = self.label_config.get('auto_subset', {}).get('papers', [])
+        
+        if max_auto:
+            auto_pubs = auto_pubs[:max_auto]
+        
+        loaded_count = 0
+        
+        # Load manual publications from processed_dir
+        if not auto_only and self.processed_dir:
+            for pub_id in manual_pubs:
+                try:
+                    bib_entries, arxiv_entries = self.data_loader.load_publication(pub_id, use_processed=True)
+                    if bib_entries and arxiv_entries:
+                        self.publications[pub_id] = (bib_entries, arxiv_entries, 'manual')
+                        loaded_count += 1
+                        logger.info(f"[Manual] Loaded {pub_id}: {len(bib_entries)} bib, {len(arxiv_entries)} arxiv")
+                except Exception as e:
+                    logger.error(f"Failed to load manual publication {pub_id}: {e}")
+        
+        # Load auto publications from data_dir
+        if not manual_only:
+            for pub_id in auto_pubs:
+                try:
+                    bib_entries, arxiv_entries = self.data_loader.load_publication(pub_id, use_processed=False)
+                    if bib_entries and arxiv_entries:
+                        self.publications[pub_id] = (bib_entries, arxiv_entries, 'auto')
+                        loaded_count += 1
+                        if loaded_count % 50 == 0:
+                            logger.info(f"Loaded {loaded_count} publications...")
+                except Exception as e:
+                    logger.warning(f"Failed to load auto publication {pub_id}: {e}")
+        
+        logger.info(f"Total loaded: {loaded_count} publications")
+        return loaded_count
+    
+    def fit_feature_extractor(self):
+        """Fit TF-IDF vectorizer on all titles"""
+        all_titles = []
+        for pub_id, pub_data in self.publications.items():
+            bib_entries, arxiv_entries, _ = pub_data
+            for bib in bib_entries:
+                all_titles.append(bib.title)
+            for arxiv in arxiv_entries.values():
+                all_titles.append(arxiv.title)
+        
+        self.feature_extractor.fit(all_titles)
+        logger.info(f"Feature extractor fitted on {len(all_titles)} titles")
+    
+    def create_labels(
+        self,
+        manual_labels: Optional[Dict[str, Dict[str, str]]] = None,
+        auto_threshold: float = 0.7,
+        load_manual_from_files: bool = True
+    ):
+        """
+        Create labels for all publications.
+        
+        Args:
+            manual_labels: Manually labeled ground truth for specific publications
+            auto_threshold: Threshold for automatic labeling
+            load_manual_from_files: If True, load manual labels from labels_manual.json files
+        """
+        manual_labels = manual_labels or {}
+        
+        # Load manual labels from files if requested
+        if load_manual_from_files and self.processed_dir:
+            for pub_id, pub_data in self.publications.items():
+                if pub_data[2] == 'manual':  # This is a manual publication
+                    file_labels = self.data_loader.load_manual_labels(pub_id)
+                    if file_labels:
+                        manual_labels[pub_id] = file_labels
+                        logger.info(f"Loaded {len(file_labels)} manual labels for {pub_id}")
+        
+        manual_pub_ids = set(manual_labels.keys())
+        
+        for pub_id, pub_data in self.publications.items():
+            bib_entries, arxiv_entries, label_type = pub_data
+            
+            if pub_id in manual_pub_ids:
+                # Use manual labels
+                known_matches = manual_labels[pub_id]
+                pairs = self.labeler.create_manual_labels(
+                    pub_id, bib_entries, arxiv_entries, known_matches
+                )
+                self.ground_truth[pub_id] = known_matches
+                logger.info(f"Manual labels for {pub_id}: {len(known_matches)} matches")
+            else:
+                # Use automatic labels
+                pairs, discovered = self.labeler.create_auto_labels(
+                    pub_id, bib_entries, arxiv_entries, threshold=auto_threshold
+                )
+                self.ground_truth[pub_id] = discovered
+                if discovered:
+                    logger.info(f"Auto labels for {pub_id}: {len(discovered)} matches discovered")
+            
+            self.all_pairs[pub_id] = pairs
+    
+    def split_data(
+        self,
+        test_pubs: List[str],
+        valid_pubs: List[str]
+    ):
+        """
+        Split publications into train/valid/test sets.
+        
+        According to requirements:
+        - Test Set: 1 publication from manual + 1 from auto
+        - Validation Set: 1 publication from manual + 1 from auto
+        - Training Set: All remaining publications
+        """
+        test_set = set(test_pubs)
+        valid_set = set(valid_pubs)
+        
+        for pub_id in self.publications:
+            if pub_id in test_set:
+                self.split_info[pub_id] = 'test'
+            elif pub_id in valid_set:
+                self.split_info[pub_id] = 'valid'
+            else:
+                self.split_info[pub_id] = 'train'
+        
+        train_count = sum(1 for v in self.split_info.values() if v == 'train')
+        valid_count = sum(1 for v in self.split_info.values() if v == 'valid')
+        test_count = sum(1 for v in self.split_info.values() if v == 'test')
+        
+        logger.info(f"Data split: train={train_count}, valid={valid_count}, test={test_count}")
+        
+        return {
+            'train': train_count,
+            'valid': valid_count,
+            'test': test_count
+        }
+    
+    def auto_split_data(self):
+        """
+        Automatically split data according to requirements:
+        - Test: 1 manual + 1 auto
+        - Valid: 1 manual + 1 auto
+        - Train: remaining
+        """
+        manual_pubs = [pub_id for pub_id, data in self.publications.items() if data[2] == 'manual']
+        auto_pubs = [pub_id for pub_id, data in self.publications.items() if data[2] == 'auto']
+        
+        # Select publications for test and validation
+        test_manual = manual_pubs[0] if len(manual_pubs) > 0 else None
+        test_auto = auto_pubs[0] if len(auto_pubs) > 0 else None
+        valid_manual = manual_pubs[1] if len(manual_pubs) > 1 else None
+        valid_auto = auto_pubs[1] if len(auto_pubs) > 1 else None
+        
+        test_pubs = [p for p in [test_manual, test_auto] if p]
+        valid_pubs = [p for p in [valid_manual, valid_auto] if p]
+        
+        logger.info(f"Auto-split: test={test_pubs}, valid={valid_pubs}")
+        
+        return self.split_data(test_pubs, valid_pubs)
+    
+    def get_pairs_by_split(self, split: str) -> List[MatchPair]:
+        """Get all pairs for a given split"""
+        pairs = []
+        for pub_id, pub_pairs in self.all_pairs.items():
+            if self.split_info.get(pub_id) == split:
+                pairs.extend(pub_pairs)
+        return pairs
+    
+    def train_model(self):
+        """Train the matching model"""
+        train_pairs = self.get_pairs_by_split('train')
+        valid_pairs = self.get_pairs_by_split('valid')
+        
+        if not train_pairs:
+            logger.warning("No training pairs available")
+            return
+        
+        self.model.train(train_pairs, valid_pairs)
+    
+    def evaluate(self, split: str = 'test', k: int = 5) -> Tuple[float, Dict]:
+        """Evaluate model on a split"""
+        results = {}
+        all_mrr_scores = []
+        
+        for pub_id, pub_pairs in self.all_pairs.items():
+            if self.split_info.get(pub_id) != split:
+                continue
+            
+            # Get ranked candidates
+            ranked = self.model.rank_candidates(pub_pairs)
+            
+            # Get ground truth for this publication
+            gt = self.ground_truth.get(pub_id, {})
+            
+            # Calculate MRR
+            mrr, per_entry_rr = self.evaluator.calculate_mrr(ranked, gt, k=k)
+            
+            results[pub_id] = {
+                'mrr': mrr,
+                'per_entry': per_entry_rr,
+                'ranked_candidates': ranked,
+                'ground_truth': gt
+            }
+            
+            all_mrr_scores.append(mrr)
+            logger.info(f"MRR@{k} for {pub_id}: {mrr:.4f}")
+        
+        overall_mrr = np.mean(all_mrr_scores) if all_mrr_scores else 0.0
+        logger.info(f"Overall MRR@{k} on {split}: {overall_mrr:.4f}")
+        
+        return overall_mrr, results
+    
+    def generate_and_save_predictions(self, k: int = 5):
+        """Generate predictions and save to pred.json files"""
+        for pub_id, pub_pairs in self.all_pairs.items():
+            split = self.split_info.get(pub_id, 'train')
+            
+            # Get ranked candidates
+            ranked = self.model.rank_candidates(pub_pairs)
+            
+            # Get ground truth
+            gt = self.ground_truth.get(pub_id, {})
+            
+            # Generate predictions
+            pred_data = self.evaluator.generate_predictions(ranked, gt, split, k=k)
+            
+            # Determine output path based on publication type
+            if pub_id in [p for p, d in self.publications.items() if d[2] == 'manual']:
+                pred_path = self.processed_dir / pub_id / 'pred.json' if self.processed_dir else self.data_dir / pub_id / 'pred.json'
+            else:
+                pred_path = self.data_dir / pub_id / 'pred.json'
+            
+            # Ensure directory exists
+            pred_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(pred_path, 'w', encoding='utf-8') as f:
+                json.dump(pred_data, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"Saved predictions to {pred_path}")
+    
+    def run_full_pipeline(
+        self,
+        manual_labels: Dict[str, Dict[str, str]],
+        test_pubs: List[str],
+        valid_pubs: List[str],
+        auto_threshold: float = 0.7,
+        k: int = 5
+    ) -> Dict:
+        """Run the complete pipeline"""
+        # 1. Load data
+        logger.info("=" * 50)
+        logger.info("Step 1: Loading publications...")
+        n_loaded = self.load_all_publications()
+        logger.info(f"Loaded {n_loaded} publications")
+        
+        if n_loaded == 0:
+            logger.error("No publications loaded!")
+            return {}
+        
+        # 2. Fit feature extractor
+        logger.info("=" * 50)
+        logger.info("Step 2: Fitting feature extractor...")
+        self.fit_feature_extractor()
+        
+        # 3. Create labels
+        logger.info("=" * 50)
+        logger.info("Step 3: Creating labels...")
+        self.create_labels(manual_labels, auto_threshold)
+        
+        # 4. Split data
+        logger.info("=" * 50)
+        logger.info("Step 4: Splitting data...")
+        self.split_data(test_pubs, valid_pubs)
+        
+        # 5. Train model
+        logger.info("=" * 50)
+        logger.info("Step 5: Training model...")
+        self.train_model()
+        
+        # 6. Evaluate
+        logger.info("=" * 50)
+        logger.info("Step 6: Evaluating on test set...")
+        test_mrr, test_results = self.evaluate('test', k=k)
+        
+        logger.info("Evaluating on validation set...")
+        valid_mrr, valid_results = self.evaluate('valid', k=k)
+        
+        # 7. Generate predictions
+        logger.info("=" * 50)
+        logger.info("Step 7: Generating predictions...")
+        self.generate_and_save_predictions(k=k)
+        
+        return {
+            'test_mrr': test_mrr,
+            'valid_mrr': valid_mrr,
+            'test_results': test_results,
+            'valid_results': valid_results
+        }
+
+
+# ================ EDA UTILITIES ================
+class EDAUtils:
+    """Utilities for Exploratory Data Analysis"""
+    
+    @staticmethod
+    def analyze_publication(
+        bib_entries: List[BibEntry],
+        arxiv_entries: Dict[str, ArxivEntry]
+    ) -> Dict:
+        """Analyze a single publication's data"""
+        stats = {
+            'n_bib': len(bib_entries),
+            'n_arxiv': len(arxiv_entries),
+            'n_possible_pairs': len(bib_entries) * len(arxiv_entries),
+        }
+        
+        # BibTeX statistics
+        bib_title_lens = [len(b.title.split()) for b in bib_entries]
+        bib_author_counts = [len(b.authors) for b in bib_entries]
+        bib_years = [int(b.year) for b in bib_entries if b.year.isdigit()]
+        
+        stats['bib_title_len_mean'] = np.mean(bib_title_lens) if bib_title_lens else 0
+        stats['bib_title_len_std'] = np.std(bib_title_lens) if bib_title_lens else 0
+        stats['bib_author_count_mean'] = np.mean(bib_author_counts) if bib_author_counts else 0
+        stats['bib_year_range'] = (min(bib_years), max(bib_years)) if bib_years else (0, 0)
+        
+        # ArXiv statistics
+        arxiv_title_lens = [len(a.title.split()) for a in arxiv_entries.values()]
+        arxiv_author_counts = [len(a.authors) for a in arxiv_entries.values()]
+        arxiv_years = [int(a.year) for a in arxiv_entries.values() if a.year.isdigit()]
+        
+        stats['arxiv_title_len_mean'] = np.mean(arxiv_title_lens) if arxiv_title_lens else 0
+        stats['arxiv_title_len_std'] = np.std(arxiv_title_lens) if arxiv_title_lens else 0
+        stats['arxiv_author_count_mean'] = np.mean(arxiv_author_counts) if arxiv_author_counts else 0
+        stats['arxiv_year_range'] = (min(arxiv_years), max(arxiv_years)) if arxiv_years else (0, 0)
+        
+        return stats
+    
+    @staticmethod
+    def find_potential_matches_heuristic(
+        bib_entries: List[BibEntry],
+        arxiv_entries: Dict[str, ArxivEntry],
+        feature_extractor: FeatureExtractor,
+        threshold: float = 0.5
+    ) -> List[Tuple[str, str, float, Dict]]:
+        """
+        Find potential matches using heuristics.
+        Returns list of (bib_key, arxiv_id, score, features)
+        """
+        matches = []
+        
+        for bib in bib_entries:
+            for arxiv_id, arxiv in arxiv_entries.items():
+                features = feature_extractor.extract_features(bib, arxiv)
+                
+                # Calculate composite score
+                score = (
+                    features.get('title_jaccard_nostop', 0) * 0.3 +
+                    features.get('title_sequence_ratio', 0) * 0.2 +
+                    features.get('author_lastname_overlap', 0) * 0.25 +
+                    features.get('author_first_match', 0) * 0.1 +
+                    features.get('year_exact_match', 0) * 0.1 +
+                    features.get('venue_arxiv_id_match', 0) * 0.05
+                )
+                
+                if score >= threshold:
+                    matches.append((bib.key, arxiv_id, score, features))
+        
+        # Sort by score
+        matches.sort(key=lambda x: x[2], reverse=True)
+        
+        return matches
+
+
+# ================ MAIN ENTRY POINT ================
+def main():
+    """Main entry point for the reference matching pipeline"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Reference Matching Pipeline')
+    parser.add_argument('--data-dir', type=str, help='Path to data directory containing auto-labeled papers')
+    parser.add_argument('--input-dir', type=str, help='Alias for --data-dir (for Colab compatibility)')
+    parser.add_argument('--processed-dir', type=str, help='Path to processed directory containing manual labels')
+    parser.add_argument('--label-config', type=str, help='Path to label.json configuration file')
+    parser.add_argument('--max-auto', type=int, default=None, help='Maximum number of auto publications to load')
+    parser.add_argument('--auto-threshold', type=float, default=0.7, help='Threshold for auto-labeling')
+    parser.add_argument('--k', type=int, default=5, help='Top-k candidates for ranking')
+    parser.add_argument('--workers', type=int, default=1, help='Number of workers (reserved for future use)')
+    args = parser.parse_args()
+    
+    # Resolve directories
+    data_dir_str = args.data_dir or args.input_dir
+    if not data_dir_str:
+        raise SystemExit('Either --data-dir or --input-dir must be provided')
+    data_dir = Path(data_dir_str).resolve()
+    if not data_dir.exists():
+        raise SystemExit(f'Data directory not found: {data_dir}')
+    
+    processed_dir = Path(args.processed_dir).resolve() if args.processed_dir else None
+    if processed_dir is None:
+        candidate = data_dir.parent / 'processed'
+        if candidate.exists():
+            processed_dir = candidate
+            logger.info(f"Infer processed directory: {processed_dir}")
+    
+    if processed_dir and not processed_dir.exists():
+        logger.warning(f"Processed directory not found: {processed_dir}")
+        processed_dir = None
+    
+    # Resolve label configuration path
+    if args.label_config:
+        label_config_path = Path(args.label_config).resolve()
+    else:
+        label_config_path = data_dir / 'label.json'
+    if not label_config_path.exists():
+        raise SystemExit(f'label.json not found at {label_config_path}')
+    
+    logger.info("=" * 50)
+    logger.info("Initializing Reference Matching Pipeline")
+    logger.info(f"Data directory    : {data_dir}")
+    logger.info(f"Processed directory: {processed_dir}")
+    logger.info(f"Label config      : {label_config_path}")
+    logger.info(f"Auto threshold    : {args.auto_threshold}")
+    logger.info(f"Top-k             : {args.k}")
+    logger.info(f"Workers           : {args.workers}")
+    
+    pipeline = ReferenceMatchingPipeline(data_dir, processed_dir)
+    pipeline.load_label_config(label_config_path)
+    
+    logger.info("Loading publications...")
+    n_pubs = pipeline.load_all_publications(max_auto=args.max_auto)
+    if n_pubs == 0:
+        logger.error("No valid publications found!")
+        return 1
+    
+    pipeline.fit_feature_extractor()
+    pipeline.create_labels(auto_threshold=args.auto_threshold, load_manual_from_files=True)
+    pipeline.auto_split_data()
+    pipeline.train_model()
+    
+    logger.info("Evaluating on validation split...")
+    valid_mrr, _ = pipeline.evaluate('valid', k=args.k)
+    logger.info("Evaluating on test split...")
+    test_mrr, _ = pipeline.evaluate('test', k=args.k)
+    
+    pipeline.generate_and_save_predictions(k=args.k)
+    
+    logger.info("=" * 50)
+    logger.info(f"Validation MRR@{args.k}: {valid_mrr:.4f}")
+    logger.info(f"Test MRR@{args.k}      : {test_mrr:.4f}")
+    logger.info("Prediction files written to publication folders")
+    logger.info("Pipeline completed successfully")
+    
+    return 0
+
+
+if __name__ == "__main__":
+    exit(main())
